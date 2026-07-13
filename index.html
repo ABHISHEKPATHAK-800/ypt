@@ -800,6 +800,37 @@
       margin-top: 14px;
     }
 
+    .settings-divider {
+      border: none;
+      border-top: 1px solid var(--line);
+      margin: 20px 0 14px;
+    }
+
+    .settings-inline-form {
+      display: grid;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .settings-inline-form label {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--muted);
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .checkbox-row input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+    }
+
     .partner-popup-head {
       display: grid;
       grid-template-columns: auto minmax(0, 1fr);
@@ -907,6 +938,24 @@
       overflow-wrap: anywhere;
       line-height: 1.35;
       position: relative;
+    }
+
+    .edited-tag {
+      font-size: 10px;
+      color: var(--muted);
+      margin-left: 4px;
+      font-weight: 700;
+    }
+
+    .chat-edit-input {
+      font: inherit;
+      color: inherit;
+      background: rgba(255, 255, 255, .7);
+      border: 1px solid var(--green);
+      border-radius: 6px;
+      padding: 2px 6px;
+      width: 100%;
+      margin-top: 2px;
     }
 
     .chat-message-more {
@@ -1043,6 +1092,92 @@
     .xp-card strong { color: var(--green); }
     .partner-seconds { margin-top: 5px; font-size: 12px; font-weight: 800; color: var(--green); }
 
+    .call-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      background: rgba(10, 20, 15, 0.72);
+      display: grid;
+      place-items: center;
+      padding: 20px;
+    }
+
+    .call-card {
+      width: min(480px, 100%);
+      background: var(--panel);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 14px;
+    }
+
+    .call-status-text {
+      text-align: center;
+      font-weight: 800;
+      color: var(--ink);
+      margin: 0;
+    }
+
+    .call-video-stage {
+      position: relative;
+      background: #0d1712;
+      border-radius: 12px;
+      min-height: 220px;
+      overflow: hidden;
+    }
+
+    #remoteCallVideo {
+      width: 100%;
+      height: 100%;
+      min-height: 220px;
+      object-fit: cover;
+      background: #0d1712;
+    }
+
+    #localCallVideo {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      width: 96px;
+      height: 72px;
+      border-radius: 8px;
+      object-fit: cover;
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      background: #16231c;
+    }
+
+    .call-controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .call-accept-btn, .call-decline-btn, .call-hangup-btn {
+      min-height: 42px;
+    }
+
+    /* Deliberately low-key: small, low-contrast, tucked at the end of the row */
+    .call-screenshare-btn {
+      width: 24px;
+      height: 24px;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      opacity: 0.45;
+      margin-left: 6px;
+    }
+    .call-screenshare-btn:hover { opacity: 0.85; }
+    .call-screenshare-btn.active { opacity: 1; color: var(--green); }
+
+    .call-video-stage.audio-only #remoteCallVideo,
+    .call-video-stage.audio-only #localCallVideo { display: none; }
+
     .toast-stack {
       position: fixed;
       right: 20px;
@@ -1096,6 +1231,92 @@
     .timer-display { position:relative; min-height: 235px; border: 0; border-radius: 18px; color: #effff4; background: radial-gradient(circle at 50% 0%, #3d936a, #164c36 72%); box-shadow: inset 0 1px 0 rgba(255,255,255,.22); overflow:hidden; }
     .timer-display::after { content:""; position:absolute; width:320px; height:320px; border:1px solid rgba(255,255,255,.09); border-radius:50%; top:-170px; left:50%; transform:translateX(-50%); }
     .timer-display > div { position:relative; z-index:1; }
+
+    #mascotWrap.mascot-wrap {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 60px;
+      height: 60px;
+      z-index: 2;
+      cursor: pointer;
+      filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .28));
+      transition: transform 160ms ease;
+    }
+    .mascot-wrap:hover { transform: scale(1.08); }
+    .mascot-wrap:active { transform: scale(.94); }
+    .mascot-svg { width: 100%; height: 100%; overflow: visible; }
+    .mascot-face { fill: #ffd873; stroke: #c98a2b; stroke-width: 3; }
+    .mascot-sclera { fill: #fff; }
+    .mascot-pupil { fill: #26301f; }
+    .mascot-spiral { display: none; fill: none; stroke: #26301f; stroke-width: 2; stroke-linecap: round; }
+    .mascot-brow-l, .mascot-brow-r {
+      fill: none; stroke: #8a651f; stroke-width: 4; stroke-linecap: round;
+      opacity: 0; transition: opacity 160ms ease, transform 160ms ease;
+    }
+    .mascot-mouth { fill: none; stroke: #8a651f; stroke-width: 4; stroke-linecap: round; display: none; }
+    .mascot-mouth.mouth-neutral { display: block; }
+    .mascot-mouth.mouth-happy { fill: #8a651f; }
+    .mascot-mouth.mouth-thirsty { fill: #4aa8d8; }
+
+    /* Ambient state while a focus session is running */
+    .mascot-wrap.mood-focused .mouth-neutral { display: none; }
+    .mascot-wrap.mood-focused .mouth-focused { display: block; }
+    .mascot-wrap.mood-focused .mascot-eye-l,
+    .mascot-wrap.mood-focused .mascot-eye-r { transform: scaleY(.6); transform-box: fill-box; transform-origin: center; }
+
+    /* Tap: annoyed */
+    .mascot-wrap.mood-angry .mouth-neutral,
+    .mascot-wrap.mood-angry .mouth-focused { display: none; }
+    .mascot-wrap.mood-angry .mouth-angry { display: block; }
+    .mascot-wrap.mood-angry .mascot-brow-l { opacity: 1; transform: translate(2px, 4px) rotate(8deg); transform-box: fill-box; transform-origin: center; }
+    .mascot-wrap.mood-angry .mascot-brow-r { opacity: 1; transform: translate(-2px, 4px) rotate(-8deg); transform-box: fill-box; transform-origin: center; }
+    .mascot-wrap.mood-angry .mascot-face { fill: #ffb884; }
+    .mascot-wrap.mood-angry { animation: mascotShake 320ms ease; }
+
+    /* Double-tap: happy */
+    .mascot-wrap.mood-happy .mouth-neutral,
+    .mascot-wrap.mood-happy .mouth-focused { display: none; }
+    .mascot-wrap.mood-happy .mouth-happy { display: block; }
+    .mascot-wrap.mood-happy .mascot-eye-r { transform: scaleY(.15); transform-box: fill-box; transform-origin: center; }
+
+    /* Right-click: surprised */
+    .mascot-wrap.mood-surprised .mouth-neutral,
+    .mascot-wrap.mood-surprised .mouth-focused { display: none; }
+    .mascot-wrap.mood-surprised .mouth-surprised { display: block; }
+    .mascot-wrap.mood-surprised .mascot-eye-l,
+    .mascot-wrap.mood-surprised .mascot-eye-r { transform: scale(1.25); transform-box: fill-box; transform-origin: center; }
+
+    /* Long press: dizzy */
+    .mascot-wrap.mood-dizzy .mouth-neutral,
+    .mascot-wrap.mood-dizzy .mouth-focused { display: none; }
+    .mascot-wrap.mood-dizzy .mascot-pupil { display: none; }
+    .mascot-wrap.mood-dizzy .mascot-spiral { display: block; animation: mascotSpin 700ms linear infinite; transform-box: fill-box; transform-origin: center; }
+    .mascot-wrap.mood-dizzy { animation: mascotWobble 500ms ease-in-out infinite; }
+
+    /* Hourly reminder: thirsty */
+    .mascot-wrap.mood-thirsty .mouth-neutral,
+    .mascot-wrap.mood-thirsty .mouth-focused { display: none; }
+    .mascot-wrap.mood-thirsty .mouth-thirsty { display: block; }
+    .mascot-wrap.mood-thirsty { animation: mascotBounce 900ms ease-in-out 3; }
+
+    @keyframes mascotShake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-3px); }
+      75% { transform: translateX(3px); }
+    }
+    @keyframes mascotWobble {
+      0%, 100% { transform: rotate(-6deg); }
+      50% { transform: rotate(6deg); }
+    }
+    @keyframes mascotSpin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @keyframes mascotBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
     .timer-orbit { position:absolute; inset: auto 5% 6px; width:90%; height:175px; color:#d5ffe3; }
     .time { font-size: clamp(54px, 8vw, 96px); letter-spacing: -3px; text-shadow: 0 6px 17px rgba(0,0,0,.2); }
     .active-subject { color: #d6f5e0; }
@@ -1407,6 +1628,21 @@
             <div id="timerText" class="time">00:00:00</div>
             <div id="activeSubjectText" class="active-subject">Ready for Physics</div>
           </div>
+          <div id="mascotWrap" class="mascot-wrap" title="Poke me">
+            <svg id="mascotSvg" class="mascot-svg" viewBox="0 0 120 120" aria-hidden="true">
+              <circle class="mascot-face" cx="60" cy="62" r="50"/>
+              <path class="mascot-brow-l" d="M30 40 Q42 32 54 40"/>
+              <path class="mascot-brow-r" d="M66 40 Q78 32 90 40"/>
+              <g class="mascot-eye-l"><circle class="mascot-sclera" cx="44" cy="56" r="13"/><circle class="mascot-pupil" cx="44" cy="56" r="5.5"/><path class="mascot-spiral" d="M44 56 m-6 0 a6 6 0 1 1 12 0 a4 4 0 1 1 -8 0 a2 2 0 1 1 4 0"/></g>
+              <g class="mascot-eye-r"><circle class="mascot-sclera" cx="76" cy="56" r="13"/><circle class="mascot-pupil" cx="76" cy="56" r="5.5"/><path class="mascot-spiral" d="M76 56 m-6 0 a6 6 0 1 1 12 0 a4 4 0 1 1 -8 0 a2 2 0 1 1 4 0"/></g>
+              <path class="mascot-mouth mouth-neutral" d="M42 82 Q60 90 78 82"/>
+              <path class="mascot-mouth mouth-angry" d="M42 88 Q60 80 78 88"/>
+              <path class="mascot-mouth mouth-happy" d="M38 80 Q60 100 82 80 Q60 96 38 80 Z"/>
+              <path class="mascot-mouth mouth-surprised" d="M60 78 a8 8 0 1 0 0.1 0"/>
+              <path class="mascot-mouth mouth-focused" d="M46 84 L74 84"/>
+              <path class="mascot-mouth mouth-thirsty" d="M50 78 Q60 98 70 78 Q60 92 50 78 Z"/>
+            </svg>
+          </div>
         </div>
 
         <div class="actions">
@@ -1494,6 +1730,8 @@
         <div class="chat-head">
           <div class="chat-title"><span class="chat-title-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 15a4 4 0 0 1-4 4H8l-4 3v-7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4v8Z"/></svg></span><span>Study Chat <small>LIVE</small></span></div>
           <div class="chat-head-actions">
+            <button id="voiceCallBtn" class="small-btn" type="button" title="Voice call" aria-label="Start voice call"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/></svg></button>
+            <button id="videoCallBtn" class="small-btn" type="button" title="Video call" aria-label="Start video call"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="6" width="12" height="12" rx="2"/><path d="m21 8-6 4 6 4V8Z"/></svg></button>
             <button id="chatSizeBtn" class="small-btn" type="button" title="Expand chat" aria-label="Expand chat">↗</button>
             <button id="notifyBtn" class="small-btn" type="button" title="Turn chat notifications on">!</button>
             <button id="closeChatBtn" class="small-btn" type="button" aria-label="Close chat">X</button>
@@ -1514,6 +1752,30 @@
       <button id="chatToggle" class="chat-toggle" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 15a4 4 0 0 1-4 4H8l-4 3v-7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4v8Z"/></svg> Chat <span id="chatCount" class="chat-count hidden">0</span></button>
     </section>
     <div id="toastStack" class="toast-stack" aria-live="polite"></div>
+
+    <div id="callOverlay" class="call-overlay hidden">
+      <div class="call-card">
+        <p id="callStatusText" class="call-status-text">Calling…</p>
+        <div class="call-video-stage" id="callVideoStage">
+          <video id="remoteCallVideo" autoplay playsinline></video>
+          <video id="localCallVideo" autoplay playsinline muted></video>
+        </div>
+        <div class="call-controls">
+          <button id="callAcceptBtn" class="primary-btn call-accept-btn hidden" type="button">Accept</button>
+          <button id="callDeclineBtn" class="danger-btn call-decline-btn hidden" type="button">Decline</button>
+          <button id="callMuteBtn" class="icon-btn" type="button" title="Mute microphone" aria-label="Mute microphone">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Z"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4"/></svg>
+          </button>
+          <button id="callCameraBtn" class="icon-btn" type="button" title="Turn camera off" aria-label="Turn camera off">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="12" height="12" rx="2"/><path d="m21 8-6 4 6 4V8Z"/></svg>
+          </button>
+          <button id="callHangupBtn" class="danger-btn call-hangup-btn" type="button" title="End call" aria-label="End call">End</button>
+          <button id="callScreenShareBtn" class="call-screenshare-btn" type="button" title="Share screen" aria-label="Share screen">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" width="13" height="13"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
   </main>
 
   <div id="infoModal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
@@ -1530,8 +1792,10 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
     import {
+      get,
       getDatabase,
       limitToLast,
+      onChildAdded,
       onValue,
       push,
       query,
@@ -1561,6 +1825,9 @@
     const userRef = (userId) => ref(database, `duotrack/groups/${GROUP_ID}/users/${userId}`);
     const chatRef = ref(database, `duotrack/groups/${GROUP_ID}/chat`);
     const chatMessageRef = (messageId) => ref(database, `duotrack/groups/${GROUP_ID}/chat/${messageId}`);
+    const accountsRef = ref(database, `duotrack/groups/${GROUP_ID}/accounts`);
+    const callRef = ref(database, `duotrack/groups/${GROUP_ID}/call`);
+    const callCandidatesRef = (side) => ref(database, `duotrack/groups/${GROUP_ID}/call/${side}Candidates`);
 
     const USERS = {
       "abhi@990": {
@@ -1576,6 +1843,51 @@
     };
 
     const USERS_BY_ID = Object.fromEntries(Object.values(USERS).map((user) => [user.id, user]));
+
+    // Registered accounts beyond the two built-in ones live in Firebase (not in this
+    // file), so any device can log in with them. Note: the "Study Partner" card and
+    // 1-on-1 comparison view still assume exactly one other person — with 3+ accounts
+    // it will just show whichever other account it finds first. Chat itself is shared
+    // by everyone already, so that part works fine with more people.
+    async function loadDynamicAccounts() {
+      try {
+        const snapshot = await get(accountsRef);
+        const accounts = snapshot.val() || {};
+        Object.entries(accounts).forEach(([loginId, account]) => {
+          if (!USERS[loginId] && account && account.id) {
+            USERS[loginId] = { password: String(account.password || ""), id: account.id, name: account.name || account.id };
+            USERS_BY_ID[account.id] = USERS[loginId];
+          }
+        });
+      } catch (error) {
+        console.error("Could not load registered accounts", error);
+      }
+    }
+
+    function slugifyId(value) {
+      return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    }
+
+    async function registerAccount({ name, loginId, password }) {
+      const trimmedLogin = loginId.trim();
+      const trimmedName = name.trim();
+      if (!trimmedName || !trimmedLogin || !password) {
+        throw new Error("Fill in a name, login ID, and password.");
+      }
+      if (USERS[trimmedLogin]) {
+        throw new Error("That login ID is already taken.");
+      }
+      let id = slugifyId(trimmedName) || slugifyId(trimmedLogin) || `user${Date.now()}`;
+      if (USERS_BY_ID[id]) {
+        id = `${id}${Date.now().toString().slice(-4)}`;
+      }
+      const account = { password, id, name: trimmedName };
+      await set(ref(database, `duotrack/groups/${GROUP_ID}/accounts/${trimmedLogin}`), account);
+      await set(userRef(id), defaultUserState(account));
+      USERS[trimmedLogin] = account;
+      USERS_BY_ID[id] = account;
+      return account;
+    }
     const SUBJECTS = ["Physics", "Chemistry", "Maths"];
     const SUBJECT_COLORS = {
       Physics: "#2f6fb0",
@@ -1589,6 +1901,8 @@
     const NOTIFY_KEY = "duotrackChatNotifications";
     const LAST_CHAT_SEEN_KEY = "duotrackLastChatSeen";
     const DELETED_CHAT_KEY_PREFIX = "duotrackDeletedChat:";
+    const HYDRATION_ENABLED_KEY = "duotrackHydrationEnabled";
+    const HYDRATION_HOURS_KEY = "duotrackHydrationHours";
     const SETTINGS_PASSWORD = "jeemain";
     const EXPORT_VERSION = 1;
     const THEME_PRESETS = [
@@ -1716,6 +2030,21 @@
     const closeChatBtn = document.getElementById("closeChatBtn");
     const notifyBtn = document.getElementById("notifyBtn");
     const chatMessages = document.getElementById("chatMessages");
+    const mascotWrap = document.getElementById("mascotWrap");
+    const mascotPupils = mascotWrap ? mascotWrap.querySelectorAll(".mascot-pupil") : [];
+    const voiceCallBtn = document.getElementById("voiceCallBtn");
+    const videoCallBtn = document.getElementById("videoCallBtn");
+    const callOverlay = document.getElementById("callOverlay");
+    const callStatusText = document.getElementById("callStatusText");
+    const callVideoStage = document.getElementById("callVideoStage");
+    const remoteCallVideo = document.getElementById("remoteCallVideo");
+    const localCallVideo = document.getElementById("localCallVideo");
+    const callAcceptBtn = document.getElementById("callAcceptBtn");
+    const callDeclineBtn = document.getElementById("callDeclineBtn");
+    const callMuteBtn = document.getElementById("callMuteBtn");
+    const callCameraBtn = document.getElementById("callCameraBtn");
+    const callHangupBtn = document.getElementById("callHangupBtn");
+    const callScreenShareBtn = document.getElementById("callScreenShareBtn");
     const chatForm = document.getElementById("chatForm");
     const chatInput = document.getElementById("chatInput");
     const chatImageBtn = document.getElementById("chatImageBtn");
@@ -1935,6 +2264,28 @@
         <input id="customBgInput" class="file-input" type="file" accept="image/*">
         <input id="settingsImportInput" class="file-input" type="file" accept="application/json,.json">
         <p id="settingsToolError" class="settings-error" aria-live="polite"></p>
+
+        <hr class="settings-divider">
+        <p class="subtext"><strong>Hydration reminder</strong> — a cute nudge from your mascot, personal to this device.</p>
+        <form id="hydrationForm" class="field settings-inline-form">
+          <label class="checkbox-row"><input id="hydrationEnabledInput" type="checkbox" ${hydrationEnabled ? "checked" : ""}> Remind me to drink water</label>
+          <label for="hydrationHoursInput">Every (hours)</label>
+          <input id="hydrationHoursInput" type="number" min="0.25" max="12" step="0.25" value="${hydrationHours}">
+          <button class="secondary-btn" type="submit">Save reminder</button>
+        </form>
+
+        <hr class="settings-divider">
+        <p class="subtext"><strong>Register a new account</strong> — stored in the shared Firebase database, same prototype-level security as the existing two accounts (plaintext, no real auth). Note: the partner/comparison view is still built for two people; a third account will just show whichever other account it finds first.</p>
+        <form id="registerAccountForm" class="field settings-inline-form">
+          <label for="registerName">Name</label>
+          <input id="registerName" type="text" placeholder="Display name" required>
+          <label for="registerLoginId">Login ID</label>
+          <input id="registerLoginId" type="text" placeholder="Login ID" required>
+          <label for="registerPassword">Password</label>
+          <input id="registerPassword" type="password" placeholder="Password" required>
+          <button class="secondary-btn" type="submit">Register</button>
+          <p id="registerAccountError" class="settings-error" aria-live="polite"></p>
+        </form>
       `;
     }
 
@@ -2114,7 +2465,8 @@
             name: message.name || "User",
             text: String(message.text || "").slice(0, 160),
             image: safeProfileImage(message.image),
-            createdAt: Number(message.createdAt) || 0
+            createdAt: Number(message.createdAt) || 0,
+            editedAt: Number(message.editedAt) || 0
           }))
           .filter((message) => message.text || message.image)
           .sort((a, b) => a.createdAt - b.createdAt);
@@ -2194,6 +2546,351 @@
         showToast("Delete failed", "Could not delete this message for everyone.");
       }
     }
+
+    // --- Mascot: eye tracking + a handful of tap/press reactions ---
+    let mascotMoodTimeout = null;
+    const MASCOT_TEMP_MOODS = ["mood-angry", "mood-happy", "mood-surprised", "mood-dizzy", "mood-thirsty"];
+
+    function setMascotMood(mood, durationMs) {
+      if (!mascotWrap) return;
+      MASCOT_TEMP_MOODS.forEach((m) => mascotWrap.classList.remove(m));
+      if (mood) mascotWrap.classList.add(mood);
+      clearTimeout(mascotMoodTimeout);
+      if (durationMs) {
+        mascotMoodTimeout = setTimeout(() => mascotWrap.classList.remove(mood), durationMs);
+      }
+    }
+
+    if (mascotWrap) {
+      document.addEventListener("pointermove", (event) => {
+        if (mascotWrap.classList.contains("mood-dizzy")) return;
+        const rect = mascotWrap.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const dx = event.clientX - cx;
+        const dy = event.clientY - cy;
+        const dist = Math.hypot(dx, dy) || 1;
+        const maxOffset = 4;
+        const offsetX = (dx / dist) * Math.min(maxOffset, dist / 12);
+        const offsetY = (dy / dist) * Math.min(maxOffset, dist / 12);
+        mascotPupils.forEach((pupil) => {
+          pupil.setAttribute("transform", `translate(${offsetX.toFixed(1)} ${offsetY.toFixed(1)})`);
+        });
+      });
+
+      mascotWrap.addEventListener("click", () => setMascotMood("mood-angry", 1200));
+      mascotWrap.addEventListener("dblclick", (event) => {
+        event.stopPropagation();
+        setMascotMood("mood-happy", 1200);
+      });
+      mascotWrap.addEventListener("contextmenu", (event) => {
+        event.preventDefault();
+        setMascotMood("mood-surprised", 1000);
+      });
+
+      let mascotPressTimer = null;
+      mascotWrap.addEventListener("pointerdown", () => {
+        mascotPressTimer = setTimeout(() => setMascotMood("mood-dizzy", 1500), 550);
+      });
+      ["pointerup", "pointerleave", "pointercancel"].forEach((eventName) => {
+        mascotWrap.addEventListener(eventName, () => clearTimeout(mascotPressTimer));
+      });
+    }
+
+    // --- Hydration reminder: personal to this device, uses on-device speech synthesis ---
+    let hydrationEnabled = localStorage.getItem(HYDRATION_ENABLED_KEY) !== "false";
+    let hydrationHours = Math.min(12, Math.max(0.25, Number(localStorage.getItem(HYDRATION_HOURS_KEY)) || 1));
+    let hydrationTimerId = null;
+
+    function scheduleHydrationReminder() {
+      clearInterval(hydrationTimerId);
+      if (!hydrationEnabled) return;
+      const intervalMs = hydrationHours * 60 * 60 * 1000;
+      hydrationTimerId = setInterval(triggerHydrationReminder, intervalMs);
+    }
+
+    function triggerHydrationReminder() {
+      setMascotMood("mood-thirsty", 4000);
+      if (typeof speechSynthesis === "undefined") return;
+      try {
+        const utterance = new SpeechSynthesisUtterance("Paani pi lo!");
+        utterance.lang = "hi-IN";
+        utterance.rate = 1.05;
+        utterance.pitch = 1.25;
+        speechSynthesis.speak(utterance);
+      } catch (_) {
+        // Speech synthesis isn't available on every browser/device — fail quietly.
+      }
+    }
+
+    // --- Voice/video calling: WebRTC peer-to-peer, Firebase only carries signaling ---
+    // Note: there's no TURN server here, only a public STUN server. That means calls
+    // should connect fine on normal home/office wifi, but may fail to connect on some
+    // mobile networks or behind strict corporate firewalls — there's no way around
+    // that without paying for a TURN relay.
+    const ICE_SERVERS = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+    let pc = null;
+    let localCallStream = null;
+    let screenStream = null;
+    let currentCallRole = null; // "caller" | "callee" | "pending" | null
+    let pendingIncomingCall = null;
+    let remoteDescSet = false;
+    let micMuted = false;
+    let cameraOff = false;
+    let isScreenSharing = false;
+    let callCandidateUnsub = null;
+
+    function createPeerConnection(role) {
+      const connection = new RTCPeerConnection(ICE_SERVERS);
+      connection.ontrack = (event) => {
+        remoteCallVideo.srcObject = event.streams[0];
+      };
+      connection.onicecandidate = (event) => {
+        if (event.candidate) {
+          push(callCandidatesRef(role === "caller" ? "caller" : "callee"), event.candidate.toJSON());
+        }
+      };
+      connection.onconnectionstatechange = () => {
+        if (["failed", "disconnected", "closed"].includes(connection.connectionState) && currentCallRole) {
+          showToast("Call ended", "The call connection was lost.");
+        }
+      };
+      return connection;
+    }
+
+    function listenForRemoteCandidates(side) {
+      return onChildAdded(callCandidatesRef(side), (snapshot) => {
+        const candidate = snapshot.val();
+        if (pc && candidate) {
+          pc.addIceCandidate(new RTCIceCandidate(candidate)).catch(() => {});
+        }
+      });
+    }
+
+    function showCallOverlay() {
+      callOverlay.classList.remove("hidden");
+    }
+
+    function stopLocalCallMedia() {
+      localCallStream?.getTracks().forEach((track) => track.stop());
+      localCallStream = null;
+      screenStream?.getTracks().forEach((track) => track.stop());
+      screenStream = null;
+    }
+
+    function cleanupCall() {
+      pc?.close();
+      pc = null;
+      stopLocalCallMedia();
+      if (callCandidateUnsub) {
+        callCandidateUnsub();
+        callCandidateUnsub = null;
+      }
+      remoteCallVideo.srcObject = null;
+      localCallVideo.srcObject = null;
+      currentCallRole = null;
+      pendingIncomingCall = null;
+      remoteDescSet = false;
+      micMuted = false;
+      cameraOff = false;
+      isScreenSharing = false;
+      callScreenShareBtn.classList.remove("active");
+      callAcceptBtn.classList.add("hidden");
+      callDeclineBtn.classList.add("hidden");
+      callOverlay.classList.add("hidden");
+    }
+
+    async function startCall(type) {
+      if (currentCallRole) return;
+      const partner = partnerUser();
+      if (!partner) {
+        showToast("No partner", "Could not find your study partner account.");
+        return;
+      }
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: type === "video" });
+      } catch (error) {
+        showToast("Call failed", `Could not access your microphone${type === "video" ? "/camera." : "."}`);
+        return;
+      }
+      localCallStream = stream;
+      currentCallRole = "caller";
+      showCallOverlay();
+      callStatusText.textContent = `Calling ${partner.name}…`;
+      callVideoStage.classList.toggle("audio-only", type !== "video");
+      callCameraBtn.classList.toggle("hidden", type !== "video");
+      callScreenShareBtn.classList.toggle("hidden", type !== "video");
+      localCallVideo.srcObject = localCallStream;
+
+      pc = createPeerConnection("caller");
+      localCallStream.getTracks().forEach((track) => pc.addTrack(track, localCallStream));
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      await set(callRef, {
+        from: currentUserId,
+        to: partner.id,
+        type,
+        status: "ringing",
+        offer: { type: offer.type, sdp: offer.sdp },
+        createdAt: Date.now()
+      });
+      callCandidateUnsub = listenForRemoteCandidates("callee");
+    }
+
+    async function acceptCall(call) {
+      currentCallRole = "callee";
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: call.type === "video" });
+      } catch (error) {
+        showToast("Call failed", `Could not access your microphone${call.type === "video" ? "/camera." : "."}`);
+        await declineCall();
+        return;
+      }
+      localCallStream = stream;
+      callAcceptBtn.classList.add("hidden");
+      callDeclineBtn.classList.add("hidden");
+      callVideoStage.classList.toggle("audio-only", call.type !== "video");
+      callCameraBtn.classList.toggle("hidden", call.type !== "video");
+      callScreenShareBtn.classList.toggle("hidden", call.type !== "video");
+      localCallVideo.srcObject = localCallStream;
+      const callerName = USERS_BY_ID[call.from]?.name || "your partner";
+      callStatusText.textContent = `In call with ${callerName}`;
+
+      pc = createPeerConnection("callee");
+      localCallStream.getTracks().forEach((track) => pc.addTrack(track, localCallStream));
+      await pc.setRemoteDescription(new RTCSessionDescription(call.offer));
+      remoteDescSet = true;
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      await update(callRef, { status: "active", answer: { type: answer.type, sdp: answer.sdp } });
+      callCandidateUnsub = listenForRemoteCandidates("caller");
+    }
+
+    async function declineCall() {
+      try { await set(callRef, null); } catch (_) { /* ignore */ }
+      cleanupCall();
+    }
+
+    async function hangUpCall() {
+      if (!currentCallRole) return;
+      try { await set(callRef, null); } catch (_) { /* ignore */ }
+      cleanupCall();
+    }
+
+    function showIncomingCall(call) {
+      currentCallRole = "pending";
+      pendingIncomingCall = call;
+      showCallOverlay();
+      const callerName = USERS_BY_ID[call.from]?.name || "Someone";
+      callStatusText.textContent = `Incoming ${call.type} call from ${callerName}`;
+      callVideoStage.classList.toggle("audio-only", call.type !== "video");
+      callAcceptBtn.classList.remove("hidden");
+      callDeclineBtn.classList.remove("hidden");
+    }
+
+    function listenToCalls() {
+      onValue(callRef, async (snapshot) => {
+        const call = snapshot.val();
+
+        if (!call) {
+          if (currentCallRole) cleanupCall();
+          return;
+        }
+
+        if (!currentCallRole && call.to === currentUserId && call.status === "ringing") {
+          showIncomingCall(call);
+          return;
+        }
+
+        if (currentCallRole === "caller" && call.status === "active" && call.answer && !remoteDescSet && pc) {
+          remoteDescSet = true;
+          callStatusText.textContent = "In call";
+          await pc.setRemoteDescription(new RTCSessionDescription(call.answer));
+        }
+
+        if (currentCallRole === "caller" && call.status === "declined") {
+          showToast("Call declined", "Your partner declined the call.");
+          cleanupCall();
+        }
+      });
+    }
+
+    voiceCallBtn.addEventListener("click", () => startCall("voice"));
+    videoCallBtn.addEventListener("click", () => startCall("video"));
+    callHangupBtn.addEventListener("click", hangUpCall);
+    callAcceptBtn.addEventListener("click", async () => {
+      if (!pendingIncomingCall) return;
+      const call = pendingIncomingCall;
+      pendingIncomingCall = null;
+      await acceptCall(call);
+    });
+    callDeclineBtn.addEventListener("click", () => {
+      pendingIncomingCall = null;
+      declineCall();
+    });
+
+    callMuteBtn.addEventListener("click", () => {
+      if (!localCallStream) return;
+      micMuted = !micMuted;
+      localCallStream.getAudioTracks().forEach((track) => { track.enabled = !micMuted; });
+      callMuteBtn.classList.toggle("active", micMuted);
+      const label = micMuted ? "Unmute microphone" : "Mute microphone";
+      callMuteBtn.title = label;
+      callMuteBtn.setAttribute("aria-label", label);
+    });
+
+    callCameraBtn.addEventListener("click", () => {
+      if (!localCallStream) return;
+      cameraOff = !cameraOff;
+      localCallStream.getVideoTracks().forEach((track) => { track.enabled = !cameraOff; });
+      callCameraBtn.classList.toggle("active", cameraOff);
+      const label = cameraOff ? "Turn camera on" : "Turn camera off";
+      callCameraBtn.title = label;
+      callCameraBtn.setAttribute("aria-label", label);
+    });
+
+    // Tucked-away and low-contrast on purpose — this reuses the active call's
+    // connection to swap the outgoing video track, so it only works during a
+    // video call and isn't meant to be a primary, polished feature.
+    callScreenShareBtn.addEventListener("click", async () => {
+      if (!pc) return;
+      const sender = pc.getSenders().find((item) => item.track && item.track.kind === "video");
+      if (!sender) {
+        showToast("Screen share", "Start a video call first.");
+        return;
+      }
+
+      if (isScreenSharing) {
+        screenStream?.getTracks().forEach((track) => track.stop());
+        screenStream = null;
+        const cameraTrack = localCallStream?.getVideoTracks()[0];
+        if (cameraTrack) await sender.replaceTrack(cameraTrack);
+        localCallVideo.srcObject = localCallStream;
+        isScreenSharing = false;
+        callScreenShareBtn.classList.remove("active");
+        return;
+      }
+
+      try {
+        screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+      } catch (error) {
+        return;
+      }
+      const screenTrack = screenStream.getVideoTracks()[0];
+      await sender.replaceTrack(screenTrack);
+      localCallVideo.srcObject = screenStream;
+      isScreenSharing = true;
+      callScreenShareBtn.classList.add("active");
+      screenTrack.addEventListener("ended", async () => {
+        isScreenSharing = false;
+        callScreenShareBtn.classList.remove("active");
+        const cameraTrack = localCallStream?.getVideoTracks()[0];
+        if (cameraTrack) await sender.replaceTrack(cameraTrack);
+        localCallVideo.srcObject = localCallStream;
+      });
+    });
 
     function showChatNotification(message) {
       showToast(`${message.name} sent a message`, message.text || "Sent an image");
@@ -2386,6 +3083,7 @@
       timerToggleLabel.textContent = user.running ? "Pause focus" : "Start focus";
       timerToggleHint.textContent = user.running ? "Save your session and take a break" : "Begin a focused session";
       timerToggleBtn.setAttribute("aria-label", user.running ? "Pause focus session" : "Start focus session");
+      mascotWrap?.classList.toggle("mood-focused", Boolean(user.running));
 
       renderTodos(user);
       renderPartner(partner);
@@ -2550,10 +3248,10 @@
         return;
       }
       chatMessages.innerHTML = chatMessagesState.map((message) => `
-        <div class="chat-message${message.userId === currentUserId ? " mine" : ""}" data-message-id="${escapeHTML(message.id)}" data-mine="${message.userId === currentUserId}">
+        <div class="chat-message${message.userId === currentUserId ? " mine" : ""}" data-message-id="${escapeHTML(message.id)}" data-mine="${message.userId === currentUserId}" data-created-at="${message.createdAt}">
           <button class="chat-message-more" type="button" title="Message options" aria-label="Message options">⋮</button>
           <strong>${escapeHTML(message.name)}</strong>
-          ${message.text ? `<span>${escapeHTML(message.text)}</span>` : ""}
+          ${message.text ? `<span class="chat-text">${escapeHTML(message.text)}</span>${message.editedAt ? `<span class="edited-tag">(edited)</span>` : ""}` : ""}
           ${message.image ? `<div class="chat-image-wrap"><img class="chat-image" src="${message.image}" alt="Image shared by ${escapeHTML(message.name)}"><a class="download-image-btn" href="${message.image}" download="duotrack-chat-image.jpg" title="Download image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 20h14"/></svg></a></div>` : ""}
         </div>
       `).join("");
@@ -2684,6 +3382,9 @@
     });
 
     logoutBtn.addEventListener("click", async () => {
+      if (currentCallRole) {
+        await hangUpCall();
+      }
       if (currentUserId && state.users[currentUserId]) {
         const patch = stoppedTimerPatch(currentUser());
         if (patch) {
@@ -2774,11 +3475,13 @@
       if (event.key === "Escape") closeChatContextMenu();
     }
 
-    function openChatContextMenu(x, y, messageId, isMine) {
+    function openChatContextMenu(x, y, messageId, isMine, createdAt) {
       closeChatContextMenu();
+      const canEdit = isMine && Date.now() - createdAt < 60000;
       const menu = document.createElement("div");
       menu.className = "chat-context-menu";
       menu.innerHTML = `
+        ${canEdit ? `<button type="button" data-action="edit">Edit message</button>` : ""}
         <button type="button" data-action="delete-me">Delete for me</button>
         ${isMine ? `<button type="button" class="danger" data-action="delete-everyone">Delete for everyone</button>` : ""}
       `;
@@ -2796,6 +3499,8 @@
           deleteChatMessageForMe(messageId);
         } else if (action === "delete-everyone") {
           await deleteChatMessageForEveryone(messageId);
+        } else if (action === "edit") {
+          startEditingChatMessage(messageId);
         }
         closeChatContextMenu();
       });
@@ -2807,11 +3512,41 @@
       }, 0);
     }
 
+    function startEditingChatMessage(messageId) {
+      const messageEl = chatMessages.querySelector(`.chat-message[data-message-id="${CSS.escape(messageId)}"]`);
+      const textEl = messageEl?.querySelector(".chat-text");
+      const message = chatMessagesState.find((item) => item.id === messageId);
+      if (!messageEl || !textEl || !message) return;
+
+      const input = document.createElement("input");
+      input.type = "text";
+      input.className = "chat-edit-input";
+      input.maxLength = 160;
+      input.value = message.text;
+      textEl.replaceWith(input);
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+
+      const commit = async () => {
+        const newText = input.value.trim().slice(0, 160);
+        if (newText && newText !== message.text && Date.now() - message.createdAt < 60000) {
+          await update(chatMessageRef(messageId), { text: newText, editedAt: Date.now() });
+        } else {
+          renderChat(true);
+        }
+      };
+      input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") { event.preventDefault(); input.blur(); }
+        if (event.key === "Escape") { renderChat(true); }
+      });
+      input.addEventListener("blur", commit, { once: true });
+    }
+
     chatMessages.addEventListener("contextmenu", (event) => {
       const messageEl = event.target.closest(".chat-message");
       if (!messageEl) return;
       event.preventDefault();
-      openChatContextMenu(event.clientX, event.clientY, messageEl.dataset.messageId, messageEl.dataset.mine === "true");
+      openChatContextMenu(event.clientX, event.clientY, messageEl.dataset.messageId, messageEl.dataset.mine === "true", Number(messageEl.dataset.createdAt));
     });
 
     chatMessages.addEventListener("click", (event) => {
@@ -2820,7 +3555,7 @@
       event.stopPropagation();
       const messageEl = moreBtn.closest(".chat-message");
       const rect = moreBtn.getBoundingClientRect();
-      openChatContextMenu(rect.left, rect.bottom + 4, messageEl.dataset.messageId, messageEl.dataset.mine === "true");
+      openChatContextMenu(rect.left, rect.bottom + 4, messageEl.dataset.messageId, messageEl.dataset.mine === "true", Number(messageEl.dataset.createdAt));
     });
 
     chatToggle.addEventListener("click", () => {
@@ -2910,18 +3645,47 @@
     loginSettingsBtn.addEventListener("click", openSettingsPasswordModal);
     appSettingsBtn.addEventListener("click", openSettingsPasswordModal);
 
-    modalBody.addEventListener("submit", (event) => {
-      if (event.target.id !== "settingsPasswordForm") return;
-      event.preventDefault();
-      const enteredPassword = document.getElementById("settingsPassword").value;
-      const settingsError = document.getElementById("settingsError");
+    modalBody.addEventListener("submit", async (event) => {
+      if (event.target.id === "settingsPasswordForm") {
+        event.preventDefault();
+        const enteredPassword = document.getElementById("settingsPassword").value;
+        const settingsError = document.getElementById("settingsError");
 
-      if (enteredPassword !== SETTINGS_PASSWORD) {
-        settingsError.textContent = "Wrong settings password.";
+        if (enteredPassword !== SETTINGS_PASSWORD) {
+          settingsError.textContent = "Wrong settings password.";
+          return;
+        }
+
+        openThemeSettings();
         return;
       }
 
-      openThemeSettings();
+      if (event.target.id === "hydrationForm") {
+        event.preventDefault();
+        hydrationEnabled = document.getElementById("hydrationEnabledInput").checked;
+        hydrationHours = Math.min(12, Math.max(0.25, Number(document.getElementById("hydrationHoursInput").value) || 1));
+        localStorage.setItem(HYDRATION_ENABLED_KEY, String(hydrationEnabled));
+        localStorage.setItem(HYDRATION_HOURS_KEY, String(hydrationHours));
+        scheduleHydrationReminder();
+        openThemeSettings();
+        return;
+      }
+
+      if (event.target.id === "registerAccountForm") {
+        event.preventDefault();
+        const errorEl = document.getElementById("registerAccountError");
+        errorEl.textContent = "";
+        try {
+          await registerAccount({
+            name: document.getElementById("registerName").value,
+            loginId: document.getElementById("registerLoginId").value,
+            password: document.getElementById("registerPassword").value
+          });
+          openThemeSettings();
+        } catch (error) {
+          errorEl.textContent = error.message || "Could not register that account.";
+        }
+      }
     });
 
     modalBody.addEventListener("click", async (event) => {
@@ -3008,10 +3772,14 @@
       activeModalType = "privacy";
       modalTitle.textContent = "Privacy Policy";
       modalBody.innerHTML = `
-        <p><strong>What DuoTrack stores:</strong> study timer status, selected subject, today's total study seconds, profile photo, to-do items, chat messages, and shared app appearance for the demo group.</p>
-        <p><strong>Where it is stored:</strong> Firebase Realtime Database under the demo group path. Login memory and notification preference are saved in this browser.</p>
-        <p><strong>Demo access:</strong> the current two login IDs are prototype IDs. They are not full secure accounts yet.</p>
-        <p><strong>Before public sharing:</strong> Firebase Authentication and stricter database rules should be added so each person can update only their own data.</p>
+        <p><strong>What DuoTrack stores:</strong> study timer status, selected subject, today's total study seconds, profile photo, to-do items, chat messages (including edits and deletions), account registrations, and shared app appearance for the demo group.</p>
+        <p><strong>Where it is stored:</strong> Firebase Realtime Database under the demo group path. Login memory, notification preference, personal night mode, and the hydration reminder setting are saved only in this browser, not shared.</p>
+        <p><strong>Voice and video calls:</strong> calls connect directly between the two devices (WebRTC). Firebase only carries brief connection setup messages while a call is being placed — it does not record or store audio, video, or screen-share content.</p>
+        <p><strong>Screen share:</strong> only starts if you explicitly choose to share your screen during a video call, and only for that call.</p>
+        <p><strong>Chat edit/delete:</strong> "Delete for me" only changes what you see, on this device. "Delete for everyone" and message edits change the shared message for both accounts.</p>
+        <p><strong>Mascot reminders:</strong> the hydration reminder runs entirely on your device using your browser's built-in text-to-speech. Nothing about it is sent anywhere.</p>
+        <p><strong>Demo access:</strong> the built-in login IDs, and any account registered through Settings, are prototype credentials stored as plain text. They are not full secure accounts yet.</p>
+        <p><strong>Before public sharing:</strong> Firebase Authentication and stricter database rules should be added so each person can update only their own data, and calls/microphone/camera access should only be requested over a properly secured deployment.</p>
       `;
       infoModal.classList.remove("hidden");
     });
@@ -3022,8 +3790,9 @@
       modalTitle.textContent = "Contact Us";
       modalBody.innerHTML = `
         <p><strong>App owner:</strong> Abhishek</p>
-        <p>For login problems, timer sync issues, subject changes, design requests, privacy questions, or Firebase setup help, contact Abhishek directly.</p>
-        <p><strong>Prototype note:</strong> this version is built for Abhishek and Aditya's study group. A public version should use proper account login and private database rules.</p>
+        <p>For login problems, timer sync issues, subject changes, chat/call problems, account registration, design requests, privacy questions, or Firebase setup help, contact Abhishek directly.</p>
+        <p><strong>Calling note:</strong> voice/video calls use a public STUN server only (no TURN relay), so they should connect fine on normal home or office wifi, but may occasionally fail to connect on some mobile networks or strict office firewalls.</p>
+        <p><strong>Prototype note:</strong> this version is built for Abhishek and Aditya's study group. A public version should use proper account login, private database rules, and a TURN server for reliable calling.</p>
       `;
       infoModal.classList.remove("hidden");
     });
@@ -3061,8 +3830,12 @@
       }
     });
     loadLocallyDeletedChat();
+    await loadDynamicAccounts();
+    state = defaultState();
     listenToFirebase();
     listenToChat();
+    listenToCalls();
+    scheduleHydrationReminder();
     render();
   </script>
 </body>
