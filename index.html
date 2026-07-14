@@ -201,6 +201,22 @@
       margin-bottom: 24px;
     }
 
+    .typewriter-text {
+      margin: 4px 0 0;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--green);
+      min-height: 17px;
+    }
+    .typewriter-text::after {
+      content: "|";
+      margin-left: 1px;
+      animation: typewriterBlink 900ms step-end infinite;
+    }
+    @keyframes typewriterBlink {
+      50% { opacity: 0; }
+    }
+
     .logo {
       width: 48px;
       height: 48px;
@@ -605,8 +621,30 @@
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
       gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .todo-tag-picker {
+      display: flex;
+      gap: 6px;
       margin-bottom: 14px;
     }
+
+    .todo-tag-btn {
+      width: 30px;
+      height: 30px;
+      padding: 5px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--muted);
+      display: grid;
+      place-items: center;
+      opacity: 0.55;
+    }
+    .todo-tag-btn svg { width: 16px; height: 16px; }
+    .todo-tag-btn:hover { opacity: 0.85; }
+    .todo-tag-btn.active { opacity: 1; border-color: var(--green); box-shadow: inset 0 0 0 1px var(--green); }
 
     .todo-list {
       display: grid;
@@ -618,7 +656,7 @@
 
     .todo-item {
       display: grid;
-      grid-template-columns: auto minmax(0, 1fr) auto;
+      grid-template-columns: auto auto minmax(0, 1fr) auto;
       gap: 10px;
       align-items: center;
       border: 1px solid var(--line);
@@ -626,6 +664,9 @@
       padding: 10px;
       background: #fff;
     }
+
+    .todo-tag-icon { width: 17px; height: 17px; flex: none; }
+    .todo-tag-icon svg { width: 100%; height: 100%; }
 
     .todo-item.done .todo-text {
       color: var(--muted);
@@ -1097,9 +1138,12 @@
       inset: 0;
       z-index: 60;
       background: rgba(10, 20, 15, 0.72);
+      padding: 20px;
+    }
+
+    .call-overlay:not(.hidden) {
       display: grid;
       place-items: center;
-      padding: 20px;
     }
 
     .call-card {
@@ -1210,6 +1254,15 @@
     /* Dashboard redesign */
     .app-brand { display: flex; align-items: center; gap: 9px; color: var(--ink); font-weight: 900; letter-spacing: -.4px; }
     .app-brand small { display: block; margin-top: 2px; font-size: 9px; letter-spacing: 1.25px; color: var(--muted); }
+    .topbar-typewriter {
+      color: var(--green) !important;
+      letter-spacing: .5px !important;
+    }
+    .topbar-typewriter::after {
+      content: "|";
+      margin-left: 1px;
+      animation: typewriterBlink 900ms step-end infinite;
+    }
     .brand-mark { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 13px; overflow: hidden; box-shadow: 0 8px 16px rgba(36,107,69,.22); }
     .brand-mark svg { width: 100%; height: 100%; display: block; }
     .topbar { background: color-mix(in srgb, var(--panel) 88%, transparent); }
@@ -1299,6 +1352,24 @@
     .mascot-wrap.mood-thirsty .mouth-focused { display: none; }
     .mascot-wrap.mood-thirsty .mouth-thirsty { display: block; }
     .mascot-wrap.mood-thirsty { animation: mascotBounce 900ms ease-in-out 3; }
+
+    /* Hover a while without clicking: sleepy */
+    .mascot-wrap.mood-sleepy .mascot-eye-l,
+    .mascot-wrap.mood-sleepy .mascot-eye-r {
+      transform: scaleY(.12);
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+    .mascot-wrap.mood-sleepy .mascot-brow-l,
+    .mascot-wrap.mood-sleepy .mascot-brow-r { opacity: .5; transform: translateY(3px); transform-box: fill-box; transform-origin: center; }
+
+    /* Scroll over it: quick startled blink */
+    .mascot-wrap.mood-blink .mascot-eye-l,
+    .mascot-wrap.mood-blink .mascot-eye-r {
+      transform: scaleY(.05);
+      transform-box: fill-box;
+      transform-origin: center;
+    }
 
     @keyframes mascotShake {
       0%, 100% { transform: translateX(0); }
@@ -1529,6 +1600,7 @@
         <div>
           <h1 id="loginTitle">DuoTrack</h1>
           <p class="subtext">Private study timer for two people.</p>
+          <p id="typewriterText" class="typewriter-text" aria-hidden="true"></p>
         </div>
       </div>
 
@@ -1575,7 +1647,7 @@
               <path fill="url(#brandFlameGrad)" d="M20 11c-1.3 2.5-3.8 3.6-3.8 6.9a3.8 3.8 0 0 0 7.6 0c0-.8-.6-1.6-.6-2.3.8.7 1.5 2.2 1.5 3.5a4.5 4.5 0 0 1-9 0c0-4.6 3.5-5.3 4.3-8.1Z"/>
             </svg>
           </span>
-          <span>DuoTrack <small>STUDY TOGETHER</small></span>
+          <span>DuoTrack <small id="topbarTypewriter" class="topbar-typewriter"></small></span>
         </div>
         <div class="user-chip">
           <div id="topAvatar" class="avatar"></div>
@@ -1711,6 +1783,23 @@
             <input id="todoInput" type="text" placeholder="Add a task" maxlength="80" required />
             <button class="secondary-btn" type="submit">Add</button>
           </form>
+          <div id="todoTagPicker" class="todo-tag-picker" role="group" aria-label="Tag this task">
+            <button type="button" class="todo-tag-btn active" data-tag="none" title="No tag" aria-label="No tag">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9" stroke-dasharray="3 3"/></svg>
+            </button>
+            <button type="button" class="todo-tag-btn" data-tag="flame" title="Urgent" aria-label="Tag as urgent">
+              <svg viewBox="0 0 24 24" fill="#ff7a1a"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+            </button>
+            <button type="button" class="todo-tag-btn" data-tag="ice" title="Low priority" aria-label="Tag as low priority">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#4aa8d8" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M4 7l16 10M20 7 4 17M7 4l5 3M17 4l-5 3M7 20l5-3M17 20l-5-3"/></svg>
+            </button>
+            <button type="button" class="todo-tag-btn" data-tag="panic" title="Stressed / deadline" aria-label="Tag as stressed">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#e0483e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 1 21h22L12 3Z"/><path d="M12 10v5M12 18h.01"/></svg>
+            </button>
+            <button type="button" class="todo-tag-btn" data-tag="star" title="Important" aria-label="Tag as important">
+              <svg viewBox="0 0 24 24" fill="#e8b23c"><path d="m12 2 2.9 6.6 7.1.7-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7-5.4-4.7 7.1-.7Z"/></svg>
+            </button>
+          </div>
           <ul id="todoList" class="todo-list"></ul>
         </section>
 
@@ -1899,10 +1988,11 @@
     const THEME_KEY = "duotrackTheme";
     const CUSTOM_BG_KEY = "duotrackCustomBackground";
     const NOTIFY_KEY = "duotrackChatNotifications";
+    const NOTIFY_ASKED_KEY = "duotrackNotifyAsked";
     const LAST_CHAT_SEEN_KEY = "duotrackLastChatSeen";
     const DELETED_CHAT_KEY_PREFIX = "duotrackDeletedChat:";
     const HYDRATION_ENABLED_KEY = "duotrackHydrationEnabled";
-    const HYDRATION_HOURS_KEY = "duotrackHydrationHours";
+    const HYDRATION_MINUTES_KEY = "duotrackHydrationMinutes";
     const SETTINGS_PASSWORD = "jeemain";
     const EXPORT_VERSION = 1;
     const THEME_PRESETS = [
@@ -2090,6 +2180,56 @@
     nightModeBtn.addEventListener("click", toggleNightMode);
     loginNightModeBtn.addEventListener("click", toggleNightMode);
 
+    // --- Typewriter: type each phrase, pause, backspace, next phrase — reused for
+    // the login logo, the in-app topbar logo, and the browser tab title ---
+    const TYPEWRITER_PHRASES = ["Be consistent.", "Be focused.", "Believe the process."];
+
+    function startTypewriterLoop(setText, options = {}) {
+      const { typeSpeed = 70, eraseSpeed = 35, holdMs = 1500, gapMs = 400 } = options;
+      let phraseIndex = 0;
+      let charIndex = 0;
+      let deleting = false;
+
+      function tick() {
+        const phrase = TYPEWRITER_PHRASES[phraseIndex];
+        if (!deleting) {
+          charIndex++;
+          setText(phrase.slice(0, charIndex));
+          if (charIndex >= phrase.length) {
+            deleting = true;
+            setTimeout(tick, holdMs);
+            return;
+          }
+          setTimeout(tick, typeSpeed);
+        } else {
+          charIndex--;
+          setText(phrase.slice(0, charIndex));
+          if (charIndex <= 0) {
+            deleting = false;
+            phraseIndex = (phraseIndex + 1) % TYPEWRITER_PHRASES.length;
+            setTimeout(tick, gapMs);
+            return;
+          }
+          setTimeout(tick, eraseSpeed);
+        }
+      }
+      tick();
+    }
+
+    const typewriterEl = document.getElementById("typewriterText");
+    if (typewriterEl) {
+      startTypewriterLoop((text) => { typewriterEl.textContent = text; });
+    }
+
+    const topbarTypewriterEl = document.getElementById("topbarTypewriter");
+    if (topbarTypewriterEl) {
+      startTypewriterLoop((text) => { topbarTypewriterEl.textContent = text; });
+    }
+
+    startTypewriterLoop((text) => {
+      document.title = text ? `${text} · DuoTrack` : "DuoTrack";
+    });
+
     function setSyncStatus(message, isError = false) {
       syncStatus.textContent = message;
       syncStatus.classList.toggle("error", isError);
@@ -2269,8 +2409,9 @@
         <p class="subtext"><strong>Hydration reminder</strong> — a cute nudge from your mascot, personal to this device.</p>
         <form id="hydrationForm" class="field settings-inline-form">
           <label class="checkbox-row"><input id="hydrationEnabledInput" type="checkbox" ${hydrationEnabled ? "checked" : ""}> Remind me to drink water</label>
-          <label for="hydrationHoursInput">Every (hours)</label>
-          <input id="hydrationHoursInput" type="number" min="0.25" max="12" step="0.25" value="${hydrationHours}">
+          <label for="hydrationMinutesInput">Every (minutes)</label>
+          <input id="hydrationMinutesInput" type="number" min="15" max="720" step="5" value="${hydrationMinutes}">
+          <p class="subtext">e.g. 60 = every hour, 30 = every half hour</p>
           <button class="secondary-btn" type="submit">Save reminder</button>
         </form>
 
@@ -2289,6 +2430,14 @@
       `;
     }
 
+    const TODO_TAGS = ["none", "flame", "ice", "panic", "star"];
+    const TODO_TAG_ICONS = {
+      flame: `<svg viewBox="0 0 24 24" fill="#ff7a1a"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>`,
+      ice: `<svg viewBox="0 0 24 24" fill="#4aa8d8"><path d="M12 2 4 7v10l8 5 8-5V7Z"/><path d="M12 2v20M4 7l16 10M20 7 4 17" stroke="#eaf6fc" stroke-width="1" stroke-linecap="round"/></svg>`,
+      panic: `<svg viewBox="0 0 24 24" fill="#e0483e"><path d="M12 3 1 21h22L12 3Z"/><rect x="11" y="9.5" width="2" height="5.5" rx="1" fill="#fff"/><rect x="11" y="16.5" width="2" height="2" rx="1" fill="#fff"/></svg>`,
+      star: `<svg viewBox="0 0 24 24" fill="#e8b23c"><path d="m12 2 2.9 6.6 7.1.7-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7-5.4-4.7 7.1-.7Z"/></svg>`
+    };
+
     function normalizeTodos(todos) {
       if (!todos) return [];
       const list = Array.isArray(todos) ? todos : Object.values(todos);
@@ -2297,7 +2446,8 @@
         .map((todo) => ({
           id: String(todo.id || Date.now()),
           text: String(todo.text || "").slice(0, 80),
-          done: Boolean(todo.done)
+          done: Boolean(todo.done),
+          tag: TODO_TAGS.includes(todo.tag) ? todo.tag : "none"
         }))
         .filter((todo) => todo.text);
     }
@@ -2494,6 +2644,23 @@
       });
     }
 
+    // Asks for browser notification permission automatically, but only the very
+    // first time the app ever loads on this device — never re-prompts after that,
+    // regardless of what the person chose.
+    async function requestNotificationPermissionOnce() {
+      if (localStorage.getItem(NOTIFY_ASKED_KEY)) return;
+      localStorage.setItem(NOTIFY_ASKED_KEY, "true");
+      if (!("Notification" in window) || Notification.permission !== "default") return;
+      try {
+        const permission = await Notification.requestPermission();
+        notificationsEnabled = permission === "granted";
+        localStorage.setItem(NOTIFY_KEY, String(notificationsEnabled));
+        renderNotificationButton();
+      } catch (_) {
+        // Ignore — some browsers/embedded webviews don't support this at all.
+      }
+    }
+
     function renderNotificationButton() {
       if (!notifyBtn) return;
       const browserAllowed = "Notification" in window && Notification.permission === "granted";
@@ -2549,7 +2716,7 @@
 
     // --- Mascot: eye tracking + a handful of tap/press reactions ---
     let mascotMoodTimeout = null;
-    const MASCOT_TEMP_MOODS = ["mood-angry", "mood-happy", "mood-surprised", "mood-dizzy", "mood-thirsty"];
+    const MASCOT_TEMP_MOODS = ["mood-angry", "mood-happy", "mood-surprised", "mood-dizzy", "mood-thirsty", "mood-sleepy", "mood-blink"];
 
     function setMascotMood(mood, durationMs) {
       if (!mascotWrap) return;
@@ -2578,34 +2745,66 @@
         });
       });
 
-      mascotWrap.addEventListener("click", () => setMascotMood("mood-angry", 1200));
+      // 1. Tap / click -> annoyed
+      let mascotLongPressFired = false;
+      mascotWrap.addEventListener("click", () => {
+        // A completed long-press also fires a trailing "click" on release —
+        // without this guard it would instantly stomp the dizzy reaction.
+        if (mascotLongPressFired) {
+          mascotLongPressFired = false;
+          return;
+        }
+        setMascotMood("mood-angry", 1200);
+      });
+
+      // 2. Double tap / double-click -> happy
       mascotWrap.addEventListener("dblclick", (event) => {
         event.stopPropagation();
         setMascotMood("mood-happy", 1200);
       });
+
+      // 3. Right-click -> surprised
       mascotWrap.addEventListener("contextmenu", (event) => {
         event.preventDefault();
         setMascotMood("mood-surprised", 1000);
       });
 
+      // 4. Press and hold -> dizzy
       let mascotPressTimer = null;
       mascotWrap.addEventListener("pointerdown", () => {
-        mascotPressTimer = setTimeout(() => setMascotMood("mood-dizzy", 1500), 550);
+        clearTimeout(mascotHoverTimer);
+        mascotPressTimer = setTimeout(() => {
+          mascotLongPressFired = true;
+          setMascotMood("mood-dizzy", 1500);
+        }, 550);
       });
       ["pointerup", "pointerleave", "pointercancel"].forEach((eventName) => {
         mascotWrap.addEventListener(eventName, () => clearTimeout(mascotPressTimer));
       });
+
+      // 5. Hover without clicking for a few seconds -> sleepy
+      let mascotHoverTimer = null;
+      mascotWrap.addEventListener("pointerenter", () => {
+        mascotHoverTimer = setTimeout(() => setMascotMood("mood-sleepy", 2200), 3000);
+      });
+      mascotWrap.addEventListener("pointerleave", () => clearTimeout(mascotHoverTimer));
+
+      // 6. Scroll/wheel over it -> quick startled blink
+      mascotWrap.addEventListener("wheel", (event) => {
+        event.preventDefault();
+        setMascotMood("mood-blink", 260);
+      }, { passive: false });
     }
 
     // --- Hydration reminder: personal to this device, uses on-device speech synthesis ---
     let hydrationEnabled = localStorage.getItem(HYDRATION_ENABLED_KEY) !== "false";
-    let hydrationHours = Math.min(12, Math.max(0.25, Number(localStorage.getItem(HYDRATION_HOURS_KEY)) || 1));
+    let hydrationMinutes = Math.min(720, Math.max(15, Number(localStorage.getItem(HYDRATION_MINUTES_KEY)) || 60));
     let hydrationTimerId = null;
 
     function scheduleHydrationReminder() {
       clearInterval(hydrationTimerId);
       if (!hydrationEnabled) return;
-      const intervalMs = hydrationHours * 60 * 60 * 1000;
+      const intervalMs = hydrationMinutes * 60 * 1000;
       hydrationTimerId = setInterval(triggerHydrationReminder, intervalMs);
     }
 
@@ -2639,6 +2838,42 @@
     let cameraOff = false;
     let isScreenSharing = false;
     let callCandidateUnsub = null;
+    let ringtoneAudioContext = null;
+    let ringtoneInterval = null;
+
+    function playRingtoneBeep() {
+      try {
+        ringtoneAudioContext = ringtoneAudioContext || new (window.AudioContext || window.webkitAudioContext)();
+        const ctx = ringtoneAudioContext;
+        const now = ctx.currentTime;
+        [0, 0.3].forEach((offset) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "sine";
+          osc.frequency.value = 880;
+          gain.gain.setValueAtTime(0.0001, now + offset);
+          gain.gain.exponentialRampToValueAtTime(0.22, now + offset + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.24);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now + offset);
+          osc.stop(now + offset + 0.26);
+        });
+      } catch (_) {
+        // Web Audio isn't available on every browser — ring silently instead of crashing.
+      }
+    }
+
+    function startRingtone() {
+      stopRingtone();
+      playRingtoneBeep();
+      ringtoneInterval = setInterval(playRingtoneBeep, 1600);
+    }
+
+    function stopRingtone() {
+      clearInterval(ringtoneInterval);
+      ringtoneInterval = null;
+    }
 
     function createPeerConnection(role) {
       const connection = new RTCPeerConnection(ICE_SERVERS);
@@ -2679,6 +2914,7 @@
     }
 
     function cleanupCall() {
+      stopRingtone();
       pc?.close();
       pc = null;
       stopLocalCallMedia();
@@ -2739,6 +2975,7 @@
     }
 
     async function acceptCall(call) {
+      stopRingtone();
       currentCallRole = "callee";
       let stream;
       try {
@@ -2783,6 +3020,7 @@
       currentCallRole = "pending";
       pendingIncomingCall = call;
       showCallOverlay();
+      startRingtone();
       const callerName = USERS_BY_ID[call.from]?.name || "Someone";
       callStatusText.textContent = `Incoming ${call.type} call from ${callerName}`;
       callVideoStage.classList.toggle("audio-only", call.type !== "video");
@@ -3145,6 +3383,13 @@
           await writeUserPatch(user.id, { todos });
         });
 
+        const tagIcon = document.createElement("span");
+        tagIcon.className = "todo-tag-icon";
+        tagIcon.innerHTML = TODO_TAG_ICONS[todo.tag] || "";
+        if (todo.tag && todo.tag !== "none") {
+          tagIcon.title = todo.tag === "flame" ? "Urgent" : todo.tag === "ice" ? "Low priority" : todo.tag === "panic" ? "Stressed / deadline" : "Important";
+        }
+
         const text = document.createElement("span");
         text.className = "todo-text";
         text.textContent = todo.text;
@@ -3159,7 +3404,7 @@
           await writeUserPatch(user.id, { todos });
         });
 
-        item.append(checkbox, text, remove);
+        item.append(checkbox, tagIcon, text, remove);
         todoList.appendChild(item);
       });
     }
@@ -3443,6 +3688,16 @@
       }
     });
 
+    const todoTagPicker = document.getElementById("todoTagPicker");
+    let selectedTodoTag = "none";
+
+    todoTagPicker.addEventListener("click", (event) => {
+      const btn = event.target.closest(".todo-tag-btn");
+      if (!btn) return;
+      selectedTodoTag = btn.dataset.tag;
+      todoTagPicker.querySelectorAll(".todo-tag-btn").forEach((b) => b.classList.toggle("active", b === btn));
+    });
+
     todoForm.addEventListener("submit", async (event) => {
       event.preventDefault();
       const text = todoInput.value.trim();
@@ -3452,9 +3707,12 @@
       const todos = [{
         id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
         text,
-        done: false
+        done: false,
+        tag: selectedTodoTag
       }, ...user.todos];
       todoInput.value = "";
+      selectedTodoTag = "none";
+      todoTagPicker.querySelectorAll(".todo-tag-btn").forEach((b) => b.classList.toggle("active", b.dataset.tag === "none"));
       await writeUserPatch(user.id, { todos });
     });
 
@@ -3663,9 +3921,9 @@
       if (event.target.id === "hydrationForm") {
         event.preventDefault();
         hydrationEnabled = document.getElementById("hydrationEnabledInput").checked;
-        hydrationHours = Math.min(12, Math.max(0.25, Number(document.getElementById("hydrationHoursInput").value) || 1));
+        hydrationMinutes = Math.min(720, Math.max(15, Number(document.getElementById("hydrationMinutesInput").value) || 60));
         localStorage.setItem(HYDRATION_ENABLED_KEY, String(hydrationEnabled));
-        localStorage.setItem(HYDRATION_HOURS_KEY, String(hydrationHours));
+        localStorage.setItem(HYDRATION_MINUTES_KEY, String(hydrationMinutes));
         scheduleHydrationReminder();
         openThemeSettings();
         return;
@@ -3836,6 +4094,7 @@
     listenToChat();
     listenToCalls();
     scheduleHydrationReminder();
+    requestNotificationPermissionOnce();
     render();
   </script>
 </body>
