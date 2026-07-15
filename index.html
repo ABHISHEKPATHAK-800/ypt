@@ -872,6 +872,28 @@
       height: 16px;
     }
 
+    .admin-chat-list {
+      display: grid;
+      gap: 6px;
+      margin-top: 10px;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+    .admin-chat-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 12px;
+    }
+    .admin-chat-snippet {
+      overflow-wrap: anywhere;
+      min-width: 0;
+    }
+
     .partner-popup-head {
       display: grid;
       grid-template-columns: auto minmax(0, 1fr);
@@ -1422,8 +1444,120 @@
     .chat-message { border-radius:14px 14px 14px 4px; padding:10px 12px; }
     .chat-message.mine { border-radius:14px 14px 4px 14px; }
     .chat-image { max-height:250px; border-radius:10px; }
-    .chat-attachment-preview { margin:0 12px; padding:8px; display:grid; grid-template-columns:42px 1fr auto; gap:9px; align-items:center; border:1px solid #b9dcc8; border-radius:12px; background:var(--green-2); font-size:12px; font-weight:800; color:var(--green); }
+    .chat-attachment-preview { margin:0 12px; padding:8px; display:grid; grid-template-columns:42px auto 1fr auto; gap:9px; align-items:center; border:1px solid #b9dcc8; border-radius:12px; background:var(--green-2); font-size:12px; font-weight:800; color:var(--green); }
     .chat-attachment-preview img { width:42px; height:42px; border-radius:8px; object-fit:cover; }
+    .view-once-toggle { display:flex; align-items:center; gap:5px; font-size:11px; white-space:nowrap; }
+    .view-once-toggle input { width:14px; height:14px; }
+
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 0 12px 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+    .typing-dots {
+      display: inline-flex;
+      gap: 3px;
+    }
+    .typing-dots span {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--muted);
+      animation: typingBounce 1.1s ease-in-out infinite;
+    }
+    .typing-dots span:nth-child(2) { animation-delay: .15s; }
+    .typing-dots span:nth-child(3) { animation-delay: .3s; }
+    @keyframes typingBounce {
+      0%, 60%, 100% { transform: translateY(0); opacity: .5; }
+      30% { transform: translateY(-3px); opacity: 1; }
+    }
+
+    .chat-reply-preview {
+      margin: 0 12px 8px;
+      padding: 7px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: #f0f4f1;
+      border-left: 3px solid var(--green);
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+    .chat-reply-text { overflow-wrap: anywhere; }
+
+    .reply-quote {
+      display: block;
+      margin-bottom: 3px;
+      padding: 4px 7px;
+      border-left: 2px solid var(--green);
+      background: rgba(0,0,0,.04);
+      border-radius: 4px;
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .reactions-row {
+      display: flex;
+      gap: 4px;
+      margin-top: 4px;
+      flex-wrap: wrap;
+    }
+    .reaction-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 1px 6px;
+      border-radius: 999px;
+      background: #fff;
+      border: 1px solid var(--line);
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .reaction-pill.mine { border-color: var(--green); background: var(--green-2); }
+
+    .view-once-locked {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: rgba(0,0,0,.05);
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--muted);
+      cursor: pointer;
+      border: 1px dashed var(--line);
+    }
+    .view-once-opened {
+      display: inline-block;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-style: italic;
+      color: var(--muted);
+    }
+
+    .chat-emoji-strip {
+      display: flex;
+      gap: 4px;
+      padding: 6px;
+    }
+    .chat-emoji-strip button {
+      font-size: 18px;
+      padding: 2px 5px;
+      background: transparent;
+      border-radius: 6px;
+    }
+    .chat-emoji-strip button:hover { background: var(--green-2); transform: none; }
+
     .chat-form { padding:12px; }
     .icon-btn { border-radius:11px; }
     .night-toggle-btn { width: 42px; min-height: 42px; }
@@ -1791,10 +1925,10 @@
               <svg viewBox="0 0 24 24" fill="#ff7a1a"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
             </button>
             <button type="button" class="todo-tag-btn" data-tag="ice" title="Low priority" aria-label="Tag as low priority">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#4aa8d8" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M4 7l16 10M20 7 4 17M7 4l5 3M17 4l-5 3M7 20l5-3M17 20l-5-3"/></svg>
+              <svg viewBox="0 0 24 24" fill="#4aa8d8"><path d="M12 2 4 7v10l8 5 8-5V7Z"/><path d="M12 2v20M4 7l16 10M20 7 4 17" stroke="#eaf6fc" stroke-width="1" stroke-linecap="round"/></svg>
             </button>
             <button type="button" class="todo-tag-btn" data-tag="panic" title="Stressed / deadline" aria-label="Tag as stressed">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#e0483e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 1 21h22L12 3Z"/><path d="M12 10v5M12 18h.01"/></svg>
+              <svg viewBox="0 0 24 24" fill="#e0483e"><path d="M12 3 1 21h22L12 3Z"/><rect x="11" y="9.5" width="2" height="5.5" rx="1" fill="#fff"/><rect x="11" y="16.5" width="2" height="2" rx="1" fill="#fff"/></svg>
             </button>
             <button type="button" class="todo-tag-btn" data-tag="star" title="Important" aria-label="Tag as important">
               <svg viewBox="0 0 24 24" fill="#e8b23c"><path d="m12 2 2.9 6.6 7.1.7-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7-5.4-4.7 7.1-.7Z"/></svg>
@@ -1827,8 +1961,17 @@
           </div>
         </div>
         <div id="chatMessages" class="chat-messages" aria-live="polite"></div>
+        <div id="typingIndicator" class="typing-indicator hidden">
+          <span class="typing-dots"><span></span><span></span><span></span></span>
+          <span id="typingIndicatorText"></span>
+        </div>
+        <div id="chatReplyPreview" class="chat-reply-preview hidden">
+          <span id="chatReplyText" class="chat-reply-text"></span>
+          <button id="cancelReplyBtn" class="small-btn" type="button" aria-label="Cancel reply">×</button>
+        </div>
         <div id="chatAttachmentPreview" class="chat-attachment-preview hidden">
           <img id="chatPreviewImage" alt="Image ready to send" />
+          <label class="view-once-toggle"><input id="viewOnceInput" type="checkbox"> View once</label>
           <span>Image ready</span><button id="removeChatImageBtn" class="small-btn" type="button" aria-label="Remove image">×</button>
         </div>
         <form id="chatForm" class="chat-form">
@@ -1914,6 +2057,7 @@
     const userRef = (userId) => ref(database, `duotrack/groups/${GROUP_ID}/users/${userId}`);
     const chatRef = ref(database, `duotrack/groups/${GROUP_ID}/chat`);
     const chatMessageRef = (messageId) => ref(database, `duotrack/groups/${GROUP_ID}/chat/${messageId}`);
+    const typingRef = ref(database, `duotrack/groups/${GROUP_ID}/typing`);
     const accountsRef = ref(database, `duotrack/groups/${GROUP_ID}/accounts`);
     const callRef = ref(database, `duotrack/groups/${GROUP_ID}/call`);
     const callCandidatesRef = (side) => ref(database, `duotrack/groups/${GROUP_ID}/call/${side}Candidates`);
@@ -2141,6 +2285,12 @@
     const chatImageInput = document.getElementById("chatImageInput");
     const chatSizeBtn = document.getElementById("chatSizeBtn");
     const chatAttachmentPreview = document.getElementById("chatAttachmentPreview");
+    const chatReplyPreview = document.getElementById("chatReplyPreview");
+    const chatReplyText = document.getElementById("chatReplyText");
+    const cancelReplyBtn = document.getElementById("cancelReplyBtn");
+    const typingIndicator = document.getElementById("typingIndicator");
+    const typingIndicatorText = document.getElementById("typingIndicatorText");
+    const viewOnceInput = document.getElementById("viewOnceInput");
     const chatPreviewImage = document.getElementById("chatPreviewImage");
     const removeChatImageBtn = document.getElementById("removeChatImageBtn");
     const chatCount = document.getElementById("chatCount");
@@ -2416,6 +2566,22 @@
         </form>
 
         <hr class="settings-divider">
+        <p class="subtext"><strong>Study check-in reminder</strong> — fully optional, entirely your choice whether to turn it on. A quiet nudge to check in on your goals, separate from the water reminder.</p>
+        <form id="checkinForm" class="field settings-inline-form">
+          <label class="checkbox-row"><input id="checkinEnabledInput" type="checkbox" ${checkinEnabled ? "checked" : ""}> Enable check-in reminders</label>
+          <label for="checkinMinutesInput">Every (minutes)</label>
+          <input id="checkinMinutesInput" type="number" min="15" max="720" step="5" value="${checkinMinutes}">
+          <button class="secondary-btn" type="submit">Save check-in</button>
+        </form>
+
+        <hr class="settings-divider">
+        <p class="subtext"><strong>Chat administration</strong> — download the full chat history, or remove any specific message from either person.</p>
+        <div class="settings-actions">
+          <button id="downloadChatPdfBtn" class="secondary-btn" type="button">Download chat history PDF</button>
+        </div>
+        <div id="adminChatList" class="admin-chat-list">${renderAdminChatList()}</div>
+
+        <hr class="settings-divider">
         <p class="subtext"><strong>Register a new account</strong> — stored in the shared Firebase database, same prototype-level security as the existing two accounts (plaintext, no real auth). Note: the partner/comparison view is still built for two people; a third account will just show whichever other account it finds first.</p>
         <form id="registerAccountForm" class="field settings-inline-form">
           <label for="registerName">Name</label>
@@ -2428,6 +2594,16 @@
           <p id="registerAccountError" class="settings-error" aria-live="polite"></p>
         </form>
       `;
+    }
+
+    function renderAdminChatList() {
+      if (!rawChatMessages.length) return `<p class="subtext">No messages yet.</p>`;
+      return rawChatMessages.slice(-20).reverse().map((message) => `
+        <div class="admin-chat-row">
+          <span class="admin-chat-snippet"><strong>${escapeHTML(message.name)}:</strong> ${escapeHTML(message.text || (message.image ? "[Photo]" : "[deleted]"))}</span>
+          <button type="button" class="small-btn" data-admin-delete-id="${escapeHTML(message.id)}">Delete</button>
+        </div>
+      `).join("");
     }
 
     const TODO_TAGS = ["none", "flame", "ice", "panic", "star"];
@@ -2604,6 +2780,23 @@
       renderChat(true);
     }
 
+    let lastKnownPartnerTypingAt = 0;
+
+    function listenToTyping() {
+      onValue(typingRef, (snapshot) => {
+        const data = snapshot.val() || {};
+        const partner = partnerUser();
+        if (!partner || !currentUserId) {
+          typingIndicator.classList.add("hidden");
+          return;
+        }
+        lastKnownPartnerTypingAt = Number(data[partner.id]) || 0;
+        const isTyping = lastKnownPartnerTypingAt && Date.now() - lastKnownPartnerTypingAt < 4000;
+        typingIndicatorText.textContent = `${partner.name} is typing`;
+        typingIndicator.classList.toggle("hidden", !isTyping);
+      });
+    }
+
     function listenToChat() {
       const recentChat = query(chatRef, limitToLast(50));
       onValue(recentChat, (snapshot) => {
@@ -2616,9 +2809,21 @@
             text: String(message.text || "").slice(0, 160),
             image: safeProfileImage(message.image),
             createdAt: Number(message.createdAt) || 0,
-            editedAt: Number(message.editedAt) || 0
+            editedAt: Number(message.editedAt) || 0,
+            viewOnce: Boolean(message.viewOnce),
+            viewed: Boolean(message.viewed),
+            replyTo: message.replyTo && typeof message.replyTo === "object"
+              ? {
+                  id: String(message.replyTo.id || ""),
+                  name: String(message.replyTo.name || "User").slice(0, 40),
+                  text: String(message.replyTo.text || "").slice(0, 80)
+                }
+              : null,
+            reactions: message.reactions && typeof message.reactions === "object"
+              ? Object.fromEntries(Object.entries(message.reactions).map(([uid, emoji]) => [uid, String(emoji).slice(0, 8)]))
+              : {}
           }))
-          .filter((message) => message.text || message.image)
+          .filter((message) => message.text || message.image || message.viewOnce)
           .sort((a, b) => a.createdAt - b.createdAt);
 
         const nextMessages = rawChatMessages.filter((message) => !locallyDeletedChatIds.has(message.id));
@@ -2819,6 +3024,31 @@
         speechSynthesis.speak(utterance);
       } catch (_) {
         // Speech synthesis isn't available on every browser/device — fail quietly.
+      }
+    }
+
+    // --- Study check-in reminder: OFF by default, entirely optional ---
+    const CHECKIN_ENABLED_KEY = "duotrackCheckinEnabled";
+    const CHECKIN_MINUTES_KEY = "duotrackCheckinMinutes";
+    let checkinEnabled = localStorage.getItem(CHECKIN_ENABLED_KEY) === "true";
+    let checkinMinutes = Math.min(720, Math.max(15, Number(localStorage.getItem(CHECKIN_MINUTES_KEY)) || 45));
+    let checkinTimerId = null;
+
+    function scheduleCheckinReminder() {
+      clearInterval(checkinTimerId);
+      if (!checkinEnabled) return;
+      const intervalMs = checkinMinutes * 60 * 1000;
+      checkinTimerId = setInterval(triggerCheckinReminder, intervalMs);
+    }
+
+    function triggerCheckinReminder() {
+      showToast("Check-in", "How's the study session going? Take a look at today's plan.");
+      if ("Notification" in window && Notification.permission === "granted") {
+        try {
+          new Notification("DuoTrack check-in", { body: "How's the study session going?" });
+        } catch (_) {
+          // Ignore — the in-app toast above already covers it.
+        }
       }
     }
 
@@ -3356,6 +3586,9 @@
       if (activeModalType === "partner") {
         renderPartnerModalContent();
       }
+      if (lastKnownPartnerTypingAt && Date.now() - lastKnownPartnerTypingAt >= 4000 && !typingIndicator.classList.contains("hidden")) {
+        typingIndicator.classList.add("hidden");
+      }
       saveLocalHistory();
     }
 
@@ -3483,7 +3716,12 @@
         lastRenderedChatKey = "";
         return;
       }
-      const chatKey = chatMessagesState.map((message) => message.id).join(",");
+      // Fingerprint content too, not just which messages exist — otherwise a
+      // reaction, edit, or view-once open on an existing message wouldn't
+      // trigger a re-render, and it would look like sync had stalled.
+      const chatKey = chatMessagesState
+        .map((message) => `${message.id}:${message.editedAt}:${message.viewed ? 1 : 0}:${message.image ? 1 : 0}:${Object.entries(message.reactions || {}).map(([uid, emoji]) => uid + emoji).sort().join("")}`)
+        .join("|");
       const hasNewChatData = chatKey !== lastRenderedChatKey;
       if (!hasNewChatData && !forceScroll) return;
       lastRenderedChatKey = chatKey;
@@ -3492,12 +3730,44 @@
         chatMessages.innerHTML = `<p class="subtext">No messages yet.</p>`;
         return;
       }
-      chatMessages.innerHTML = chatMessagesState.map((message) => `
+    function renderReplyQuote(message) {
+      if (!message.replyTo) return "";
+      const snippet = message.replyTo.text || "Photo";
+      return `<span class="reply-quote">↩ ${escapeHTML(message.replyTo.name)}: ${escapeHTML(snippet)}</span>`;
+    }
+
+    function renderMessageImage(message) {
+      if (!message.viewOnce) {
+        return message.image ? `<div class="chat-image-wrap"><img class="chat-image" src="${message.image}" alt="Image shared by ${escapeHTML(message.name)}"><a class="download-image-btn" href="${message.image}" download="duotrack-chat-image.jpg" title="Download image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 20h14"/></svg></a></div>` : "";
+      }
+      if (message.userId === currentUserId) {
+        return message.image
+          ? `<div class="chat-image-wrap"><img class="chat-image" src="${message.image}" alt="Image shared by ${escapeHTML(message.name)}"></div><span class="edited-tag">View once</span>`
+          : `<span class="view-once-opened">📷 Photo · opened</span>`;
+      }
+      if (!message.viewed) {
+        return `<button type="button" class="view-once-locked" data-view-once-id="${escapeHTML(message.id)}">📷 Tap to view (once)</button>`;
+      }
+      return `<span class="view-once-opened">📷 Photo · opened</span>`;
+    }
+
+    function renderMessageReactions(message) {
+      const entries = Object.entries(message.reactions || {});
+      if (!entries.length) return "";
+      const counts = {};
+      entries.forEach(([, emoji]) => { counts[emoji] = (counts[emoji] || 0) + 1; });
+      const mine = message.reactions[currentUserId];
+      return `<div class="reactions-row">${Object.entries(counts).map(([emoji, count]) => `<button type="button" class="reaction-pill${emoji === mine ? " mine" : ""}" data-reaction-emoji="${emoji}">${emoji} ${count}</button>`).join("")}</div>`;
+    }
+
+    chatMessages.innerHTML = chatMessagesState.map((message) => `
         <div class="chat-message${message.userId === currentUserId ? " mine" : ""}" data-message-id="${escapeHTML(message.id)}" data-mine="${message.userId === currentUserId}" data-created-at="${message.createdAt}">
           <button class="chat-message-more" type="button" title="Message options" aria-label="Message options">⋮</button>
           <strong>${escapeHTML(message.name)}</strong>
+          ${renderReplyQuote(message)}
           ${message.text ? `<span class="chat-text">${escapeHTML(message.text)}</span>${message.editedAt ? `<span class="edited-tag">(edited)</span>` : ""}` : ""}
-          ${message.image ? `<div class="chat-image-wrap"><img class="chat-image" src="${message.image}" alt="Image shared by ${escapeHTML(message.name)}"><a class="download-image-btn" href="${message.image}" download="duotrack-chat-image.jpg" title="Download image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 20h14"/></svg></a></div>` : ""}
+          ${renderMessageImage(message)}
+          ${renderMessageReactions(message)}
         </div>
       `).join("");
       chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -3608,6 +3878,60 @@
       }
     }
 
+    async function downloadChatHistoryPdf() {
+      let allMessages = [];
+      try {
+        const snapshot = await get(chatRef);
+        const data = snapshot.val() || {};
+        allMessages = Object.values(data)
+          .map((message) => ({
+            name: message.name || "User",
+            text: String(message.text || ""),
+            image: Boolean(message.image),
+            viewOnce: Boolean(message.viewOnce),
+            createdAt: Number(message.createdAt) || 0
+          }))
+          .sort((a, b) => a.createdAt - b.createdAt);
+      } catch (error) {
+        showToast("Export failed", "Could not fetch the full chat history.");
+        return;
+      }
+
+      if (!window.jspdf?.jsPDF) {
+        window.print();
+        return;
+      }
+
+      const pdf = new window.jspdf.jsPDF();
+      pdf.setFontSize(18);
+      pdf.text("DuoTrack — full chat history", 18, 20);
+      pdf.setFontSize(10);
+      pdf.text(`Exported ${new Date().toLocaleString()}`, 18, 27);
+
+      let y = 40;
+      const lineHeight = 7;
+      const pageBottom = 280;
+      pdf.setFontSize(10);
+
+      allMessages.forEach((message) => {
+        if (y > pageBottom) {
+          pdf.addPage();
+          y = 20;
+        }
+        const timestamp = message.createdAt ? new Date(message.createdAt).toLocaleString() : "";
+        const bodyText = message.text || (message.viewOnce ? "[view-once photo]" : message.image ? "[photo]" : "[deleted]");
+        const wrapped = pdf.splitTextToSize(`${message.name} (${timestamp}): ${bodyText}`, 174);
+        pdf.text(wrapped, 18, y);
+        y += lineHeight * wrapped.length;
+      });
+
+      if (!allMessages.length) {
+        pdf.text("No chat messages yet.", 18, y);
+      }
+
+      pdf.save(`duotrack-chat-history-${todayKey()}.pdf`);
+    }
+
     loginForm.addEventListener("submit", (event) => {
       event.preventDefault();
       const account = USERS[loginId.value.trim()];
@@ -3635,6 +3959,7 @@
         if (patch) {
           await writeUserPatch(currentUserId, patch);
         }
+        set(ref(database, `duotrack/groups/${GROUP_ID}/typing/${currentUserId}`), null).catch(() => {});
       }
       currentUserId = null;
       localStorage.removeItem(SESSION_KEY);
@@ -3733,12 +4058,18 @@
       if (event.key === "Escape") closeChatContextMenu();
     }
 
+    const REACTION_EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
+
     function openChatContextMenu(x, y, messageId, isMine, createdAt) {
       closeChatContextMenu();
       const canEdit = isMine && Date.now() - createdAt < 60000;
       const menu = document.createElement("div");
       menu.className = "chat-context-menu";
       menu.innerHTML = `
+        <div class="chat-emoji-strip">
+          ${REACTION_EMOJIS.map((emoji) => `<button type="button" data-reaction="${emoji}">${emoji}</button>`).join("")}
+        </div>
+        <button type="button" data-action="reply">Reply</button>
         ${canEdit ? `<button type="button" data-action="edit">Edit message</button>` : ""}
         <button type="button" data-action="delete-me">Delete for me</button>
         ${isMine ? `<button type="button" class="danger" data-action="delete-everyone">Delete for everyone</button>` : ""}
@@ -3752,6 +4083,12 @@
       menu.style.top = `${Math.max(8, clampedY)}px`;
 
       menu.addEventListener("click", async (event) => {
+        const reactionBtn = event.target.closest("[data-reaction]");
+        if (reactionBtn) {
+          await toggleReaction(messageId, reactionBtn.dataset.reaction);
+          closeChatContextMenu();
+          return;
+        }
         const action = event.target.closest("button")?.dataset.action;
         if (action === "delete-me") {
           deleteChatMessageForMe(messageId);
@@ -3759,6 +4096,8 @@
           await deleteChatMessageForEveryone(messageId);
         } else if (action === "edit") {
           startEditingChatMessage(messageId);
+        } else if (action === "reply") {
+          startReplyToMessage(messageId);
         }
         closeChatContextMenu();
       });
@@ -3768,6 +4107,51 @@
         document.addEventListener("click", closeChatContextMenu);
         document.addEventListener("keydown", handleChatMenuEscape);
       }, 0);
+    }
+
+    let replyingTo = null;
+
+    function startReplyToMessage(messageId) {
+      const message = chatMessagesState.find((item) => item.id === messageId);
+      if (!message) return;
+      replyingTo = {
+        id: message.id,
+        name: message.name,
+        text: message.text || (message.image ? "Photo" : "")
+      };
+      chatReplyText.textContent = `Replying to ${replyingTo.name}: ${replyingTo.text}`;
+      chatReplyPreview.classList.remove("hidden");
+      chatInput.focus();
+    }
+
+    cancelReplyBtn.addEventListener("click", () => {
+      replyingTo = null;
+      chatReplyPreview.classList.add("hidden");
+    });
+
+    async function toggleReaction(messageId, emoji) {
+      const message = chatMessagesState.find((item) => item.id === messageId);
+      if (!message || !currentUserId) return;
+      try {
+        const current = message.reactions?.[currentUserId];
+        await update(chatMessageRef(messageId), { [`reactions/${currentUserId}`]: current === emoji ? null : emoji });
+      } catch (_) {
+        showToast("Reaction failed", "Could not save that reaction.");
+      }
+    }
+
+    async function openViewOnceImage(messageId) {
+      const message = chatMessagesState.find((item) => item.id === messageId);
+      if (!message || !message.image) return;
+      activeModalType = "viewonce";
+      modalTitle.textContent = "Photo";
+      modalBody.innerHTML = `<img src="${message.image}" alt="View once photo" style="width:100%;border-radius:10px;display:block;">`;
+      infoModal.classList.remove("hidden");
+      try {
+        await update(chatMessageRef(messageId), { image: "", viewed: true });
+      } catch (_) {
+        // If this fails the photo just stays viewable — not worth blocking the view over.
+      }
     }
 
     function startEditingChatMessage(messageId) {
@@ -3809,11 +4193,25 @@
 
     chatMessages.addEventListener("click", (event) => {
       const moreBtn = event.target.closest(".chat-message-more");
-      if (!moreBtn) return;
-      event.stopPropagation();
-      const messageEl = moreBtn.closest(".chat-message");
-      const rect = moreBtn.getBoundingClientRect();
-      openChatContextMenu(rect.left, rect.bottom + 4, messageEl.dataset.messageId, messageEl.dataset.mine === "true", Number(messageEl.dataset.createdAt));
+      if (moreBtn) {
+        event.stopPropagation();
+        const messageEl = moreBtn.closest(".chat-message");
+        const rect = moreBtn.getBoundingClientRect();
+        openChatContextMenu(rect.left, rect.bottom + 4, messageEl.dataset.messageId, messageEl.dataset.mine === "true", Number(messageEl.dataset.createdAt));
+        return;
+      }
+
+      const viewOnceBtn = event.target.closest(".view-once-locked");
+      if (viewOnceBtn) {
+        openViewOnceImage(viewOnceBtn.dataset.viewOnceId);
+        return;
+      }
+
+      const reactionBtn = event.target.closest(".reaction-pill");
+      if (reactionBtn) {
+        const messageEl = reactionBtn.closest(".chat-message");
+        toggleReaction(messageEl.dataset.messageId, reactionBtn.dataset.reactionEmoji);
+      }
     });
 
     chatToggle.addEventListener("click", () => {
@@ -3844,15 +4242,39 @@
       const user = currentUser();
       if ((!text && !pendingChatImage) || !user) return;
       chatInput.value = "";
-      await push(chatRef, {
+      const payload = {
         userId: user.id,
         name: user.name,
         text,
         image: pendingChatImage,
         createdAt: Date.now()
-      });
+      };
+      if (pendingChatImage && viewOnceInput?.checked) {
+        payload.viewOnce = true;
+        payload.viewed = false;
+      }
+      if (replyingTo) {
+        payload.replyTo = { id: replyingTo.id, name: replyingTo.name, text: replyingTo.text };
+      }
+      await push(chatRef, payload);
       pendingChatImage = "";
+      if (viewOnceInput) viewOnceInput.checked = false;
+      replyingTo = null;
+      chatReplyPreview.classList.add("hidden");
       renderChatAttachment();
+      clearTimeout(typingTimeout);
+      set(ref(database, `duotrack/groups/${GROUP_ID}/typing/${user.id}`), null).catch(() => {});
+    });
+
+    let typingTimeout = null;
+    chatInput.addEventListener("input", () => {
+      const user = currentUser();
+      if (!user) return;
+      set(ref(database, `duotrack/groups/${GROUP_ID}/typing/${user.id}`), Date.now()).catch(() => {});
+      clearTimeout(typingTimeout);
+      typingTimeout = setTimeout(() => {
+        set(ref(database, `duotrack/groups/${GROUP_ID}/typing/${user.id}`), null).catch(() => {});
+      }, 2500);
     });
 
     chatImageBtn.addEventListener("click", () => chatImageInput.click());
@@ -3876,6 +4298,7 @@
 
     removeChatImageBtn.addEventListener("click", () => {
       pendingChatImage = "";
+      if (viewOnceInput) viewOnceInput.checked = false;
       renderChatAttachment();
     });
 
@@ -3925,6 +4348,17 @@
         localStorage.setItem(HYDRATION_ENABLED_KEY, String(hydrationEnabled));
         localStorage.setItem(HYDRATION_MINUTES_KEY, String(hydrationMinutes));
         scheduleHydrationReminder();
+        openThemeSettings();
+        return;
+      }
+
+      if (event.target.id === "checkinForm") {
+        event.preventDefault();
+        checkinEnabled = document.getElementById("checkinEnabledInput").checked;
+        checkinMinutes = Math.min(720, Math.max(15, Number(document.getElementById("checkinMinutesInput").value) || 45));
+        localStorage.setItem(CHECKIN_ENABLED_KEY, String(checkinEnabled));
+        localStorage.setItem(CHECKIN_MINUTES_KEY, String(checkinMinutes));
+        scheduleCheckinReminder();
         openThemeSettings();
         return;
       }
@@ -3991,6 +4425,18 @@
 
       if (event.target.id === "importSettingsBtn") {
         document.getElementById("settingsImportInput").click();
+        return;
+      }
+
+      if (event.target.id === "downloadChatPdfBtn") {
+        downloadChatHistoryPdf();
+        return;
+      }
+
+      const adminDeleteBtn = event.target.closest("[data-admin-delete-id]");
+      if (adminDeleteBtn) {
+        await deleteChatMessageForEveryone(adminDeleteBtn.dataset.adminDeleteId);
+        openThemeSettings();
       }
     });
 
@@ -4092,8 +4538,10 @@
     state = defaultState();
     listenToFirebase();
     listenToChat();
+    listenToTyping();
     listenToCalls();
     scheduleHydrationReminder();
+    scheduleCheckinReminder();
     requestNotificationPermissionOnce();
     render();
   </script>
