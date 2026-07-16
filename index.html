@@ -704,6 +704,85 @@
       align-items: center;
     }
 
+    .dday-setup {
+      display: grid;
+      gap: 8px;
+    }
+
+    .dday-card {
+      text-align: center;
+    }
+
+    .dday-calendar-page {
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, .08);
+      background: #fff;
+      margin-bottom: 6px;
+    }
+
+    .dday-month {
+      background: #8a8f8c;
+      color: #fff;
+      font-weight: 900;
+      letter-spacing: 2px;
+      padding: 6px;
+      font-size: 12px;
+      transition: background 400ms ease;
+    }
+
+    .dday-days-number {
+      font-size: 30px;
+      font-weight: 900;
+      padding: 8px 8px 0;
+      line-height: 1;
+      transition: color 400ms ease;
+      color: var(--ink);
+    }
+
+    .dday-days-label {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--muted);
+      padding: 2px 0 8px;
+    }
+
+    .dday-name {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--ink);
+      padding-bottom: 8px;
+      border-top: 1px dashed var(--line);
+      padding-top: 6px;
+      margin: 0 12px;
+    }
+
+    .dday-calendar-page.dday-green .dday-month { background: #2e7d4f; }
+    .dday-calendar-page.dday-green .dday-days-number { color: #2e7d4f; }
+
+    .dday-calendar-page.dday-lightgreen .dday-month { background: #7bb661; }
+    .dday-calendar-page.dday-lightgreen .dday-days-number { color: #7bb661; }
+
+    .dday-calendar-page.dday-orange .dday-month { background: #e8a33d; }
+    .dday-calendar-page.dday-orange .dday-days-number { color: #e8a33d; }
+
+    .dday-calendar-page.dday-red .dday-month { background: #e0483e; }
+    .dday-calendar-page.dday-red .dday-days-number { color: #e0483e; }
+
+    .dday-quote {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--green);
+      min-height: 16px;
+      margin: 0 0 6px;
+    }
+    .dday-quote::after {
+      content: "|";
+      margin-left: 1px;
+      animation: typewriterBlink 900ms step-end infinite;
+    }
+
     .partner-card:hover {
       border-color: var(--green);
     }
@@ -1003,6 +1082,13 @@
       position: relative;
     }
 
+    .chat-link {
+      color: #1a73e8;
+      text-decoration: underline;
+      overflow-wrap: anywhere;
+    }
+    .chat-link:hover { color: #0d47a1; }
+
     .edited-tag {
       font-size: 10px;
       color: var(--muted);
@@ -1288,22 +1374,22 @@
     .brand-mark { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 13px; overflow: hidden; box-shadow: 0 8px 16px rgba(36,107,69,.22); }
     .brand-mark svg { width: 100%; height: 100%; display: block; }
     .topbar { background: color-mix(in srgb, var(--panel) 88%, transparent); }
-    .topbar-inner { width: min(1280px, 100%); padding-block: 12px; }
+    .topbar-inner { width: min(1560px, 96%); padding-block: 8px; }
     .user-chip { order: 2; margin-left: auto; }
     .top-actions { order: 3; }
-    .layout { width: min(1280px, 100%); grid-template-columns: minmax(0, 1.55fr) minmax(300px, .65fr); gap: 22px; padding-top: 30px; }
-    .panel { border-radius: 18px; border-color: rgba(114,137,123,.24); box-shadow: 0 18px 45px rgba(31,54,41,.09); }
-    .timer-panel { padding: 28px; gap: 22px; overflow: hidden; }
+    .layout { width: min(1560px, 96%); grid-template-columns: minmax(0, 1.6fr) minmax(320px, .6fr); gap: 16px; padding: 14px 0 14px; }
+    .panel { border-radius: 16px; border-color: rgba(114,137,123,.24); box-shadow: 0 18px 45px rgba(31,54,41,.09); padding: 14px; }
+    .timer-panel { padding: 16px; gap: 12px; overflow: hidden; }
     .section-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
-    .section-heading h2 { margin: 5px 0 0; font-size: 24px; letter-spacing: -.55px; }
+    .section-heading h2 { margin: 3px 0 0; font-size: 18px; letter-spacing: -.4px; }
     .section-heading .subtext { margin-bottom: 0; }
     .eyebrow { display:block; color: var(--green); font-size: 10px; line-height: 1; font-weight: 900; letter-spacing: 1.25px; }
     .live-badge { color: #fff; background: var(--green); font-size: 10px; letter-spacing: .8px; font-weight: 900; border-radius: 999px; padding: 8px 10px; }
     .live-badge.running { background: #167648; box-shadow: 0 0 0 5px rgba(36,107,69,.12); }
-    .subject-grid { gap: 10px; }
-    .subject-option { min-height: 98px; border-radius: 14px; padding: 15px; transition: transform .18s ease, box-shadow .18s ease; }
+    .subject-grid { gap: 8px; }
+    .subject-option { min-height: 66px; border-radius: 12px; padding: 9px 11px; transition: transform .18s ease, box-shadow .18s ease; }
     .subject-option:hover { transform: translateY(-2px); }
-    .timer-display { position:relative; min-height: 235px; border: 0; border-radius: 18px; color: #effff4; background: radial-gradient(circle at 50% 0%, #3d936a, #164c36 72%); box-shadow: inset 0 1px 0 rgba(255,255,255,.22); overflow:hidden; }
+    .timer-display { position:relative; min-height: 150px; border: 0; border-radius: 16px; color: #effff4; background: radial-gradient(circle at 50% 0%, #3d936a, #164c36 72%); box-shadow: inset 0 1px 0 rgba(255,255,255,.22); overflow:hidden; }
     .timer-display::after { content:""; position:absolute; width:320px; height:320px; border:1px solid rgba(255,255,255,.09); border-radius:50%; top:-170px; left:50%; transform:translateX(-50%); }
     .timer-display > div { position:relative; z-index:1; }
 
@@ -1410,26 +1496,26 @@
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(-10px); }
     }
-    .timer-orbit { position:absolute; inset: auto 5% 6px; width:90%; height:175px; color:#d5ffe3; }
-    .time { font-size: clamp(54px, 8vw, 96px); letter-spacing: -3px; text-shadow: 0 6px 17px rgba(0,0,0,.2); }
+    .timer-orbit { position:absolute; inset: auto 5% 6px; width:90%; height:110px; color:#d5ffe3; }
+    .time { font-size: clamp(38px, 6vw, 62px); letter-spacing: -2px; text-shadow: 0 6px 17px rgba(0,0,0,.2); }
     .active-subject { color: #d6f5e0; }
     .actions { gap: 10px; }
     .actions button { min-height: 52px; border-radius: 13px; }
-    .stats-row { gap: 10px; }
-    .stat { border-radius: 14px; padding: 13px; background: color-mix(in srgb, var(--panel) 88%, var(--green-2)); }
-    .stat strong { font-size: 19px; }
+    .stats-row { gap: 8px; }
+    .stat { border-radius: 12px; padding: 9px; background: color-mix(in srgb, var(--panel) 88%, var(--green-2)); }
+    .stat strong { font-size: 16px; }
     .xp-card { margin-top: 0; border-radius: 15px; }
-    .side-stack { gap: 14px; }
-    .profile-panel { display:flex; align-items:center; gap:15px; padding:16px; }
+    .side-stack { gap: 10px; }
+    .profile-panel { display:flex; align-items:center; gap:12px; padding:10px 14px; }
     .profile-panel > .eyebrow, .profile-panel > h2 { display:none; }
-    .profile-tools { grid-template-columns: auto auto; align-items:center; width:100%; }
-    .avatar-button { margin:0; width:58px; height:58px; grid-row:span 2; }
-    .partner-panel { padding:18px; background: linear-gradient(160deg, var(--panel), var(--green-2)); }
-    .compact-heading { margin-bottom:12px; }
-    .compact-heading h2 { font-size:18px; }
+    .profile-tools { grid-template-columns: auto; align-items:center; }
+    .avatar-button { margin:0; width:44px; height:44px; }
+    .partner-panel { padding:12px 14px; background: linear-gradient(160deg, var(--panel), var(--green-2)); }
+    .compact-heading { margin-bottom:8px; }
+    .compact-heading h2 { font-size:16px; }
     .live-dot { width:9px; height:9px; margin-top:6px; border-radius:50%; background:#29a766; box-shadow:0 0 0 5px rgba(41,167,102,.14); }
-    .partner-card { border-radius:14px; padding:13px; background:rgba(255,255,255,.72); }
-    .todo-panel { padding:18px; }
+    .partner-card { border-radius:12px; padding:10px; background:rgba(255,255,255,.72); }
+    .todo-panel { padding:12px 14px; }
     .todo-form input, .todo-form button { border-radius:11px; }
     .chat-widget { width: min(410px, calc(100vw - 36px)); right:18px; bottom:18px; gap:12px; }
     .chat-panel { border-radius:18px; box-shadow:0 25px 70px rgba(12,37,24,.24); }
@@ -1444,10 +1530,8 @@
     .chat-message { border-radius:14px 14px 14px 4px; padding:10px 12px; }
     .chat-message.mine { border-radius:14px 14px 4px 14px; }
     .chat-image { max-height:250px; border-radius:10px; }
-    .chat-attachment-preview { margin:0 12px; padding:8px; display:grid; grid-template-columns:42px auto 1fr auto; gap:9px; align-items:center; border:1px solid #b9dcc8; border-radius:12px; background:var(--green-2); font-size:12px; font-weight:800; color:var(--green); }
+    .chat-attachment-preview { margin:0 12px; padding:8px; display:grid; grid-template-columns:42px 1fr auto; gap:9px; align-items:center; border:1px solid #b9dcc8; border-radius:12px; background:var(--green-2); font-size:12px; font-weight:800; color:var(--green); }
     .chat-attachment-preview img { width:42px; height:42px; border-radius:8px; object-fit:cover; }
-    .view-once-toggle { display:flex; align-items:center; gap:5px; font-size:11px; white-space:nowrap; }
-    .view-once-toggle input { width:14px; height:14px; }
 
     .typing-indicator {
       display: flex;
@@ -1523,27 +1607,6 @@
       cursor: pointer;
     }
     .reaction-pill.mine { border-color: var(--green); background: var(--green-2); }
-
-    .view-once-locked {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 10px;
-      border-radius: 8px;
-      background: rgba(0,0,0,.05);
-      font-size: 12px;
-      font-weight: 800;
-      color: var(--muted);
-      cursor: pointer;
-      border: 1px dashed var(--line);
-    }
-    .view-once-opened {
-      display: inline-block;
-      padding: 6px 10px;
-      font-size: 12px;
-      font-style: italic;
-      color: var(--muted);
-    }
 
     .chat-emoji-strip {
       display: flex;
@@ -1902,13 +1965,31 @@
           <div class="profile-tools">
             <button id="profilePicBtn" class="avatar-button" type="button" title="Change profile picture"></button>
             <input id="profilePicInput" class="file-input" type="file" accept="image/*" />
-            <button id="changePhotoBtn" class="secondary-btn" type="button">Change Photo</button>
           </div>
         </section>
 
         <section class="panel partner-panel">
           <div class="section-heading compact-heading"><div><span class="eyebrow">ACCOUNTABILITY</span><h2>Study Partner</h2></div><span class="live-dot" aria-label="Live"></span></div>
           <button id="partnerCard" class="partner-card" type="button"></button>
+        </section>
+
+        <section class="panel dday-panel">
+          <div class="section-heading compact-heading"><div><span class="eyebrow">COUNTDOWN</span><h2>D-Day</h2></div></div>
+          <div id="ddaySetup" class="dday-setup">
+            <input id="ddayNameInput" type="text" placeholder="Name it (e.g. JEE Mains)" maxlength="40">
+            <input id="ddayDateInput" type="date">
+            <button id="ddaySaveBtn" class="secondary-btn" type="button">Set D-Day</button>
+          </div>
+          <div id="ddayCard" class="dday-card hidden">
+            <div id="ddayCalendarPage" class="dday-calendar-page">
+              <div id="ddayMonth" class="dday-month"></div>
+              <div id="ddayDaysNumber" class="dday-days-number"></div>
+              <div id="ddayDaysLabel" class="dday-days-label"></div>
+              <div id="ddayName" class="dday-name"></div>
+            </div>
+            <p id="ddayQuote" class="dday-quote" aria-hidden="true"></p>
+            <button id="ddayEditBtn" class="ghost-btn" type="button">Change D-Day</button>
+          </div>
         </section>
 
         <section class="panel todo-panel">
@@ -1971,7 +2052,6 @@
         </div>
         <div id="chatAttachmentPreview" class="chat-attachment-preview hidden">
           <img id="chatPreviewImage" alt="Image ready to send" />
-          <label class="view-once-toggle"><input id="viewOnceInput" type="checkbox"> View once</label>
           <span>Image ready</span><button id="removeChatImageBtn" class="small-btn" type="button" aria-label="Remove image">×</button>
         </div>
         <form id="chatForm" class="chat-form">
@@ -2197,7 +2277,9 @@
       running: false,
       startedAt: null,
       dailyTotals: {},
-      todos: []
+      todos: [],
+      dDayName: "",
+      dDayDate: ""
     });
 
     const defaultState = () => ({
@@ -2253,11 +2335,22 @@
     const historyStat = document.getElementById("historyStat");
     const profilePicBtn = document.getElementById("profilePicBtn");
     const profilePicInput = document.getElementById("profilePicInput");
-    const changePhotoBtn = document.getElementById("changePhotoBtn");
     const todoForm = document.getElementById("todoForm");
     const todoInput = document.getElementById("todoInput");
     const todoList = document.getElementById("todoList");
     const partnerCard = document.getElementById("partnerCard");
+    const ddaySetup = document.getElementById("ddaySetup");
+    const ddayNameInput = document.getElementById("ddayNameInput");
+    const ddayDateInput = document.getElementById("ddayDateInput");
+    const ddaySaveBtn = document.getElementById("ddaySaveBtn");
+    const ddayCard = document.getElementById("ddayCard");
+    const ddayCalendarPage = document.getElementById("ddayCalendarPage");
+    const ddayMonth = document.getElementById("ddayMonth");
+    const ddayDaysNumber = document.getElementById("ddayDaysNumber");
+    const ddayDaysLabel = document.getElementById("ddayDaysLabel");
+    const ddayName = document.getElementById("ddayName");
+    const ddayQuote = document.getElementById("ddayQuote");
+    const ddayEditBtn = document.getElementById("ddayEditBtn");
     const chatWidget = document.getElementById("chatWidget");
     const chatPanel = document.getElementById("chatPanel");
     const chatToggle = document.getElementById("chatToggle");
@@ -2290,7 +2383,6 @@
     const cancelReplyBtn = document.getElementById("cancelReplyBtn");
     const typingIndicator = document.getElementById("typingIndicator");
     const typingIndicatorText = document.getElementById("typingIndicatorText");
-    const viewOnceInput = document.getElementById("viewOnceInput");
     const chatPreviewImage = document.getElementById("chatPreviewImage");
     const removeChatImageBtn = document.getElementById("removeChatImageBtn");
     const chatCount = document.getElementById("chatCount");
@@ -2334,14 +2426,14 @@
     // the login logo, the in-app topbar logo, and the browser tab title ---
     const TYPEWRITER_PHRASES = ["Be consistent.", "Be focused.", "Believe the process."];
 
-    function startTypewriterLoop(setText, options = {}) {
+    function startTypewriterLoop(setText, options = {}, phrases = TYPEWRITER_PHRASES) {
       const { typeSpeed = 70, eraseSpeed = 35, holdMs = 1500, gapMs = 400 } = options;
       let phraseIndex = 0;
       let charIndex = 0;
       let deleting = false;
 
       function tick() {
-        const phrase = TYPEWRITER_PHRASES[phraseIndex];
+        const phrase = phrases[phraseIndex];
         if (!deleting) {
           charIndex++;
           setText(phrase.slice(0, charIndex));
@@ -2356,7 +2448,7 @@
           setText(phrase.slice(0, charIndex));
           if (charIndex <= 0) {
             deleting = false;
-            phraseIndex = (phraseIndex + 1) % TYPEWRITER_PHRASES.length;
+            phraseIndex = (phraseIndex + 1) % phrases.length;
             setTimeout(tick, gapMs);
             return;
           }
@@ -2379,6 +2471,19 @@
     startTypewriterLoop((text) => {
       document.title = text ? `${text} · DuoTrack` : "DuoTrack";
     });
+
+    const DDAY_QUOTES = [
+      "Every day counts.",
+      "Small steps, big results.",
+      "Discipline beats motivation.",
+      "You are closer than yesterday.",
+      "Stay consistent, stay sharp.",
+      "One page a day adds up.",
+      "Future you is watching."
+    ];
+    if (ddayQuote) {
+      startTypewriterLoop((text) => { ddayQuote.textContent = text; }, {}, DDAY_QUOTES);
+    }
 
     function setSyncStatus(message, isError = false) {
       syncStatus.textContent = message;
@@ -2582,6 +2687,15 @@
         <div id="adminChatList" class="admin-chat-list">${renderAdminChatList()}</div>
 
         <hr class="settings-divider">
+        <p class="subtext"><strong>Full backup &amp; restore</strong> — the whole shared database in one file: both accounts' history, to-do lists, chat, appearance, and registered accounts. Use this before trying anything risky. <strong>Restoring replaces everything</strong> and can't be undone.</p>
+        <div class="settings-actions">
+          <button id="downloadFullBackupBtn" class="secondary-btn" type="button">Download full backup</button>
+          <button id="restoreFullBackupBtn" class="danger-btn" type="button">Restore from backup</button>
+        </div>
+        <input id="fullBackupImportInput" class="file-input" type="file" accept="application/json,.json">
+        <p id="fullBackupError" class="settings-error" aria-live="polite"></p>
+
+        <hr class="settings-divider">
         <p class="subtext"><strong>Register a new account</strong> — stored in the shared Firebase database, same prototype-level security as the existing two accounts (plaintext, no real auth). Note: the partner/comparison view is still built for two people; a third account will just show whichever other account it finds first.</p>
         <form id="registerAccountForm" class="field settings-inline-form">
           <label for="registerName">Name</label>
@@ -2687,7 +2801,9 @@
           running,
           startedAt,
           dailyTotals: normalizeDailyTotals(savedUser.dailyTotals),
-          todos: normalizeTodos(savedUser.todos)
+          todos: normalizeTodos(savedUser.todos),
+          dDayName: typeof savedUser.dDayName === "string" ? savedUser.dDayName.slice(0, 40) : "",
+          dDayDate: /^\d{4}-\d{2}-\d{2}$/.test(savedUser.dDayDate) ? savedUser.dDayDate : ""
         };
       });
 
@@ -2810,8 +2926,6 @@
             image: safeProfileImage(message.image),
             createdAt: Number(message.createdAt) || 0,
             editedAt: Number(message.editedAt) || 0,
-            viewOnce: Boolean(message.viewOnce),
-            viewed: Boolean(message.viewed),
             replyTo: message.replyTo && typeof message.replyTo === "object"
               ? {
                   id: String(message.replyTo.id || ""),
@@ -2823,7 +2937,7 @@
               ? Object.fromEntries(Object.entries(message.reactions).map(([uid, emoji]) => [uid, String(emoji).slice(0, 8)]))
               : {}
           }))
-          .filter((message) => message.text || message.image || message.viewOnce)
+          .filter((message) => message.text || message.image)
           .sort((a, b) => a.createdAt - b.createdAt);
 
         const nextMessages = rawChatMessages.filter((message) => !locallyDeletedChatIds.has(message.id));
@@ -3465,6 +3579,23 @@
         .replaceAll("'", "&#039;");
     }
 
+    // Runs on already-escaped text, so it's safe to insert extra markup here.
+    function linkifyText(escapedText) {
+      const urlPattern = /((https?:\/\/|www\.)[^\s<]+)/gi;
+      return escapedText.replace(urlPattern, (match) => {
+        let href = /^https?:\/\//i.test(match) ? match : `https://${match}`;
+        let displayText = match;
+        const trailingMatch = match.match(/[),.!?;:]+$/);
+        let trailer = "";
+        if (trailingMatch) {
+          trailer = trailingMatch[0];
+          displayText = match.slice(0, match.length - trailer.length);
+          href = href.slice(0, href.length - trailer.length);
+        }
+        return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="chat-link">${displayText}</a>${trailer}`;
+      });
+    }
+
     function safeProfileImage(value) {
       return typeof value === "string" && value.startsWith("data:image/") ? value : "";
     }
@@ -3555,6 +3686,7 @@
 
       renderTodos(user);
       renderPartner(partner);
+      renderDday(user);
       renderChat();
       renderChatAttachment();
       renderNotificationButton();
@@ -3583,6 +3715,7 @@
       timerText.textContent = formatClock(seconds);
       todayTotal.textContent = formatHours(seconds);
       renderPartner(partner);
+      renderDday(user);
       if (activeModalType === "partner") {
         renderPartnerModalContent();
       }
@@ -3656,6 +3789,59 @@
       `;
     }
 
+    function daysUntilDday(dateStr) {
+      if (!dateStr) return null;
+      const target = new Date(`${dateStr}T00:00:00`);
+      if (Number.isNaN(target.getTime())) return null;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return Math.round((target - today) / 86400000);
+    }
+
+    let ddayEditing = false;
+
+    function renderDday(user) {
+      if (!user || ddayEditing) return;
+      const hasDday = Boolean(user.dDayDate);
+      ddaySetup.classList.toggle("hidden", hasDday);
+      ddayCard.classList.toggle("hidden", !hasDday);
+      if (!hasDday) return;
+
+      const daysLeft = daysUntilDday(user.dDayDate);
+      ddayMonth.textContent = new Date().toLocaleString(undefined, { month: "short" }).toUpperCase();
+      ddayName.textContent = user.dDayName || "D-Day";
+
+      let stageClass = "dday-green";
+      let numberText = daysLeft;
+      let labelText = "days left";
+
+      if (daysLeft === null) {
+        numberText = "—";
+        labelText = "";
+      } else if (daysLeft < 0) {
+        numberText = "—";
+        labelText = "day has passed";
+        stageClass = "dday-red";
+      } else if (daysLeft === 0) {
+        numberText = "D-DAY";
+        labelText = "is today!";
+        stageClass = "dday-red";
+      } else if (daysLeft <= 7) {
+        stageClass = "dday-red";
+      } else if (daysLeft <= 20) {
+        stageClass = "dday-orange";
+      } else if (daysLeft <= 60) {
+        stageClass = "dday-lightgreen";
+      } else {
+        stageClass = "dday-green";
+      }
+
+      ddayDaysNumber.textContent = numberText;
+      ddayDaysLabel.textContent = labelText;
+      ddayCalendarPage.classList.remove("dday-green", "dday-lightgreen", "dday-orange", "dday-red");
+      ddayCalendarPage.classList.add(stageClass);
+    }
+
     function openPartnerModal() {
       activeModalType = "partner";
       modalTitle.textContent = "Study Partner";
@@ -3717,10 +3903,10 @@
         return;
       }
       // Fingerprint content too, not just which messages exist — otherwise a
-      // reaction, edit, or view-once open on an existing message wouldn't
-      // trigger a re-render, and it would look like sync had stalled.
+      // reaction or edit on an existing message wouldn't trigger a re-render,
+      // and it would look like sync had stalled.
       const chatKey = chatMessagesState
-        .map((message) => `${message.id}:${message.editedAt}:${message.viewed ? 1 : 0}:${message.image ? 1 : 0}:${Object.entries(message.reactions || {}).map(([uid, emoji]) => uid + emoji).sort().join("")}`)
+        .map((message) => `${message.id}:${message.editedAt}:${message.image ? 1 : 0}:${Object.entries(message.reactions || {}).map(([uid, emoji]) => uid + emoji).sort().join("")}`)
         .join("|");
       const hasNewChatData = chatKey !== lastRenderedChatKey;
       if (!hasNewChatData && !forceScroll) return;
@@ -3737,18 +3923,7 @@
     }
 
     function renderMessageImage(message) {
-      if (!message.viewOnce) {
-        return message.image ? `<div class="chat-image-wrap"><img class="chat-image" src="${message.image}" alt="Image shared by ${escapeHTML(message.name)}"><a class="download-image-btn" href="${message.image}" download="duotrack-chat-image.jpg" title="Download image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 20h14"/></svg></a></div>` : "";
-      }
-      if (message.userId === currentUserId) {
-        return message.image
-          ? `<div class="chat-image-wrap"><img class="chat-image" src="${message.image}" alt="Image shared by ${escapeHTML(message.name)}"></div><span class="edited-tag">View once</span>`
-          : `<span class="view-once-opened">📷 Photo · opened</span>`;
-      }
-      if (!message.viewed) {
-        return `<button type="button" class="view-once-locked" data-view-once-id="${escapeHTML(message.id)}">📷 Tap to view (once)</button>`;
-      }
-      return `<span class="view-once-opened">📷 Photo · opened</span>`;
+      return message.image ? `<div class="chat-image-wrap"><img class="chat-image" src="${message.image}" alt="Image shared by ${escapeHTML(message.name)}"><a class="download-image-btn" href="${message.image}" download="duotrack-chat-image.jpg" title="Download image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 20h14"/></svg></a></div>` : "";
     }
 
     function renderMessageReactions(message) {
@@ -3765,7 +3940,7 @@
           <button class="chat-message-more" type="button" title="Message options" aria-label="Message options">⋮</button>
           <strong>${escapeHTML(message.name)}</strong>
           ${renderReplyQuote(message)}
-          ${message.text ? `<span class="chat-text">${escapeHTML(message.text)}</span>${message.editedAt ? `<span class="edited-tag">(edited)</span>` : ""}` : ""}
+          ${message.text ? `<span class="chat-text">${linkifyText(escapeHTML(message.text))}</span>${message.editedAt ? `<span class="edited-tag">(edited)</span>` : ""}` : ""}
           ${renderMessageImage(message)}
           ${renderMessageReactions(message)}
         </div>
@@ -3878,6 +4053,43 @@
       }
     }
 
+    async function downloadFullBackup() {
+      try {
+        const snapshot = await get(groupRef);
+        const data = snapshot.val() || {};
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `duotrack-full-backup-${todayKey()}.json`;
+        link.click();
+        URL.revokeObjectURL(url);
+      } catch (error) {
+        showToast("Backup failed", "Could not download the full backup.");
+      }
+    }
+
+    async function restoreFullBackup(file) {
+      const errorEl = document.getElementById("fullBackupError");
+      if (errorEl) errorEl.textContent = "";
+      const confirmed = window.confirm(
+        "This replaces ALL shared data — both accounts' history, to-dos, chat, and appearance — with this backup file. This cannot be undone. Continue?"
+      );
+      if (!confirmed) return;
+      try {
+        const text = await file.text();
+        const parsed = JSON.parse(text);
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+          throw new Error("Invalid backup file");
+        }
+        await set(groupRef, parsed);
+        showToast("Backup restored", "Shared data replaced. Reloading…");
+        setTimeout(() => window.location.reload(), 1200);
+      } catch (error) {
+        if (errorEl) errorEl.textContent = "Could not restore this file — make sure it's a DuoTrack full backup .json.";
+      }
+    }
+
     async function downloadChatHistoryPdf() {
       let allMessages = [];
       try {
@@ -3888,7 +4100,6 @@
             name: message.name || "User",
             text: String(message.text || ""),
             image: Boolean(message.image),
-            viewOnce: Boolean(message.viewOnce),
             createdAt: Number(message.createdAt) || 0
           }))
           .sort((a, b) => a.createdAt - b.createdAt);
@@ -3919,7 +4130,7 @@
           y = 20;
         }
         const timestamp = message.createdAt ? new Date(message.createdAt).toLocaleString() : "";
-        const bodyText = message.text || (message.viewOnce ? "[view-once photo]" : message.image ? "[photo]" : "[deleted]");
+        const bodyText = message.text || (message.image ? "[photo]" : "[deleted]");
         const wrapped = pdf.splitTextToSize(`${message.name} (${timestamp}): ${bodyText}`, 174);
         pdf.text(wrapped, 18, y);
         y += lineHeight * wrapped.length;
@@ -3995,7 +4206,6 @@
       }
     });
 
-    changePhotoBtn.addEventListener("click", () => profilePicInput.click());
     profilePicBtn.addEventListener("click", () => profilePicInput.click());
 
     profilePicInput.addEventListener("change", async () => {
@@ -4042,6 +4252,30 @@
     });
 
     partnerCard.addEventListener("click", openPartnerModal);
+
+    ddaySaveBtn.addEventListener("click", async () => {
+      const user = currentUser();
+      if (!user) return;
+      const date = ddayDateInput.value;
+      if (!date) {
+        showToast("Pick a date", "Choose a target date first.");
+        return;
+      }
+      const name = ddayNameInput.value.trim().slice(0, 40) || "D-Day";
+      await writeUserPatch(user.id, { dDayName: name, dDayDate: date });
+      ddayNameInput.value = "";
+      ddayEditing = false;
+      renderDday(currentUser());
+    });
+
+    ddayEditBtn.addEventListener("click", () => {
+      const user = currentUser();
+      ddayNameInput.value = user?.dDayName || "";
+      ddayDateInput.value = user?.dDayDate || "";
+      ddayEditing = true;
+      ddaySetup.classList.remove("hidden");
+      ddayCard.classList.add("hidden");
+    });
 
     let openChatMenuEl = null;
 
@@ -4140,20 +4374,6 @@
       }
     }
 
-    async function openViewOnceImage(messageId) {
-      const message = chatMessagesState.find((item) => item.id === messageId);
-      if (!message || !message.image) return;
-      activeModalType = "viewonce";
-      modalTitle.textContent = "Photo";
-      modalBody.innerHTML = `<img src="${message.image}" alt="View once photo" style="width:100%;border-radius:10px;display:block;">`;
-      infoModal.classList.remove("hidden");
-      try {
-        await update(chatMessageRef(messageId), { image: "", viewed: true });
-      } catch (_) {
-        // If this fails the photo just stays viewable — not worth blocking the view over.
-      }
-    }
-
     function startEditingChatMessage(messageId) {
       const messageEl = chatMessages.querySelector(`.chat-message[data-message-id="${CSS.escape(messageId)}"]`);
       const textEl = messageEl?.querySelector(".chat-text");
@@ -4201,12 +4421,6 @@
         return;
       }
 
-      const viewOnceBtn = event.target.closest(".view-once-locked");
-      if (viewOnceBtn) {
-        openViewOnceImage(viewOnceBtn.dataset.viewOnceId);
-        return;
-      }
-
       const reactionBtn = event.target.closest(".reaction-pill");
       if (reactionBtn) {
         const messageEl = reactionBtn.closest(".chat-message");
@@ -4249,16 +4463,11 @@
         image: pendingChatImage,
         createdAt: Date.now()
       };
-      if (pendingChatImage && viewOnceInput?.checked) {
-        payload.viewOnce = true;
-        payload.viewed = false;
-      }
       if (replyingTo) {
         payload.replyTo = { id: replyingTo.id, name: replyingTo.name, text: replyingTo.text };
       }
       await push(chatRef, payload);
       pendingChatImage = "";
-      if (viewOnceInput) viewOnceInput.checked = false;
       replyingTo = null;
       chatReplyPreview.classList.add("hidden");
       renderChatAttachment();
@@ -4298,7 +4507,6 @@
 
     removeChatImageBtn.addEventListener("click", () => {
       pendingChatImage = "";
-      if (viewOnceInput) viewOnceInput.checked = false;
       renderChatAttachment();
     });
 
@@ -4433,6 +4641,16 @@
         return;
       }
 
+      if (event.target.id === "downloadFullBackupBtn") {
+        downloadFullBackup();
+        return;
+      }
+
+      if (event.target.id === "restoreFullBackupBtn") {
+        document.getElementById("fullBackupImportInput").click();
+        return;
+      }
+
       const adminDeleteBtn = event.target.closest("[data-admin-delete-id]");
       if (adminDeleteBtn) {
         await deleteChatMessageForEveryone(adminDeleteBtn.dataset.adminDeleteId);
@@ -4467,6 +4685,13 @@
         const file = event.target.files[0];
         if (file) {
           importSettings(file);
+        }
+      }
+
+      if (event.target.id === "fullBackupImportInput") {
+        const file = event.target.files[0];
+        if (file) {
+          restoreFullBackup(file);
         }
       }
     });
