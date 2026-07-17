@@ -295,6 +295,17 @@
       box-shadow: 0 0 0 3px rgba(36, 107, 69, 0.12);
     }
 
+    a:focus-visible,
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible,
+    textarea:focus-visible,
+    [tabindex]:focus-visible {
+      outline: 2px solid var(--green);
+      outline-offset: 2px;
+      border-radius: 6px;
+    }
+
     .primary-btn,
     .secondary-btn,
     .danger-btn,
@@ -667,6 +678,24 @@
 
     .todo-tag-icon { width: 17px; height: 17px; flex: none; }
     .todo-tag-icon svg { width: 100%; height: 100%; }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 6px;
+      padding: 26px 16px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      list-style: none;
+    }
+    .empty-state-icon {
+      font-size: 26px;
+      opacity: .7;
+    }
 
     .todo-item.done .todo-text {
       color: var(--muted);
@@ -1377,9 +1406,9 @@
     .topbar-inner { width: min(1560px, 96%); padding-block: 8px; }
     .user-chip { order: 2; margin-left: auto; }
     .top-actions { order: 3; }
-    .layout { width: min(1560px, 96%); grid-template-columns: minmax(0, 1.6fr) minmax(320px, .6fr); gap: 16px; padding: 14px 0 14px; }
-    .panel { border-radius: 16px; border-color: rgba(114,137,123,.24); box-shadow: 0 18px 45px rgba(31,54,41,.09); padding: 14px; }
-    .timer-panel { padding: 16px; gap: 12px; overflow: hidden; }
+    .layout { width: min(1560px, 96%); grid-template-columns: minmax(0, 1.6fr) minmax(320px, .6fr); gap: 12px; padding: 12px 0 12px; }
+    .panel { border-radius: 16px; border-color: rgba(114,137,123,.24); box-shadow: 0 18px 45px rgba(31,54,41,.09); padding: 12px; }
+    .timer-panel { padding: 14px; gap: 10px; overflow: hidden; }
     .section-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
     .section-heading h2 { margin: 3px 0 0; font-size: 18px; letter-spacing: -.4px; }
     .section-heading .subtext { margin-bottom: 0; }
@@ -1505,33 +1534,74 @@
     .stat { border-radius: 12px; padding: 9px; background: color-mix(in srgb, var(--panel) 88%, var(--green-2)); }
     .stat strong { font-size: 16px; }
     .xp-card { margin-top: 0; border-radius: 15px; }
-    .side-stack { gap: 10px; }
+    .side-stack { gap: 8px; }
     .profile-panel { display:flex; align-items:center; gap:12px; padding:10px 14px; }
     .profile-panel > .eyebrow, .profile-panel > h2 { display:none; }
     .profile-tools { grid-template-columns: auto; align-items:center; }
     .avatar-button { margin:0; width:44px; height:44px; }
     .partner-panel { padding:12px 14px; background: linear-gradient(160deg, var(--panel), var(--green-2)); }
-    .compact-heading { margin-bottom:8px; }
+    .compact-heading { margin-bottom:6px; }
     .compact-heading h2 { font-size:16px; }
     .live-dot { width:9px; height:9px; margin-top:6px; border-radius:50%; background:#29a766; box-shadow:0 0 0 5px rgba(41,167,102,.14); }
     .partner-card { border-radius:12px; padding:10px; background:rgba(255,255,255,.72); }
     .todo-panel { padding:12px 14px; }
     .todo-form input, .todo-form button { border-radius:11px; }
-    .chat-widget { width: min(410px, calc(100vw - 36px)); right:18px; bottom:18px; gap:12px; }
+    .chat-widget { width: min(460px, calc(100vw - 32px)); right:18px; bottom:18px; gap:12px; }
     .chat-panel { border-radius:18px; box-shadow:0 25px 70px rgba(12,37,24,.24); }
-    .chat-widget.chat-large { width:min(650px, calc(100vw - 48px)); }
-    .chat-widget.chat-large .chat-messages { height:min(58vh, 540px); }
+    .chat-widget.chat-large { width:min(880px, calc(100vw - 32px)); }
+    .chat-widget.chat-large .chat-messages { height:min(76vh, 760px); }
     .chat-head { padding:14px 16px; background:linear-gradient(90deg, var(--green-2), var(--panel)); }
     .chat-title { display:flex; align-items:center; gap:9px; font-weight:900; }
     .chat-title small { color:var(--green); font-size:9px; letter-spacing:1px; margin-left:4px; }
     .chat-title-icon { width:32px; height:32px; display:grid; place-items:center; background:var(--green); color:white; border-radius:10px; }
     .chat-title-icon svg { width:18px; height:18px; }
-    .chat-messages { height:340px; padding:14px; background:linear-gradient(180deg, rgba(228,244,234,.33), transparent 38%); }
+    .chat-messages { height:420px; padding:14px; background:linear-gradient(180deg, rgba(228,244,234,.33), transparent 38%); }
     .chat-message { border-radius:14px 14px 14px 4px; padding:10px 12px; }
     .chat-message.mine { border-radius:14px 14px 4px 14px; }
     .chat-image { max-height:250px; border-radius:10px; }
     .chat-attachment-preview { margin:0 12px; padding:8px; display:grid; grid-template-columns:42px 1fr auto; gap:9px; align-items:center; border:1px solid #b9dcc8; border-radius:12px; background:var(--green-2); font-size:12px; font-weight:800; color:var(--green); }
     .chat-attachment-preview img { width:42px; height:42px; border-radius:8px; object-fit:cover; }
+
+    /* Football theme — toggleable, purely cosmetic, off by default */
+    #footballThemeBtn { font-size: 14px; }
+    #footballThemeBtn.active { background: var(--green-2); }
+
+    .chat-widget.football-theme .chat-head {
+      background: repeating-linear-gradient(90deg, #2e7d4f, #2e7d4f 14px, #35914f 14px, #35914f 28px);
+    }
+    .chat-widget.football-theme .chat-title,
+    .chat-widget.football-theme .chat-title small {
+      color: #fff;
+    }
+    .chat-widget.football-theme .chat-title-icon {
+      background: #fff;
+      color: #2e7d4f;
+    }
+    .chat-widget.football-theme .chat-messages {
+      background:
+        radial-gradient(circle at 50% 50%, transparent 46px, rgba(255,255,255,.5) 47px, rgba(255,255,255,.5) 48px, transparent 49px),
+        repeating-linear-gradient(180deg, #2e8b52, #2e8b52 42px, #359759 42px, #359759 84px);
+      background-position: center, center;
+    }
+    .chat-widget.football-theme .chat-message {
+      border: 1px solid rgba(255,255,255,.6);
+    }
+    .chat-widget.football-theme .chat-message::before {
+      content: "⚽";
+      margin-right: 4px;
+      font-size: 11px;
+    }
+    .chat-widget.football-theme .chat-form {
+      background: repeating-linear-gradient(90deg, #2e7d4f, #2e7d4f 14px, #35914f 14px, #35914f 28px);
+    }
+    .chat-widget.football-theme .chat-form button[type="submit"] {
+      background: #fff;
+      color: #2e7d4f;
+    }
+    .chat-widget.football-theme .typing-indicator,
+    .chat-widget.football-theme .chat-reply-preview {
+      background: rgba(255,255,255,.85);
+    }
 
     .typing-indicator {
       display: flex;
@@ -1632,9 +1702,10 @@
     .login-settings-row { position: absolute; top: 22px; right: 22px; display: flex; gap: 8px; }
     .login-settings-row .login-settings-btn { position: static; }
     .icon-btn svg { width:20px; height:20px; }
-    .chat-toggle { min-height:52px; display:flex; align-items:center; gap:8px; border-radius:16px; padding:0 17px; }
+    .chat-toggle { min-height:68px; display:flex; align-items:center; gap:10px; border-radius:20px; padding:0 24px; font-size:16px; box-shadow: 0 16px 34px rgba(31,54,41,.32); }
+    .chat-toggle svg { width:26px; height:26px; }
     .chat-toggle svg { width:20px; height:20px; }
-    .chat-count { display:grid; place-items:center; min-width:19px; height:19px; border-radius:50%; background:#fff; color:var(--green); font-size:11px; }
+    .chat-count { display:grid; place-items:center; min-width:23px; height:23px; border-radius:50%; background:#fff; color:var(--green); font-size:12px; font-weight:900; }
     .footer { width:min(1280px,100%); }
     .timer-toggle { width:100%; min-height:66px !important; justify-content:flex-start; padding:9px 14px !important; text-align:left; }
     .timer-toggle-icon { width:43px; height:43px; display:grid; place-items:center; border-radius:13px; background:rgba(255,255,255,.18); transition: box-shadow 240ms ease, background 240ms ease; }
@@ -2034,6 +2105,7 @@
         <div class="chat-head">
           <div class="chat-title"><span class="chat-title-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 15a4 4 0 0 1-4 4H8l-4 3v-7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4v8Z"/></svg></span><span>Study Chat <small>LIVE</small></span></div>
           <div class="chat-head-actions">
+            <button id="footballThemeBtn" class="small-btn" type="button" title="Football theme" aria-label="Toggle football theme">⚽</button>
             <button id="voiceCallBtn" class="small-btn" type="button" title="Voice call" aria-label="Start voice call"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/></svg></button>
             <button id="videoCallBtn" class="small-btn" type="button" title="Video call" aria-label="Start video call"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="6" width="12" height="12" rx="2"/><path d="m21 8-6 4 6 4V8Z"/></svg></button>
             <button id="chatSizeBtn" class="small-btn" type="button" title="Expand chat" aria-label="Expand chat">↗</button>
@@ -2106,11 +2178,9 @@
     import {
       get,
       getDatabase,
-      limitToLast,
       onChildAdded,
       onValue,
       push,
-      query,
       ref,
       remove,
       runTransaction,
@@ -2216,6 +2286,7 @@
     const LAST_CHAT_SEEN_KEY = "duotrackLastChatSeen";
     const DELETED_CHAT_KEY_PREFIX = "duotrackDeletedChat:";
     const HYDRATION_ENABLED_KEY = "duotrackHydrationEnabled";
+    const EIGHT_HOUR_SOUND_KEY = "duotrackEightHourSoundUrl";
     const HYDRATION_MINUTES_KEY = "duotrackHydrationMinutes";
     const SETTINGS_PASSWORD = "jeemain";
     const EXPORT_VERSION = 1;
@@ -2314,6 +2385,7 @@
     const appSettingsBtn = document.getElementById("appSettingsBtn");
     const nightModeBtn = document.getElementById("nightModeBtn");
     const loginNightModeBtn = document.getElementById("loginNightModeBtn");
+    const footballThemeBtn = document.getElementById("footballThemeBtn");
     const loginForm = document.getElementById("loginForm");
     const loginId = document.getElementById("loginId");
     const password = document.getElementById("password");
@@ -2422,6 +2494,25 @@
     nightModeBtn.addEventListener("click", toggleNightMode);
     loginNightModeBtn.addEventListener("click", toggleNightMode);
 
+    const FOOTBALL_THEME_KEY = "duotrackChatFootballTheme";
+    let footballThemeOn = localStorage.getItem(FOOTBALL_THEME_KEY) === "true";
+
+    function applyFootballTheme() {
+      chatWidget.classList.toggle("football-theme", footballThemeOn);
+      footballThemeBtn.classList.toggle("active", footballThemeOn);
+      const title = footballThemeOn ? "Remove football theme" : "Football theme";
+      footballThemeBtn.title = title;
+      footballThemeBtn.setAttribute("aria-label", title);
+    }
+
+    footballThemeBtn.addEventListener("click", () => {
+      footballThemeOn = !footballThemeOn;
+      localStorage.setItem(FOOTBALL_THEME_KEY, String(footballThemeOn));
+      applyFootballTheme();
+    });
+
+    applyFootballTheme();
+
     // --- Typewriter: type each phrase, pause, backspace, next phrase — reused for
     // the login logo, the in-app topbar logo, and the browser tab title ---
     const TYPEWRITER_PHRASES = ["Be consistent.", "Be focused.", "Believe the process."];
@@ -2485,9 +2576,25 @@
       startTypewriterLoop((text) => { ddayQuote.textContent = text; }, {}, DDAY_QUOTES);
     }
 
+    let lastSyncedAt = 0;
+
     function setSyncStatus(message, isError = false) {
       syncStatus.textContent = message;
       syncStatus.classList.toggle("error", isError);
+      if (!isError) {
+        lastSyncedAt = Date.now();
+      }
+      updateSyncTooltip();
+    }
+
+    function updateSyncTooltip() {
+      if (!lastSyncedAt) {
+        syncStatus.title = "";
+        return;
+      }
+      const seconds = Math.floor((Date.now() - lastSyncedAt) / 1000);
+      const relative = seconds < 5 ? "just now" : seconds < 60 ? `${seconds}s ago` : `${Math.floor(seconds / 60)}m ago`;
+      syncStatus.title = `Last synced ${relative}`;
     }
 
     function applyTheme(themeId) {
@@ -2680,6 +2787,14 @@
         </form>
 
         <hr class="settings-divider">
+        <p class="subtext"><strong>8-hour milestone sound</strong> — paste a direct link to an audio file (e.g. a raw GitHub link to song.mp3) and it plays for 5 seconds the moment today's study time crosses 8 hours. Personal to this device, once per day.</p>
+        <form id="eightHourSoundForm" class="field settings-inline-form">
+          <label for="eightHourSoundUrlInput">Sound file URL</label>
+          <input id="eightHourSoundUrlInput" type="url" placeholder="https://raw.githubusercontent.com/you/repo/main/song.mp3" value="${escapeHTML(eightHourSoundUrl)}">
+          <button class="secondary-btn" type="submit">Save sound</button>
+        </form>
+
+        <hr class="settings-divider">
         <p class="subtext"><strong>Chat administration</strong> — download the full chat history, or remove any specific message from either person.</p>
         <div class="settings-actions">
           <button id="downloadChatPdfBtn" class="secondary-btn" type="button">Download chat history PDF</button>
@@ -2711,7 +2826,7 @@
     }
 
     function renderAdminChatList() {
-      if (!rawChatMessages.length) return `<p class="subtext">No messages yet.</p>`;
+      if (!rawChatMessages.length) return `<div class="empty-state"><span class="empty-state-icon">💬</span><span>No messages yet.</span></div>`;
       return rawChatMessages.slice(-20).reverse().map((message) => `
         <div class="admin-chat-row">
           <span class="admin-chat-snippet"><strong>${escapeHTML(message.name)}:</strong> ${escapeHTML(message.text || (message.image ? "[Photo]" : "[deleted]"))}</span>
@@ -2914,8 +3029,7 @@
     }
 
     function listenToChat() {
-      const recentChat = query(chatRef, limitToLast(50));
-      onValue(recentChat, (snapshot) => {
+      onValue(chatRef, (snapshot) => {
         const chatData = snapshot.val() || {};
         rawChatMessages = Object.entries(chatData)
           .map(([id, message]) => ({
@@ -3125,6 +3239,41 @@
       if (!hydrationEnabled) return;
       const intervalMs = hydrationMinutes * 60 * 1000;
       hydrationTimerId = setInterval(triggerHydrationReminder, intervalMs);
+    }
+
+    // --- 8-hour milestone sound: plays a user-supplied audio URL (e.g. hosted on
+    // GitHub) for 5 seconds the first time today's study time crosses 8 hours ---
+    let eightHourSoundUrl = localStorage.getItem(EIGHT_HOUR_SOUND_KEY) || "";
+    const eightHourAudio = new Audio();
+    let eightHourStopTimeout = null;
+
+    function eightHourPlayedKey(userId) {
+      return `duotrackEightHourPlayed:${userId}:${todayKey()}`;
+    }
+
+    function maybePlayEightHourSound(user) {
+      if (!eightHourSoundUrl || !user) return;
+      const seconds = liveSeconds(user);
+      if (seconds < 8 * 3600) return;
+      const key = eightHourPlayedKey(user.id);
+      if (localStorage.getItem(key)) return;
+      localStorage.setItem(key, "true");
+
+      showToast("8 hours! 🎉", "You've crossed 8 hours of study today.");
+      try {
+        eightHourAudio.src = eightHourSoundUrl;
+        eightHourAudio.currentTime = 0;
+        eightHourAudio.play().catch(() => {
+          showToast("Sound blocked", "Your browser blocked autoplay — interact with the page once and it'll work next time.");
+        });
+        clearTimeout(eightHourStopTimeout);
+        eightHourStopTimeout = setTimeout(() => {
+          eightHourAudio.pause();
+          eightHourAudio.currentTime = 0;
+        }, 5000);
+      } catch (_) {
+        // Bad or unreachable URL — fail quietly, the toast above still showed.
+      }
     }
 
     function triggerHydrationReminder() {
@@ -3716,6 +3865,8 @@
       todayTotal.textContent = formatHours(seconds);
       renderPartner(partner);
       renderDday(user);
+      updateSyncTooltip();
+      maybePlayEightHourSound(user);
       if (activeModalType === "partner") {
         renderPartnerModalContent();
       }
@@ -3729,8 +3880,8 @@
       todoList.innerHTML = "";
       if (!user.todos.length) {
         const empty = document.createElement("li");
-        empty.className = "subtext";
-        empty.textContent = "No tasks yet.";
+        empty.className = "empty-state";
+        empty.innerHTML = `<span class="empty-state-icon">📝</span><span>Nothing on today's plan yet — add your first task above.</span>`;
         todoList.appendChild(empty);
         return;
       }
@@ -3913,7 +4064,7 @@
       lastRenderedChatKey = chatKey;
 
       if (!chatMessagesState.length) {
-        chatMessages.innerHTML = `<p class="subtext">No messages yet.</p>`;
+        chatMessages.innerHTML = `<div class="empty-state"><span class="empty-state-icon">💬</span><span>No messages yet — say hi to get the conversation going.</span></div>`;
         return;
       }
     function renderReplyQuote(message) {
@@ -4567,6 +4718,15 @@
         localStorage.setItem(CHECKIN_ENABLED_KEY, String(checkinEnabled));
         localStorage.setItem(CHECKIN_MINUTES_KEY, String(checkinMinutes));
         scheduleCheckinReminder();
+        openThemeSettings();
+        return;
+      }
+
+      if (event.target.id === "eightHourSoundForm") {
+        event.preventDefault();
+        eightHourSoundUrl = document.getElementById("eightHourSoundUrlInput").value.trim();
+        localStorage.setItem(EIGHT_HOUR_SOUND_KEY, eightHourSoundUrl);
+        showToast("Saved", eightHourSoundUrl ? "8-hour milestone sound saved." : "8-hour milestone sound cleared.");
         openThemeSettings();
         return;
       }
