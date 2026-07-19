@@ -4,6 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DuoTrack Study Timer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
   <style>
     :root {
       color-scheme: light;
@@ -18,6 +24,15 @@
       --blue: #246a9f;
       --red: #c74435;
       --shadow: 0 18px 45px rgba(31, 54, 41, 0.13);
+      --shadow-soft: 0 8px 22px rgba(31, 54, 41, 0.08);
+      --shadow-lift: 0 22px 55px rgba(20, 40, 30, 0.16);
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --font-display: 'Inter', Arial, Helvetica, sans-serif;
+      --font-body: 'Inter', Arial, Helvetica, sans-serif;
+      --ai: #7c4dff;
+      --ai-2: #efe9ff;
+      --ai-glow: #b18bff;
     }
 
     * {
@@ -27,12 +42,17 @@
     body {
       margin: 0;
       min-height: 100vh;
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: var(--font-body);
       color: var(--ink);
+      letter-spacing: 0.1px;
       background:
         linear-gradient(135deg, rgba(36, 107, 69, 0.13), rgba(244, 197, 66, 0.15)),
         var(--paper);
       transition: background 450ms ease, color 250ms ease;
+    }
+
+    h1, h2, h3, h4, .app-brand, .chat-title, .theme-option, .subject-option, .mode-option, .primary-btn, .secondary-btn, .chat-toggle, .grok-toggle {
+      font-family: var(--font-display);
     }
 
     body::before {
@@ -74,6 +94,45 @@
       background:
         linear-gradient(135deg, rgba(61, 90, 47, 0.15), rgba(55, 91, 144, 0.11)),
         var(--paper);
+    }
+
+    body.theme-tricolor {
+      --green: #138808;
+      --green-2: #e4f7e0;
+      --yellow: #ff9933;
+      --blue: #06038d;
+      --paper: #fffaf2;
+      --shadow: 0 18px 45px rgba(6, 3, 141, 0.14);
+      background:
+        linear-gradient(
+          180deg,
+          rgba(255, 153, 51, 0.28) 0%,
+          rgba(255, 153, 51, 0.28) 24%,
+          rgba(255, 255, 255, 0.65) 24%,
+          rgba(255, 255, 255, 0.65) 76%,
+          rgba(19, 136, 8, 0.28) 76%,
+          rgba(19, 136, 8, 0.28) 100%
+        ),
+        var(--paper);
+    }
+
+    body.theme-tricolor::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -1;
+      opacity: 0.16;
+      background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%2306038d' stroke-width='3'%3E%3Ccircle cx='100' cy='100' r='88'/%3E%3Ccircle cx='100' cy='100' r='6' fill='%2306038d' stroke='none'/%3E%3Cg%3E%3Cline x1='100' y1='12' x2='100' y2='188'/%3E%3Cline x1='12' y1='100' x2='188' y2='100'/%3E%3Cline x1='27.6' y1='27.6' x2='172.4' y2='172.4'/%3E%3Cline x1='172.4' y1='27.6' x2='27.6' y2='172.4'/%3E%3Cline x1='100' y1='12' x2='100' y2='188' transform='rotate(15 100 100)'/%3E%3Cline x1='12' y1='100' x2='188' y2='100' transform='rotate(15 100 100)'/%3E%3Cline x1='27.6' y1='27.6' x2='172.4' y2='172.4' transform='rotate(15 100 100)'/%3E%3Cline x1='172.4' y1='27.6' x2='27.6' y2='172.4' transform='rotate(15 100 100)'/%3E%3Cline x1='100' y1='12' x2='100' y2='188' transform='rotate(30 100 100)'/%3E%3Cline x1='12' y1='100' x2='188' y2='100' transform='rotate(30 100 100)'/%3E%3Cline x1='27.6' y1='27.6' x2='172.4' y2='172.4' transform='rotate(30 100 100)'/%3E%3Cline x1='172.4' y1='27.6' x2='27.6' y2='172.4' transform='rotate(30 100 100)'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: min(62vw, 620px);
+      animation: chakraSpin 40s linear infinite;
+    }
+
+    @keyframes chakraSpin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
     }
 
     body.theme-night,
@@ -252,6 +311,15 @@
       margin-bottom: 0;
     }
 
+    .chat-ai-hint {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.4;
+      padding: 4px 12px 0;
+      margin: 0;
+    }
+    .chat-ai-hint strong { color: var(--green); font-weight: 700; }
+
     .field {
       display: grid;
       gap: 8px;
@@ -282,6 +350,7 @@
     body:is(.theme-night, .night-override) .todo-item,
     body:is(.theme-night, .night-override) .partner-card,
     body:is(.theme-night, .night-override) .subject-option,
+    body:is(.theme-night, .night-override) .mode-option,
     body:is(.theme-night, .night-override) .modal,
     body:is(.theme-night, .night-override) .timer-display {
       background: #101914;
@@ -311,9 +380,10 @@
     .danger-btn,
     .ghost-btn {
       min-height: 44px;
-      border-radius: 8px;
+      border-radius: 10px;
       padding: 0 16px;
-      font-weight: 800;
+      font-weight: 700;
+      letter-spacing: 0.1px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -322,14 +392,24 @@
 
     .primary-btn {
       width: 100%;
-      background: var(--green);
+      background: linear-gradient(135deg, var(--green), color-mix(in srgb, var(--green) 78%, black));
       color: white;
+      box-shadow: 0 10px 24px color-mix(in srgb, var(--green) 35%, transparent);
+    }
+
+    .primary-btn:hover {
+      box-shadow: 0 14px 30px color-mix(in srgb, var(--green) 42%, transparent);
     }
 
     .secondary-btn {
       background: var(--green-2);
       color: var(--green);
       border: 1px solid #b9dcc8;
+    }
+
+    .secondary-btn:hover {
+      background: color-mix(in srgb, var(--green-2) 60%, white);
+      border-color: var(--green);
     }
 
     .danger-btn {
@@ -342,6 +422,11 @@
       background: transparent;
       color: var(--muted);
       border: 1px solid var(--line);
+    }
+
+    .ghost-btn:hover {
+      border-color: var(--green);
+      color: var(--green);
     }
 
     .login-help {
@@ -372,9 +457,15 @@
       background: rgba(255, 255, 255, 0.9);
       backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--line);
+      box-shadow: var(--shadow-soft);
       position: sticky;
       top: 0;
       z-index: 5;
+    }
+
+    .app-brand {
+      font-weight: 800;
+      letter-spacing: 0.2px;
     }
 
     .topbar-inner {
@@ -485,10 +576,15 @@
     .panel {
       background: var(--panel);
       border: 1px solid var(--line);
-      border-radius: 8px;
-      box-shadow: 0 10px 26px rgba(31, 54, 41, 0.08);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-soft);
       padding: 20px;
       animation: riseIn 500ms ease both;
+      transition: box-shadow 220ms ease, transform 220ms ease;
+    }
+
+    .panel:hover {
+      box-shadow: var(--shadow-lift);
     }
 
     .timer-panel {
@@ -539,6 +635,49 @@
     .subject-option:hover,
     .partner-card:hover,
     .stat:hover {
+      box-shadow: 0 10px 22px rgba(31, 54, 41, 0.08);
+    }
+
+    .mode-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .mode-option {
+      --mode: var(--blue);
+      min-height: 56px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      border-top: 3px solid var(--mode);
+      background: #fff;
+      color: var(--ink);
+      text-align: left;
+      font-weight: 800;
+      display: grid;
+      gap: 4px;
+      align-content: center;
+      cursor: pointer;
+    }
+
+    .mode-option[data-mode="Practice"] { --mode: #c9822f; }
+
+    .mode-option span {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .mode-option.active {
+      border-color: var(--mode);
+      border-top-color: var(--mode);
+      background: color-mix(in srgb, var(--mode) 14%, var(--panel));
+      box-shadow: inset 0 0 0 1px var(--mode);
+    }
+
+    .mode-option:hover {
       box-shadow: 0 10px 22px rgba(31, 54, 41, 0.08);
     }
 
@@ -1102,13 +1241,26 @@
     .chat-message {
       max-width: 88%;
       padding: 9px 11px;
-      border-radius: 8px;
+      border-radius: 13px 13px 13px 4px;
       background: #f5f7f6;
       border: 1px solid var(--line);
       justify-self: start;
       overflow-wrap: anywhere;
       line-height: 1.35;
       position: relative;
+      box-shadow: 0 2px 8px rgba(31, 54, 41, 0.05);
+    }
+
+    .chat-message.grok-message {
+      background: linear-gradient(135deg, var(--ai-2), #ffffff);
+      border-color: color-mix(in srgb, var(--ai) 35%, var(--line));
+    }
+
+    .chat-message.grok-message strong {
+      color: var(--ai);
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
 
     .chat-link {
@@ -1202,6 +1354,7 @@
       justify-self: end;
       background: var(--green-2);
       border-color: #b9dcc8;
+      border-radius: 13px 13px 4px 13px;
     }
 
     .chat-message strong {
@@ -1223,6 +1376,188 @@
       min-height: 42px;
     }
 
+    /* --- AI assistant widget --- */
+    .grok-widget {
+      position: fixed;
+      left: 20px;
+      bottom: 20px;
+      z-index: 13;
+      display: grid;
+      justify-items: start;
+      gap: 10px;
+    }
+
+    .grok-toggle {
+      position: relative;
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--ai), #4b2fc7);
+      box-shadow: 0 12px 28px rgba(124, 77, 255, 0.45);
+      animation: aiPulse 3.2s ease-in-out infinite;
+    }
+
+    .grok-toggle-icon {
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: #fff;
+      line-height: 1;
+    }
+
+    @keyframes aiPulse {
+      0%, 100% { box-shadow: 0 12px 28px rgba(124, 77, 255, 0.45); }
+      50% { box-shadow: 0 12px 28px rgba(124, 77, 255, 0.45), 0 0 0 8px rgba(124, 77, 255, 0.14); }
+    }
+
+    .grok-tooltip {
+      position: absolute;
+      left: 62px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 220px;
+      background: var(--ink);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.4;
+      padding: 10px 12px;
+      border-radius: 10px;
+      text-align: left;
+      white-space: normal;
+      box-shadow: var(--shadow);
+      animation: riseIn 220ms ease both;
+      pointer-events: none;
+    }
+
+    .grok-tooltip::after {
+      content: "";
+      position: absolute;
+      left: -6px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: 6px solid transparent;
+      border-right-color: var(--ink);
+    }
+
+    .grok-tooltip strong {
+      color: var(--ai-glow);
+    }
+
+    .grok-panel {
+      width: min(360px, calc(100vw - 40px));
+      background: var(--panel);
+      border: 1px solid color-mix(in srgb, var(--ai) 30%, var(--line));
+      border-radius: 14px;
+      box-shadow: 0 25px 60px rgba(76, 40, 170, 0.22);
+      overflow: hidden;
+      animation: riseIn 220ms ease both;
+    }
+
+    .grok-head {
+      background: linear-gradient(135deg, var(--ai-2), transparent);
+    }
+
+    .grok-icon {
+      display: inline-block;
+    }
+
+    .grok-messages {
+      height: 300px;
+    }
+
+    .grok-bubble {
+      max-width: 92%;
+      padding: 9px 11px;
+      border-radius: 13px 13px 13px 4px;
+      background: #f5f7f6;
+      border: 1px solid var(--line);
+      justify-self: start;
+      overflow-wrap: anywhere;
+      line-height: 1.4;
+    }
+
+    .grok-bubble.mine {
+      justify-self: end;
+      background: var(--green-2);
+      border-color: #b9dcc8;
+      border-radius: 13px 13px 4px 13px;
+    }
+
+    .grok-bubble.assistant {
+      background: linear-gradient(135deg, var(--ai-2), #ffffff);
+      border-color: color-mix(in srgb, var(--ai) 35%, var(--line));
+    }
+
+    .grok-bubble strong {
+      display: block;
+      font-size: 11px;
+      margin-bottom: 3px;
+      color: var(--ai);
+    }
+
+    .grok-send-btn {
+      color: var(--ai);
+      border-color: color-mix(in srgb, var(--ai) 30%, #b9dcc8);
+      background: var(--ai-2);
+    }
+
+    /* AI rich-text formatting: proper paragraph spacing instead of a wall of text */
+    .ai-rich, .chat-text.ai-rich {
+      display: block;
+      line-height: 1.5;
+    }
+
+    .ai-para {
+      margin: 0 0 10px;
+    }
+
+    .ai-para:last-child {
+      margin-bottom: 0;
+    }
+
+    .ai-heading {
+      margin: 12px 0 6px;
+      font-weight: 800;
+      color: var(--ai);
+    }
+
+    .ai-heading:first-child {
+      margin-top: 0;
+    }
+
+    .ai-list {
+      margin: 0 0 10px;
+      padding-left: 20px;
+      display: grid;
+      gap: 4px;
+    }
+
+    .ai-list:last-child {
+      margin-bottom: 0;
+    }
+
+    .ai-rich code, .chat-text.ai-rich code {
+      background: color-mix(in srgb, var(--ai) 10%, transparent);
+      border: 1px solid color-mix(in srgb, var(--ai) 25%, var(--line));
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 0.92em;
+      font-family: 'SFMono-Regular', Consolas, monospace;
+    }
+
+    .ai-rich strong, .chat-text.ai-rich strong {
+      color: var(--ai);
+    }
+
+    @media (max-width: 560px) {
+      .grok-widget { left: 14px; }
+      .grok-toggle { width: 48px; height: 48px; }
+      .grok-tooltip { width: 180px; left: 56px; font-size: 11.5px; }
+    }
+
     .icon-btn {
       width: 42px;
       min-height: 42px;
@@ -1233,6 +1568,67 @@
       display: inline-grid;
       place-items: center;
       cursor: pointer;
+    }
+
+    .questions-logo-btn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 42px;
+      padding: 0 12px 0 10px;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .2px;
+      background: linear-gradient(135deg, #f4c542, #e08a2b);
+      box-shadow: 0 8px 16px rgba(224, 138, 43, 0.3);
+      animation: questionsLogoBounce 2.6s ease-in-out infinite;
+    }
+
+    .questions-logo-btn svg {
+      width: 19px;
+      height: 19px;
+      display: block;
+      flex-shrink: 0;
+    }
+
+    .questions-logo-label {
+      white-space: nowrap;
+    }
+
+    .questions-logo-count {
+      display: inline-grid;
+      place-items: center;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 6px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.22);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .questions-logo-btn:hover {
+      filter: brightness(1.05);
+    }
+
+    @keyframes questionsLogoBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+    }
+
+    .questions-logo-btn.needs-answer {
+      animation: questionsLogoBounce 1.3s ease-in-out infinite, questionsLogoPulse 1.3s ease-in-out infinite;
+    }
+
+    @keyframes questionsLogoPulse {
+      0%, 100% { box-shadow: 0 8px 16px rgba(224, 138, 43, 0.3), 0 0 0 0 rgba(244, 197, 66, 0.55); }
+      50% { box-shadow: 0 8px 16px rgba(224, 138, 43, 0.3), 0 0 0 7px rgba(244, 197, 66, 0); }
     }
 
     .chat-image {
@@ -1418,6 +1814,9 @@
     .subject-grid { gap: 8px; }
     .subject-option { min-height: 66px; border-radius: 12px; padding: 9px 11px; transition: transform .18s ease, box-shadow .18s ease; }
     .subject-option:hover { transform: translateY(-2px); }
+    .mode-grid { gap: 8px; }
+    .mode-option { min-height: 50px; border-radius: 12px; padding: 8px 11px; transition: transform .18s ease, box-shadow .18s ease; }
+    .mode-option:hover { transform: translateY(-2px); }
     .timer-display { position:relative; min-height: 150px; border: 0; border-radius: 16px; color: #effff4; background: radial-gradient(circle at 50% 0%, #3d936a, #164c36 72%); box-shadow: inset 0 1px 0 rgba(255,255,255,.22); overflow:hidden; }
     .timer-display::after { content:""; position:absolute; width:320px; height:320px; border:1px solid rgba(255,255,255,.09); border-radius:50%; top:-170px; left:50%; transform:translateX(-50%); }
     .timer-display > div { position:relative; z-index:1; }
@@ -1775,6 +2174,14 @@
         justify-content: center;
       }
 
+      .questions-logo-label {
+        display: none;
+      }
+
+      .questions-logo-btn {
+        padding: 0 10px;
+      }
+
       .time {
         font-size: 44px;
       }
@@ -1926,6 +2333,14 @@
         </div>
         <div class="top-actions">
           <span id="syncStatus" class="sync-pill">Connecting Firebase</span>
+          <button id="questionsLogoBtn" class="questions-logo-btn" type="button" title="How much questions u done today?" aria-label="How much questions u done today?">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 4h6a1 1 0 0 1 1 1v.5h1.5A1.5 1.5 0 0 1 19 7v12a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 19V7a1.5 1.5 0 0 1 1.5-1.5H8V5a1 1 0 0 1 1-1Z"/>
+              <path d="M8.5 12.3l2.1 2.1L15.5 10"/>
+            </svg>
+            <span class="questions-logo-label">Qs done</span>
+            <span id="questionsLogoCount" class="questions-logo-count">0</span>
+          </button>
           <button id="nightModeBtn" class="icon-btn night-toggle-btn" type="button" title="Switch to night mode" aria-label="Switch to night mode">
             <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
             <svg class="moon-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M20.4 14.7A8.5 8.5 0 0 1 9.3 3.6a.9.9 0 0 0-1.1-1.2A10 10 0 1 0 21.6 15.8a.9.9 0 0 0-1.2-1.1Z"/></svg>
@@ -1959,6 +2374,17 @@
           <button class="subject-option" type="button" data-subject="Maths">
             Maths
             <span>Problems and revision</span>
+          </button>
+        </div>
+
+        <div id="modeGrid" class="mode-grid" aria-label="Session mode choices">
+          <button class="mode-option active" type="button" data-mode="Lecture">
+            Lecture Mode
+            <span>Watching / attending a lecture</span>
+          </button>
+          <button class="mode-option" type="button" data-mode="Practice">
+            Practice Mode
+            <span>Solving problems / revising</span>
           </button>
         </div>
 
@@ -2126,15 +2552,43 @@
           <img id="chatPreviewImage" alt="Image ready to send" />
           <span>Image ready</span><button id="removeChatImageBtn" class="small-btn" type="button" aria-label="Remove image">×</button>
         </div>
+        <p class="chat-ai-hint">Tip: type <strong>@grok your question</strong> anywhere in this chat to ask AI, or <strong>@a9 your question</strong> for roast-mode.</p>
         <form id="chatForm" class="chat-form">
           <button id="chatImageBtn" class="icon-btn" type="button" title="Add image" aria-label="Add image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m21 15-5-5L5 20"/></svg></button>
           <input id="chatImageInput" class="file-input" type="file" accept="image/*" />
-          <input id="chatInput" type="text" placeholder="Message your partner" maxlength="160" autocomplete="off" />
+          <input id="chatInput" type="text" placeholder="Message your partner" maxlength="320" autocomplete="off" />
           <button class="secondary-btn" type="submit">Send</button>
         </form>
       </div>
       <button id="chatToggle" class="chat-toggle" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 15a4 4 0 0 1-4 4H8l-4 3v-7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4v8Z"/></svg> Chat <span id="chatCount" class="chat-count hidden">0</span></button>
     </section>
+
+    <section id="grokWidget" class="grok-widget">
+      <div id="grokPanel" class="grok-panel hidden">
+        <div class="chat-head grok-head">
+          <div class="chat-title"><span class="chat-title-icon grok-icon">AI</span><span>Study AI <small>ASSISTANT</small></span></div>
+          <div class="chat-head-actions">
+            <button id="closeGrokBtn" class="small-btn" type="button" aria-label="Close AI assistant">X</button>
+          </div>
+        </div>
+        <div id="grokMessages" class="chat-messages grok-messages" aria-live="polite">
+          <div class="empty-state"><span class="empty-state-icon">AI</span><span>Ask anything — physics, chemistry, maths, or just a quick doubt.</span></div>
+        </div>
+        <div id="grokThinking" class="typing-indicator hidden">
+          <span class="typing-dots"><span></span><span></span><span></span></span>
+          <span>Thinking</span>
+        </div>
+        <form id="grokForm" class="chat-form">
+          <input id="grokInput" type="text" placeholder="Ask the AI..." maxlength="600" autocomplete="off" />
+          <button class="secondary-btn grok-send-btn" type="submit">Ask</button>
+        </form>
+      </div>
+      <button id="grokToggle" class="grok-toggle" type="button" title="Ask AI" aria-label="Ask AI">
+        <span class="grok-toggle-icon">AI</span>
+        <span id="grokTooltip" class="grok-tooltip hidden">Tip: start a chat message with <strong>@grok</strong> to ask AI right in Study Chat too! Use <strong>@a9</strong> instead for a savage roast-mode reply.</span>
+      </button>
+    </section>
+
     <div id="toastStack" class="toast-stack" aria-live="polite"></div>
 
     <div id="callOverlay" class="call-overlay hidden">
@@ -2211,6 +2665,9 @@
     const accountsRef = ref(database, `duotrack/groups/${GROUP_ID}/accounts`);
     const callRef = ref(database, `duotrack/groups/${GROUP_ID}/call`);
     const callCandidatesRef = (side) => ref(database, `duotrack/groups/${GROUP_ID}/call/${side}Candidates`);
+    // Single Grok API key shared between both users — either person can set it once
+    // from Settings and it works for both, since it's stored in the shared group data.
+    const grokConfigRef = ref(database, `duotrack/groups/${GROUP_ID}/grokApiKey`);
 
     const USERS = {
       "abhi@990": {
@@ -2272,6 +2729,7 @@
       return account;
     }
     const SUBJECTS = ["Physics", "Chemistry", "Maths"];
+    const MODES = ["Lecture", "Practice"];
     const SUBJECT_COLORS = {
       Physics: "#2f6fb0",
       Chemistry: "#c9822f",
@@ -2316,6 +2774,12 @@
         swatch: "linear-gradient(90deg, #3d5a2f, #375b90, #edf6e7)"
       },
       {
+        id: "tricolor",
+        name: "Indian Flag",
+        className: "theme-tricolor",
+        swatch: "linear-gradient(90deg, #ff9933 0%, #ff9933 33%, #ffffff 33%, #ffffff 66%, #138808 66%, #138808 100%)"
+      },
+      {
         id: "night",
         name: "Night",
         className: "theme-night",
@@ -2342,9 +2806,16 @@
       profilePic: "",
       selectedSubject: "Physics",
       currentSubject: "Physics",
+      selectedMode: "Lecture",
+      currentMode: "Lecture",
       todaySeconds: 0,
       subjectSecondsToday: {},
       subjectHistory: {},
+      modeSecondsToday: {},
+      modeHistory: {},
+      questionsToday: 0,
+      questionHistory: {},
+      questionsPromptedDay: "",
       running: false,
       startedAt: null,
       dailyTotals: {},
@@ -2378,12 +2849,19 @@
     let pendingChatImage = "";
     let unreadChatCount = 0;
     let locallyDeletedChatIds = new Set();
+    const GROK_TIP_SEEN_KEY = "duotrackGrokTipSeen";
+    const GROK_MODEL = "openai/gpt-oss-120b";
+    let grokApiKey = "";
+    let grokConversation = [];
+    let grokPanelOpen = false;
 
     const loginScreen = document.getElementById("loginScreen");
     const appScreen = document.getElementById("appScreen");
     const loginSettingsBtn = document.getElementById("loginSettingsBtn");
     const appSettingsBtn = document.getElementById("appSettingsBtn");
     const nightModeBtn = document.getElementById("nightModeBtn");
+    const questionsLogoBtn = document.getElementById("questionsLogoBtn");
+    const questionsLogoCount = document.getElementById("questionsLogoCount");
     const loginNightModeBtn = document.getElementById("loginNightModeBtn");
     const footballThemeBtn = document.getElementById("footballThemeBtn");
     const loginForm = document.getElementById("loginForm");
@@ -2396,6 +2874,7 @@
     const syncStatus = document.getElementById("syncStatus");
     const logoutBtn = document.getElementById("logoutBtn");
     const subjectGrid = document.getElementById("subjectGrid");
+    const modeGrid = document.getElementById("modeGrid");
     const timerText = document.getElementById("timerText");
     const activeSubjectText = document.getElementById("activeSubjectText");
     const timerToggleBtn = document.getElementById("timerToggleBtn");
@@ -2458,6 +2937,15 @@
     const chatPreviewImage = document.getElementById("chatPreviewImage");
     const removeChatImageBtn = document.getElementById("removeChatImageBtn");
     const chatCount = document.getElementById("chatCount");
+    const grokWidget = document.getElementById("grokWidget");
+    const grokPanel = document.getElementById("grokPanel");
+    const grokToggle = document.getElementById("grokToggle");
+    const grokTooltip = document.getElementById("grokTooltip");
+    const closeGrokBtn = document.getElementById("closeGrokBtn");
+    const grokMessages = document.getElementById("grokMessages");
+    const grokThinking = document.getElementById("grokThinking");
+    const grokForm = document.getElementById("grokForm");
+    const grokInput = document.getElementById("grokInput");
     const timerStateBadge = document.getElementById("timerStateBadge");
     const infoModal = document.getElementById("infoModal");
     const modalTitle = document.getElementById("modalTitle");
@@ -2715,6 +3203,23 @@
       reader.readAsText(file);
     }
 
+    function openQuestionsModal() {
+      const user = currentUser();
+      if (!user) return;
+      activeModalType = "questions";
+      modalTitle.textContent = "How much questions u done today?";
+      modalBody.innerHTML = `
+        <p class="subtext">How many questions have you solved today so far, ${escapeHTML(user.name)}?</p>
+        <form id="questionsForm" class="field" style="margin-top: 14px;">
+          <label for="questionsCountInput">Questions solved today</label>
+          <input id="questionsCountInput" type="number" min="0" max="999" step="1" inputmode="numeric" value="${user.questionsToday || 0}" required>
+          <button class="primary-btn" type="submit">Save</button>
+        </form>
+      `;
+      infoModal.classList.remove("hidden");
+      document.getElementById("questionsCountInput")?.focus();
+    }
+
     function openSettingsPasswordModal() {
       activeModalType = "settings";
       modalTitle.textContent = "Settings";
@@ -2792,6 +3297,15 @@
           <label for="eightHourSoundUrlInput">Sound file URL</label>
           <input id="eightHourSoundUrlInput" type="url" placeholder="https://raw.githubusercontent.com/you/repo/main/song.mp3" value="${escapeHTML(eightHourSoundUrl)}">
           <button class="secondary-btn" type="submit">Save sound</button>
+        </form>
+
+        <hr class="settings-divider">
+        <p class="subtext"><strong>AI Assistant (Groq)</strong> — one API key, shared between both accounts. Get a free key from console.groq.com → API Keys. Once saved, type <strong>@grok your question</strong> in Study Chat for a normal reply, <strong>@a9 your question</strong> for a savage roast-mode reply, or use the AI icon in the bottom-left corner, on either device.</p>
+        <form id="grokApiKeyForm" class="field settings-inline-form">
+          <label for="grokApiKeyInput">Groq API key</label>
+          <input id="grokApiKeyInput" type="password" placeholder="gsk_..." value="${escapeHTML(grokApiKey)}" autocomplete="off">
+          <p class="subtext">${grokApiKey ? "A Grok API key is currently saved and shared." : "No Grok API key saved yet."}</p>
+          <button class="secondary-btn" type="submit">Save Grok key</button>
         </form>
 
         <hr class="settings-divider">
@@ -2881,6 +3395,21 @@
       return merged;
     }
 
+    function normalizeModeSeconds(modeSeconds) {
+      if (!modeSeconds || typeof modeSeconds !== "object") return {};
+      return Object.fromEntries(MODES.map((mode) => [
+        mode, Math.max(0, Number(modeSeconds[mode]) || 0)
+      ]).filter(([, seconds]) => seconds > 0));
+    }
+
+    function addModeSeconds(base, addition) {
+      const merged = { ...normalizeModeSeconds(base) };
+      Object.entries(normalizeModeSeconds(addition)).forEach(([mode, seconds]) => {
+        merged[mode] = (merged[mode] || 0) + seconds;
+      });
+      return merged;
+    }
+
     function normalizeRemoteState(remote) {
       const normalized = defaultState();
       normalized.day = remote?.day || todayKey();
@@ -2900,6 +3429,12 @@
         const currentSubject = SUBJECTS.includes(savedUser.currentSubject)
           ? savedUser.currentSubject
           : selectedSubject;
+        const selectedMode = MODES.includes(savedUser.selectedMode)
+          ? savedUser.selectedMode
+          : "Lecture";
+        const currentMode = MODES.includes(savedUser.currentMode)
+          ? savedUser.currentMode
+          : selectedMode;
         const startedAt = Number(savedUser.startedAt) || null;
         const running = Boolean(savedUser.running && startedAt);
 
@@ -2908,11 +3443,22 @@
           profilePic: typeof savedUser.profilePic === "string" ? savedUser.profilePic : "",
           selectedSubject,
           currentSubject,
+          selectedMode,
+          currentMode,
           todaySeconds: Math.max(0, Number(savedUser.todaySeconds) || 0),
           subjectSecondsToday: normalizeSubjectSeconds(savedUser.subjectSecondsToday),
           subjectHistory: Object.fromEntries(Object.entries(savedUser.subjectHistory || {})
             .filter(([day]) => /^\d{4}-\d{2}-\d{2}$/.test(day))
             .map(([day, subjects]) => [day, normalizeSubjectSeconds(subjects)])),
+          modeSecondsToday: normalizeModeSeconds(savedUser.modeSecondsToday),
+          modeHistory: Object.fromEntries(Object.entries(savedUser.modeHistory || {})
+            .filter(([day]) => /^\d{4}-\d{2}-\d{2}$/.test(day))
+            .map(([day, modes]) => [day, normalizeModeSeconds(modes)])),
+          questionsToday: Math.max(0, Math.min(999, Math.floor(Number(savedUser.questionsToday) || 0))),
+          questionHistory: Object.fromEntries(Object.entries(savedUser.questionHistory || {})
+            .filter(([day]) => /^\d{4}-\d{2}-\d{2}$/.test(day))
+            .map(([day, count]) => [day, Math.max(0, Math.floor(Number(count) || 0))])),
+          questionsPromptedDay: /^\d{4}-\d{2}-\d{2}$/.test(savedUser.questionsPromptedDay) ? savedUser.questionsPromptedDay : "",
           running,
           startedAt,
           dailyTotals: normalizeDailyTotals(savedUser.dailyTotals),
@@ -2940,12 +3486,25 @@
             ...(user.subjectHistory || {}),
             [previousDay]: addSubjectSeconds(user.subjectHistory?.[previousDay], user.subjectSecondsToday)
           };
+          user.modeHistory = {
+            ...(user.modeHistory || {}),
+            [previousDay]: addModeSeconds(user.modeHistory?.[previousDay], user.modeSecondsToday)
+          };
+          if (user.questionsToday > 0) {
+            user.questionHistory = {
+              ...(user.questionHistory || {}),
+              [previousDay]: (user.questionHistory?.[previousDay] || 0) + user.questionsToday
+            };
+          }
         }
         user.todaySeconds = 0;
         user.subjectSecondsToday = {};
+        user.modeSecondsToday = {};
+        user.questionsToday = 0;
         user.running = false;
         user.startedAt = null;
         user.currentSubject = user.selectedSubject || "Physics";
+        user.currentMode = user.selectedMode || "Lecture";
       });
       return resetState;
     }
@@ -3036,7 +3595,8 @@
             id,
             userId: message.userId || "",
             name: message.name || "User",
-            text: String(message.text || "").slice(0, 160),
+            isGrok: !!message.isGrok,
+            text: String(message.text || "").slice(0, message.isGrok ? 4000 : 320),
             image: safeProfileImage(message.image),
             createdAt: Number(message.createdAt) || 0,
             editedAt: Number(message.editedAt) || 0,
@@ -3316,11 +3876,33 @@
     }
 
     // --- Voice/video calling: WebRTC peer-to-peer, Firebase only carries signaling ---
-    // Note: there's no TURN server here, only a public STUN server. That means calls
-    // should connect fine on normal home/office wifi, but may fail to connect on some
-    // mobile networks or behind strict corporate firewalls — there's no way around
-    // that without paying for a TURN relay.
-    const ICE_SERVERS = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+    // Uses a STUN server for the easy case (both sides on open networks) plus a
+    // free public TURN relay (Open Relay Project) as fallback for mobile networks,
+    // carrier-grade NAT, and strict firewalls where a direct STUN-only connection
+    // can't be established. This is why calls were failing to connect before —
+    // STUN alone isn't enough on many mobile/college wifi networks.
+    const ICE_SERVERS = {
+      iceServers: [
+        { urls: "stun:stun.l.google.com:19302" },
+        { urls: "stun:stun1.l.google.com:19302" },
+        {
+          urls: "turn:openrelay.metered.ca:80",
+          username: "openrelayproject",
+          credential: "openrelayproject"
+        },
+        {
+          urls: "turn:openrelay.metered.ca:443",
+          username: "openrelayproject",
+          credential: "openrelayproject"
+        },
+        {
+          urls: "turn:openrelay.metered.ca:443?transport=tcp",
+          username: "openrelayproject",
+          credential: "openrelayproject"
+        }
+      ],
+      iceCandidatePoolSize: 4
+    };
     let pc = null;
     let localCallStream = null;
     let screenStream = null;
@@ -3379,7 +3961,11 @@
         }
       };
       connection.onconnectionstatechange = () => {
-        if (["failed", "disconnected", "closed"].includes(connection.connectionState) && currentCallRole) {
+        if (connection.connectionState === "failed" && currentCallRole) {
+          showToast("Call failed", "Could not connect the call — check your internet connection and try again.");
+          set(callRef, null).catch(() => {});
+          cleanupCall();
+        } else if (connection.connectionState === "disconnected" && currentCallRole) {
           showToast("Call ended", "The call connection was lost.");
         }
       };
@@ -3745,6 +4331,353 @@
       });
     }
 
+    // Renders any \( \) / \[ \] / $$ $$ LaTeX inside an element's AI-reply
+    // bubbles into proper math (KaTeX). Silently no-ops if KaTeX hasn't
+    // loaded (e.g. offline) or a snippet doesn't parse as valid LaTeX.
+    function renderMathIn(container) {
+      if (!container || typeof window.renderMathInElement !== "function") return;
+      try {
+        window.renderMathInElement(container, {
+          delimiters: [
+            { left: "\\[", right: "\\]", display: true },
+            { left: "$$", right: "$$", display: true },
+            { left: "\\(", right: "\\)", display: false }
+          ],
+          throwOnError: false,
+          ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"],
+          // KaTeX by default renders BOTH a visible version and a hidden
+          // MathML copy of every formula (for screen readers / copy-paste).
+          // That hidden copy is what made copied text look duplicated, e.g.
+          // "IcmIcm" or "kg·m2kg·m2" — output:"html" turns it off so only
+          // the one visible formula exists.
+          output: "html"
+        });
+      } catch (error) {
+        // Leave the raw text as-is if rendering fails.
+      }
+    }
+
+    // Formats inline markdown-ish emphasis on a single already-escaped line:
+    // strips any stray asterisks (the AI is instructed not to use them, this
+    // is just a safety net so raw ** never leaks through), renders `code`,
+    // and turns URLs into links. Runs after escapeHTML, so it's safe to
+    // insert extra markup here.
+    function formatAiInline(escapedLine) {
+      let out = escapedLine.replace(/\*\*(.+?)\*\*/g, "$1").replace(/\*/g, "");
+      out = out.replace(/`([^`]+)`/g, "<code>$1</code>");
+      out = linkifyText(out);
+      return out;
+    }
+
+    // Turns an AI reply's plain text (already HTML-escaped) into properly
+    // spaced HTML: paragraphs, bullet/numbered lists, and bold/code emphasis.
+    // This is what fixes "everything is one squished wall of text" replies.
+    function renderAiRichText(escapedText) {
+      const lines = escapedText.split(/\r?\n/);
+      let html = "";
+      let currentList = null;
+      let paragraphLines = [];
+
+      const flushParagraph = () => {
+        if (paragraphLines.length) {
+          html += `<p class="ai-para">${paragraphLines.join("<br>")}</p>`;
+          paragraphLines = [];
+        }
+      };
+      const closeList = () => {
+        if (currentList) {
+          html += `</${currentList}>`;
+          currentList = null;
+        }
+      };
+
+      lines.forEach((rawLine) => {
+        const line = rawLine.trim();
+        if (!line) {
+          flushParagraph();
+          closeList();
+          return;
+        }
+        const bulletMatch = line.match(/^[-*•]\s+(.*)/);
+        const numberedMatch = line.match(/^\d+[.)]\s+(.*)/);
+        const headingMatch = line.match(/^#{1,4}\s+(.*)/);
+        if (bulletMatch) {
+          flushParagraph();
+          if (currentList !== "ul") { closeList(); html += `<ul class="ai-list">`; currentList = "ul"; }
+          html += `<li>${formatAiInline(bulletMatch[1])}</li>`;
+          return;
+        }
+        if (numberedMatch) {
+          flushParagraph();
+          if (currentList !== "ol") { closeList(); html += `<ol class="ai-list">`; currentList = "ol"; }
+          html += `<li>${formatAiInline(numberedMatch[1])}</li>`;
+          return;
+        }
+        if (headingMatch) {
+          flushParagraph();
+          closeList();
+          html += `<p class="ai-heading">${formatAiInline(headingMatch[1])}</p>`;
+          return;
+        }
+        closeList();
+        paragraphLines.push(formatAiInline(line));
+      });
+      flushParagraph();
+      closeList();
+      return html || formatAiInline(escapedText);
+    }
+
+    // --- AI Assistant via Groq (shared single API key, used by both accounts) ---
+
+    async function loadGrokApiKey() {
+      try {
+        const snapshot = await get(grokConfigRef);
+        grokApiKey = snapshot.val() || "";
+      } catch (error) {
+        console.error("Could not load Grok API key", error);
+      }
+    }
+
+    async function saveGrokApiKey(key) {
+      grokApiKey = key.trim();
+      await set(grokConfigRef, grokApiKey);
+    }
+
+    // Calls Groq's OpenAI-compatible API directly from the browser using the shared key.
+    // mode: "normal" (default — @grok / the AI panel, NEVER roasts or uses any
+    // slang/abuse) or "savage" (@a9 only — same brain, dialled-up roast tone).
+    // searchContext: optional plain-text web search snippets to ground the reply.
+    // Returns the assistant's reply text, or throws on failure.
+    async function callGrokApi(promptText, history, mode = "normal", searchContext = "") {
+      if (!grokApiKey) {
+        throw new Error("No AI API key set yet. Add one in Settings → AI Assistant.");
+      }
+      const toneBlock = mode === "savage"
+        ? [
+            "TONE (this reply only — triggered by @a9): Ab pura roast mode on hai. Bindaas, thoda ganda-mazaakiya, real dost jaisa jo bina filter ke bol deta hai — halki-fulki gaali-galoch/slang chalega (e.g. \"saale\", \"bewakoof\", \"nikamma\", \"bakchodi mat kar\", \"tereko dimaag hai ya nahi\"), lekin genuine slurs, sexual content, ya kisi ki family/body/identity pe hamla bilkul nahi — woh line kabhi cross mat karo. Isse pehle jo baatein hui hain unse specific cheez utha ke taunt maaro (\"kal bhi yehi bola tha aur aaj bhi wahi\" type callback), generic gaali mat fenko. Agar message genuinely sad/stressed/serious lage (exam anxiety, family issue, kuch bhi heavy), turant roast band karo aur seedha real, supportive dost bano — koi mazaak nahi."
+          ]
+        : [
+            "TONE: Bilkul normal, warm aur helpful dost jaisa raho — NO roasting, NO taunting, NO slang/abuse of any kind in this mode, chahe pehle @a9 se roast hua ho, is reply mein woh tone mat carry karo. Thodi si natural wit/light humour chalti hai (jaise ek smart dost casually baat karta hai) but never at the person's expense. Purane messages/inside jokes ko reference karke reply ko personal aur relevant banao, generic bot jaisa mat lago — lekin woh bhi friendly tone mein, roast mein nahi. Agar message upset/stressed lage, seedha supportive bano."
+          ];
+      const messages = [
+        {
+          role: "system",
+          content: [
+            "You are 'AI', a study buddy living inside DuoTrack, a JEE (Indian engineering entrance exam) prep app shared by two students who are friends. Messages before this may be tagged with the sender's name (e.g. 'Abhishek: ...' or 'Aditya: ...') — that's their real Study Chat history, so you already know what they've been talking about, studying, or slacking off on.",
+            "",
+            "READ THE HISTORY PROPERLY: Don't just glance at the last line — actually scan everything given to you before replying: who said what, jokes already made, topics already covered, promises made ('kal test dunga' type things), moods. Reuse specifics from it naturally, the way a friend who was actually present in the chat would, instead of giving a generic reply that could've fit anywhere.",
+            "",
+            "LANGUAGE: Reply ONLY in Hinglish — natural Hindi-English mixed speech written in Roman/Latin script (no Devanagari), the way Indian students actually text each other. Do not reply in pure English or pure Hindi. Keep vocabulary simple, NCERT-level clarity for anything academic — short sentences, common words, explain a hard term the first time you use it.",
+            "",
+            ...toneBlock,
+            "",
+            "ACCURACY: The actual academic content must always stay correct, regardless of tone. Double-check every formula, constant, unit, and numerical answer — galat answer se inka nuksaan hoga. If a value depends on a convention (e.g. g = 9.8 vs 9.81 m/s²), mention which one you're using. Agar pakka sure nahi ho to seedha bol do, guess mat maro.",
+            "",
+            searchContext
+              ? "WEB SEARCH: Some live web search snippets are attached below the question, wrapped in [WEB SEARCH RESULTS]. Use them only if they're actually relevant and reliable for this question (e.g. current facts, dates, exam notifications, real-world info) — weave the info in naturally without saying \"according to search\" or dumping raw snippets. If they're irrelevant, outdated-looking, or contradict solid subject knowledge, ignore them and answer from what you know instead. Never treat them as more trustworthy than basic physics/chem/maths facts you're already sure of."
+              : "WEB SEARCH: No search results were available for this one — just answer from what you know, and say clearly if you're not sure about something time-sensitive (like a recent date or news item) instead of guessing.",
+            "",
+            "LENGTH: Match the reply to the question — ek simple/casual message ka jawab 1-3 lines mein de do, lekin koi doubt, numerical, ya explanation poocha hai to usse pura, properly samjhao (thoda lamba chalega, koi dikkat nahi) instead of chopping it down to a one-liner. Don't pad with unnecessary filler either — jitna zaroori hai utna hi likho, na kam na zyada.",
+            "",
+            "MATH FORMATTING: Yeh chat KaTeX se render hota hai, isliye har formula/expression LaTeX mein likho:",
+            "- Inline math ke liye \\( ... \\) use karo (e.g. \\(v = u + at\\)), sirf single line ke andar — kabhi bhi ek expression ko do lines mein mat todo.",
+            "- Standalone/important formula ko apni line pe display math se do: \\[ ... \\]",
+            "- Plain $ ka istemal math ke liye kabhi mat karo (currency ke liye bhi 'Rs' ya 'rupees' likho, $ nahi) — sirf \\( \\) aur \\[ \\] hi math delimiters hain.",
+            "- Fractions ke liye \\frac{a}{b}, powers ke liye ^{}, subscript ke liye _{}, square root ke liye \\sqrt{}, Greek letters ke liye \\theta, \\pi, \\Delta, etc. use karo — plain text mein 'a/b' ya 'x^2' mat likho jab proper LaTeX likh sakte ho.",
+            "",
+            "FORMATTING: Structure every answer for easy reading:",
+            "- Paragraphs chhote rakho (3-4 lines max ek paragraph mein).",
+            "- Numericals ke liye: pehle concept/formula batao, phir values step-by-step alag lines mein substitute karo, phir final answer clearly units ke saath alag line pe do.",
+            "- Multiple points/steps ke liye bullet list use karo (lines shuru '- ' se).",
+            "- NEVER use asterisks (*) anywhere in the reply — no **bold**, no *emphasis*, nothing with a * character. If something needs to stand out (a final answer, a key term), just put it on its own line or start the line with a clear label like 'Answer:' instead — plain text only, no markdown symbols.",
+            "- Distinct ideas ke beech ek khaali line chhodo, taaki text ek hi block na lage.",
+            "- \"Great question!\" jaisa filler mat likho — seedha jawab se shuru karo."
+          ].filter((line) => line !== undefined).join("\n")
+        },
+        ...(history || []).slice(-40),
+        { role: "user", content: searchContext ? `${promptText}\n\n[WEB SEARCH RESULTS]\n${searchContext}` : promptText }
+      ];
+      let response;
+      try {
+        response = await fetchWithTimeout("https://api.groq.com/openai/v1/chat/completions", 30000, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${grokApiKey}`
+          },
+          body: JSON.stringify({
+            model: GROK_MODEL,
+            messages,
+            temperature: 0.7,
+            max_tokens: 1500
+          })
+        });
+      } catch (error) {
+        if (error.name === "AbortError") {
+          throw new Error("AI took too long to reply (timed out). Try again in a bit.");
+        }
+        throw new Error("Couldn't reach the AI — check your internet connection.");
+      }
+      if (!response.ok) {
+        const errText = await response.text().catch(() => "");
+        throw new Error(`AI error (${response.status}): ${errText.slice(0, 160)}`);
+      }
+      const data = await response.json();
+      return data?.choices?.[0]?.message?.content?.trim() || "(No response from Grok.)";
+    }
+
+    // Best-effort free web search (no API key / backend needed) so the AI can
+    // ground time-sensitive or factual questions instead of guessing. Uses
+    // DuckDuckGo's public Instant Answer API (CORS-enabled) plus a Wikipedia
+    // summary lookup. Both are read-only, no key required. If either fails
+    // (offline, blocked, no results) it's simply skipped — the AI still
+    // answers from its own knowledge either way.
+    // Fetches a URL but gives up after `ms` milliseconds instead of hanging —
+    // used by webSearchSnippets so a slow/blocked network call never stalls
+    // or breaks an AI reply.
+    async function fetchWithTimeout(url, ms = 4000, options = {}) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), ms);
+      try {
+        return await fetch(url, { ...options, signal: controller.signal });
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
+    async function webSearchSnippets(query) {
+      const snippets = [];
+      try {
+        const ddgUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_redirect=1&no_html=1&skip_disambig=1`;
+        const res = await fetchWithTimeout(ddgUrl);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.AbstractText) snippets.push(data.AbstractText);
+          if (Array.isArray(data.RelatedTopics)) {
+            data.RelatedTopics.slice(0, 3).forEach((topic) => {
+              if (topic?.Text) snippets.push(topic.Text);
+              else if (Array.isArray(topic?.Topics)) {
+                topic.Topics.slice(0, 2).forEach((t) => t?.Text && snippets.push(t.Text));
+              }
+            });
+          }
+        }
+      } catch (error) {
+        // Ignore — search is best-effort only.
+      }
+      try {
+        const wikiUrl = `https://en.wikipedia.org/w/api.php?origin=*&action=query&list=search&format=json&srlimit=2&srsearch=${encodeURIComponent(query)}`;
+        const res = await fetchWithTimeout(wikiUrl);
+        if (res.ok) {
+          const data = await res.json();
+          (data?.query?.search || []).forEach((item) => {
+            const plain = String(item.snippet || "").replace(/<[^>]+>/g, "");
+            if (plain) snippets.push(`${item.title}: ${plain}`);
+          });
+        }
+      } catch (error) {
+        // Ignore — search is best-effort only.
+      }
+      return snippets.filter(Boolean).slice(0, 5).join("\n").slice(0, 1400);
+    }
+
+
+
+    function renderGrokMessages() {
+      if (!grokMessages) return;
+      if (!grokConversation.length) {
+        grokMessages.innerHTML = `<div class="empty-state"><span class="empty-state-icon">AI</span><span>Ask anything — physics, chemistry, maths, or just a quick doubt.</span></div>`;
+        return;
+      }
+      grokMessages.innerHTML = grokConversation.map((message) => `
+        <div class="grok-bubble${message.role === "user" ? " mine" : " assistant"}">
+          <strong>${message.role === "user" ? "You" : "AI"}</strong>
+          ${message.role === "user"
+            ? `<span>${linkifyText(escapeHTML(message.content))}</span>`
+            : `<div class="ai-rich">${renderAiRichText(escapeHTML(message.content))}</div>`}
+        </div>
+      `).join("");
+      grokMessages.scrollTop = grokMessages.scrollHeight;
+      renderMathIn(grokMessages);
+    }
+
+    async function askGrokFromPanel(promptText) {
+      grokConversation.push({ role: "user", content: promptText });
+      renderGrokMessages();
+      grokThinking?.classList.remove("hidden");
+      try {
+        const searchContext = await webSearchSnippets(promptText);
+        const reply = await callGrokApi(promptText, grokConversation.map(({ role, content }) => ({ role, content })), "normal", searchContext);
+        grokConversation.push({ role: "assistant", content: reply });
+      } catch (error) {
+        grokConversation.push({ role: "assistant", content: error.message || "Couldn't reply right now." });
+      }
+      grokThinking?.classList.add("hidden");
+      renderGrokMessages();
+    }
+
+    function markGrokTipSeen() {
+      if (!grokTooltip) return;
+      grokTooltip.classList.add("hidden");
+      localStorage.setItem(GROK_TIP_SEEN_KEY, "true");
+    }
+
+    function maybeShowGrokTipOnce() {
+      if (!grokTooltip || localStorage.getItem(GROK_TIP_SEEN_KEY) === "true") return;
+      grokTooltip.classList.remove("hidden");
+      setTimeout(markGrokTipSeen, 6000);
+    }
+
+    // Builds the shared Study Chat's recent history as {role, content} turns so
+    // the AI "remembers" what both people have been saying — not just the one
+    // @grok line. Names are prefixed so it can tell Abhishek and Aditya apart.
+    function buildStudyChatHistoryForAi(excludingMessageId) {
+      return chatMessagesState
+        .filter((message) => message.id !== excludingMessageId)
+        .slice(-60)
+        .map((message) => {
+          if (message.isGrok) {
+            return message.text ? { role: "assistant", content: message.text } : null;
+          }
+          const body = message.text || (message.image ? "[sent an image]" : "");
+          if (!body) return null;
+          return { role: "user", content: `${message.name}: ${body}` };
+        })
+        .filter(Boolean);
+    }
+
+    // Detects an "@grok ..." (normal) or "@a9 ..." (dialled-up roast mode)
+    // message in the shared Study Chat and posts the AI's reply back into
+    // that same chat thread so both people see it.
+    async function maybeReplyAsGrokInChat(rawText, askerName, messageId) {
+      const trimmed = rawText.trim();
+      const isSavage = /^@a9\b/i.test(trimmed);
+      const isNormal = /^@grok\b/i.test(trimmed);
+      if (!isSavage && !isNormal) return;
+      const question = trimmed.replace(/^@(a9|grok)\b/i, "").trim();
+      if (!question) return;
+      try {
+        const history = buildStudyChatHistoryForAi(messageId);
+        const searchContext = await webSearchSnippets(question);
+        const reply = await callGrokApi(`${askerName}: ${question}`, history, isSavage ? "savage" : "normal", searchContext);
+        await push(chatRef, {
+          userId: "grok",
+          name: "AI",
+          text: reply,
+          isGrok: true,
+          createdAt: Date.now()
+        });
+      } catch (error) {
+        await push(chatRef, {
+          userId: "grok",
+          name: "AI",
+          text: error.message || "Couldn't reply right now — check the API key in Settings.",
+          isGrok: true,
+          createdAt: Date.now()
+        });
+      }
+    }
+
     function safeProfileImage(value) {
       return typeof value === "string" && value.startsWith("data:image/") ? value : "";
     }
@@ -3811,14 +4744,18 @@
       document.querySelectorAll(".subject-option").forEach((button) => {
         button.classList.toggle("active", button.dataset.subject === user.selectedSubject);
       });
+      document.querySelectorAll(".mode-option").forEach((button) => {
+        button.classList.toggle("active", button.dataset.mode === (user.selectedMode || "Lecture"));
+      });
 
       const seconds = liveSeconds(user);
       const displaySubject = user.running ? user.currentSubject : user.selectedSubject;
+      const displayMode = user.running ? (user.currentMode || "Lecture") : (user.selectedMode || "Lecture");
       const accent = subjectAccent(displaySubject);
       timerText.textContent = formatClock(seconds);
       activeSubjectText.textContent = user.running
-        ? `Studying ${user.currentSubject}`
-        : `Ready for ${user.selectedSubject}`;
+        ? `Studying ${user.currentSubject} · ${displayMode}`
+        : `Ready for ${user.selectedSubject} · ${displayMode}`;
       todayTotal.textContent = formatHours(seconds);
       subjectStat.textContent = displaySubject;
       subjectStat.style.color = accent || "";
@@ -3832,6 +4769,10 @@
       timerToggleHint.textContent = user.running ? "Save your session and take a break" : "Begin a focused session";
       timerToggleBtn.setAttribute("aria-label", user.running ? "Pause focus session" : "Start focus session");
       mascotWrap?.classList.toggle("mood-focused", Boolean(user.running));
+
+      const needsQuestionsAnswer = user.questionsPromptedDay !== todayKey();
+      questionsLogoCount.textContent = String(user.questionsToday || 0);
+      questionsLogoBtn.classList.toggle("needs-answer", needsQuestionsAnswer);
 
       renderTodos(user);
       renderPartner(partner);
@@ -4087,16 +5028,20 @@
     }
 
     chatMessages.innerHTML = chatMessagesState.map((message) => `
-        <div class="chat-message${message.userId === currentUserId ? " mine" : ""}" data-message-id="${escapeHTML(message.id)}" data-mine="${message.userId === currentUserId}" data-created-at="${message.createdAt}">
+        <div class="chat-message${message.userId === currentUserId ? " mine" : ""}${message.isGrok ? " grok-message" : ""}" data-message-id="${escapeHTML(message.id)}" data-mine="${message.userId === currentUserId}" data-is-grok="${!!message.isGrok}" data-created-at="${message.createdAt}">
           <button class="chat-message-more" type="button" title="Message options" aria-label="Message options">⋮</button>
           <strong>${escapeHTML(message.name)}</strong>
           ${renderReplyQuote(message)}
-          ${message.text ? `<span class="chat-text">${linkifyText(escapeHTML(message.text))}</span>${message.editedAt ? `<span class="edited-tag">(edited)</span>` : ""}` : ""}
+          ${message.text ? (message.isGrok
+            ? `<div class="chat-text ai-rich">${renderAiRichText(escapeHTML(message.text))}</div>`
+            : `<span class="chat-text">${linkifyText(escapeHTML(message.text))}</span>`
+          ) + (message.editedAt ? `<span class="edited-tag">(edited)</span>` : "") : ""}
           ${renderMessageImage(message)}
           ${renderMessageReactions(message)}
         </div>
       `).join("");
       chatMessages.scrollTop = chatMessages.scrollHeight;
+      renderMathIn(chatMessages);
     }
 
     function renderChatAttachment() {
@@ -4110,9 +5055,13 @@
       const elapsed = Math.max(0, Math.floor((Date.now() - user.startedAt) / 1000));
       const subjectSecondsToday = { ...(user.subjectSecondsToday || {}) };
       subjectSecondsToday[user.currentSubject] = (subjectSecondsToday[user.currentSubject] || 0) + elapsed;
+      const modeSecondsToday = { ...(user.modeSecondsToday || {}) };
+      const mode = user.currentMode || "Lecture";
+      modeSecondsToday[mode] = (modeSecondsToday[mode] || 0) + elapsed;
       return {
         todaySeconds: user.todaySeconds + elapsed,
         subjectSecondsToday,
+        modeSecondsToday,
         running: !pause,
         startedAt: pause ? null : Date.now()
       };
@@ -4131,7 +5080,9 @@
         todaySeconds: liveSeconds(user),
         todaySubjects: user.subjectSecondsToday || {},
         dailyTotals: user.dailyTotals || {},
-        subjectHistory: user.subjectHistory || {}
+        subjectHistory: user.subjectHistory || {},
+        todayModes: user.modeSecondsToday || {},
+        modeHistory: user.modeHistory || {}
       };
       localStorage.setItem(`duotrackHistory:${currentUserId}`, JSON.stringify(history));
     }
@@ -4143,20 +5094,31 @@
         Object.values(next.users).forEach((user) => {
           const activeSeconds = liveSeconds(user);
           const day = todayKey();
+          const elapsedRunning = user.running ? Math.max(0, Math.floor((Date.now() - user.startedAt) / 1000)) : 0;
           const completedSubjects = { ...(user.subjectSecondsToday || {}) };
           if (user.running && user.currentSubject) {
-            completedSubjects[user.currentSubject] = (completedSubjects[user.currentSubject] || 0)
-              + Math.max(0, Math.floor((Date.now() - user.startedAt) / 1000));
+            completedSubjects[user.currentSubject] = (completedSubjects[user.currentSubject] || 0) + elapsedRunning;
+          }
+          const completedModes = { ...(user.modeSecondsToday || {}) };
+          if (user.running && user.currentMode) {
+            completedModes[user.currentMode] = (completedModes[user.currentMode] || 0) + elapsedRunning;
           }
           if (activeSeconds > 0) {
             user.dailyTotals = { ...(user.dailyTotals || {}), [day]: (user.dailyTotals?.[day] || 0) + activeSeconds };
             user.subjectHistory = { ...(user.subjectHistory || {}), [day]: addSubjectSeconds(user.subjectHistory?.[day], completedSubjects) };
+            user.modeHistory = { ...(user.modeHistory || {}), [day]: addModeSeconds(user.modeHistory?.[day], completedModes) };
+          }
+          if (user.questionsToday > 0) {
+            user.questionHistory = { ...(user.questionHistory || {}), [day]: (user.questionHistory?.[day] || 0) + user.questionsToday };
           }
           user.todaySeconds = 0;
           user.subjectSecondsToday = {};
+          user.modeSecondsToday = {};
+          user.questionsToday = 0;
           user.running = false;
           user.startedAt = null;
           user.currentSubject = user.selectedSubject || "Physics";
+          user.currentMode = user.selectedMode || "Lecture";
         });
         next.day = todayKey();
         next.updatedAt = Date.now();
@@ -4172,8 +5134,14 @@
       const rows = [own, partner].map((user) => {
         const seconds = liveSeconds(user);
         const subjects = { ...(user.subjectSecondsToday || {}) };
-        if (user.running) subjects[user.currentSubject] = (subjects[user.currentSubject] || 0) + Math.max(0, Math.floor((Date.now() - user.startedAt) / 1000));
-        return { name: user.name, seconds, subjects };
+        const modes = { ...(user.modeSecondsToday || {}) };
+        if (user.running) {
+          const runningElapsed = Math.max(0, Math.floor((Date.now() - user.startedAt) / 1000));
+          subjects[user.currentSubject] = (subjects[user.currentSubject] || 0) + runningElapsed;
+          const runningMode = user.currentMode || "Lecture";
+          modes[runningMode] = (modes[runningMode] || 0) + runningElapsed;
+        }
+        return { name: user.name, seconds, subjects, modes, questions: user.questionsToday || 0 };
       });
       const title = `DuoTrack comparison — ${todayKey()}`;
       if (window.jspdf?.jsPDF) {
@@ -4182,9 +5150,10 @@
         pdf.setFontSize(11); pdf.text("Daily study comparison (stored locally and synced for this duo)", 18, 29);
         let y = 43;
         rows.forEach((row) => {
-          pdf.setFontSize(14); pdf.text(`${row.name}: ${formatHours(row.seconds)} | ${Math.floor(row.seconds / 300)} XP`, 18, y); y += 8;
+          pdf.setFontSize(14); pdf.text(`${row.name}: ${formatHours(row.seconds)} | ${Math.floor(row.seconds / 300)} XP | ${row.questions} question${row.questions === 1 ? "" : "s"} solved`, 18, y); y += 8;
           pdf.setFontSize(10);
-          pdf.text(SUBJECTS.map((subject) => `${subject}: ${formatHours(row.subjects[subject] || 0)}`).join("     "), 18, y); y += 15;
+          pdf.text(SUBJECTS.map((subject) => `${subject}: ${formatHours(row.subjects[subject] || 0)}`).join("     "), 18, y); y += 7;
+          pdf.text(MODES.map((mode) => `${mode}: ${formatHours(row.modes[mode] || 0)}`).join("     "), 18, y); y += 15;
         });
         pdf.setFontSize(9); pdf.text("XP rule: 5 minutes = 1 XP.", 18, y + 8);
         pdf.addPage();
@@ -4195,8 +5164,17 @@
           const day = shiftedDayKey(-offset);
           const left = own.dailyTotals?.[day] || (offset === 0 ? liveSeconds(own) : 0);
           const right = partner.dailyTotals?.[day] || (offset === 0 ? liveSeconds(partner) : 0);
+          const leftModes = own.modeHistory?.[day] || (offset === 0 ? own.modeSecondsToday : {}) || {};
+          const rightModes = partner.modeHistory?.[day] || (offset === 0 ? partner.modeSecondsToday : {}) || {};
+          const leftQuestions = own.questionHistory?.[day] ?? (offset === 0 ? (own.questionsToday || 0) : 0);
+          const rightQuestions = partner.questionHistory?.[day] ?? (offset === 0 ? (partner.questionsToday || 0) : 0);
+          if (historyY > 270) { pdf.addPage(); historyY = 20; }
           pdf.text(`${day}     ${own.name}: ${formatHours(left)} (${Math.floor(left / 300)} XP)     ${partner.name}: ${formatHours(right)} (${Math.floor(right / 300)} XP)`, 18, historyY);
-          historyY += 8;
+          historyY += 6;
+          pdf.text(`   Lecture/Practice — ${own.name}: ${formatHours(leftModes.Lecture || 0)}/${formatHours(leftModes.Practice || 0)}     ${partner.name}: ${formatHours(rightModes.Lecture || 0)}/${formatHours(rightModes.Practice || 0)}`, 18, historyY);
+          historyY += 6;
+          pdf.text(`   Questions solved — ${own.name}: ${leftQuestions}     ${partner.name}: ${rightQuestions}`, 18, historyY);
+          historyY += 9;
         }
         pdf.save(`duotrack-${todayKey()}-comparison.pdf`);
       } else {
@@ -4342,6 +5320,18 @@
       await writeUserPatch(user.id, patch);
     });
 
+    modeGrid.addEventListener("click", async (event) => {
+      const button = event.target.closest(".mode-option");
+      if (!button) return;
+      const user = currentUser();
+      if (!user) return;
+      const patch = { selectedMode: button.dataset.mode };
+      if (!user.running) {
+        patch.currentMode = patch.selectedMode;
+      }
+      await writeUserPatch(user.id, patch);
+    });
+
     timerToggleBtn.addEventListener("click", async () => {
       const user = currentUser();
       if (!user) return;
@@ -4351,6 +5341,7 @@
       } else {
         await writeUserPatch(user.id, {
           currentSubject: user.selectedSubject,
+          currentMode: user.selectedMode || "Lecture",
           running: true,
           startedAt: Date.now()
         });
@@ -4445,9 +5436,13 @@
 
     const REACTION_EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
 
-    function openChatContextMenu(x, y, messageId, isMine, createdAt) {
+    function openChatContextMenu(x, y, messageId, isMine, createdAt, isGrokMessage) {
       closeChatContextMenu();
       const canEdit = isMine && Date.now() - createdAt < 60000;
+      // Abhishek gets delete-for-everyone on AI replies too (not just his own
+      // messages) — he owns the shared Grok API key, so he can clean up the
+      // AI's messages for both accounts.
+      const canDeleteEveryone = isMine || (isGrokMessage && currentUserId === "abhi");
       const menu = document.createElement("div");
       menu.className = "chat-context-menu";
       menu.innerHTML = `
@@ -4457,7 +5452,7 @@
         <button type="button" data-action="reply">Reply</button>
         ${canEdit ? `<button type="button" data-action="edit">Edit message</button>` : ""}
         <button type="button" data-action="delete-me">Delete for me</button>
-        ${isMine ? `<button type="button" class="danger" data-action="delete-everyone">Delete for everyone</button>` : ""}
+        ${canDeleteEveryone ? `<button type="button" class="danger" data-action="delete-everyone">Delete for everyone</button>` : ""}
       `;
       document.body.appendChild(menu);
 
@@ -4541,7 +5536,7 @@
       input.setSelectionRange(input.value.length, input.value.length);
 
       const commit = async () => {
-        const newText = input.value.trim().slice(0, 160);
+        const newText = input.value.trim().slice(0, 320);
         if (newText && newText !== message.text && Date.now() - message.createdAt < 60000) {
           await update(chatMessageRef(messageId), { text: newText, editedAt: Date.now() });
         } else {
@@ -4559,7 +5554,7 @@
       const messageEl = event.target.closest(".chat-message");
       if (!messageEl) return;
       event.preventDefault();
-      openChatContextMenu(event.clientX, event.clientY, messageEl.dataset.messageId, messageEl.dataset.mine === "true", Number(messageEl.dataset.createdAt));
+      openChatContextMenu(event.clientX, event.clientY, messageEl.dataset.messageId, messageEl.dataset.mine === "true", Number(messageEl.dataset.createdAt), messageEl.dataset.isGrok === "true");
     });
 
     chatMessages.addEventListener("click", (event) => {
@@ -4568,7 +5563,7 @@
         event.stopPropagation();
         const messageEl = moreBtn.closest(".chat-message");
         const rect = moreBtn.getBoundingClientRect();
-        openChatContextMenu(rect.left, rect.bottom + 4, messageEl.dataset.messageId, messageEl.dataset.mine === "true", Number(messageEl.dataset.createdAt));
+        openChatContextMenu(rect.left, rect.bottom + 4, messageEl.dataset.messageId, messageEl.dataset.mine === "true", Number(messageEl.dataset.createdAt), messageEl.dataset.isGrok === "true");
         return;
       }
 
@@ -4586,6 +5581,7 @@
         chatCount.classList.add("hidden");
         renderChat(true);
         chatInput.focus();
+        maybeShowGrokTipOnce();
       }
     });
 
@@ -4617,13 +5613,38 @@
       if (replyingTo) {
         payload.replyTo = { id: replyingTo.id, name: replyingTo.name, text: replyingTo.text };
       }
-      await push(chatRef, payload);
+      const newMessageRef = push(chatRef);
+      await set(newMessageRef, payload);
       pendingChatImage = "";
       replyingTo = null;
       chatReplyPreview.classList.add("hidden");
       renderChatAttachment();
       clearTimeout(typingTimeout);
       set(ref(database, `duotrack/groups/${GROUP_ID}/typing/${user.id}`), null).catch(() => {});
+      if (text) maybeReplyAsGrokInChat(text, user.name, newMessageRef.key);
+    });
+
+    grokToggle.addEventListener("click", () => {
+      grokPanelOpen = !grokPanelOpen;
+      grokPanel.classList.toggle("hidden", !grokPanelOpen);
+      markGrokTipSeen();
+      if (grokPanelOpen) {
+        renderGrokMessages();
+        grokInput.focus();
+      }
+    });
+
+    closeGrokBtn.addEventListener("click", () => {
+      grokPanelOpen = false;
+      grokPanel.classList.add("hidden");
+    });
+
+    grokForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const text = grokInput.value.trim();
+      if (!text) return;
+      grokInput.value = "";
+      await askGrokFromPanel(text);
     });
 
     let typingTimeout = null;
@@ -4684,8 +5705,22 @@
 
     loginSettingsBtn.addEventListener("click", openSettingsPasswordModal);
     appSettingsBtn.addEventListener("click", openSettingsPasswordModal);
+    questionsLogoBtn.addEventListener("click", () => openQuestionsModal());
 
     modalBody.addEventListener("submit", async (event) => {
+      if (event.target.id === "questionsForm") {
+        event.preventDefault();
+        const user = currentUser();
+        if (!user) return;
+        const rawValue = Number(document.getElementById("questionsCountInput").value);
+        const value = Math.max(0, Math.min(999, Math.floor(Number.isFinite(rawValue) ? rawValue : 0)));
+        await writeUserPatch(user.id, { questionsToday: value, questionsPromptedDay: todayKey() });
+        activeModalType = "";
+        infoModal.classList.add("hidden");
+        showToast("Logged", `Saved ${value} question${value === 1 ? "" : "s"} for today.`);
+        return;
+      }
+
       if (event.target.id === "settingsPasswordForm") {
         event.preventDefault();
         const enteredPassword = document.getElementById("settingsPassword").value;
@@ -4727,6 +5762,19 @@
         eightHourSoundUrl = document.getElementById("eightHourSoundUrlInput").value.trim();
         localStorage.setItem(EIGHT_HOUR_SOUND_KEY, eightHourSoundUrl);
         showToast("Saved", eightHourSoundUrl ? "8-hour milestone sound saved." : "8-hour milestone sound cleared.");
+        openThemeSettings();
+        return;
+      }
+
+      if (event.target.id === "grokApiKeyForm") {
+        event.preventDefault();
+        const newKey = document.getElementById("grokApiKeyInput").value.trim();
+        try {
+          await saveGrokApiKey(newKey);
+          showToast("Saved", newKey ? "Grok API key saved — shared with both accounts." : "Grok API key cleared.");
+        } catch (error) {
+          showToast("Error", "Could not save the Grok API key.");
+        }
         openThemeSettings();
         return;
       }
@@ -4920,6 +5968,7 @@
     });
     loadLocallyDeletedChat();
     await loadDynamicAccounts();
+    loadGrokApiKey();
     state = defaultState();
     listenToFirebase();
     listenToChat();
