@@ -722,6 +722,10 @@
       gap: 12px;
     }
 
+    .stats-row.stats-row-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
     .stat {
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -2453,6 +2457,21 @@
           </div>
         </div>
 
+        <div class="stats-row stats-row-3">
+          <div class="stat">
+            <span>Lecture Mode</span>
+            <strong id="lectureModeStat">0h 0m</strong>
+          </div>
+          <div class="stat">
+            <span>Practice Mode</span>
+            <strong id="practiceModeStat">0h 0m</strong>
+          </div>
+          <div class="stat">
+            <span>Questions Today</span>
+            <strong id="questionsTodayStat">0</strong>
+          </div>
+        </div>
+
       </div>
 
       <aside class="side-stack">
@@ -2884,6 +2903,9 @@
     const subjectStat = document.getElementById("subjectStat");
     const statusStat = document.getElementById("statusStat");
     const historyStat = document.getElementById("historyStat");
+    const lectureModeStat = document.getElementById("lectureModeStat");
+    const practiceModeStat = document.getElementById("practiceModeStat");
+    const questionsTodayStat = document.getElementById("questionsTodayStat");
     const profilePicBtn = document.getElementById("profilePicBtn");
     const profilePicInput = document.getElementById("profilePicInput");
     const todoForm = document.getElementById("todoForm");
@@ -4305,6 +4327,16 @@
       return user.todaySeconds + Math.max(0, Math.floor((Date.now() - user.startedAt) / 1000));
     }
 
+    // Seconds spent in a specific mode ("Lecture" or "Practice") today,
+    // including the still-running segment if that's the mode currently active.
+    function liveModeSeconds(user, mode) {
+      const base = (user.modeSecondsToday || {})[mode] || 0;
+      if (user.running && user.startedAt && (user.currentMode || "Lecture") === mode) {
+        return base + Math.max(0, Math.floor((Date.now() - user.startedAt) / 1000));
+      }
+      return base;
+    }
+
     function escapeHTML(value) {
       return String(value)
         .replaceAll("&", "&amp;")
@@ -4763,6 +4795,9 @@
       timerStateBadge.textContent = user.running ? "IN FOCUS" : "READY";
       timerStateBadge.classList.toggle("running", user.running);
       historyStat.textContent = formatHours(user.dailyTotals?.[shiftedDayKey(-1)] || 0);
+      lectureModeStat.textContent = formatHours(liveModeSeconds(user, "Lecture"));
+      practiceModeStat.textContent = formatHours(liveModeSeconds(user, "Practice"));
+      questionsTodayStat.textContent = String(user.questionsToday || 0);
       timerToggleBtn.disabled = !firebaseReady;
       timerToggleBtn.classList.toggle("is-running", user.running);
       timerToggleLabel.textContent = user.running ? "Pause focus" : "Start focus";
@@ -4804,6 +4839,8 @@
       const seconds = liveSeconds(user);
       timerText.textContent = formatClock(seconds);
       todayTotal.textContent = formatHours(seconds);
+      lectureModeStat.textContent = formatHours(liveModeSeconds(user, "Lecture"));
+      practiceModeStat.textContent = formatHours(liveModeSeconds(user, "Practice"));
       renderPartner(partner);
       renderDday(user);
       updateSyncTooltip();
@@ -4977,6 +5014,18 @@
           <div class="stat">
             <span>Yesterday</span>
             <strong>${formatHours(yesterdaySeconds)}</strong>
+          </div>
+          <div class="stat">
+            <span>Lecture Mode</span>
+            <strong>${formatHours(liveModeSeconds(partner, "Lecture"))}</strong>
+          </div>
+          <div class="stat">
+            <span>Practice Mode</span>
+            <strong>${formatHours(liveModeSeconds(partner, "Practice"))}</strong>
+          </div>
+          <div class="stat">
+            <span>Questions Today</span>
+            <strong>${partner.questionsToday || 0}</strong>
           </div>
         </div>
         <p><span class="subject-badge" style="--subject-accent:${partnerAccent || "var(--green)"}">${partner.running ? "Studying now" : "Timer stopped"}</span></p>
