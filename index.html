@@ -683,7 +683,7 @@
 
     .quick-add-tabs {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 8px;
       margin-top: 10px;
     }
@@ -2428,6 +2428,10 @@
         </div>
 
         <div id="quickAddTabs" class="quick-add-tabs" aria-label="Quick add to to-do list">
+          <button class="quick-add-tab" type="button" data-quick-label="L-0" data-quick-text="L-0 Revision">
+            L-0
+            <span>Revision</span>
+          </button>
           <button class="quick-add-tab" type="button" data-quick-label="L-1" data-quick-text="L-1 Lecture">
             L-1
             <span>Lecture</span>
