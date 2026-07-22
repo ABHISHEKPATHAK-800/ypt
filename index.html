@@ -681,6 +681,41 @@
       box-shadow: 0 10px 22px rgba(31, 54, 41, 0.08);
     }
 
+    .quick-add-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .quick-add-tab {
+      display: grid;
+      gap: 2px;
+      justify-items: center;
+      padding: 7px 8px;
+      border-radius: 8px;
+      border: 1px dashed var(--line);
+      background: var(--green-2);
+      color: var(--green);
+      font-weight: 800;
+      font-size: 12.5px;
+      line-height: 1.15;
+    }
+
+    .quick-add-tab span {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .quick-add-tab:hover {
+      border-style: solid;
+      border-color: var(--green);
+      box-shadow: 0 8px 18px rgba(31, 54, 41, 0.08);
+    }
+
     .timer-display {
       min-height: 178px;
       border: 1px solid var(--line);
@@ -2389,6 +2424,21 @@
           <button class="mode-option" type="button" data-mode="Practice">
             Practice Mode
             <span>Solving problems / revising</span>
+          </button>
+        </div>
+
+        <div id="quickAddTabs" class="quick-add-tabs" aria-label="Quick add to to-do list">
+          <button class="quick-add-tab" type="button" data-quick-label="L-1" data-quick-text="L-1 Lecture">
+            L-1
+            <span>Lecture</span>
+          </button>
+          <button class="quick-add-tab" type="button" data-quick-label="L-2" data-quick-text="L-2 Practice">
+            L-2
+            <span>Practice</span>
+          </button>
+          <button class="quick-add-tab" type="button" data-quick-label="L-3" data-quick-text="L-3 Test">
+            L-3
+            <span>Test</span>
           </button>
         </div>
 
@@ -5440,6 +5490,22 @@
       selectedTodoTag = "none";
       todoTagPicker.querySelectorAll(".todo-tag-btn").forEach((b) => b.classList.toggle("active", b.dataset.tag === "none"));
       await writeUserPatch(user.id, { todos });
+    });
+
+    const quickAddTabs = document.getElementById("quickAddTabs");
+    quickAddTabs.addEventListener("click", async (event) => {
+      const tab = event.target.closest(".quick-add-tab");
+      if (!tab) return;
+      const user = currentUser();
+      if (!user) return;
+      const todos = [{
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        text: tab.dataset.quickText,
+        done: false,
+        tag: "none"
+      }, ...user.todos];
+      await writeUserPatch(user.id, { todos });
+      showToast("Added", `"${tab.dataset.quickText}" added to your to-do list.`);
     });
 
     partnerCard.addEventListener("click", openPartnerModal);
