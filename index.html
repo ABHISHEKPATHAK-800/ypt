@@ -845,13 +845,35 @@
 
     .todo-item {
       display: grid;
-      grid-template-columns: auto auto minmax(0, 1fr) auto;
+      grid-template-columns: auto auto auto minmax(0, 1fr) auto;
       gap: 10px;
       align-items: center;
       border: 1px solid var(--line);
       border-radius: 8px;
       padding: 10px;
       background: #fff;
+      transition: transform 140ms ease, opacity 140ms ease, box-shadow 140ms ease;
+    }
+
+    .todo-drag-handle {
+      width: 18px;
+      height: 18px;
+      flex: none;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      cursor: grab;
+      touch-action: none;
+    }
+    .todo-drag-handle svg { width: 100%; height: 100%; }
+    .todo-item.dragging {
+      opacity: 0.45;
+      box-shadow: 0 10px 22px rgba(31, 54, 41, 0.18);
+      cursor: grabbing;
+    }
+    .todo-item.drag-over {
+      border-color: var(--green);
+      box-shadow: inset 0 0 0 1px var(--green);
     }
 
     .todo-tag-icon { width: 17px; height: 17px; flex: none; }
@@ -1243,6 +1265,7 @@
     }
 
     .chat-panel {
+      position: relative;
       width: 100%;
       background: var(--panel);
       border: 1px solid var(--line);
@@ -1250,6 +1273,23 @@
       box-shadow: var(--shadow);
       overflow: hidden;
       animation: riseIn 220ms ease both;
+    }
+
+    .chat-panel.chat-drag-over {
+      box-shadow: inset 0 0 0 3px var(--green), var(--shadow);
+    }
+    .chat-panel.chat-drag-over::after {
+      content: "Drop image to attach";
+      position: absolute;
+      inset: 0;
+      background: color-mix(in srgb, var(--green) 14%, transparent);
+      color: var(--green);
+      font-weight: 900;
+      font-size: 14px;
+      display: grid;
+      place-items: center;
+      z-index: 20;
+      pointer-events: none;
     }
 
     .chat-head {
@@ -1860,6 +1900,177 @@
     .timer-display::after { content:""; position:absolute; width:320px; height:320px; border:1px solid rgba(255,255,255,.09); border-radius:50%; top:-170px; left:50%; transform:translateX(-50%); }
     .timer-display > div { position:relative; z-index:1; }
 
+    .timer-mode-toggle {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      z-index: 3;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: rgba(255, 255, 255, 0.16);
+      color: #effff4;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .28);
+    }
+    .timer-mode-toggle:hover { background: rgba(255, 255, 255, 0.28); }
+    .timer-mode-toggle svg { width: 19px; height: 19px; transition: transform 220ms ease; }
+    .timer-mode-toggle.is-countdown svg { transform: rotate(180deg); }
+    .timer-mode-toggle:disabled { opacity: .45; cursor: not-allowed; }
+
+    .timer-mode-label {
+      position: absolute;
+      top: 21px;
+      left: 58px;
+      z-index: 3;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: rgba(239, 255, 244, 0.78);
+    }
+
+    .countdown-setup {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 10px;
+      justify-items: center;
+      margin-top: 14px;
+    }
+
+    .countdown-chips {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .countdown-chip {
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .14);
+      color: #effff4;
+      font-weight: 800;
+      font-size: 12.5px;
+    }
+    .countdown-chip:hover { background: rgba(255, 255, 255, .26); }
+    .countdown-chip.active { background: #effff4; color: #164c36; }
+
+    .countdown-custom {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .countdown-custom input {
+      width: 62px;
+      text-align: center;
+      border-radius: 8px;
+      border: 0;
+      padding: 6px 4px;
+      font-weight: 800;
+      background: rgba(255, 255, 255, .92);
+      color: #164c36;
+    }
+
+    .countdown-custom span {
+      font-size: 12px;
+      font-weight: 700;
+      color: rgba(239, 255, 244, .85);
+    }
+
+    .countdown-tune-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .countdown-tune-label {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      color: rgba(239, 255, 244, .78);
+    }
+
+    .countdown-tune-picker {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .tune-chip {
+      padding: 6px 11px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .14);
+      color: #effff4;
+      font-weight: 800;
+      font-size: 12px;
+    }
+    .tune-chip:hover { background: rgba(255, 255, 255, .26); }
+    .tune-chip.active { background: #effff4; color: #164c36; }
+
+    .timer-display.mode-countdown {
+      background: radial-gradient(circle at 50% 0%, #f6d365, #b9860f 72%);
+      color: #2d2205;
+    }
+    .timer-display.mode-countdown .active-subject { color: rgba(45, 34, 5, 0.72); }
+    .timer-display.mode-countdown .timer-mode-toggle,
+    .timer-display.mode-countdown .countdown-chip,
+    .timer-display.mode-countdown .tune-chip {
+      background: rgba(45, 34, 5, 0.14);
+      color: #2d2205;
+    }
+    .timer-display.mode-countdown .timer-mode-toggle:hover,
+    .timer-display.mode-countdown .countdown-chip:hover,
+    .timer-display.mode-countdown .tune-chip:hover {
+      background: rgba(45, 34, 5, 0.24);
+    }
+    .timer-display.mode-countdown .countdown-chip.active,
+    .timer-display.mode-countdown .tune-chip.active {
+      background: #2d2205;
+      color: #f6d365;
+    }
+    .timer-display.mode-countdown .timer-mode-label,
+    .timer-display.mode-countdown .countdown-tune-label,
+    .timer-display.mode-countdown .countdown-custom span {
+      color: rgba(45, 34, 5, 0.75);
+    }
+    .timer-display.mode-countdown .countdown-custom input { color: #2d2205; }
+
+    .mascot-tip {
+      position: absolute;
+      top: 62px;
+      right: 8px;
+      z-index: 6;
+      width: min(230px, calc(100% - 90px));
+      background: var(--ink);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.4;
+      padding: 10px 12px;
+      border-radius: 10px;
+      text-align: left;
+      box-shadow: var(--shadow);
+      animation: riseIn 180ms ease both;
+      pointer-events: none;
+    }
+    .mascot-tip::after {
+      content: "";
+      position: absolute;
+      top: -6px;
+      right: 22px;
+      border: 6px solid transparent;
+      border-bottom-color: var(--ink);
+    }
+    .mascot-tip strong { color: #ffd873; }
+
     #mascotWrap.mascot-wrap {
       position: absolute;
       top: 14px;
@@ -2446,11 +2657,40 @@
           </button>
         </div>
 
-        <div class="timer-display">
+        <div id="timerDisplayBox" class="timer-display">
+          <button id="timerModeToggleBtn" class="timer-mode-toggle" type="button" title="Switch to countdown timer" aria-label="Switch between stopwatch and countdown timer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
+          </button>
+          <span id="timerModeLabel" class="timer-mode-label">Stopwatch</span>
           <svg class="timer-orbit" viewBox="0 0 320 180" aria-hidden="true"><path d="M20 140C54 21 259 3 301 104" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="4 9" opacity=".25"/><circle cx="285" cy="77" r="6" fill="currentColor" opacity=".75"/></svg>
           <div>
             <div id="timerText" class="time">00:00:00</div>
             <div id="activeSubjectText" class="active-subject">Ready for Physics</div>
+            <div id="countdownSetup" class="countdown-setup hidden">
+              <div id="countdownChips" class="countdown-chips" aria-label="Quick countdown durations">
+                <button type="button" class="countdown-chip" data-minutes="5">5m</button>
+                <button type="button" class="countdown-chip" data-minutes="15">15m</button>
+                <button type="button" class="countdown-chip" data-minutes="25">25m</button>
+                <button type="button" class="countdown-chip" data-minutes="45">45m</button>
+                <button type="button" class="countdown-chip" data-minutes="60">60m</button>
+              </div>
+              <label class="countdown-custom">
+                <span>Custom</span>
+                <input id="countdownMinutesInput" type="number" min="1" max="600" step="1" inputmode="numeric" aria-label="Custom countdown minutes" />
+                <span>min</span>
+              </label>
+              <div class="countdown-tune-row">
+                <span class="countdown-tune-label">Alarm</span>
+                <div id="countdownTunePicker" class="countdown-tune-picker" aria-label="Choose the sound to play when the timer ends">
+                  <button type="button" class="tune-chip" data-tune="none">None</button>
+                  <button type="button" class="tune-chip" data-tune="chime">Chime</button>
+                  <button type="button" class="tune-chip" data-tune="bells">Bells</button>
+                  <button type="button" class="tune-chip" data-tune="arcade">Arcade</button>
+                  <button type="button" class="tune-chip" data-tune="digital">Digital</button>
+                  <button type="button" class="tune-chip" data-tune="marimba">Marimba</button>
+                </div>
+              </div>
+            </div>
           </div>
           <div id="mascotWrap" class="mascot-wrap" title="Poke me">
             <svg id="mascotSvg" class="mascot-svg" viewBox="0 0 120 120" aria-hidden="true">
@@ -2467,6 +2707,7 @@
               <path class="mascot-mouth mouth-thirsty" d="M50 78 Q60 98 70 78 Q60 92 50 78 Z"/>
             </svg>
           </div>
+          <div id="mascotTip" class="mascot-tip hidden"><span id="mascotTipText"></span></div>
         </div>
 
         <div class="actions">
@@ -2919,6 +3160,14 @@
     let notificationsEnabled = localStorage.getItem(NOTIFY_KEY) === "true";
     let chatSoundEnabled = localStorage.getItem("duotrackChatSound") !== "false";
     let lastTimerCheckpoint = 0;
+    let timerMode = localStorage.getItem("duotrackTimerMode") === "countdown" ? "countdown" : "stopwatch";
+    let countdownMinutes = Math.min(600, Math.max(1, Number(localStorage.getItem("duotrackCountdownMinutes")) || 25));
+    const VALID_COUNTDOWN_TUNES = ["none", "chime", "bells", "arcade", "digital", "marimba"];
+    let countdownTune = VALID_COUNTDOWN_TUNES.includes(localStorage.getItem("duotrackCountdownTune"))
+      ? localStorage.getItem("duotrackCountdownTune")
+      : "none";
+    let countdownCompletedForSession = null;
+    let draggedTodoId = null;
     let pendingChatImage = "";
     let unreadChatCount = 0;
     let locallyDeletedChatIds = new Set();
@@ -2953,6 +3202,13 @@
     const timerToggleBtn = document.getElementById("timerToggleBtn");
     const timerToggleLabel = document.getElementById("timerToggleLabel");
     const timerToggleHint = document.getElementById("timerToggleHint");
+    const timerModeToggleBtn = document.getElementById("timerModeToggleBtn");
+    const timerModeLabel = document.getElementById("timerModeLabel");
+    const timerDisplayBox = document.getElementById("timerDisplayBox");
+    const countdownSetup = document.getElementById("countdownSetup");
+    const countdownChips = document.getElementById("countdownChips");
+    const countdownMinutesInput = document.getElementById("countdownMinutesInput");
+    const countdownTunePicker = document.getElementById("countdownTunePicker");
     const todayTotal = document.getElementById("todayTotal");
     const subjectStat = document.getElementById("subjectStat");
     const statusStat = document.getElementById("statusStat");
@@ -2986,6 +3242,8 @@
     const chatMessages = document.getElementById("chatMessages");
     const mascotWrap = document.getElementById("mascotWrap");
     const mascotPupils = mascotWrap ? mascotWrap.querySelectorAll(".mascot-pupil") : [];
+    const mascotTip = document.getElementById("mascotTip");
+    const mascotTipText = document.getElementById("mascotTipText");
     const voiceCallBtn = document.getElementById("voiceCallBtn");
     const videoCallBtn = document.getElementById("videoCallBtn");
     const callOverlay = document.getElementById("callOverlay");
@@ -3797,6 +4055,20 @@
       }
     }
 
+    // Hovering the mascot shows a quick, personalized hint pointing at the
+    // stopwatch/timer arrow toggle in the corner of the box.
+    function showMascotTip() {
+      if (!mascotTip || !mascotTipText) return;
+      const user = currentUser();
+      const name = user?.name || "there";
+      mascotTipText.innerHTML = `Hi, <strong>${escapeHTML(name)}</strong> — you can turn off the stopwatch and switch to the Timer option by tapping the arrow right here.`;
+      mascotTip.classList.remove("hidden");
+    }
+
+    function hideMascotTip() {
+      mascotTip?.classList.add("hidden");
+    }
+
     if (mascotWrap) {
       document.addEventListener("pointermove", (event) => {
         if (mascotWrap.classList.contains("mood-dizzy")) return;
@@ -3855,8 +4127,12 @@
       let mascotHoverTimer = null;
       mascotWrap.addEventListener("pointerenter", () => {
         mascotHoverTimer = setTimeout(() => setMascotMood("mood-sleepy", 2200), 3000);
+        showMascotTip();
       });
-      mascotWrap.addEventListener("pointerleave", () => clearTimeout(mascotHoverTimer));
+      mascotWrap.addEventListener("pointerleave", () => {
+        clearTimeout(mascotHoverTimer);
+        hideMascotTip();
+      });
 
       // 6. Scroll/wheel over it -> quick startled blink
       mascotWrap.addEventListener("wheel", (event) => {
@@ -4381,6 +4657,153 @@
       return user.todaySeconds + Math.max(0, Math.floor((Date.now() - user.startedAt) / 1000));
     }
 
+    // Countdown ("Timer mode") is a personal, device-only display mode layered on
+    // top of the existing focus session. IMPORTANT: user.startedAt is NOT a stable
+    // "session start" anchor — every ~20s checkpoint (and every Firebase sync of a
+    // checkpoint written from another tab/device) folds elapsed time into
+    // todaySeconds and resets startedAt to Date.now() again. Deriving countdown
+    // elapsed time directly from startedAt made the timer glitch/reset every
+    // checkpoint. Instead we anchor to liveSeconds(user), which is exactly the
+    // value that stays continuous and correct across checkpoints and Firebase
+    // syncs (it's the same total the stopwatch itself relies on), and only
+    // capture a fresh baseline the moment a NEW run actually begins.
+    let countdownSessionActive = false;
+    let countdownBaselineSeconds = null;
+
+    function trackCountdownSession(user) {
+      if (user.running) {
+        if (!countdownSessionActive) {
+          countdownSessionActive = true;
+          countdownBaselineSeconds = liveSeconds(user);
+          countdownCompletedForSession = null;
+        }
+      } else {
+        countdownSessionActive = false;
+        countdownBaselineSeconds = null;
+      }
+    }
+
+    function sessionElapsedSeconds(user) {
+      if (!user.running || countdownBaselineSeconds === null) return 0;
+      return Math.max(0, liveSeconds(user) - countdownBaselineSeconds);
+    }
+
+    function remainingCountdownSeconds(user) {
+      return Math.max(0, countdownMinutes * 60 - sessionElapsedSeconds(user));
+    }
+
+    function renderTimerModeUI(user) {
+      trackCountdownSession(user);
+      const isCountdown = timerMode === "countdown";
+      timerDisplayBox?.classList.toggle("mode-countdown", isCountdown);
+      timerModeToggleBtn.classList.toggle("is-countdown", isCountdown);
+      timerModeToggleBtn.disabled = Boolean(user.running);
+      timerModeToggleBtn.title = isCountdown ? "Switch to stopwatch" : "Switch to countdown timer";
+      timerModeLabel.textContent = isCountdown ? "Timer" : "Stopwatch";
+      countdownSetup.classList.toggle("hidden", !isCountdown || Boolean(user.running));
+
+      if (isCountdown) {
+        countdownMinutesInput.value = countdownMinutes;
+        countdownChips.querySelectorAll(".countdown-chip").forEach((chip) => {
+          chip.classList.toggle("active", Number(chip.dataset.minutes) === countdownMinutes);
+        });
+        countdownTunePicker.querySelectorAll(".tune-chip").forEach((chip) => {
+          chip.classList.toggle("active", chip.dataset.tune === countdownTune);
+        });
+        const remaining = remainingCountdownSeconds(user);
+        timerText.textContent = formatClock(remaining);
+        if (user.running && remaining <= 0) {
+          handleCountdownComplete(user);
+        }
+      } else {
+        timerText.textContent = formatClock(liveSeconds(user));
+      }
+    }
+
+    // Five short, original, non-copyrighted alarm tunes synthesized locally with
+    // the Web Audio API (no external audio files) — plus "none" for no sound.
+    const COUNTDOWN_TUNES = {
+      chime: [
+        { freq: 523.25, offset: 0, duration: 0.32, type: "sine" },
+        { freq: 659.25, offset: 0.18, duration: 0.32, type: "sine" },
+        { freq: 783.99, offset: 0.36, duration: 0.5, type: "sine" }
+      ],
+      bells: [
+        { freq: 392.0, offset: 0, duration: 0.7, type: "triangle" },
+        { freq: 523.25, offset: 0.28, duration: 0.7, type: "triangle" },
+        { freq: 659.25, offset: 0.56, duration: 0.9, type: "triangle" }
+      ],
+      arcade: [
+        { freq: 523.25, offset: 0, duration: 0.11, type: "square" },
+        { freq: 587.33, offset: 0.09, duration: 0.11, type: "square" },
+        { freq: 659.25, offset: 0.18, duration: 0.11, type: "square" },
+        { freq: 698.46, offset: 0.27, duration: 0.11, type: "square" },
+        { freq: 783.99, offset: 0.36, duration: 0.11, type: "square" },
+        { freq: 880.0, offset: 0.45, duration: 0.11, type: "square" },
+        { freq: 1046.5, offset: 0.54, duration: 0.32, type: "square" }
+      ],
+      digital: [
+        { freq: 880, offset: 0, duration: 0.14, type: "square" },
+        { freq: 660, offset: 0.2, duration: 0.14, type: "square" },
+        { freq: 880, offset: 0.4, duration: 0.14, type: "square" },
+        { freq: 660, offset: 0.6, duration: 0.14, type: "square" },
+        { freq: 880, offset: 0.8, duration: 0.22, type: "square" }
+      ],
+      marimba: [
+        { freq: 523.25, offset: 0, duration: 0.24, type: "triangle" },
+        { freq: 587.33, offset: 0.14, duration: 0.24, type: "triangle" },
+        { freq: 698.46, offset: 0.28, duration: 0.24, type: "triangle" },
+        { freq: 783.99, offset: 0.42, duration: 0.24, type: "triangle" },
+        { freq: 880.0, offset: 0.56, duration: 0.4, type: "triangle" }
+      ]
+    };
+
+    function playTune(tuneId) {
+      const notes = COUNTDOWN_TUNES[tuneId];
+      if (!notes) return;
+      try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        const context = new AudioContextClass();
+        const start = context.currentTime;
+        let closeAfter = 0.2;
+        notes.forEach(({ freq, offset, duration, type }) => {
+          const oscillator = context.createOscillator();
+          const gain = context.createGain();
+          oscillator.type = type || "sine";
+          oscillator.frequency.value = freq;
+          gain.gain.setValueAtTime(0.0001, start + offset);
+          gain.gain.exponentialRampToValueAtTime(0.11, start + offset + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.0001, start + offset + duration);
+          oscillator.connect(gain).connect(context.destination);
+          oscillator.start(start + offset);
+          oscillator.stop(start + offset + duration + 0.02);
+          closeAfter = Math.max(closeAfter, offset + duration + 0.2);
+        });
+        setTimeout(() => context.close(), Math.ceil(closeAfter * 1000));
+      } catch (_) { /* Browser may block sound before a user gesture. */ }
+    }
+
+    function playCountdownAlarm() {
+      if (countdownTune === "none") return;
+      playTune(countdownTune);
+    }
+
+    async function handleCountdownComplete(user) {
+      if (!user.running || !user.startedAt) return;
+      if (countdownCompletedForSession === user.startedAt) return;
+      countdownCompletedForSession = user.startedAt;
+      playCountdownAlarm();
+      showToast("Timer complete", `Your ${countdownMinutes}-minute focus timer is up.`);
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("DuoTrack - Timer complete", {
+          body: `Your ${countdownMinutes}-minute focus timer is up.`,
+          tag: "duotrack-countdown"
+        });
+      }
+      const patch = stoppedTimerPatch(user);
+      if (patch) await writeUserPatch(user.id, patch);
+    }
+
     // Seconds spent in a specific mode ("Lecture" or "Practice") today,
     // including the still-running segment if that's the mode currently active.
     function liveModeSeconds(user, mode) {
@@ -4838,7 +5261,7 @@
       const displaySubject = user.running ? user.currentSubject : user.selectedSubject;
       const displayMode = user.running ? (user.currentMode || "Lecture") : (user.selectedMode || "Lecture");
       const accent = subjectAccent(displaySubject);
-      timerText.textContent = formatClock(seconds);
+      renderTimerModeUI(user);
       activeSubjectText.textContent = user.running
         ? `Studying ${user.currentSubject} · ${displayMode}`
         : `Ready for ${user.selectedSubject} · ${displayMode}`;
@@ -4891,7 +5314,7 @@
       if (!user || !partner) return;
 
       const seconds = liveSeconds(user);
-      timerText.textContent = formatClock(seconds);
+      renderTimerModeUI(user);
       todayTotal.textContent = formatHours(seconds);
       lectureModeStat.textContent = formatHours(liveModeSeconds(user, "Lecture"));
       practiceModeStat.textContent = formatHours(liveModeSeconds(user, "Practice"));
@@ -4921,6 +5344,24 @@
       user.todos.forEach((todo) => {
         const item = document.createElement("li");
         item.className = `todo-item${todo.done ? " done" : ""}`;
+        item.draggable = true;
+        item.dataset.todoId = todo.id;
+
+        item.addEventListener("dragstart", () => {
+          draggedTodoId = todo.id;
+          requestAnimationFrame(() => item.classList.add("dragging"));
+        });
+        item.addEventListener("dragend", () => {
+          draggedTodoId = null;
+          item.classList.remove("dragging");
+          todoList.querySelectorAll(".todo-item.drag-over").forEach((el) => el.classList.remove("drag-over"));
+        });
+
+        const dragHandle = document.createElement("span");
+        dragHandle.className = "todo-drag-handle";
+        dragHandle.title = "Drag to reorder";
+        dragHandle.setAttribute("aria-hidden", "true");
+        dragHandle.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>`;
 
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
@@ -4953,10 +5394,44 @@
           await writeUserPatch(user.id, { todos });
         });
 
-        item.append(checkbox, tagIcon, text, remove);
+        item.append(dragHandle, checkbox, tagIcon, text, remove);
         todoList.appendChild(item);
       });
     }
+
+    todoList.addEventListener("dragover", (event) => {
+      if (!draggedTodoId) return;
+      event.preventDefault();
+      const targetItem = event.target.closest(".todo-item");
+      todoList.querySelectorAll(".todo-item.drag-over").forEach((el) => {
+        if (el !== targetItem) el.classList.remove("drag-over");
+      });
+      if (targetItem && targetItem.dataset.todoId !== draggedTodoId) {
+        targetItem.classList.add("drag-over");
+      }
+    });
+
+    todoList.addEventListener("dragleave", (event) => {
+      const targetItem = event.target.closest(".todo-item");
+      if (targetItem) targetItem.classList.remove("drag-over");
+    });
+
+    todoList.addEventListener("drop", async (event) => {
+      event.preventDefault();
+      const targetItem = event.target.closest(".todo-item");
+      todoList.querySelectorAll(".todo-item.drag-over").forEach((el) => el.classList.remove("drag-over"));
+      const user = currentUser();
+      if (!user || !draggedTodoId || !targetItem || targetItem.dataset.todoId === draggedTodoId) return;
+
+      const todos = [...user.todos];
+      const fromIndex = todos.findIndex((todo) => todo.id === draggedTodoId);
+      const toIndex = todos.findIndex((todo) => todo.id === targetItem.dataset.todoId);
+      if (fromIndex === -1 || toIndex === -1) return;
+
+      const [moved] = todos.splice(fromIndex, 1);
+      todos.splice(toIndex, 0, moved);
+      await writeUserPatch(user.id, { todos });
+    });
 
     function renderPartner(partner) {
       partnerCard.innerHTML = `
@@ -5451,6 +5926,44 @@
       }
     });
 
+    timerModeToggleBtn.addEventListener("click", () => {
+      const user = currentUser();
+      if (user?.running) return;
+      timerMode = timerMode === "countdown" ? "stopwatch" : "countdown";
+      localStorage.setItem("duotrackTimerMode", timerMode);
+      render();
+    });
+
+    countdownChips.addEventListener("click", (event) => {
+      const chip = event.target.closest(".countdown-chip");
+      if (!chip) return;
+      const user = currentUser();
+      if (user?.running) return;
+      countdownMinutes = Math.min(600, Math.max(1, Number(chip.dataset.minutes) || 25));
+      localStorage.setItem("duotrackCountdownMinutes", String(countdownMinutes));
+      render();
+    });
+
+    countdownMinutesInput.addEventListener("change", () => {
+      const user = currentUser();
+      if (user?.running) return;
+      const value = Math.min(600, Math.max(1, Math.round(Number(countdownMinutesInput.value)) || 25));
+      countdownMinutes = value;
+      localStorage.setItem("duotrackCountdownMinutes", String(countdownMinutes));
+      render();
+    });
+
+    countdownTunePicker.addEventListener("click", (event) => {
+      const chip = event.target.closest(".tune-chip");
+      if (!chip) return;
+      const tune = chip.dataset.tune;
+      if (!VALID_COUNTDOWN_TUNES.includes(tune)) return;
+      countdownTune = tune;
+      localStorage.setItem("duotrackCountdownTune", countdownTune);
+      playTune(tune);
+      render();
+    });
+
     profilePicBtn.addEventListener("click", () => profilePicInput.click());
 
     profilePicInput.addEventListener("change", async () => {
@@ -5777,12 +6290,13 @@
       }, 2500);
     });
 
-    chatImageBtn.addEventListener("click", () => chatImageInput.click());
-    chatImageInput.addEventListener("change", async () => {
-      const file = chatImageInput.files[0];
+    async function handleChatImageFile(file) {
       const user = currentUser();
-      chatImageInput.value = "";
       if (!file || !user) return;
+      if (!file.type || !file.type.startsWith("image/")) {
+        showToast("Unsupported file", "Only image files can be attached to chat right now.");
+        return;
+      }
       if (file.size > 3500000) {
         showToast("Image too large", "Choose an image under 3.5 MB.");
         return;
@@ -5794,6 +6308,38 @@
       } catch (_) {
         showToast("Image error", "That image could not be sent.");
       }
+    }
+
+    chatImageBtn.addEventListener("click", () => chatImageInput.click());
+    chatImageInput.addEventListener("change", async () => {
+      const file = chatImageInput.files[0];
+      chatImageInput.value = "";
+      await handleChatImageFile(file);
+    });
+
+    let chatDragDepth = 0;
+    chatPanel.addEventListener("dragenter", (event) => {
+      if (!Array.from(event.dataTransfer?.types || []).includes("Files")) return;
+      event.preventDefault();
+      chatDragDepth += 1;
+      chatPanel.classList.add("chat-drag-over");
+    });
+    chatPanel.addEventListener("dragover", (event) => {
+      if (!Array.from(event.dataTransfer?.types || []).includes("Files")) return;
+      event.preventDefault();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
+    });
+    chatPanel.addEventListener("dragleave", () => {
+      chatDragDepth = Math.max(0, chatDragDepth - 1);
+      if (chatDragDepth === 0) chatPanel.classList.remove("chat-drag-over");
+    });
+    chatPanel.addEventListener("drop", async (event) => {
+      const files = event.dataTransfer?.files;
+      if (!files || !files.length) return;
+      event.preventDefault();
+      chatDragDepth = 0;
+      chatPanel.classList.remove("chat-drag-over");
+      await handleChatImageFile(files[0]);
     });
 
     removeChatImageBtn.addEventListener("click", () => {
