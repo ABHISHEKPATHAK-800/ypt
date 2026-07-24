@@ -2043,33 +2043,192 @@
     }
     .timer-display.mode-countdown .countdown-custom input { color: #2d2205; }
 
-    .mascot-tip {
-      position: absolute;
-      top: 62px;
-      right: 8px;
-      z-index: 6;
-      width: min(230px, calc(100% - 90px));
-      background: var(--ink);
-      color: #fff;
-      font-size: 12px;
-      font-weight: 600;
-      line-height: 1.4;
-      padding: 10px 12px;
-      border-radius: 10px;
-      text-align: left;
-      box-shadow: var(--shadow);
-      animation: riseIn 180ms ease both;
-      pointer-events: none;
+    /* Welcome popup: a centered rectangular modal, like a typical website popup */
+    .welcome-modal-backdrop {
+      z-index: 30;
+      background: rgba(8, 16, 12, 0.58);
+      backdrop-filter: blur(3px);
     }
-    .mascot-tip::after {
+
+    .welcome-modal {
+      width: min(440px, 100%);
+      padding: 0;
+      overflow: hidden;
+      border-radius: 22px;
+      box-shadow: 0 32px 70px rgba(9, 30, 20, 0.4), 0 6px 18px rgba(9, 30, 20, 0.18);
+      animation: welcomePop 380ms cubic-bezier(.2, .9, .25, 1.1) both;
+    }
+
+    @keyframes welcomePop {
+      from { opacity: 0; transform: translateY(18px) scale(.96); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .welcome-modal-banner {
+      position: relative;
+      padding: 34px 26px 46px;
+      background:
+        radial-gradient(circle at 14% -10%, rgba(255, 216, 115, 0.35), transparent 45%),
+        radial-gradient(circle at 100% 0%, rgba(255, 255, 255, 0.14), transparent 40%),
+        linear-gradient(155deg, #1d7a52, #0e3f2a 78%);
+      color: #fff;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .welcome-modal-banner::before {
       content: "";
       position: absolute;
-      top: -6px;
-      right: 22px;
-      border: 6px solid transparent;
-      border-bottom-color: var(--ink);
+      inset: -20% -10% auto auto;
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.1), transparent 70%);
+      z-index: -1;
     }
-    .mascot-tip strong { color: #ffd873; }
+
+    .welcome-modal-orbit {
+      position: absolute;
+      right: -18px;
+      bottom: -30px;
+      width: 190px;
+      height: 190px;
+      color: rgba(255, 255, 255, 0.35);
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    .welcome-modal-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 11px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      color: #ffe9ad;
+      font-size: 10.5px;
+      font-weight: 900;
+      letter-spacing: 1.1px;
+      text-transform: uppercase;
+    }
+
+    .welcome-modal-eyebrow svg { width: 11px; height: 11px; }
+
+    .welcome-modal-banner h2 {
+      margin: 12px 0 0;
+      font-size: 25px;
+      font-weight: 900;
+      letter-spacing: -.4px;
+      line-height: 1.15;
+    }
+
+    .welcome-modal-banner p.welcome-modal-sub {
+      margin: 5px 0 0;
+      color: rgba(255, 255, 255, 0.78);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .welcome-modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.16);
+      color: #fff;
+      z-index: 2;
+    }
+
+    .welcome-modal-close:hover { background: rgba(255, 255, 255, 0.3); transform: translateY(0) rotate(90deg); }
+    .welcome-modal-close svg { width: 15px; height: 15px; }
+
+    .welcome-modal-body {
+      position: relative;
+      margin-top: -26px;
+      padding: 0 24px 26px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .welcome-modal-feature {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: var(--shadow-lift);
+    }
+
+    .welcome-modal-feature-icon {
+      position: relative;
+      width: 42px;
+      height: 42px;
+      flex: none;
+      border-radius: 13px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(145deg, #ffe08a, #f3b53f);
+      color: #7a4a06;
+      box-shadow: 0 8px 18px rgba(243, 181, 63, 0.4);
+    }
+
+    .welcome-modal-feature-icon::after {
+      content: "";
+      position: absolute;
+      inset: -5px;
+      border-radius: 16px;
+      border: 1.5px solid rgba(243, 181, 63, 0.45);
+      animation: pulseGlow 2.6s ease-in-out infinite;
+    }
+
+    .welcome-modal-feature-icon svg { width: 20px; height: 20px; }
+
+    .welcome-modal-feature p {
+      margin: 0;
+      color: var(--ink);
+      font-size: 13.5px;
+      font-weight: 600;
+      line-height: 1.55;
+    }
+
+    .welcome-modal-feature p strong { color: var(--green); font-weight: 800; }
+
+    .welcome-modal-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .welcome-modal-thanks {
+      margin: 0;
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 12.5px;
+    }
+
+    .welcome-modal-cta {
+      min-height: 42px;
+      padding: 0 20px;
+      border-radius: 11px;
+      font-weight: 800;
+      font-size: 13px;
+      color: #fff;
+      background: linear-gradient(135deg, var(--green), color-mix(in srgb, var(--green) 78%, black));
+      box-shadow: 0 10px 22px color-mix(in srgb, var(--green) 38%, transparent);
+    }
+
+    .welcome-modal-cta:hover { box-shadow: 0 14px 28px color-mix(in srgb, var(--green) 45%, transparent); }
+
+    body:is(.theme-night, .night-override) .welcome-modal-feature { background: #16231c; border-color: #34473e; }
+    body:is(.theme-night, .night-override) .welcome-modal-feature-icon { background: #101914; }
 
     #mascotWrap.mascot-wrap {
       position: absolute;
@@ -2085,7 +2244,8 @@
     .mascot-wrap:hover { transform: scale(1.08); }
     .mascot-wrap:active { transform: scale(.94); }
     .mascot-svg { width: 100%; height: 100%; overflow: visible; }
-    .mascot-face { fill: #ffd873; stroke: #c98a2b; stroke-width: 3; }
+    .mascot-face { fill: url(#mascotFaceGrad); stroke: #c98a2b; stroke-width: 3; }
+    .mascot-face-shine { pointer-events: none; }
     .mascot-sclera { fill: #fff; }
     .mascot-pupil { fill: #26301f; }
     .mascot-spiral { display: none; fill: none; stroke: #26301f; stroke-width: 2; stroke-linecap: round; }
@@ -2491,6 +2651,148 @@
         height: 58vh;
       }
     }
+
+    /* ---------- Visual polish pass: icons, spacing, depth ---------- */
+    .subject-option,
+    .mode-option {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+
+    .subject-option .option-icon,
+    .mode-option .option-icon {
+      width: 36px;
+      height: 36px;
+      flex: none;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      background: color-mix(in srgb, var(--subject, var(--mode, var(--green))) 15%, var(--panel));
+      color: var(--subject, var(--mode, var(--green)));
+      transition: transform 200ms ease, background 200ms ease;
+    }
+
+    .option-icon svg { width: 18px; height: 18px; display: block; }
+
+    .subject-option:hover .option-icon,
+    .mode-option:hover .option-icon,
+    .subject-option.active .option-icon,
+    .mode-option.active .option-icon {
+      transform: scale(1.06) rotate(-4deg);
+      background: color-mix(in srgb, var(--subject, var(--mode, var(--green))) 26%, var(--panel));
+    }
+
+    .subject-option .option-text,
+    .mode-option .option-text {
+      display: grid;
+      gap: 3px;
+      min-width: 0;
+      color: var(--ink);
+      font-weight: 800;
+    }
+
+    .subject-option .option-text span,
+    .mode-option .option-text span {
+      display: block;
+      color: var(--muted);
+      font-size: 11.5px;
+      font-weight: 700;
+      white-space: normal;
+      line-height: 1.25;
+    }
+
+    .mode-option .option-text span { font-size: 11px; }
+
+    /* Stat cards: icon + label row, number below */
+    .stat {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      column-gap: 8px;
+      row-gap: 2px;
+      align-items: center;
+      transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+    }
+
+    .stat:hover {
+      transform: translateY(-2px);
+      border-color: color-mix(in srgb, var(--green) 45%, var(--line));
+    }
+
+    .stat .stat-icon {
+      grid-row: 1 / 3;
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border-radius: 9px;
+      background: var(--green-2);
+      color: var(--green);
+      flex: none;
+    }
+
+    .stat-icon svg { width: 15px; height: 15px; }
+
+    .stat .stat-label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .3px;
+      align-self: end;
+    }
+
+    .stat strong {
+      grid-column: 2;
+      align-self: start;
+      margin-top: 0;
+    }
+
+    body:is(.theme-night, .night-override) .option-icon,
+    body:is(.theme-night, .night-override) .stat-icon {
+      background: color-mix(in srgb, var(--subject, var(--mode, var(--green))) 22%, #101914);
+    }
+
+    /* Empty-state SVG icons (replacing former emoji placeholders) */
+    .empty-state-icon {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--green-2);
+      color: var(--green);
+      font-size: inherit;
+      opacity: 1;
+    }
+
+    .empty-state-icon svg { width: 17px; height: 17px; }
+
+    /* Slightly richer card depth + consistent radius rhythm */
+    .subject-option,
+    .mode-option,
+    .stat,
+    .quick-add-tab,
+    .todo-item {
+      border-radius: 12px;
+    }
+
+    .panel { border-radius: 18px; }
+
+    .primary-btn,
+    .secondary-btn,
+    .danger-btn,
+    .ghost-btn {
+      border-radius: 12px;
+    }
+
+    .sync-pill,
+    .live-badge,
+    .reaction-pill,
+    .countdown-chip,
+    .tune-chip {
+      border-radius: var(--radius-pill, 999px);
+    }
   </style>
 </head>
 <body>
@@ -2614,27 +2916,27 @@
 
         <div id="subjectGrid" class="subject-grid" aria-label="Subject choices">
           <button class="subject-option active" type="button" data-subject="Physics">
-            Physics
-            <span>Concepts and numericals</span>
+            <span class="option-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><ellipse cx="12" cy="12" rx="9.5" ry="4"/><ellipse cx="12" cy="12" rx="9.5" ry="4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="9.5" ry="4" transform="rotate(120 12 12)"/><circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none"/></svg></span>
+            <span class="option-text">Physics<span>Concepts and numericals</span></span>
           </button>
           <button class="subject-option" type="button" data-subject="Chemistry">
-            Chemistry
-            <span>Reactions and practice</span>
+            <span class="option-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6.2L4.8 18.4A2 2 0 0 0 6.5 21h11a2 2 0 0 0 1.7-2.6L14 9.2V3"/><path d="M8 15h8"/></svg></span>
+            <span class="option-text">Chemistry<span>Reactions and practice</span></span>
           </button>
           <button class="subject-option" type="button" data-subject="Maths">
-            Maths
-            <span>Problems and revision</span>
+            <span class="option-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h13M9 4c0 6-2 12-6 16M9 4c1.2 4 3.6 6 8 6"/></svg></span>
+            <span class="option-text">Maths<span>Problems and revision</span></span>
           </button>
         </div>
 
         <div id="modeGrid" class="mode-grid" aria-label="Session mode choices">
           <button class="mode-option active" type="button" data-mode="Lecture">
-            Lecture Mode
-            <span>Watching / attending a lecture</span>
+            <span class="option-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h12v13l-6-3-6 3Z"/><path d="M16 8h4v13l-4-2"/></svg></span>
+            <span class="option-text">Lecture Mode<span>Watching / attending a lecture</span></span>
           </button>
           <button class="mode-option" type="button" data-mode="Practice">
-            Practice Mode
-            <span>Solving problems / revising</span>
+            <span class="option-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m14.5 3.5 6 6L8 22H3v-5.5Z"/><path d="m12.5 5.5 6 6"/></svg></span>
+            <span class="option-text">Practice Mode<span>Solving problems / revising</span></span>
           </button>
         </div>
 
@@ -2694,7 +2996,15 @@
           </div>
           <div id="mascotWrap" class="mascot-wrap" title="Poke me">
             <svg id="mascotSvg" class="mascot-svg" viewBox="0 0 120 120" aria-hidden="true">
-              <circle class="mascot-face" cx="60" cy="62" r="50"/>
+              <defs>
+                <radialGradient id="mascotFaceGrad" cx="38%" cy="30%" r="75%">
+                  <stop offset="0%" stop-color="#fff3d1"/>
+                  <stop offset="55%" stop-color="#ffd873"/>
+                  <stop offset="100%" stop-color="#f3b53f"/>
+                </radialGradient>
+              </defs>
+              <circle class="mascot-face" cx="60" cy="62" r="50" fill="url(#mascotFaceGrad)"/>
+              <ellipse class="mascot-face-shine" cx="42" cy="38" rx="16" ry="9" fill="rgba(255,255,255,0.55)"/>
               <path class="mascot-brow-l" d="M30 40 Q42 32 54 40"/>
               <path class="mascot-brow-r" d="M66 40 Q78 32 90 40"/>
               <g class="mascot-eye-l"><circle class="mascot-sclera" cx="44" cy="56" r="13"/><circle class="mascot-pupil" cx="44" cy="56" r="5.5"/><path class="mascot-spiral" d="M44 56 m-6 0 a6 6 0 1 1 12 0 a4 4 0 1 1 -8 0 a2 2 0 1 1 4 0"/></g>
@@ -2707,7 +3017,6 @@
               <path class="mascot-mouth mouth-thirsty" d="M50 78 Q60 98 70 78 Q60 92 50 78 Z"/>
             </svg>
           </div>
-          <div id="mascotTip" class="mascot-tip hidden"><span id="mascotTipText"></span></div>
         </div>
 
         <div class="actions">
@@ -2735,34 +3044,41 @@
 
         <div class="stats-row">
           <div class="stat">
-            <span>Studied Today</span>
+            <span class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></span>
+            <span class="stat-label">Studied Today</span>
             <strong id="todayTotal">0h 0m</strong>
           </div>
           <div class="stat">
-            <span>Current Subject</span>
+            <span class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V6a2 2 0 0 1 2-2h11.5v15H6a2 2 0 0 0-2 2Z"/><path d="M8 8h6"/></svg></span>
+            <span class="stat-label">Current Subject</span>
             <strong id="subjectStat">Physics</strong>
           </div>
           <div class="stat">
-            <span>Status</span>
+            <span class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3 4 14h6l-1 7 9-11h-6Z"/></svg></span>
+            <span class="stat-label">Status</span>
             <strong id="statusStat">Stopped</strong>
           </div>
           <div class="stat">
-            <span>Yesterday</span>
+            <span class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>
+            <span class="stat-label">Yesterday</span>
             <strong id="historyStat">0h 0m</strong>
           </div>
         </div>
 
         <div class="stats-row stats-row-3">
           <div class="stat">
-            <span>Lecture Mode</span>
+            <span class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h12v13l-6-3-6 3Z"/><path d="M16 8h4v13l-4-2"/></svg></span>
+            <span class="stat-label">Lecture Mode</span>
             <strong id="lectureModeStat">0h 0m</strong>
           </div>
           <div class="stat">
-            <span>Practice Mode</span>
+            <span class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14.5 3.5 6 6L8 22H3v-5.5Z"/></svg></span>
+            <span class="stat-label">Practice Mode</span>
             <strong id="practiceModeStat">0h 0m</strong>
           </div>
           <div class="stat">
-            <span>Questions Today</span>
+            <span class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1 .8-1 1.7M12 17h.01"/></svg></span>
+            <span class="stat-label">Questions Today</span>
             <strong id="questionsTodayStat">0</strong>
           </div>
         </div>
@@ -2886,7 +3202,7 @@
           </div>
         </div>
         <div id="grokMessages" class="chat-messages grok-messages" aria-live="polite">
-          <div class="empty-state"><span class="empty-state-icon">AI</span><span>Ask anything — physics, chemistry, maths, or just a quick doubt.</span></div>
+          <div class="empty-state"><span class="empty-state-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2Z"/><path d="M19 15l.9 2.6 2.6.9-2.6.9L19 22l-.9-2.6-2.6-.9 2.6-.9L19 15Z"/></svg></span><span>Ask anything — physics, chemistry, maths, or just a quick doubt.</span></div>
         </div>
         <div id="grokThinking" class="typing-indicator hidden">
           <span class="typing-dots"><span></span><span></span><span></span></span>
@@ -2937,6 +3253,35 @@
         <button id="closeModalBtn" class="small-btn" type="button" aria-label="Close">X</button>
       </div>
       <div id="modalBody"></div>
+    </section>
+  </div>
+
+  <div id="welcomeModal" class="modal-backdrop welcome-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="welcomeModalTitle">
+    <section class="modal welcome-modal">
+      <div class="welcome-modal-banner">
+        <svg class="welcome-modal-orbit" viewBox="0 0 190 190" aria-hidden="true"><circle cx="95" cy="95" r="80" fill="none" stroke="currentColor" stroke-width="1.4" stroke-dasharray="3 10"/><circle cx="95" cy="95" r="55" fill="none" stroke="currentColor" stroke-width="1.4" stroke-dasharray="2 8"/><circle cx="150" cy="60" r="4" fill="currentColor"/></svg>
+        <span class="welcome-modal-eyebrow">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2Z"/></svg>
+          New feature
+        </span>
+        <h2 id="welcomeModalTitle">Welcome</h2>
+        <p class="welcome-modal-sub">Here's what's new in DuoTrack</p>
+        <button id="welcomeModalClose" class="welcome-modal-close" type="button" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+      <div class="welcome-modal-body">
+        <div class="welcome-modal-feature">
+          <span class="welcome-modal-feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
+          </span>
+          <p id="welcomeModalText"></p>
+        </div>
+        <div class="welcome-modal-footer">
+          <p class="welcome-modal-thanks">Thank you</p>
+          <button id="welcomeModalCta" class="welcome-modal-cta" type="button">Got it</button>
+        </div>
+      </div>
     </section>
   </div>
 
@@ -3060,6 +3405,9 @@
     const HYDRATION_ENABLED_KEY = "duotrackHydrationEnabled";
     const EIGHT_HOUR_SOUND_KEY = "duotrackEightHourSoundUrl";
     const HYDRATION_MINUTES_KEY = "duotrackHydrationMinutes";
+    const WELCOME_POPUP_ENABLED_KEY = "duotrackWelcomePopupEnabled";
+    const WELCOME_POPUP_TEXT_KEY = "duotrackWelcomePopupText";
+    const DEFAULT_WELCOME_POPUP_TEXT = "there's a new feature now — you can switch to timer mode by clicking on the arrow button (it helps in time-bound practice).";
     const SETTINGS_PASSWORD = "jeemain";
     const EXPORT_VERSION = 1;
     const THEME_PRESETS = [
@@ -3242,8 +3590,10 @@
     const chatMessages = document.getElementById("chatMessages");
     const mascotWrap = document.getElementById("mascotWrap");
     const mascotPupils = mascotWrap ? mascotWrap.querySelectorAll(".mascot-pupil") : [];
-    const mascotTip = document.getElementById("mascotTip");
-    const mascotTipText = document.getElementById("mascotTipText");
+    const welcomeModal = document.getElementById("welcomeModal");
+    const welcomeModalTitle = document.getElementById("welcomeModalTitle");
+    const welcomeModalText = document.getElementById("welcomeModalText");
+    const welcomeModalClose = document.getElementById("welcomeModalClose");
     const voiceCallBtn = document.getElementById("voiceCallBtn");
     const videoCallBtn = document.getElementById("videoCallBtn");
     const callOverlay = document.getElementById("callOverlay");
@@ -3607,6 +3957,15 @@
         <p id="settingsToolError" class="settings-error" aria-live="polite"></p>
 
         <hr class="settings-divider">
+        <p class="subtext"><strong>Welcome popup</strong> — the mascot's message that opens automatically when the app loads. Personal to this device.</p>
+        <form id="welcomePopupForm" class="field settings-inline-form">
+          <label class="checkbox-row"><input id="welcomePopupEnabledInput" type="checkbox" ${welcomePopupEnabled ? "checked" : ""}> Show this popup when the app opens</label>
+          <label for="welcomePopupTextInput">Message text</label>
+          <textarea id="welcomePopupTextInput" rows="3" maxlength="240">${escapeHTML(welcomePopupText)}</textarea>
+          <button class="secondary-btn" type="submit">Save popup</button>
+        </form>
+
+        <hr class="settings-divider">
         <p class="subtext"><strong>Hydration reminder</strong> — a cute nudge from your mascot, personal to this device.</p>
         <form id="hydrationForm" class="field settings-inline-form">
           <label class="checkbox-row"><input id="hydrationEnabledInput" type="checkbox" ${hydrationEnabled ? "checked" : ""}> Remind me to drink water</label>
@@ -3674,7 +4033,7 @@
     }
 
     function renderAdminChatList() {
-      if (!rawChatMessages.length) return `<div class="empty-state"><span class="empty-state-icon">💬</span><span>No messages yet.</span></div>`;
+      if (!rawChatMessages.length) return `<div class="empty-state"><span class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 15a4 4 0 0 1-4 4H8l-4 3v-7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4v8Z"/></svg></span><span>No messages yet.</span></div>`;
       return rawChatMessages.slice(-20).reverse().map((message) => `
         <div class="admin-chat-row">
           <span class="admin-chat-snippet"><strong>${escapeHTML(message.name)}:</strong> ${escapeHTML(message.text || (message.image ? "[Photo]" : "[deleted]"))}</span>
@@ -4055,19 +4414,43 @@
       }
     }
 
-    // Hovering the mascot shows a quick, personalized hint pointing at the
-    // stopwatch/timer arrow toggle in the corner of the box.
-    function showMascotTip() {
-      if (!mascotTip || !mascotTipText) return;
+    // A rectangular welcome popup (a centered modal, like on most sites)
+    // shows automatically once per page load with the current feature
+    // announcement. It only closes via its own close (x) button or by
+    // clicking outside the box — never on its own.
+    let welcomePopupEnabled = localStorage.getItem(WELCOME_POPUP_ENABLED_KEY) !== "false";
+    let welcomePopupText = localStorage.getItem(WELCOME_POPUP_TEXT_KEY) || DEFAULT_WELCOME_POPUP_TEXT;
+    let welcomePopupShownThisLoad = false;
+
+    function renderWelcomePopupContent() {
+      if (!welcomeModalTitle || !welcomeModalText) return;
       const user = currentUser();
       const name = user?.name || "there";
-      mascotTipText.innerHTML = `Hi, <strong>${escapeHTML(name)}</strong> — you can turn off the stopwatch and switch to the Timer option by tapping the arrow right here.`;
-      mascotTip.classList.remove("hidden");
+      welcomeModalTitle.textContent = `Welcome, ${name}`;
+      welcomeModalText.textContent = `Hi, ${welcomePopupText}`;
     }
 
-    function hideMascotTip() {
-      mascotTip?.classList.add("hidden");
+    function showWelcomePopup() {
+      if (!welcomeModal) return;
+      renderWelcomePopupContent();
+      welcomeModal.classList.remove("hidden");
     }
+
+    function hideWelcomePopup() {
+      welcomeModal?.classList.add("hidden");
+    }
+
+    function maybeShowWelcomePopupOnLoad() {
+      if (welcomePopupShownThisLoad || !welcomePopupEnabled) return;
+      welcomePopupShownThisLoad = true;
+      showWelcomePopup();
+    }
+
+    welcomeModalClose?.addEventListener("click", hideWelcomePopup);
+    welcomeModal?.addEventListener("click", (event) => {
+      if (event.target === welcomeModal) hideWelcomePopup();
+    });
+
 
     if (mascotWrap) {
       document.addEventListener("pointermove", (event) => {
@@ -4086,7 +4469,8 @@
         });
       });
 
-      // 1. Tap / click -> annoyed
+      // 1. Tap / click -> annoyed, and also a quick way to bring the
+      // welcome popup back if you've closed it.
       let mascotLongPressFired = false;
       mascotWrap.addEventListener("click", () => {
         // A completed long-press also fires a trailing "click" on release —
@@ -4096,6 +4480,7 @@
           return;
         }
         setMascotMood("mood-angry", 1200);
+        showWelcomePopup();
       });
 
       // 2. Double tap / double-click -> happy
@@ -4127,11 +4512,9 @@
       let mascotHoverTimer = null;
       mascotWrap.addEventListener("pointerenter", () => {
         mascotHoverTimer = setTimeout(() => setMascotMood("mood-sleepy", 2200), 3000);
-        showMascotTip();
       });
       mascotWrap.addEventListener("pointerleave", () => {
         clearTimeout(mascotHoverTimer);
-        hideMascotTip();
       });
 
       // 6. Scroll/wheel over it -> quick startled blink
@@ -5095,7 +5478,7 @@
     function renderGrokMessages() {
       if (!grokMessages) return;
       if (!grokConversation.length) {
-        grokMessages.innerHTML = `<div class="empty-state"><span class="empty-state-icon">AI</span><span>Ask anything — physics, chemistry, maths, or just a quick doubt.</span></div>`;
+        grokMessages.innerHTML = `<div class="empty-state"><span class="empty-state-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2Z"/><path d="M19 15l.9 2.6 2.6.9-2.6.9L19 22l-.9-2.6-2.6-.9 2.6-.9L19 15Z"/></svg></span><span>Ask anything — physics, chemistry, maths, or just a quick doubt.</span></div>`;
         return;
       }
       grokMessages.innerHTML = grokConversation.map((message) => `
@@ -5240,6 +5623,7 @@
       if (!user || !partner) return;
       loginScreen.classList.add("hidden");
       appScreen.classList.remove("hidden");
+      maybeShowWelcomePopupOnLoad();
 
       topAvatar.innerHTML = avatarMarkup(user);
       profilePicBtn.innerHTML = avatarMarkup(user);
@@ -5336,7 +5720,7 @@
       if (!user.todos.length) {
         const empty = document.createElement("li");
         empty.className = "empty-state";
-        empty.innerHTML = `<span class="empty-state-icon">📝</span><span>Nothing on today's plan yet — add your first task above.</span>`;
+        empty.innerHTML = `<span class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></span><span>Nothing on today's plan yet — add your first task above.</span>`;
         todoList.appendChild(empty);
         return;
       }
@@ -5583,7 +5967,7 @@
       lastRenderedChatKey = chatKey;
 
       if (!chatMessagesState.length) {
-        chatMessages.innerHTML = `<div class="empty-state"><span class="empty-state-icon">💬</span><span>No messages yet — say hi to get the conversation going.</span></div>`;
+        chatMessages.innerHTML = `<div class="empty-state"><span class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 15a4 4 0 0 1-4 4H8l-4 3v-7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4v8Z"/></svg></span><span>No messages yet — say hi to get the conversation going.</span></div>`;
         return;
       }
     function renderReplyQuote(message) {
@@ -6396,6 +6780,17 @@
           return;
         }
 
+        openThemeSettings();
+        return;
+      }
+
+      if (event.target.id === "welcomePopupForm") {
+        event.preventDefault();
+        welcomePopupEnabled = document.getElementById("welcomePopupEnabledInput").checked;
+        welcomePopupText = document.getElementById("welcomePopupTextInput").value.trim() || DEFAULT_WELCOME_POPUP_TEXT;
+        localStorage.setItem(WELCOME_POPUP_ENABLED_KEY, String(welcomePopupEnabled));
+        localStorage.setItem(WELCOME_POPUP_TEXT_KEY, welcomePopupText);
+        showToast("Saved", "Welcome popup settings updated.");
         openThemeSettings();
         return;
       }
