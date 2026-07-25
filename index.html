@@ -923,14 +923,142 @@
     .partner-card {
       width: 100%;
       text-align: left;
-      background: #fff;
+      background: linear-gradient(165deg, #fff, var(--green-2) 220%);
       border: 1px solid var(--line);
-      border-radius: 8px;
+      border-radius: 14px;
       padding: 14px;
       display: grid;
       grid-template-columns: auto minmax(0, 1fr);
-      gap: 12px;
+      gap: 14px;
       align-items: center;
+      transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+    }
+
+    .partner-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lift);
+    }
+
+    .partner-avatar-wrap {
+      position: relative;
+      width: 54px;
+      height: 54px;
+    }
+
+    .partner-avatar-wrap .avatar {
+      width: 54px;
+      height: 54px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .partner-avatar-wrap::before {
+      content: "";
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      background: conic-gradient(from 0deg, var(--green), color-mix(in srgb, var(--green) 40%, transparent), var(--green));
+      opacity: 0;
+      transition: opacity 200ms ease;
+    }
+
+    .partner-avatar-wrap.is-live::before {
+      opacity: 1;
+      animation: partnerRingSpin 3.2s linear infinite;
+    }
+
+    @keyframes partnerRingSpin {
+      to { transform: rotate(360deg); }
+    }
+
+    .partner-live-badge {
+      position: absolute;
+      right: -2px;
+      bottom: -2px;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: #cfd6d2;
+      border: 2.5px solid #fff;
+      z-index: 2;
+    }
+
+    .partner-avatar-wrap.is-live .partner-live-badge {
+      background: #29a766;
+      box-shadow: 0 0 0 3px rgba(41, 167, 102, 0.22);
+    }
+
+    .partner-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .partner-status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 800;
+      background: #eef1f0;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .partner-status-chip svg { width: 10px; height: 10px; }
+
+    .partner-status-chip.is-running {
+      background: var(--green-2);
+      color: var(--green);
+    }
+
+    .partner-subject-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 4px 0 8px;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .partner-subject-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      background: color-mix(in srgb, var(--accent, var(--green)) 16%, white);
+      color: var(--accent, var(--green));
+      flex: none;
+    }
+
+    .partner-subject-icon svg { width: 12px; height: 12px; }
+
+    .partner-card-stats {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .partner-card-stats > span {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .partner-card-stats svg { width: 13px; height: 13px; color: var(--green); }
+
+    .partner-live-clock {
+      font-variant-numeric: tabular-nums;
+      color: var(--green);
+      font-weight: 800;
     }
 
     .dday-setup {
@@ -1155,6 +1283,59 @@
       margin: 20px 0 14px;
     }
 
+    .settings-section {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--panel);
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    .settings-section:last-child { margin-bottom: 0; }
+
+    .settings-section-head {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 4px;
+    }
+
+    .settings-section-head h3 {
+      margin: 0;
+      font-size: 14.5px;
+      letter-spacing: -.1px;
+    }
+
+    .settings-section-head .subtext {
+      margin: 3px 0 0;
+    }
+
+    .settings-section-icon {
+      width: 34px;
+      height: 34px;
+      flex: none;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      background: var(--green-2);
+      color: var(--green);
+    }
+
+    .settings-section-icon svg { width: 17px; height: 17px; }
+
+    .settings-section.tone-ai .settings-section-icon {
+      background: var(--ai-2);
+      color: var(--ai);
+    }
+
+    .settings-section.tone-danger .settings-section-icon {
+      background: #fde8e5;
+      color: var(--red);
+    }
+
+    body:is(.theme-night, .night-override) .settings-section { background: #16231c; border-color: #2d3d34; }
+    body:is(.theme-night, .night-override) .settings-section-icon { background: #101914; }
+
     .settings-inline-form {
       display: grid;
       gap: 8px;
@@ -1205,28 +1386,132 @@
     .partner-popup-head {
       display: grid;
       grid-template-columns: auto minmax(0, 1fr);
-      gap: 14px;
+      gap: 16px;
       align-items: center;
-      padding: 14px;
+      padding: 16px;
       border: 1px solid var(--line);
-      border-radius: 8px;
-      background: var(--green-2);
+      border-radius: 14px;
+      background: linear-gradient(160deg, var(--green-2), var(--panel) 180%);
     }
 
-    .partner-popup-head .avatar {
+    .partner-popup-head .avatar,
+    .partner-popup-head .partner-avatar-wrap,
+    .partner-popup-head .partner-avatar-wrap .avatar {
       width: 66px;
       height: 66px;
     }
 
+    .partner-popup-head h3 { margin: 0 0 2px; font-size: 17px; }
+
+    /* You vs Partner comparison bars */
+    .partner-compare {
+      display: grid;
+      gap: 8px;
+      margin: 14px 0;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--panel);
+    }
+
+    .partner-compare-row {
+      display: grid;
+      grid-template-columns: 52px 1fr 56px;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .partner-compare-label {
+      font-size: 11.5px;
+      font-weight: 800;
+      color: var(--muted);
+    }
+
+    .partner-compare-track {
+      height: 8px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--line) 70%, transparent);
+      overflow: hidden;
+    }
+
+    .partner-compare-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 400ms ease;
+    }
+
+    .partner-compare-fill.you { background: linear-gradient(90deg, var(--green), color-mix(in srgb, var(--green) 60%, black)); }
+    .partner-compare-fill.partner { background: linear-gradient(90deg, #f3b53f, #c9822f); }
+
+    .partner-compare-value {
+      font-size: 11.5px;
+      font-weight: 800;
+      color: var(--ink);
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Partner's to-do list */
+    .partner-todo-heading { margin: 4px 0 8px; font-size: 13px; }
+
+    .partner-todo-list {
+      list-style: none;
+      display: grid;
+      gap: 6px;
+    }
+
+    .partner-todo-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 11px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--panel);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .partner-todo-check {
+      width: 18px;
+      height: 18px;
+      flex: none;
+      border-radius: 6px;
+      border: 1.5px solid var(--line);
+      display: grid;
+      place-items: center;
+      color: #fff;
+    }
+
+    .partner-todo-row.is-done {
+      color: var(--muted);
+      text-decoration: line-through;
+    }
+
+    .partner-todo-row.is-done .partner-todo-check {
+      background: var(--green);
+      border-color: var(--green);
+    }
+
+    .partner-todo-check svg { width: 11px; height: 11px; }
+
+    .partner-todo-row.is-empty {
+      color: var(--muted);
+      font-weight: 700;
+      justify-content: center;
+    }
+
     .partner-summary-grid {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 10px;
       margin: 14px 0;
     }
 
     .partner-summary-grid .stat {
       background: var(--panel);
+      padding: 10px 12px;
     }
 
     .status-dot {
@@ -1479,12 +1764,13 @@
     }
 
     .grok-toggle-icon {
-      font-size: 15px;
-      font-weight: 800;
-      letter-spacing: 0.5px;
+      display: grid;
+      place-items: center;
       color: #fff;
       line-height: 1;
     }
+
+    .grok-toggle-icon svg { width: 22px; height: 22px; }
 
     @keyframes aiPulse {
       0%, 100% { box-shadow: 0 12px 28px rgba(124, 77, 255, 0.45); }
@@ -1539,8 +1825,8 @@
       background: linear-gradient(135deg, var(--ai-2), transparent);
     }
 
-    .grok-icon {
-      display: inline-block;
+    .chat-title-icon.grok-icon {
+      background: linear-gradient(135deg, var(--ai), #4b2fc7);
     }
 
     .grok-messages {
@@ -1571,16 +1857,34 @@
     }
 
     .grok-bubble strong {
-      display: block;
+      display: flex;
+      align-items: center;
+      gap: 4px;
       font-size: 11px;
       margin-bottom: 3px;
       color: var(--ai);
     }
 
+    .grok-bubble-spark { width: 10px; height: 10px; }
+
     .grok-send-btn {
       color: var(--ai);
       border-color: color-mix(in srgb, var(--ai) 30%, #b9dcc8);
       background: var(--ai-2);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .grok-send-btn svg {
+      width: 15px;
+      height: 15px;
+      transition: transform 180ms ease;
+    }
+
+    .grok-send-btn:hover svg {
+      transform: translateX(2px);
     }
 
     /* AI rich-text formatting: proper paragraph spacing instead of a wall of text */
@@ -2066,11 +2370,11 @@
 
     .welcome-modal-banner {
       position: relative;
-      padding: 34px 26px 46px;
+      padding: 34px 92px 46px 26px;
       background:
         radial-gradient(circle at 14% -10%, rgba(255, 216, 115, 0.35), transparent 45%),
         radial-gradient(circle at 100% 0%, rgba(255, 255, 255, 0.14), transparent 40%),
-        linear-gradient(155deg, #1d7a52, #0e3f2a 78%);
+        linear-gradient(155deg, var(--green), color-mix(in srgb, var(--green) 55%, black) 78%);
       color: #fff;
       overflow: hidden;
       isolation: isolate;
@@ -2200,12 +2504,50 @@
 
     .welcome-modal-feature p strong { color: var(--green); font-weight: 800; }
 
+    .welcome-modal-mascot {
+      position: absolute;
+      right: 20px;
+      top: 52px;
+      width: 54px;
+      height: 54px;
+      filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.25));
+      animation: welcomeMascotBob 3.2s ease-in-out infinite;
+    }
+    .welcome-modal-mascot svg { width: 100%; height: 100%; }
+
+    @keyframes welcomeMascotBob {
+      0%, 100% { transform: translateY(0) rotate(-3deg); }
+      50% { transform: translateY(-5px) rotate(3deg); }
+    }
+
     .welcome-modal-footer {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      gap: 14px;
+      flex-wrap: wrap;
     }
+
+    .welcome-modal-footer-left {
+      display: grid;
+      gap: 4px;
+    }
+
+    .welcome-modal-dontshow {
+      background: none;
+      padding: 0;
+      min-height: 0;
+      color: var(--muted);
+      font-size: 11.5px;
+      font-weight: 700;
+      text-decoration: underline;
+      text-decoration-color: var(--line);
+      text-underline-offset: 2px;
+      justify-content: flex-start;
+    }
+    .welcome-modal-dontshow:hover { color: var(--red); text-decoration-color: var(--red); }
+
+    .welcome-modal-cta svg { width: 14px; height: 14px; }
 
     .welcome-modal-thanks {
       margin: 0;
@@ -3196,7 +3538,7 @@
     <section id="grokWidget" class="grok-widget">
       <div id="grokPanel" class="grok-panel hidden">
         <div class="chat-head grok-head">
-          <div class="chat-title"><span class="chat-title-icon grok-icon">AI</span><span>Study AI <small>ASSISTANT</small></span></div>
+          <div class="chat-title"><span class="chat-title-icon grok-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2Z"/><path d="M19 15l.9 2.6 2.6.9-2.6.9L19 22l-.9-2.6-2.6-.9 2.6-.9L19 15Z"/></svg></span><span>Study AI <small>ASSISTANT</small></span></div>
           <div class="chat-head-actions">
             <button id="closeGrokBtn" class="small-btn" type="button" aria-label="Close AI assistant">X</button>
           </div>
@@ -3210,11 +3552,16 @@
         </div>
         <form id="grokForm" class="chat-form">
           <input id="grokInput" type="text" placeholder="Ask the AI..." maxlength="600" autocomplete="off" />
-          <button class="secondary-btn grok-send-btn" type="submit">Ask</button>
+          <button class="secondary-btn grok-send-btn" type="submit">
+            <span>Ask</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
         </form>
       </div>
       <button id="grokToggle" class="grok-toggle" type="button" title="Ask AI" aria-label="Ask AI">
-        <span class="grok-toggle-icon">AI</span>
+        <span class="grok-toggle-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2Z"/><path d="M19 15l.9 2.6 2.6.9-2.6.9L19 22l-.9-2.6-2.6-.9 2.6-.9L19 15Z"/></svg>
+        </span>
         <span id="grokTooltip" class="grok-tooltip hidden">Tip: start a chat message with <strong>@grok</strong> to ask AI right in Study Chat too! Use <strong>@a9</strong> instead for a savage roast-mode reply.</span>
       </button>
     </section>
@@ -3260,6 +3607,15 @@
     <section class="modal welcome-modal">
       <div class="welcome-modal-banner">
         <svg class="welcome-modal-orbit" viewBox="0 0 190 190" aria-hidden="true"><circle cx="95" cy="95" r="80" fill="none" stroke="currentColor" stroke-width="1.4" stroke-dasharray="3 10"/><circle cx="95" cy="95" r="55" fill="none" stroke="currentColor" stroke-width="1.4" stroke-dasharray="2 8"/><circle cx="150" cy="60" r="4" fill="currentColor"/></svg>
+        <div class="welcome-modal-mascot" aria-hidden="true">
+          <svg viewBox="0 0 120 120">
+            <circle cx="60" cy="62" r="50" fill="url(#mascotFaceGrad)" stroke="#c98a2b" stroke-width="3"/>
+            <ellipse cx="42" cy="38" rx="16" ry="9" fill="rgba(255,255,255,0.55)"/>
+            <g><circle cx="44" cy="56" r="13" fill="#fff"/><circle cx="44" cy="56" r="5.5" fill="#26301f"/></g>
+            <g><circle cx="76" cy="56" r="13" fill="#fff"/><circle cx="76" cy="56" r="5.5" fill="#26301f"/></g>
+            <path d="M38 80 Q60 100 82 80 Q60 96 38 80 Z" fill="#8a651f"/>
+          </svg>
+        </div>
         <span class="welcome-modal-eyebrow">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2Z"/></svg>
           New feature
@@ -3278,8 +3634,14 @@
           <p id="welcomeModalText"></p>
         </div>
         <div class="welcome-modal-footer">
-          <p class="welcome-modal-thanks">Thank you</p>
-          <button id="welcomeModalCta" class="welcome-modal-cta" type="button">Got it</button>
+          <div class="welcome-modal-footer-left">
+            <p class="welcome-modal-thanks">Thank you</p>
+            <button id="welcomeModalDontShow" class="welcome-modal-dontshow" type="button">Don't show this again</button>
+          </div>
+          <button id="welcomeModalCta" class="welcome-modal-cta" type="button">
+            Got it
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          </button>
         </div>
       </div>
     </section>
@@ -3395,6 +3757,12 @@
       Maths: "#7a4fc4"
     };
     const subjectAccent = (subject) => SUBJECT_COLORS[subject] || "";
+    const SUBJECT_ICONS = {
+      Physics: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><ellipse cx="12" cy="12" rx="9.5" ry="4"/><ellipse cx="12" cy="12" rx="9.5" ry="4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="9.5" ry="4" transform="rotate(120 12 12)"/><circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none"/></svg>',
+      Chemistry: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6.2L4.8 18.4A2 2 0 0 0 6.5 21h11a2 2 0 0 0 1.7-2.6L14 9.2V3"/><path d="M8 15h8"/></svg>',
+      Maths: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h13M9 4c0 6-2 12-6 16M9 4c1.2 4 3.6 6 8 6"/></svg>'
+    };
+    const subjectIconSvg = (subject) => SUBJECT_ICONS[subject] || SUBJECT_ICONS.Physics;
     const SESSION_KEY = "duotrackPrototypeSession";
     const THEME_KEY = "duotrackTheme";
     const CUSTOM_BG_KEY = "duotrackCustomBackground";
@@ -3594,6 +3962,8 @@
     const welcomeModalTitle = document.getElementById("welcomeModalTitle");
     const welcomeModalText = document.getElementById("welcomeModalText");
     const welcomeModalClose = document.getElementById("welcomeModalClose");
+    const welcomeModalCta = document.getElementById("welcomeModalCta");
+    const welcomeModalDontShow = document.getElementById("welcomeModalDontShow");
     const voiceCallBtn = document.getElementById("voiceCallBtn");
     const videoCallBtn = document.getElementById("videoCallBtn");
     const callOverlay = document.getElementById("callOverlay");
@@ -3920,115 +4290,203 @@
       document.getElementById("settingsPassword")?.focus();
     }
 
+    const SETTINGS_ICONS = {
+      bolt: '<path d="M13 3 4 14h6l-1 7 9-11h-6Z"/>',
+      palette: '<path d="M12 3a9 9 0 1 0 0 18c1.5 0 2-.8 2-1.8 0-.5-.2-1-.6-1.4-.4-.4-.6-.9-.6-1.4 0-1 .8-1.8 1.8-1.8H17a4 4 0 0 0 4-4c0-4.4-4-8.6-9-8.6Z"/><circle cx="7.5" cy="10.5" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="7.5" r="1" fill="currentColor" stroke="none"/><circle cx="16.5" cy="10.5" r="1" fill="currentColor" stroke="none"/><circle cx="9" cy="15" r="1" fill="currentColor" stroke="none"/>',
+      sparkle: '<path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2Z"/><path d="M19 15l.9 2.6 2.6.9-2.6.9L19 22l-.9-2.6-2.6-.9 2.6-.9L19 15Z"/>',
+      droplet: '<path d="M12 3s7 7.4 7 12a7 7 0 1 1-14 0c0-4.6 7-12 7-12Z"/>',
+      clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>',
+      bell: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',
+      chat: '<path d="M20 15a4 4 0 0 1-4 4H8l-4 3v-7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4v8Z"/>',
+      shield: '<path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6l7-3Z"/>',
+      userPlus: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>'
+    };
+
+    function settingsIcon(name, filled) {
+      const inner = SETTINGS_ICONS[name] || SETTINGS_ICONS.bolt;
+      const fillAttrs = filled ? 'fill="currentColor" stroke="none"' : 'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
+      return `<svg viewBox="0 0 24 24" ${fillAttrs}>${inner}</svg>`;
+    }
+
+    function settingsSection({ icon, title, description, body, tone }) {
+      return `
+        <div class="settings-section${tone ? ` tone-${tone}` : ""}">
+          <div class="settings-section-head">
+            <span class="settings-section-icon">${settingsIcon(icon, icon === "sparkle")}</span>
+            <div>
+              <h3>${title}</h3>
+              ${description ? `<p class="subtext">${description}</p>` : ""}
+            </div>
+          </div>
+          ${body}
+        </div>
+      `;
+    }
+
     function openThemeSettings() {
       activeModalType = "settings";
       const activeTheme = localStorage.getItem(THEME_KEY) || "fresh";
       const hasCustomBackground = Boolean(localStorage.getItem(CUSTOM_BG_KEY));
       modalTitle.textContent = "Study Settings";
       modalBody.innerHTML = `
-        <p class="subtext">Useful controls only. Shared timer reset affects both users for today.</p>
-        <div class="settings-actions">
-          <button id="sharedResetBtn" class="danger-btn" type="button">Reset today's timers</button>
-          <button id="downloadReportBtn" class="secondary-btn" type="button">Download comparison PDF</button>
-        </div>
-        <div class="settings-actions">
-          <button id="chatSoundBtn" class="ghost-btn" type="button">Chat sound: ${chatSoundEnabled ? "On" : "Off"}</button>
-          <button id="exportSettingsBtn" class="ghost-btn" type="button">Export appearance</button>
-        </div>
-        <p class="subtext">Appearance for both users</p>
-        <div class="theme-grid">
-          ${THEME_PRESETS.map((theme) => `
-            <button class="theme-option${theme.id === activeTheme ? " active" : ""}" type="button" data-theme="${theme.id}">
-              <span class="theme-swatch" style="--swatch: ${theme.swatch}"></span>
-              ${theme.name}
-            </button>
-          `).join("")}
-        </div>
-        <div class="settings-actions">
-          <button id="uploadBgBtn" class="secondary-btn" type="button">Device BG</button>
-          <button id="resetAppearanceBtn" class="ghost-btn" type="button">Reset appearance</button>
-        </div>
-        <div class="settings-actions">
-          <button id="importSettingsBtn" class="ghost-btn" type="button">Import</button>
-          <span class="subtext">${hasCustomBackground ? "Custom background is active." : "No device background selected."}</span>
-        </div>
-        <input id="customBgInput" class="file-input" type="file" accept="image/*">
-        <input id="settingsImportInput" class="file-input" type="file" accept="application/json,.json">
-        <p id="settingsToolError" class="settings-error" aria-live="polite"></p>
+        ${settingsSection({
+          icon: "bolt",
+          title: "Quick actions",
+          description: "Useful controls only. Shared timer reset affects both users for today.",
+          body: `
+            <div class="settings-actions">
+              <button id="sharedResetBtn" class="danger-btn" type="button">Reset today's timers</button>
+              <button id="downloadReportBtn" class="secondary-btn" type="button">Download comparison PDF</button>
+            </div>
+            <div class="settings-actions">
+              <button id="chatSoundBtn" class="ghost-btn" type="button">Chat sound: ${chatSoundEnabled ? "On" : "Off"}</button>
+              <button id="exportSettingsBtn" class="ghost-btn" type="button">Export appearance</button>
+            </div>
+          `
+        })}
 
-        <hr class="settings-divider">
-        <p class="subtext"><strong>Welcome popup</strong> — the mascot's message that opens automatically when the app loads. Personal to this device.</p>
-        <form id="welcomePopupForm" class="field settings-inline-form">
-          <label class="checkbox-row"><input id="welcomePopupEnabledInput" type="checkbox" ${welcomePopupEnabled ? "checked" : ""}> Show this popup when the app opens</label>
-          <label for="welcomePopupTextInput">Message text</label>
-          <textarea id="welcomePopupTextInput" rows="3" maxlength="240">${escapeHTML(welcomePopupText)}</textarea>
-          <button class="secondary-btn" type="submit">Save popup</button>
-        </form>
+        ${settingsSection({
+          icon: "palette",
+          title: "Appearance",
+          description: "Shared theme for both users.",
+          body: `
+            <div class="theme-grid">
+              ${THEME_PRESETS.map((theme) => `
+                <button class="theme-option${theme.id === activeTheme ? " active" : ""}" type="button" data-theme="${theme.id}">
+                  <span class="theme-swatch" style="--swatch: ${theme.swatch}"></span>
+                  ${theme.name}
+                </button>
+              `).join("")}
+            </div>
+            <div class="settings-actions">
+              <button id="uploadBgBtn" class="secondary-btn" type="button">Device BG</button>
+              <button id="resetAppearanceBtn" class="ghost-btn" type="button">Reset appearance</button>
+            </div>
+            <div class="settings-actions">
+              <button id="importSettingsBtn" class="ghost-btn" type="button">Import</button>
+              <span class="subtext">${hasCustomBackground ? "Custom background is active." : "No device background selected."}</span>
+            </div>
+            <input id="customBgInput" class="file-input" type="file" accept="image/*">
+            <input id="settingsImportInput" class="file-input" type="file" accept="application/json,.json">
+            <p id="settingsToolError" class="settings-error" aria-live="polite"></p>
+          `
+        })}
 
-        <hr class="settings-divider">
-        <p class="subtext"><strong>Hydration reminder</strong> — a cute nudge from your mascot, personal to this device.</p>
-        <form id="hydrationForm" class="field settings-inline-form">
-          <label class="checkbox-row"><input id="hydrationEnabledInput" type="checkbox" ${hydrationEnabled ? "checked" : ""}> Remind me to drink water</label>
-          <label for="hydrationMinutesInput">Every (minutes)</label>
-          <input id="hydrationMinutesInput" type="number" min="15" max="720" step="5" value="${hydrationMinutes}">
-          <p class="subtext">e.g. 60 = every hour, 30 = every half hour</p>
-          <button class="secondary-btn" type="submit">Save reminder</button>
-        </form>
+        ${settingsSection({
+          icon: "sparkle",
+          title: "Welcome popup",
+          description: "The mascot's message that opens automatically when the app loads. Personal to this device.",
+          body: `
+            <form id="welcomePopupForm" class="field settings-inline-form">
+              <label class="checkbox-row"><input id="welcomePopupEnabledInput" type="checkbox" ${welcomePopupEnabled ? "checked" : ""}> Show this popup when the app opens</label>
+              <label for="welcomePopupTextInput">Message text</label>
+              <textarea id="welcomePopupTextInput" rows="3" maxlength="240">${escapeHTML(welcomePopupText)}</textarea>
+              <button class="secondary-btn" type="submit">Save popup</button>
+            </form>
+          `
+        })}
 
-        <hr class="settings-divider">
-        <p class="subtext"><strong>Study check-in reminder</strong> — fully optional, entirely your choice whether to turn it on. A quiet nudge to check in on your goals, separate from the water reminder.</p>
-        <form id="checkinForm" class="field settings-inline-form">
-          <label class="checkbox-row"><input id="checkinEnabledInput" type="checkbox" ${checkinEnabled ? "checked" : ""}> Enable check-in reminders</label>
-          <label for="checkinMinutesInput">Every (minutes)</label>
-          <input id="checkinMinutesInput" type="number" min="15" max="720" step="5" value="${checkinMinutes}">
-          <button class="secondary-btn" type="submit">Save check-in</button>
-        </form>
+        ${settingsSection({
+          icon: "droplet",
+          title: "Hydration reminder",
+          description: "A cute nudge from your mascot, personal to this device.",
+          body: `
+            <form id="hydrationForm" class="field settings-inline-form">
+              <label class="checkbox-row"><input id="hydrationEnabledInput" type="checkbox" ${hydrationEnabled ? "checked" : ""}> Remind me to drink water</label>
+              <label for="hydrationMinutesInput">Every (minutes)</label>
+              <input id="hydrationMinutesInput" type="number" min="15" max="720" step="5" value="${hydrationMinutes}">
+              <p class="subtext">e.g. 60 = every hour, 30 = every half hour</p>
+              <button class="secondary-btn" type="submit">Save reminder</button>
+            </form>
+          `
+        })}
 
-        <hr class="settings-divider">
-        <p class="subtext"><strong>8-hour milestone sound</strong> — paste a direct link to an audio file (e.g. a raw GitHub link to song.mp3) and it plays for 5 seconds the moment today's study time crosses 8 hours. Personal to this device, once per day.</p>
-        <form id="eightHourSoundForm" class="field settings-inline-form">
-          <label for="eightHourSoundUrlInput">Sound file URL</label>
-          <input id="eightHourSoundUrlInput" type="url" placeholder="https://raw.githubusercontent.com/you/repo/main/song.mp3" value="${escapeHTML(eightHourSoundUrl)}">
-          <button class="secondary-btn" type="submit">Save sound</button>
-        </form>
+        ${settingsSection({
+          icon: "clock",
+          title: "Study check-in reminder",
+          description: "Fully optional. A quiet nudge to check in on your goals, separate from the water reminder.",
+          body: `
+            <form id="checkinForm" class="field settings-inline-form">
+              <label class="checkbox-row"><input id="checkinEnabledInput" type="checkbox" ${checkinEnabled ? "checked" : ""}> Enable check-in reminders</label>
+              <label for="checkinMinutesInput">Every (minutes)</label>
+              <input id="checkinMinutesInput" type="number" min="15" max="720" step="5" value="${checkinMinutes}">
+              <button class="secondary-btn" type="submit">Save check-in</button>
+            </form>
+          `
+        })}
 
-        <hr class="settings-divider">
-        <p class="subtext"><strong>AI Assistant (Groq)</strong> — one API key, shared between both accounts. Get a free key from console.groq.com → API Keys. Once saved, type <strong>@grok your question</strong> in Study Chat for a normal reply, <strong>@a9 your question</strong> for a savage roast-mode reply, or use the AI icon in the bottom-left corner, on either device.</p>
-        <form id="grokApiKeyForm" class="field settings-inline-form">
-          <label for="grokApiKeyInput">Groq API key</label>
-          <input id="grokApiKeyInput" type="password" placeholder="gsk_..." value="${escapeHTML(grokApiKey)}" autocomplete="off">
-          <p class="subtext">${grokApiKey ? "A Grok API key is currently saved and shared." : "No Grok API key saved yet."}</p>
-          <button class="secondary-btn" type="submit">Save Grok key</button>
-        </form>
+        ${settingsSection({
+          icon: "bell",
+          title: "8-hour milestone sound",
+          description: "Paste a direct link to an audio file (e.g. a raw GitHub link to song.mp3) and it plays for 5 seconds the moment today's study time crosses 8 hours. Personal to this device, once per day.",
+          body: `
+            <form id="eightHourSoundForm" class="field settings-inline-form">
+              <label for="eightHourSoundUrlInput">Sound file URL</label>
+              <input id="eightHourSoundUrlInput" type="url" placeholder="https://raw.githubusercontent.com/you/repo/main/song.mp3" value="${escapeHTML(eightHourSoundUrl)}">
+              <button class="secondary-btn" type="submit">Save sound</button>
+            </form>
+          `
+        })}
 
-        <hr class="settings-divider">
-        <p class="subtext"><strong>Chat administration</strong> — download the full chat history, or remove any specific message from either person.</p>
-        <div class="settings-actions">
-          <button id="downloadChatPdfBtn" class="secondary-btn" type="button">Download chat history PDF</button>
-        </div>
-        <div id="adminChatList" class="admin-chat-list">${renderAdminChatList()}</div>
+        ${settingsSection({
+          icon: "sparkle",
+          title: "AI Assistant (Groq)",
+          description: `One API key, shared between both accounts. Get a free key from console.groq.com → API Keys. Once saved, type <strong>@grok your question</strong> in Study Chat for a normal reply, <strong>@a9 your question</strong> for a savage roast-mode reply, or use the AI icon in the bottom-left corner, on either device.`,
+          tone: "ai",
+          body: `
+            <form id="grokApiKeyForm" class="field settings-inline-form">
+              <label for="grokApiKeyInput">Groq API key</label>
+              <input id="grokApiKeyInput" type="password" placeholder="gsk_..." value="${escapeHTML(grokApiKey)}" autocomplete="off">
+              <p class="subtext">${grokApiKey ? "A Grok API key is currently saved and shared." : "No Grok API key saved yet."}</p>
+              <button class="secondary-btn" type="submit">Save Grok key</button>
+            </form>
+          `
+        })}
 
-        <hr class="settings-divider">
-        <p class="subtext"><strong>Full backup &amp; restore</strong> — the whole shared database in one file: both accounts' history, to-do lists, chat, appearance, and registered accounts. Use this before trying anything risky. <strong>Restoring replaces everything</strong> and can't be undone.</p>
-        <div class="settings-actions">
-          <button id="downloadFullBackupBtn" class="secondary-btn" type="button">Download full backup</button>
-          <button id="restoreFullBackupBtn" class="danger-btn" type="button">Restore from backup</button>
-        </div>
-        <input id="fullBackupImportInput" class="file-input" type="file" accept="application/json,.json">
-        <p id="fullBackupError" class="settings-error" aria-live="polite"></p>
+        ${settingsSection({
+          icon: "chat",
+          title: "Chat administration",
+          description: "Download the full chat history, or remove any specific message from either person.",
+          body: `
+            <div class="settings-actions">
+              <button id="downloadChatPdfBtn" class="secondary-btn" type="button">Download chat history PDF</button>
+            </div>
+            <div id="adminChatList" class="admin-chat-list">${renderAdminChatList()}</div>
+          `
+        })}
 
-        <hr class="settings-divider">
-        <p class="subtext"><strong>Register a new account</strong> — stored in the shared Firebase database, same prototype-level security as the existing two accounts (plaintext, no real auth). Note: the partner/comparison view is still built for two people; a third account will just show whichever other account it finds first.</p>
-        <form id="registerAccountForm" class="field settings-inline-form">
-          <label for="registerName">Name</label>
-          <input id="registerName" type="text" placeholder="Display name" required>
-          <label for="registerLoginId">Login ID</label>
-          <input id="registerLoginId" type="text" placeholder="Login ID" required>
-          <label for="registerPassword">Password</label>
-          <input id="registerPassword" type="password" placeholder="Password" required>
-          <button class="secondary-btn" type="submit">Register</button>
-          <p id="registerAccountError" class="settings-error" aria-live="polite"></p>
-        </form>
+        ${settingsSection({
+          icon: "shield",
+          title: "Full backup & restore",
+          description: `The whole shared database in one file: both accounts' history, to-do lists, chat, appearance, and registered accounts. Use this before trying anything risky. <strong>Restoring replaces everything</strong> and can't be undone.`,
+          tone: "danger",
+          body: `
+            <div class="settings-actions">
+              <button id="downloadFullBackupBtn" class="secondary-btn" type="button">Download full backup</button>
+              <button id="restoreFullBackupBtn" class="danger-btn" type="button">Restore from backup</button>
+            </div>
+            <input id="fullBackupImportInput" class="file-input" type="file" accept="application/json,.json">
+            <p id="fullBackupError" class="settings-error" aria-live="polite"></p>
+          `
+        })}
+
+        ${settingsSection({
+          icon: "userPlus",
+          title: "Register a new account",
+          description: "Stored in the shared Firebase database, same prototype-level security as the existing two accounts (plaintext, no real auth). Note: the partner/comparison view is still built for two people; a third account will just show whichever other account it finds first.",
+          body: `
+            <form id="registerAccountForm" class="field settings-inline-form">
+              <label for="registerName">Name</label>
+              <input id="registerName" type="text" placeholder="Display name" required>
+              <label for="registerLoginId">Login ID</label>
+              <input id="registerLoginId" type="text" placeholder="Login ID" required>
+              <label for="registerPassword">Password</label>
+              <input id="registerPassword" type="password" placeholder="Password" required>
+              <button class="secondary-btn" type="submit">Register</button>
+              <p id="registerAccountError" class="settings-error" aria-live="polite"></p>
+            </form>
+          `
+        })}
       `;
     }
 
@@ -4447,6 +4905,12 @@
     }
 
     welcomeModalClose?.addEventListener("click", hideWelcomePopup);
+    welcomeModalCta?.addEventListener("click", hideWelcomePopup);
+    welcomeModalDontShow?.addEventListener("click", () => {
+      welcomePopupEnabled = false;
+      localStorage.setItem(WELCOME_POPUP_ENABLED_KEY, "false");
+      hideWelcomePopup();
+    });
     welcomeModal?.addEventListener("click", (event) => {
       if (event.target === welcomeModal) hideWelcomePopup();
     });
@@ -5483,7 +5947,7 @@
       }
       grokMessages.innerHTML = grokConversation.map((message) => `
         <div class="grok-bubble${message.role === "user" ? " mine" : " assistant"}">
-          <strong>${message.role === "user" ? "You" : "AI"}</strong>
+          <strong>${message.role === "user" ? "You" : '<svg class="grok-bubble-spark" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2Z"/></svg>AI'}</strong>
           ${message.role === "user"
             ? `<span>${linkifyText(escapeHTML(message.content))}</span>`
             : `<div class="ai-rich">${renderAiRichText(escapeHTML(message.content))}</div>`}
@@ -5818,15 +6282,29 @@
     });
 
     function renderPartner(partner) {
+      const partnerSubject = partner.running ? partner.currentSubject : partner.selectedSubject;
+      const accent = subjectAccent(partnerSubject);
       partnerCard.innerHTML = `
-        <div class="avatar">${avatarMarkup(partner)}</div>
+        <div class="partner-avatar-wrap${partner.running ? " is-live" : ""}">
+          <div class="avatar">${avatarMarkup(partner)}</div>
+          <span class="partner-live-badge"></span>
+        </div>
         <div>
-          <div class="partner-name">${partner.name}</div>
-          <div class="partner-meta">
-            ${formatHours(liveSeconds(partner))} studied today<br>
-            ${partner.running ? "Studying now" : "Stopped"}: ${partner.running ? partner.currentSubject : partner.selectedSubject}
+          <div class="partner-card-top">
+            <span class="partner-name">${escapeHTML(partner.name)}</span>
+            <span class="partner-status-chip${partner.running ? " is-running" : ""}">
+              <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="6"/></svg>
+              ${partner.running ? "Studying" : "Stopped"}
+            </span>
           </div>
-          <div class="partner-seconds">Live: ${formatClock(liveSeconds(partner))}</div>
+          <div class="partner-subject-row">
+            <span class="partner-subject-icon" style="--accent:${accent || "var(--green)"}">${subjectIconSvg(partnerSubject)}</span>
+            <span>${escapeHTML(partnerSubject)}</span>
+          </div>
+          <div class="partner-card-stats">
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>${formatHours(liveSeconds(partner))} today</span>
+            <span class="partner-live-clock">${formatClock(liveSeconds(partner))}</span>
+          </div>
         </div>
       `;
     }
@@ -5894,56 +6372,87 @@
     function renderPartnerModalContent() {
       if (activeModalType !== "partner") return;
       const partner = partnerUser();
-      if (!partner) return;
+      const own = currentUser();
+      if (!partner || !own) return;
       const statusText = partner.running ? "Running" : "Stopped";
       const partnerSubject = partner.running ? partner.currentSubject : partner.selectedSubject;
       const partnerAccent = subjectAccent(partnerSubject);
       const yesterdaySeconds = partner.dailyTotals?.[shiftedDayKey(-1)] || 0;
+      const ownSeconds = liveSeconds(own);
+      const partnerSeconds = liveSeconds(partner);
+      const compareMax = Math.max(ownSeconds, partnerSeconds, 1);
       const todoRows = partner.todos.length
-        ? partner.todos.map((todo) => `<li>${todo.done ? "Done: " : "Pending: "}${escapeHTML(todo.text)}</li>`).join("")
-        : "<li>No tasks added.</li>";
+        ? partner.todos.map((todo) => `<li class="partner-todo-row${todo.done ? " is-done" : ""}"><span class="partner-todo-check">${todo.done ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>' : ""}</span>${escapeHTML(todo.text)}</li>`).join("")
+        : '<li class="partner-todo-row is-empty">No tasks added.</li>';
 
       modalBody.innerHTML = `
         <div class="partner-popup-head">
-          <div class="avatar">${avatarMarkup(partner)}</div>
+          <div class="partner-avatar-wrap${partner.running ? " is-live" : ""}">
+            <div class="avatar">${avatarMarkup(partner)}</div>
+            <span class="partner-live-badge"></span>
+          </div>
           <div>
             <h3>${escapeHTML(partner.name)}</h3>
             <p class="subtext"><span class="status-dot${partner.running ? " running" : ""}"></span>${statusText} in real time sync</p>
+            <span class="partner-subject-row" style="margin:6px 0 0">
+              <span class="partner-subject-icon" style="--accent:${partnerAccent || "var(--green)"}">${subjectIconSvg(partnerSubject)}</span>
+              <span>${escapeHTML(partnerSubject)}</span>
+            </span>
           </div>
         </div>
+
+        <div class="partner-compare">
+          <div class="partner-compare-row">
+            <span class="partner-compare-label">You</span>
+            <div class="partner-compare-track"><div class="partner-compare-fill you" style="width:${Math.round((ownSeconds / compareMax) * 100)}%"></div></div>
+            <span class="partner-compare-value">${formatHours(ownSeconds)}</span>
+          </div>
+          <div class="partner-compare-row">
+            <span class="partner-compare-label">${escapeHTML(partner.name.split(" ")[0])}</span>
+            <div class="partner-compare-track"><div class="partner-compare-fill partner" style="width:${Math.round((partnerSeconds / compareMax) * 100)}%"></div></div>
+            <span class="partner-compare-value">${formatHours(partnerSeconds)}</span>
+          </div>
+        </div>
+
         <div class="partner-summary-grid">
           <div class="stat">
-            <span>Today</span>
-            <strong>${formatHours(liveSeconds(partner))}</strong>
+            <span class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></span>
+            <span class="stat-label">Today</span>
+            <strong>${formatHours(partnerSeconds)}</strong>
           </div>
           <div class="stat">
-            <span>Subject</span>
+            <span class="stat-icon" aria-hidden="true" style="background:color-mix(in srgb, ${partnerAccent || "var(--green)"} 18%, var(--panel));color:${partnerAccent || "var(--green)"}">${subjectIconSvg(partnerSubject)}</span>
+            <span class="stat-label">Subject</span>
             <strong style="color:${partnerAccent || "inherit"}">${escapeHTML(partnerSubject)}</strong>
           </div>
           <div class="stat">
-            <span>Status</span>
+            <span class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3 4 14h6l-1 7 9-11h-6Z"/></svg></span>
+            <span class="stat-label">Status</span>
             <strong>${statusText}</strong>
           </div>
           <div class="stat">
-            <span>Yesterday</span>
+            <span class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>
+            <span class="stat-label">Yesterday</span>
             <strong>${formatHours(yesterdaySeconds)}</strong>
           </div>
           <div class="stat">
-            <span>Lecture Mode</span>
+            <span class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h12v13l-6-3-6 3Z"/><path d="M16 8h4v13l-4-2"/></svg></span>
+            <span class="stat-label">Lecture Mode</span>
             <strong>${formatHours(liveModeSeconds(partner, "Lecture"))}</strong>
           </div>
           <div class="stat">
-            <span>Practice Mode</span>
+            <span class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m14.5 3.5 6 6L8 22H3v-5.5Z"/></svg></span>
+            <span class="stat-label">Practice Mode</span>
             <strong>${formatHours(liveModeSeconds(partner, "Practice"))}</strong>
           </div>
           <div class="stat">
-            <span>Questions Today</span>
+            <span class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1 .8-1 1.7M12 17h.01"/></svg></span>
+            <span class="stat-label">Questions Today</span>
             <strong>${partner.questionsToday || 0}</strong>
           </div>
         </div>
-        <p><span class="subject-badge" style="--subject-accent:${partnerAccent || "var(--green)"}">${partner.running ? "Studying now" : "Timer stopped"}</span></p>
-        <p><strong>To do list</strong></p>
-        <ul>${todoRows}</ul>
+        <p class="partner-todo-heading"><strong>To do list</strong></p>
+        <ul class="partner-todo-list">${todoRows}</ul>
       `;
     }
 
