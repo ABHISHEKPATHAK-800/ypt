@@ -208,6 +208,42 @@
       }
     }
 
+    /* Timer tab selection: pop, sheen sweep, checkmark badge, icon bounce */
+    @keyframes tabSelectPop {
+      0% { transform: scale(0.96); }
+      45% { transform: scale(1.035); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes tabSheen {
+      0% { opacity: 0; background-position: 150% 0; }
+      15% { opacity: 1; }
+      85% { opacity: 1; }
+      100% { opacity: 0; background-position: -50% 0; }
+    }
+
+    @keyframes tabBadgeIn {
+      0% { transform: scale(0); opacity: 0; }
+      60% { transform: scale(1.25); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes tabIconBounce {
+      0% { transform: scale(0.6) rotate(0deg); }
+      55% { transform: scale(1.2) rotate(-10deg); }
+      100% { transform: scale(1.06) rotate(-4deg); }
+    }
+
+    @keyframes timerModeRipple {
+      to { transform: scale(1.9); opacity: 0; }
+    }
+
+    @keyframes timerModeLabelPop {
+      0% { transform: translateY(-3px) scale(0.85); opacity: 0.3; }
+      60% { transform: translateY(0) scale(1.12); opacity: 1; }
+      100% { transform: translateY(0) scale(1); opacity: 1; }
+    }
+
     @keyframes pulseGlow {
       0%, 100% {
         box-shadow: 0 0 0 rgba(36, 107, 69, 0);
@@ -227,7 +263,61 @@
       place-items: center;
       padding: 24px;
       position: relative;
+      overflow: hidden;
     }
+
+    .login-ambient {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .login-blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(40px);
+      opacity: 0.35;
+      animation: loginBlobDrift 16s ease-in-out infinite;
+    }
+
+    .login-blob-a {
+      width: 320px;
+      height: 320px;
+      left: -80px;
+      top: -60px;
+      background: radial-gradient(circle, var(--green), transparent 70%);
+      animation-duration: 18s;
+    }
+
+    .login-blob-b {
+      width: 260px;
+      height: 260px;
+      right: -60px;
+      top: 20%;
+      background: radial-gradient(circle, #ffd873, transparent 70%);
+      animation-duration: 22s;
+      animation-delay: -6s;
+    }
+
+    .login-blob-c {
+      width: 280px;
+      height: 280px;
+      left: 20%;
+      bottom: -100px;
+      background: radial-gradient(circle, var(--blue), transparent 70%);
+      animation-duration: 20s;
+      animation-delay: -3s;
+    }
+
+    @keyframes loginBlobDrift {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(30px, -20px) scale(1.08); }
+      66% { transform: translate(-20px, 25px) scale(0.95); }
+    }
+
+    body:is(.theme-night, .night-override) .login-blob { opacity: 0.18; }
 
     .login-settings-btn {
       position: absolute;
@@ -251,6 +341,8 @@
       box-shadow: var(--shadow);
       padding: 28px;
       animation: riseIn 520ms ease both;
+      position: relative;
+      z-index: 1;
     }
 
     .brand {
@@ -342,6 +434,37 @@
       padding: 12px 14px;
       outline: none;
     }
+
+    .input-with-icon {
+      position: relative;
+    }
+
+    .input-with-icon .field-icon {
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      pointer-events: none;
+      transition: color 160ms ease;
+    }
+
+    .input-with-icon .field-icon svg { width: 100%; height: 100%; }
+    .input-with-icon input { padding-left: 40px; }
+    .input-with-icon:has(input:focus) .field-icon { color: var(--green); }
+
+    .login-submit-btn {
+      width: 100%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .login-submit-btn svg { width: 17px; height: 17px; }
 
     body:is(.theme-night, .night-override) input,
     body:is(.theme-night, .night-override) select,
@@ -587,6 +710,15 @@
       box-shadow: var(--shadow-lift);
     }
 
+    .panel.dday-panel {
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(circle, rgba(36, 107, 69, 0.07) 1px, transparent 1.3px) 0 0 / 14px 14px,
+        radial-gradient(ellipse at 30% 0%, rgba(255, 216, 115, 0.1), transparent 55%),
+        var(--panel);
+    }
+
     .timer-panel {
       display: grid;
       gap: 18px;
@@ -613,6 +745,19 @@
       display: grid;
       gap: 6px;
       align-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .subject-option::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(115deg, transparent 20%, color-mix(in srgb, var(--subject) 55%, white) 50%, transparent 80%);
+      background-size: 250% 100%;
+      background-position: 150% 0;
+      opacity: 0;
+      pointer-events: none;
     }
 
     .subject-option[data-subject="Physics"] { --subject: #2f6fb0; }
@@ -629,7 +774,30 @@
       border-color: var(--subject);
       border-top-color: var(--subject);
       background: color-mix(in srgb, var(--subject) 14%, var(--panel));
-      box-shadow: inset 0 0 0 1px var(--subject);
+      box-shadow: inset 0 0 0 1px var(--subject), 0 8px 20px color-mix(in srgb, var(--subject) 28%, transparent);
+      animation: tabSelectPop 480ms cubic-bezier(.3,1.4,.5,1) both;
+    }
+
+    .subject-option.active::after {
+      animation: tabSheen 700ms ease-out both;
+    }
+
+    .subject-option.active::before {
+      content: "✓";
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--subject);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 900;
+      line-height: 18px;
+      text-align: center;
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--subject) 20%, transparent);
+      animation: tabBadgeIn 380ms cubic-bezier(.3,1.6,.5,1) 60ms both;
     }
 
     .subject-option:hover,
@@ -660,6 +828,19 @@
       gap: 4px;
       align-content: center;
       cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .mode-option::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(115deg, transparent 20%, color-mix(in srgb, var(--mode) 55%, white) 50%, transparent 80%);
+      background-size: 250% 100%;
+      background-position: 150% 0;
+      opacity: 0;
+      pointer-events: none;
     }
 
     .mode-option[data-mode="Practice"] { --mode: #c9822f; }
@@ -674,7 +855,30 @@
       border-color: var(--mode);
       border-top-color: var(--mode);
       background: color-mix(in srgb, var(--mode) 14%, var(--panel));
-      box-shadow: inset 0 0 0 1px var(--mode);
+      box-shadow: inset 0 0 0 1px var(--mode), 0 8px 20px color-mix(in srgb, var(--mode) 28%, transparent);
+      animation: tabSelectPop 480ms cubic-bezier(.3,1.4,.5,1) both;
+    }
+
+    .mode-option.active::after {
+      animation: tabSheen 700ms ease-out both;
+    }
+
+    .mode-option.active::before {
+      content: "✓";
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--mode);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 900;
+      line-height: 18px;
+      text-align: center;
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--mode) 20%, transparent);
+      animation: tabBadgeIn 380ms cubic-bezier(.3,1.6,.5,1) 60ms both;
     }
 
     .mode-option:hover {
@@ -806,6 +1010,63 @@
       border: 0;
     }
 
+    .todo-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .todo-progress {
+      position: relative;
+      width: 44px;
+      height: 44px;
+      flex: none;
+    }
+
+    .todo-progress svg {
+      width: 44px;
+      height: 44px;
+      transform: rotate(-90deg);
+    }
+
+    .todo-progress-track {
+      fill: none;
+      stroke: var(--line);
+      stroke-width: 4;
+    }
+
+    .todo-progress-fill {
+      fill: none;
+      stroke: var(--green);
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-dasharray: 113.1;
+      stroke-dashoffset: 113.1;
+      transition: stroke-dashoffset 500ms cubic-bezier(.4,0,.2,1), stroke 300ms ease;
+    }
+
+    .todo-progress.is-complete .todo-progress-fill {
+      stroke: #e8b23c;
+      animation: todoRingGlow 1.6s ease-in-out infinite;
+    }
+
+    @keyframes todoRingGlow {
+      0%, 100% { filter: drop-shadow(0 0 0 rgba(232, 178, 60, 0)); }
+      50% { filter: drop-shadow(0 0 4px rgba(232, 178, 60, 0.8)); }
+    }
+
+    .todo-progress-label {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font-size: 10px;
+      font-weight: 900;
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+    }
+
     .todo-form {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
@@ -830,10 +1091,17 @@
       display: grid;
       place-items: center;
       opacity: 0.55;
+      transition: transform 160ms ease, box-shadow 160ms ease, opacity 160ms ease, border-color 160ms ease;
     }
     .todo-tag-btn svg { width: 16px; height: 16px; }
-    .todo-tag-btn:hover { opacity: 0.85; }
-    .todo-tag-btn.active { opacity: 1; border-color: var(--green); box-shadow: inset 0 0 0 1px var(--green); }
+    .todo-tag-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    .todo-tag-btn:active { transform: scale(0.9); }
+    .todo-tag-btn.active {
+      opacity: 1;
+      border-color: transparent;
+      box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--tag-glow, var(--green)), 0 4px 10px color-mix(in srgb, var(--tag-glow, var(--green)) 45%, transparent);
+      transform: translateY(-1px) scale(1.06);
+    }
 
     .todo-list {
       display: grid;
@@ -844,16 +1112,52 @@
     }
 
     .todo-item {
+      position: relative;
       display: grid;
       grid-template-columns: auto auto auto minmax(0, 1fr) auto;
       gap: 10px;
       align-items: center;
       border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 10px;
+      border-radius: 12px;
+      padding: 11px 12px 11px 17px;
       background: #fff;
-      transition: transform 140ms ease, opacity 140ms ease, box-shadow 140ms ease;
+      overflow: hidden;
+      transition: transform 180ms ease, opacity 140ms ease, box-shadow 180ms ease, border-color 180ms ease;
+      animation: todoRiseIn 320ms cubic-bezier(.2,.8,.2,1) both;
     }
+
+    .todo-item::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: var(--tag-color, var(--green));
+      opacity: 0.85;
+    }
+
+    .todo-item:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lift);
+      border-color: color-mix(in srgb, var(--tag-color, var(--green)) 35%, var(--line));
+    }
+
+    .todo-item.done {
+      background: color-mix(in srgb, var(--green-2) 55%, white);
+    }
+
+    @keyframes todoRiseIn {
+      from { opacity: 0; transform: translateY(8px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .todo-item:nth-child(1) { animation-delay: 0ms; }
+    .todo-item:nth-child(2) { animation-delay: 35ms; }
+    .todo-item:nth-child(3) { animation-delay: 70ms; }
+    .todo-item:nth-child(4) { animation-delay: 105ms; }
+    .todo-item:nth-child(5) { animation-delay: 140ms; }
+    .todo-item:nth-child(n+6) { animation-delay: 160ms; }
 
     .todo-drag-handle {
       width: 18px;
@@ -864,7 +1168,10 @@
       color: var(--muted);
       cursor: grab;
       touch-action: none;
+      border-radius: 6px;
+      transition: color 160ms ease, background 160ms ease, transform 160ms ease;
     }
+    .todo-drag-handle:hover { color: var(--green); background: var(--green-2); transform: scale(1.12); }
     .todo-drag-handle svg { width: 100%; height: 100%; }
     .todo-item.dragging {
       opacity: 0.45;
@@ -876,8 +1183,53 @@
       box-shadow: inset 0 0 0 1px var(--green);
     }
 
-    .todo-tag-icon { width: 17px; height: 17px; flex: none; }
-    .todo-tag-icon svg { width: 100%; height: 100%; }
+    /* Custom animated checkbox */
+    .todo-check {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 23px;
+      height: 23px;
+      flex: none;
+      border-radius: 50%;
+      border: 2px solid var(--line);
+      background: #fff;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      margin: 0;
+      transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+    }
+    .todo-check:hover { border-color: var(--tag-color, var(--green)); }
+    .todo-check:checked {
+      border-color: transparent;
+      background: linear-gradient(135deg, var(--green), color-mix(in srgb, var(--green) 55%, black));
+      animation: todoCheckPop 340ms cubic-bezier(.34,1.56,.64,1);
+    }
+    .todo-check:checked::after {
+      content: "";
+      width: 10px;
+      height: 6px;
+      border-left: 2.4px solid #fff;
+      border-bottom: 2.4px solid #fff;
+      transform: rotate(-45deg) translate(1px, -1.5px);
+    }
+    @keyframes todoCheckPop {
+      0% { transform: scale(0.65); }
+      55% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+
+    .todo-tag-icon {
+      width: 24px;
+      height: 24px;
+      flex: none;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: color-mix(in srgb, var(--tag-color, var(--muted)) 18%, white);
+    }
+    .todo-tag-icon svg { width: 13px; height: 13px; }
+    .todo-tag-icon.is-empty { display: none; }
 
     .empty-state {
       display: flex;
@@ -899,13 +1251,64 @@
 
     .todo-item.done .todo-text {
       color: var(--muted);
-      text-decoration: line-through;
     }
 
     .todo-text {
+      position: relative;
+      display: inline-block;
       min-width: 0;
+      max-width: 100%;
       overflow-wrap: anywhere;
       font-weight: 700;
+    }
+
+    .todo-text::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 50%;
+      height: 2px;
+      width: 0;
+      background: var(--muted);
+      border-radius: 2px;
+    }
+
+    .todo-item.done .todo-text::after {
+      animation: todoStrike 320ms ease 80ms forwards;
+    }
+
+    @keyframes todoStrike {
+      to { width: 100%; }
+    }
+
+    .todo-delete {
+      width: 26px;
+      height: 26px;
+      flex: none;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #fde8e5;
+      color: var(--red);
+      opacity: 0.7;
+      transition: opacity 160ms ease, background 160ms ease, color 160ms ease, transform 160ms ease;
+    }
+    .todo-delete svg { width: 13px; height: 13px; }
+    .todo-delete:hover { opacity: 1; background: var(--red); color: #fff; transform: scale(1.08); }
+
+    /* Confetti burst on completing a task */
+    .todo-confetti-piece {
+      position: fixed;
+      width: 6px;
+      height: 6px;
+      border-radius: 2px;
+      pointer-events: none;
+      z-index: 9999;
+      animation: todoConfettiPop 650ms ease-out forwards;
+    }
+    @keyframes todoConfettiPop {
+      0% { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 1; }
+      100% { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(0.4); opacity: 0; }
     }
 
     .small-btn {
@@ -919,6 +1322,17 @@
       border: 1px solid var(--line);
       font-weight: 900;
     }
+
+    .call-btn {
+      border-radius: 50%;
+      position: relative;
+      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease, color 160ms ease;
+    }
+    .call-btn:hover { transform: scale(1.1); }
+    .call-btn-voice { background: var(--green-2); color: var(--green); border-color: transparent; }
+    .call-btn-voice:hover { background: var(--green); color: #fff; box-shadow: 0 6px 16px color-mix(in srgb, var(--green) 45%, transparent); }
+    .call-btn-video { background: #e7f1fa; color: var(--blue); border-color: transparent; }
+    .call-btn-video:hover { background: var(--blue); color: #fff; box-shadow: 0 6px 16px color-mix(in srgb, var(--blue) 45%, transparent); }
 
     .partner-card {
       width: 100%;
@@ -1066,18 +1480,141 @@
       gap: 8px;
     }
 
+    .dday-save-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+    }
+    .dday-save-btn svg { width: 15px; height: 15px; }
+
     .dday-card {
       text-align: center;
     }
 
+    /* Urgency stage tracker */
+    .dday-stage-track {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .dday-stage-dot {
+      width: 20px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--line);
+      transition: background 400ms ease, transform 300ms ease, box-shadow 300ms ease;
+    }
+
+    .dday-stage-dot[data-stage="dday-green"].is-current { background: #2e7d4f; }
+    .dday-stage-dot[data-stage="dday-lightgreen"].is-current { background: #7bb661; }
+    .dday-stage-dot[data-stage="dday-orange"].is-current { background: #e8a33d; }
+    .dday-stage-dot[data-stage="dday-red"].is-current { background: #e0483e; }
+    .dday-stage-dot.is-current {
+      width: 30px;
+      transform: scaleY(1.3);
+      box-shadow: 0 0 8px currentColor;
+    }
+
+    /* Calendar page: spiral rings + stacked depth + tilt */
+    .dday-calendar-wrap {
+      position: relative;
+      width: min(300px, 100%);
+      margin: 0 auto 12px;
+      perspective: 600px;
+    }
+
+    .dday-calendar-wrap::before,
+    .dday-calendar-wrap::after {
+      content: "";
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      bottom: -6px;
+      height: 100%;
+      border-radius: 12px;
+      background: #fff;
+      border: 1px solid var(--line);
+      z-index: 0;
+    }
+    .dday-calendar-wrap::before { transform: rotate(-2.5deg); opacity: 0.7; }
+    .dday-calendar-wrap::after { transform: rotate(2deg); opacity: 0.45; bottom: -11px; }
+
+    .dday-ring {
+      position: absolute;
+      top: -8px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #c7cdc9;
+      box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.3);
+      z-index: 2;
+    }
+    .dday-ring-l { left: 32px; }
+    .dday-ring-r { right: 32px; }
+
     .dday-calendar-page {
+      position: relative;
+      z-index: 1;
       border-radius: 10px;
       overflow: hidden;
       border: 1px solid var(--line);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, .08);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, .12);
       background: #fff;
-      margin-bottom: 6px;
+      transform: rotate(-1.2deg);
+      transition: transform 260ms ease, box-shadow 260ms ease;
     }
+
+    .dday-calendar-page::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+      filter: url(#paperGrain);
+      opacity: 0.05;
+      mix-blend-mode: multiply;
+    }
+
+    .dday-calendar-page::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 34px;
+      height: 3px;
+      z-index: 2;
+      pointer-events: none;
+      background: linear-gradient(180deg, rgba(0, 0, 0, 0.1), transparent);
+    }
+
+    .dday-calendar-wrap::before,
+    .dday-calendar-wrap::after {
+      background-image:
+        radial-gradient(circle, rgba(0, 0, 0, 0.05) 1px, transparent 1.2px);
+      background-size: 6px 6px;
+    }
+
+    .dday-calendar-wrap:hover .dday-calendar-page {
+      transform: rotate(0deg) translateY(-3px);
+      box-shadow: 0 16px 30px rgba(0, 0, 0, .16);
+    }
+
+    .dday-stage-icon {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 20px;
+      height: 20px;
+      display: grid;
+      place-items: center;
+      color: rgba(255, 255, 255, .85);
+      z-index: 2;
+    }
+    .dday-stage-icon svg { width: 100%; height: 100%; }
 
     .dday-month {
       background: #8a8f8c;
@@ -1090,12 +1627,17 @@
     }
 
     .dday-days-number {
-      font-size: 30px;
+      font-size: 32px;
       font-weight: 900;
-      padding: 8px 8px 0;
+      padding: 10px 8px 0;
       line-height: 1;
       transition: color 400ms ease;
       color: var(--ink);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .dday-days-number.flip {
+      animation: ddayFlip 420ms cubic-bezier(.3,1.2,.4,1);
     }
 
     .dday-days-label {
@@ -1109,23 +1651,75 @@
       font-size: 12px;
       font-weight: 800;
       color: var(--ink);
-      padding-bottom: 8px;
+      padding-bottom: 10px;
       border-top: 1px dashed var(--line);
       padding-top: 6px;
       margin: 0 12px;
     }
 
-    .dday-calendar-page.dday-green .dday-month { background: #2e7d4f; }
+    .dday-perforation {
+      display: block;
+      height: 8px;
+      margin-top: -1px;
+      background-image: radial-gradient(circle, var(--paper) 2.6px, transparent 2.7px);
+      background-size: 12px 12px;
+      background-position: 6px -4px;
+      background-repeat: repeat-x;
+    }
+
+    .dday-calendar-page.dday-green .dday-month { background: linear-gradient(135deg, #2e7d4f, #1f5c39); }
     .dday-calendar-page.dday-green .dday-days-number { color: #2e7d4f; }
 
-    .dday-calendar-page.dday-lightgreen .dday-month { background: #7bb661; }
-    .dday-calendar-page.dday-lightgreen .dday-days-number { color: #7bb661; }
+    .dday-calendar-page.dday-lightgreen .dday-month { background: linear-gradient(135deg, #7bb661, #5c9a45); }
+    .dday-calendar-page.dday-lightgreen .dday-days-number { color: #5c9a45; }
 
-    .dday-calendar-page.dday-orange .dday-month { background: #e8a33d; }
-    .dday-calendar-page.dday-orange .dday-days-number { color: #e8a33d; }
+    .dday-calendar-page.dday-orange .dday-month { background: linear-gradient(135deg, #e8a33d, #d1841e); }
+    .dday-calendar-page.dday-orange .dday-days-number { color: #d1841e; }
 
-    .dday-calendar-page.dday-red .dday-month { background: #e0483e; }
-    .dday-calendar-page.dday-red .dday-days-number { color: #e0483e; }
+    .dday-calendar-page.dday-red .dday-month { background: linear-gradient(135deg, #e0483e, #b8322a); }
+    .dday-calendar-page.dday-red .dday-days-number { color: #b8322a; }
+    .dday-calendar-page.dday-red { animation: ddayUrgentPulse 2.2s ease-in-out infinite; }
+
+    .dday-calendar-page.dday-today {
+      animation: ddayTodayShimmer 1.8s ease-in-out infinite;
+    }
+    .dday-calendar-page.dday-today .dday-month {
+      background: linear-gradient(135deg, #e8b23c, #c9822f);
+    }
+    .dday-calendar-page.dday-today .dday-days-number {
+      color: #c9822f;
+      font-size: 22px;
+    }
+
+    .dday-calendar-page.dday-past {
+      filter: grayscale(0.6);
+      opacity: 0.75;
+    }
+    .dday-calendar-page.dday-past .dday-month { background: #8a8f8c; }
+    .dday-calendar-page.dday-past .dday-days-number { color: var(--muted); }
+
+    @keyframes ddayFlip {
+      0% { transform: rotateX(0deg); }
+      45% { transform: rotateX(90deg); }
+      55% { transform: rotateX(-90deg); }
+      100% { transform: rotateX(0deg); }
+    }
+
+    @keyframes ddayUrgentPulse {
+      0%, 100% { box-shadow: 0 10px 24px rgba(224, 72, 62, .18); }
+      50% { box-shadow: 0 10px 28px rgba(224, 72, 62, .42); }
+    }
+
+    @keyframes ddayTodayShimmer {
+      0%, 100% { box-shadow: 0 10px 24px rgba(232, 178, 60, .3); }
+      50% { box-shadow: 0 10px 30px rgba(232, 178, 60, .65); }
+    }
+
+    body:is(.theme-night, .night-override) .dday-calendar-wrap::before,
+    body:is(.theme-night, .night-override) .dday-calendar-wrap::after,
+    body:is(.theme-night, .night-override) .dday-calendar-page {
+      background: var(--panel);
+    }
 
     .dday-quote {
       font-size: 12px;
@@ -1240,7 +1834,7 @@
 
     .theme-option {
       min-height: 74px;
-      border-radius: 8px;
+      border-radius: 10px;
       border: 1px solid var(--line);
       background: #fff;
       padding: 10px;
@@ -1249,17 +1843,51 @@
       gap: 8px;
       color: var(--ink);
       font-weight: 900;
+      position: relative;
+      overflow: hidden;
+      transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+    }
+
+    .theme-option:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-soft);
     }
 
     .theme-option.active {
       border-color: var(--green);
-      box-shadow: inset 0 0 0 1px var(--green);
+      box-shadow: inset 0 0 0 1px var(--green), 0 8px 18px rgba(36, 107, 69, 0.18);
+      animation: tabSelectPop 480ms cubic-bezier(.3,1.4,.5,1) both;
+    }
+
+    .theme-option.active::before {
+      content: "✓";
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--green);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 900;
+      line-height: 18px;
+      text-align: center;
+      box-shadow: 0 0 0 3px rgba(36, 107, 69, 0.18);
+      animation: tabBadgeIn 380ms cubic-bezier(.3,1.6,.5,1) 60ms both;
     }
 
     .theme-swatch {
-      height: 12px;
+      height: 14px;
       border-radius: 999px;
       background: var(--swatch);
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+      transition: transform 160ms ease;
+    }
+
+    .theme-option:hover .theme-swatch,
+    .theme-option.active .theme-swatch {
+      transform: scaleX(1.02);
     }
 
     .settings-error {
@@ -2217,11 +2845,27 @@
       background: rgba(255, 255, 255, 0.16);
       color: #effff4;
       box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .28);
+      overflow: visible;
+      transition: background 200ms ease, box-shadow 200ms ease, transform 160ms ease;
     }
-    .timer-mode-toggle:hover { background: rgba(255, 255, 255, 0.28); }
-    .timer-mode-toggle svg { width: 19px; height: 19px; transition: transform 220ms ease; }
+    .timer-mode-toggle:hover { background: rgba(255, 255, 255, 0.28); transform: scale(1.06); }
+    .timer-mode-toggle:active { transform: scale(0.9); }
+    .timer-mode-toggle svg { width: 19px; height: 19px; transition: transform 420ms cubic-bezier(.3,1.3,.4,1); }
     .timer-mode-toggle.is-countdown svg { transform: rotate(180deg); }
     .timer-mode-toggle:disabled { opacity: .45; cursor: not-allowed; }
+    .timer-mode-toggle.is-countdown {
+      background: rgba(255, 216, 115, 0.24);
+      box-shadow: inset 0 0 0 1px rgba(255, 216, 115, .55), 0 0 14px rgba(255, 216, 115, .35);
+    }
+
+    .timer-mode-ripple {
+      position: absolute;
+      inset: -2px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, .85);
+      pointer-events: none;
+      animation: timerModeRipple 550ms ease-out forwards;
+    }
 
     .timer-mode-label {
       position: absolute;
@@ -2233,6 +2877,10 @@
       letter-spacing: 1px;
       text-transform: uppercase;
       color: rgba(239, 255, 244, 0.78);
+    }
+
+    .timer-mode-label.pop {
+      animation: timerModeLabelPop 340ms cubic-bezier(.3,1.4,.5,1);
     }
 
     .countdown-setup {
@@ -2876,11 +3524,22 @@
 
     .timer-toggle.is-running .unlit-icon { display: none; }
     .timer-toggle.is-running .flame-icon { display: block; }
-    .timer-toggle.is-running .timer-toggle-icon { box-shadow: 0 0 16px rgba(255, 145, 55, .6); background: rgba(0, 0, 0, .18); }
+    .timer-toggle.is-running { background:#b13c35; animation: timerToggleBreathe 2.6s ease-in-out infinite; }
+    .timer-toggle.is-running .timer-toggle-icon { box-shadow: 0 0 16px rgba(255, 145, 55, .6); background: rgba(0, 0, 0, .18); animation: timerFlameGlow 2.6s ease-in-out infinite; }
+
+    @keyframes timerToggleBreathe {
+      0%, 100% { box-shadow: 0 6px 18px rgba(177, 60, 53, .35); }
+      50% { box-shadow: 0 6px 26px rgba(177, 60, 53, .6); }
+    }
+
+    @keyframes timerFlameGlow {
+      0%, 100% { box-shadow: 0 0 12px rgba(255, 145, 55, .5); }
+      50% { box-shadow: 0 0 22px rgba(255, 145, 55, .85); }
+    }
+
     .timer-toggle b, .timer-toggle small { display:block; }
     .timer-toggle b { font-size:15px; }
     .timer-toggle small { margin-top:2px; font-size:11px; opacity:.82; font-weight:700; }
-    .timer-toggle.is-running { background:#b13c35; }
     .chat-image-wrap { position:relative; margin-top:7px; }
     .chat-image-wrap .chat-image { margin-top:0; }
     .download-image-btn { position:absolute; right:8px; bottom:8px; width:34px; height:34px; display:grid; place-items:center; color:var(--green); background:rgba(255,255,255,.92); border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,.16); }
@@ -3025,6 +3684,11 @@
       background: color-mix(in srgb, var(--subject, var(--mode, var(--green))) 26%, var(--panel));
     }
 
+    .subject-option.active .option-icon,
+    .mode-option.active .option-icon {
+      animation: tabIconBounce 480ms cubic-bezier(.3,1.6,.5,1) both;
+    }
+
     .subject-option .option-text,
     .mode-option .option-text {
       display: grid;
@@ -3138,7 +3802,20 @@
   </style>
 </head>
 <body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <filter id="paperGrain" x="-20%" y="-20%" width="140%" height="140%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="7" stitchTiles="stitch" result="noise"/>
+        <feColorMatrix in="noise" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.9 0"/>
+      </filter>
+    </defs>
+  </svg>
   <main id="loginScreen" class="login-screen">
+    <div class="login-ambient" aria-hidden="true">
+      <span class="login-blob login-blob-a"></span>
+      <span class="login-blob login-blob-b"></span>
+      <span class="login-blob login-blob-c"></span>
+    </div>
     <div class="login-settings-row">
       <button id="loginNightModeBtn" class="icon-btn night-toggle-btn" type="button" title="Switch to night mode" aria-label="Switch to night mode">
         <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
@@ -3176,16 +3853,25 @@
       <form id="loginForm">
         <div class="field">
           <label for="loginId">Login ID</label>
-          <input id="loginId" type="text" autocomplete="username" placeholder="Enter login ID" required />
+          <div class="input-with-icon">
+            <span class="field-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg></span>
+            <input id="loginId" type="text" autocomplete="username" placeholder="Enter login ID" required />
+          </div>
         </div>
 
         <div class="field">
           <label for="password">Password</label>
-          <input id="password" type="password" autocomplete="current-password" placeholder="Enter password" required />
+          <div class="input-with-icon">
+            <span class="field-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
+            <input id="password" type="password" autocomplete="current-password" placeholder="Enter password" required />
+          </div>
         </div>
 
         <p id="loginError" class="error" aria-live="polite"></p>
-        <button class="primary-btn" type="submit">Login</button>
+        <button class="primary-btn login-submit-btn" type="submit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5M15 12H3"/></svg>
+          Login
+        </button>
       </form>
 
       <div class="login-help">
@@ -3445,16 +4131,37 @@
         <section class="panel dday-panel">
           <div class="section-heading compact-heading"><div><span class="eyebrow">COUNTDOWN</span><h2>D-Day</h2></div></div>
           <div id="ddaySetup" class="dday-setup">
-            <input id="ddayNameInput" type="text" placeholder="Name it (e.g. JEE Mains)" maxlength="40">
-            <input id="ddayDateInput" type="date">
-            <button id="ddaySaveBtn" class="secondary-btn" type="button">Set D-Day</button>
+            <div class="input-with-icon">
+              <span class="field-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V4a1 1 0 0 1 1-1h9l6 6v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1Z"/><path d="M13 3v6h6"/></svg></span>
+              <input id="ddayNameInput" type="text" placeholder="Name it (e.g. JEE Mains)" maxlength="40">
+            </div>
+            <div class="input-with-icon">
+              <span class="field-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>
+              <input id="ddayDateInput" type="date">
+            </div>
+            <button id="ddaySaveBtn" class="secondary-btn dday-save-btn" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 14.5 8.5 21 9.5 16.3 14 17.5 20.5 12 17.3 6.5 20.5 7.7 14 3 9.5 9.5 8.5 12 2Z"/></svg>
+              Set D-Day
+            </button>
           </div>
           <div id="ddayCard" class="dday-card hidden">
-            <div id="ddayCalendarPage" class="dday-calendar-page">
-              <div id="ddayMonth" class="dday-month"></div>
-              <div id="ddayDaysNumber" class="dday-days-number"></div>
-              <div id="ddayDaysLabel" class="dday-days-label"></div>
-              <div id="ddayName" class="dday-name"></div>
+            <div id="ddayStageTrack" class="dday-stage-track" aria-hidden="true">
+              <span class="dday-stage-dot" data-stage="dday-green"></span>
+              <span class="dday-stage-dot" data-stage="dday-lightgreen"></span>
+              <span class="dday-stage-dot" data-stage="dday-orange"></span>
+              <span class="dday-stage-dot" data-stage="dday-red"></span>
+            </div>
+            <div class="dday-calendar-wrap">
+              <span class="dday-ring dday-ring-l" aria-hidden="true"></span>
+              <span class="dday-ring dday-ring-r" aria-hidden="true"></span>
+              <div id="ddayCalendarPage" class="dday-calendar-page">
+                <span id="ddayStageIcon" class="dday-stage-icon" aria-hidden="true"></span>
+                <div id="ddayMonth" class="dday-month"></div>
+                <div id="ddayDaysNumber" class="dday-days-number"></div>
+                <div id="ddayDaysLabel" class="dday-days-label"></div>
+                <div id="ddayName" class="dday-name"></div>
+                <span class="dday-perforation" aria-hidden="true"></span>
+              </div>
             </div>
             <p id="ddayQuote" class="dday-quote" aria-hidden="true"></p>
             <button id="ddayEditBtn" class="ghost-btn" type="button">Change D-Day</button>
@@ -3462,25 +4169,34 @@
         </section>
 
         <section class="panel todo-panel">
-          <div class="section-heading compact-heading"><div><span class="eyebrow">TODAY'S PLAN</span><h2>To-do list</h2></div></div>
+          <div class="section-heading compact-heading todo-heading">
+            <div><span class="eyebrow">TODAY'S PLAN</span><h2>To-do list</h2></div>
+            <div class="todo-progress" id="todoProgress" title="Tasks completed today">
+              <svg viewBox="0 0 44 44" aria-hidden="true">
+                <circle class="todo-progress-track" cx="22" cy="22" r="18"/>
+                <circle id="todoProgressFill" class="todo-progress-fill" cx="22" cy="22" r="18"/>
+              </svg>
+              <span id="todoProgressLabel" class="todo-progress-label">0/0</span>
+            </div>
+          </div>
           <form id="todoForm" class="todo-form">
             <input id="todoInput" type="text" placeholder="Add a task" maxlength="80" required />
             <button class="secondary-btn" type="submit">Add</button>
           </form>
           <div id="todoTagPicker" class="todo-tag-picker" role="group" aria-label="Tag this task">
-            <button type="button" class="todo-tag-btn active" data-tag="none" title="No tag" aria-label="No tag">
+            <button type="button" class="todo-tag-btn active" data-tag="none" title="No tag" aria-label="No tag" style="--tag-glow: var(--green)">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9" stroke-dasharray="3 3"/></svg>
             </button>
-            <button type="button" class="todo-tag-btn" data-tag="flame" title="Urgent" aria-label="Tag as urgent">
+            <button type="button" class="todo-tag-btn" data-tag="flame" title="Urgent" aria-label="Tag as urgent" style="--tag-glow:#ff7a1a">
               <svg viewBox="0 0 24 24" fill="#ff7a1a"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
             </button>
-            <button type="button" class="todo-tag-btn" data-tag="ice" title="Low priority" aria-label="Tag as low priority">
+            <button type="button" class="todo-tag-btn" data-tag="ice" title="Low priority" aria-label="Tag as low priority" style="--tag-glow:#4aa8d8">
               <svg viewBox="0 0 24 24" fill="#4aa8d8"><path d="M12 2 4 7v10l8 5 8-5V7Z"/><path d="M12 2v20M4 7l16 10M20 7 4 17" stroke="#eaf6fc" stroke-width="1" stroke-linecap="round"/></svg>
             </button>
-            <button type="button" class="todo-tag-btn" data-tag="panic" title="Stressed / deadline" aria-label="Tag as stressed">
+            <button type="button" class="todo-tag-btn" data-tag="panic" title="Stressed / deadline" aria-label="Tag as stressed" style="--tag-glow:#e0483e">
               <svg viewBox="0 0 24 24" fill="#e0483e"><path d="M12 3 1 21h22L12 3Z"/><rect x="11" y="9.5" width="2" height="5.5" rx="1" fill="#fff"/><rect x="11" y="16.5" width="2" height="2" rx="1" fill="#fff"/></svg>
             </button>
-            <button type="button" class="todo-tag-btn" data-tag="star" title="Important" aria-label="Tag as important">
+            <button type="button" class="todo-tag-btn" data-tag="star" title="Important" aria-label="Tag as important" style="--tag-glow:#e8b23c">
               <svg viewBox="0 0 24 24" fill="#e8b23c"><path d="m12 2 2.9 6.6 7.1.7-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7-5.4-4.7 7.1-.7Z"/></svg>
             </button>
           </div>
@@ -3504,8 +4220,8 @@
           <div class="chat-title"><span class="chat-title-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 15a4 4 0 0 1-4 4H8l-4 3v-7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4v8Z"/></svg></span><span>Study Chat <small>LIVE</small></span></div>
           <div class="chat-head-actions">
             <button id="footballThemeBtn" class="small-btn" type="button" title="Football theme" aria-label="Toggle football theme">⚽</button>
-            <button id="voiceCallBtn" class="small-btn" type="button" title="Voice call" aria-label="Start voice call"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/></svg></button>
-            <button id="videoCallBtn" class="small-btn" type="button" title="Video call" aria-label="Start video call"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="6" width="12" height="12" rx="2"/><path d="m21 8-6 4 6 4V8Z"/></svg></button>
+            <button id="voiceCallBtn" class="small-btn call-btn call-btn-voice" type="button" title="Voice call" aria-label="Start voice call"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/></svg></button>
+            <button id="videoCallBtn" class="small-btn call-btn call-btn-video" type="button" title="Video call" aria-label="Start video call"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="6" width="12" height="12" rx="2"/><path d="m21 8-6 4 6 4V8Z"/></svg></button>
             <button id="chatSizeBtn" class="small-btn" type="button" title="Expand chat" aria-label="Expand chat">↗</button>
             <button id="notifyBtn" class="small-btn" type="button" title="Turn chat notifications on">!</button>
             <button id="closeChatBtn" class="small-btn" type="button" aria-label="Close chat">X</button>
@@ -3937,13 +4653,18 @@
     const todoForm = document.getElementById("todoForm");
     const todoInput = document.getElementById("todoInput");
     const todoList = document.getElementById("todoList");
+    const todoProgress = document.getElementById("todoProgress");
+    const todoProgressFill = document.getElementById("todoProgressFill");
+    const todoProgressLabel = document.getElementById("todoProgressLabel");
     const partnerCard = document.getElementById("partnerCard");
     const ddaySetup = document.getElementById("ddaySetup");
     const ddayNameInput = document.getElementById("ddayNameInput");
     const ddayDateInput = document.getElementById("ddayDateInput");
     const ddaySaveBtn = document.getElementById("ddaySaveBtn");
     const ddayCard = document.getElementById("ddayCard");
+    const ddayStageTrack = document.getElementById("ddayStageTrack");
     const ddayCalendarPage = document.getElementById("ddayCalendarPage");
+    const ddayStageIcon = document.getElementById("ddayStageIcon");
     const ddayMonth = document.getElementById("ddayMonth");
     const ddayDaysNumber = document.getElementById("ddayDaysNumber");
     const ddayDaysLabel = document.getElementById("ddayDaysLabel");
@@ -5546,7 +6267,13 @@
       timerModeToggleBtn.classList.toggle("is-countdown", isCountdown);
       timerModeToggleBtn.disabled = Boolean(user.running);
       timerModeToggleBtn.title = isCountdown ? "Switch to stopwatch" : "Switch to countdown timer";
-      timerModeLabel.textContent = isCountdown ? "Timer" : "Stopwatch";
+      const newTimerModeLabel = isCountdown ? "Timer" : "Stopwatch";
+      if (timerModeLabel.textContent !== newTimerModeLabel) {
+        timerModeLabel.textContent = newTimerModeLabel;
+        timerModeLabel.classList.remove("pop");
+        void timerModeLabel.offsetWidth;
+        timerModeLabel.classList.add("pop");
+      }
       countdownSetup.classList.toggle("hidden", !isCountdown || Boolean(user.running));
 
       if (isCountdown) {
@@ -6179,8 +6906,46 @@
       saveLocalHistory();
     }
 
+    const TODO_TAG_COLORS = {
+      none: "var(--green)",
+      flame: "#ff7a1a",
+      ice: "#4aa8d8",
+      panic: "#e0483e",
+      star: "#e8b23c"
+    };
+    const TODO_CONFETTI_COLORS = ["#29a766", "#ffd873", "#f3b53f", "#4aa8d8", "#e0483e", "#7a4fc4"];
+
+    function spawnTodoConfetti(x, y) {
+      for (let i = 0; i < 14; i++) {
+        const piece = document.createElement("span");
+        piece.className = "todo-confetti-piece";
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 40 + Math.random() * 55;
+        piece.style.setProperty("--dx", `${Math.cos(angle) * dist}px`);
+        piece.style.setProperty("--dy", `${Math.sin(angle) * dist - 24}px`);
+        piece.style.setProperty("--rot", `${Math.floor(Math.random() * 360)}deg`);
+        piece.style.left = `${x}px`;
+        piece.style.top = `${y}px`;
+        piece.style.background = TODO_CONFETTI_COLORS[i % TODO_CONFETTI_COLORS.length];
+        document.body.appendChild(piece);
+        setTimeout(() => piece.remove(), 700);
+      }
+    }
+
+    function updateTodoProgress(user) {
+      if (!todoProgress || !todoProgressFill || !todoProgressLabel) return;
+      const total = user.todos.length;
+      const done = user.todos.filter((todo) => todo.done).length;
+      const circumference = 113.1;
+      const fraction = total ? done / total : 0;
+      todoProgressFill.style.strokeDashoffset = String(circumference * (1 - fraction));
+      todoProgressLabel.textContent = `${done}/${total}`;
+      todoProgress.classList.toggle("is-complete", total > 0 && done === total);
+    }
+
     function renderTodos(user) {
       todoList.innerHTML = "";
+      updateTodoProgress(user);
       if (!user.todos.length) {
         const empty = document.createElement("li");
         empty.className = "empty-state";
@@ -6194,6 +6959,7 @@
         item.className = `todo-item${todo.done ? " done" : ""}`;
         item.draggable = true;
         item.dataset.todoId = todo.id;
+        item.style.setProperty("--tag-color", TODO_TAG_COLORS[todo.tag] || "var(--green)");
 
         item.addEventListener("dragstart", () => {
           draggedTodoId = todo.id;
@@ -6213,8 +6979,14 @@
 
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
+        checkbox.className = "todo-check";
         checkbox.checked = todo.done;
+        checkbox.setAttribute("aria-label", `Mark "${todo.text}" done`);
         checkbox.addEventListener("change", async () => {
+          if (checkbox.checked) {
+            const rect = checkbox.getBoundingClientRect();
+            spawnTodoConfetti(rect.left + rect.width / 2, rect.top + rect.height / 2);
+          }
           const todos = user.todos.map((itemTodo) => (
             itemTodo.id === todo.id ? { ...itemTodo, done: checkbox.checked } : itemTodo
           ));
@@ -6222,7 +6994,7 @@
         });
 
         const tagIcon = document.createElement("span");
-        tagIcon.className = "todo-tag-icon";
+        tagIcon.className = `todo-tag-icon${!todo.tag || todo.tag === "none" ? " is-empty" : ""}`;
         tagIcon.innerHTML = TODO_TAG_ICONS[todo.tag] || "";
         if (todo.tag && todo.tag !== "none") {
           tagIcon.title = todo.tag === "flame" ? "Urgent" : todo.tag === "ice" ? "Low priority" : todo.tag === "panic" ? "Stressed / deadline" : "Important";
@@ -6233,10 +7005,11 @@
         text.textContent = todo.text;
 
         const remove = document.createElement("button");
-        remove.className = "small-btn";
+        remove.className = "todo-delete";
         remove.type = "button";
-        remove.textContent = "X";
+        remove.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>';
         remove.title = "Delete task";
+        remove.setAttribute("aria-label", "Delete task");
         remove.addEventListener("click", async () => {
           const todos = user.todos.filter((itemTodo) => itemTodo.id !== todo.id);
           await writeUserPatch(user.id, { todos });
@@ -6309,6 +7082,15 @@
       `;
     }
 
+    const DDAY_STAGE_ICONS = {
+      "dday-green": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5-2 7-6 7-11V5l-7-3-7 3v6c0 5 2 9 7 11Z"/></svg>',
+      "dday-lightgreen": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5-2 7-6 7-11V5l-7-3-7 3v6c0 5 2 9 7 11Z"/></svg>',
+      "dday-orange": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12M8 2c0 5 8 5 8 10s-8 5-8 10M16 2c0 5-8 5-8 10s8 5 8 10" transform="scale(0.9) translate(1.2 1.2)"/></svg>',
+      "dday-red": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>'
+    };
+    let ddayLastNumberText = null;
+    let ddayCelebratedFor = "";
+
     function daysUntilDday(dateStr) {
       if (!dateStr) return null;
       const target = new Date(`${dateStr}T00:00:00`);
@@ -6334,6 +7116,8 @@
       let stageClass = "dday-green";
       let numberText = daysLeft;
       let labelText = "days left";
+      let isToday = false;
+      let isPast = false;
 
       if (daysLeft === null) {
         numberText = "—";
@@ -6342,10 +7126,12 @@
         numberText = "—";
         labelText = "day has passed";
         stageClass = "dday-red";
+        isPast = true;
       } else if (daysLeft === 0) {
         numberText = "D-DAY";
         labelText = "is today!";
         stageClass = "dday-red";
+        isToday = true;
       } else if (daysLeft <= 7) {
         stageClass = "dday-red";
       } else if (daysLeft <= 20) {
@@ -6356,10 +7142,34 @@
         stageClass = "dday-green";
       }
 
-      ddayDaysNumber.textContent = numberText;
       ddayDaysLabel.textContent = labelText;
-      ddayCalendarPage.classList.remove("dday-green", "dday-lightgreen", "dday-orange", "dday-red");
+      ddayCalendarPage.classList.remove("dday-green", "dday-lightgreen", "dday-orange", "dday-red", "dday-today", "dday-past");
       ddayCalendarPage.classList.add(stageClass);
+      ddayCalendarPage.classList.toggle("dday-today", isToday);
+      ddayCalendarPage.classList.toggle("dday-past", isPast);
+
+      if (ddayStageIcon) ddayStageIcon.innerHTML = DDAY_STAGE_ICONS[stageClass] || "";
+
+      ddayStageTrack?.querySelectorAll(".dday-stage-dot").forEach((dot) => {
+        dot.classList.toggle("is-current", dot.dataset.stage === stageClass);
+      });
+
+      const numberTextStr = String(numberText);
+      if (ddayDaysNumber.textContent !== numberTextStr) {
+        ddayDaysNumber.textContent = numberTextStr;
+        if (ddayLastNumberText !== null) {
+          ddayDaysNumber.classList.remove("flip");
+          void ddayDaysNumber.offsetWidth;
+          ddayDaysNumber.classList.add("flip");
+        }
+        ddayLastNumberText = numberTextStr;
+      }
+
+      if (isToday && ddayCelebratedFor !== user.dDayDate) {
+        ddayCelebratedFor = user.dDayDate;
+        const rect = ddayCalendarPage.getBoundingClientRect();
+        spawnTodoConfetti(rect.left + rect.width / 2, rect.top + rect.height / 2);
+      }
     }
 
     function openPartnerModal() {
@@ -6822,6 +7632,10 @@
     timerModeToggleBtn.addEventListener("click", () => {
       const user = currentUser();
       if (user?.running) return;
+      const ripple = document.createElement("span");
+      ripple.className = "timer-mode-ripple";
+      timerModeToggleBtn.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 560);
       timerMode = timerMode === "countdown" ? "stopwatch" : "countdown";
       localStorage.setItem("duotrackTimerMode", timerMode);
       render();
