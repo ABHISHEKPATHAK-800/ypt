@@ -1791,6 +1791,290 @@
       margin-left: 14px;
     }
 
+    .why-jee-btn {
+      order: 0;
+      margin: 0 auto;
+      background: none;
+      padding: 0;
+      color: var(--green);
+      font-weight: 800;
+      font-size: 13px;
+      font-family: var(--font-body);
+      letter-spacing: normal;
+    }
+
+    .jee-flip {
+      display: inline-block;
+      font-weight: 900;
+    }
+
+    .why-jee-btn:hover {
+      text-decoration: underline;
+    }
+
+    .jee-presentation {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      background: #0b120d;
+    }
+
+    .jee-presentation.hidden {
+      display: none;
+    }
+
+    .jee-slides-viewport {
+      width: 100%;
+      height: 100%;
+      overflow-y: scroll;
+      overflow-x: hidden;
+      scroll-snap-type: y mandatory;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .jee-slides-track {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .jee-slide {
+      position: relative;
+      height: 100vh;
+      min-height: 100vh;
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      background-size: cover;
+      background-position: center;
+      overflow: hidden;
+    }
+
+    .jee-slide-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .jee-slide::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(0deg, rgba(4,9,6,0.96) 0%, rgba(4,9,6,0.82) 32%, rgba(4,9,6,0.25) 60%, rgba(4,9,6,0.4) 100%);
+    }
+
+    .jee-slide-content {
+      position: relative;
+      z-index: 1;
+      margin: 0 16px 88px;
+      padding: 20px 20px 24px;
+      max-width: 640px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: rgba(10, 16, 12, 0.55);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius-md);
+    }
+
+    .jee-slide-tag {
+      display: inline-flex;
+      align-self: flex-start;
+      padding: 5px 13px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.18);
+      color: #fff;
+      font-weight: 800;
+      font-size: 11.5px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .jee-slide h3 {
+      margin: 4px 0 0;
+      font-size: clamp(22px, 5vw, 32px);
+      line-height: 1.15;
+      color: #fff;
+      font-family: var(--font-display);
+    }
+
+    .jee-slide p, .jee-slide li {
+      margin: 0;
+      color: rgba(255,255,255,0.94);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .jee-slide ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      text-align: left;
+    }
+
+    .jee-slide li::before {
+      content: "✓ ";
+      color: #9be0b3;
+      font-weight: 900;
+    }
+
+    .jee-credit {
+      position: absolute;
+      z-index: 1;
+      bottom: 12px;
+      right: 16px;
+      font-size: 10px;
+      color: rgba(255,255,255,0.6);
+    }
+
+    .jee-topbar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 18px 0;
+      pointer-events: none;
+    }
+
+    .jee-topbar .jee-back {
+      pointer-events: auto;
+    }
+
+    .jee-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 16px 9px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.16);
+      backdrop-filter: blur(6px);
+      color: #fff;
+      font-weight: 800;
+      font-size: 13.5px;
+    }
+
+    .jee-scroll-hint {
+      pointer-events: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 13px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.14);
+      color: #fff;
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    .jee-scroll-hint svg {
+      width: 13px;
+      height: 13px;
+      fill: #fff;
+      animation: jeeBounce 1.4s ease-in-out infinite;
+    }
+
+    @keyframes jeeBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(4px); }
+    }
+
+    .jee-progress {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 3;
+      display: flex;
+      gap: 5px;
+      padding: 10px 16px 0;
+    }
+
+    .jee-progress span {
+      flex: 1;
+      height: 3px;
+      border-radius: 3px;
+      background: rgba(255,255,255,0.28);
+      overflow: hidden;
+    }
+
+    .jee-progress span::after {
+      content: "";
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: #fff;
+      border-radius: 3px;
+      transition: width 220ms ease;
+    }
+
+    .jee-progress span.filled::after { width: 100%; }
+
+    .jee-nav {
+      position: absolute;
+      right: 16px;
+      z-index: 2;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.16);
+      backdrop-filter: blur(6px);
+      color: #fff;
+      font-size: 18px;
+      font-weight: 800;
+      display: grid;
+      place-items: center;
+    }
+
+    .jee-nav-prev { top: 50%; transform: translateY(-58px); }
+    .jee-nav-next { top: 50%; transform: translateY(16px); }
+
+    .jee-dots {
+      position: absolute;
+      right: 66px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 7px;
+      z-index: 2;
+    }
+
+    .jee-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.4);
+      padding: 0;
+    }
+
+    .jee-dot.active {
+      background: #fff;
+      height: 22px;
+      border-radius: 5px;
+    }
+
+    @media (max-width: 560px) {
+      .jee-slide-content { margin: 0 14px 80px; padding: 16px 16px 20px; }
+      .jee-nav { width: 34px; height: 34px; right: 12px; }
+      .jee-nav-prev { transform: translateY(-50px); }
+      .jee-nav-next { transform: translateY(14px); }
+      .jee-dots { right: 54px; }
+    }
+
+
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -4208,11 +4492,34 @@
 
     <footer class="footer">
       <span>Made by Abhishek · Find an issue? <a href="#" id="developerLink">Contact developer</a></span>
+      <button type="button" id="whyJeeBtn" class="why-jee-btn" aria-label="Why JEE?">
+        Why <span class="jee-flip" id="jeeFlipText">JEE</span>?
+      </button>
       <span>
         <a href="#" id="privacyLink">Privacy Policy</a>
         <a href="#" id="contactLink">Contact Us</a>
       </span>
     </footer>
+
+    <div id="jeePresentation" class="jee-presentation hidden">
+      <div class="jee-slides-viewport" id="jeeSlidesViewport">
+        <div class="jee-slides-track" id="jeeSlidesTrack"></div>
+      </div>
+      <div class="jee-progress" id="jeeProgress"></div>
+      <div class="jee-topbar">
+        <button type="button" class="jee-back" id="jeePresentationClose">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M15.5 4.5 8 12l7.5 7.5 1.4-1.4L10.8 12l6.1-6.1z"/></svg>
+          Back
+        </button>
+        <span class="jee-scroll-hint" id="jeeScrollHint">
+          Scroll
+          <svg viewBox="0 0 24 24"><path d="M12 16.5 4.5 9l1.4-1.4L12 13.7l6.1-6.1L19.5 9z"/></svg>
+        </span>
+      </div>
+      <button type="button" class="jee-nav jee-nav-prev" id="jeePrevBtn" aria-label="Previous slide">▲</button>
+      <button type="button" class="jee-nav jee-nav-next" id="jeeNextBtn" aria-label="Next slide">▼</button>
+      <div class="jee-dots" id="jeeDots"></div>
+    </div>
 
     <section id="chatWidget" class="chat-widget">
       <div id="chatPanel" class="chat-panel hidden">
@@ -4728,6 +5035,37 @@
     const closeModalBtn = document.getElementById("closeModalBtn");
     const privacyLink = document.getElementById("privacyLink");
     const contactLink = document.getElementById("contactLink");
+    const whyJeeBtn = document.getElementById("whyJeeBtn");
+    const jeeFlipText = document.getElementById("jeeFlipText");
+    const jeeFlipFonts = [
+      "'Inter', sans-serif",
+      "'Georgia', serif",
+      "'Courier New', monospace",
+      "'Brush Script MT', cursive",
+      "'Impact', sans-serif",
+      "'Comic Sans MS', cursive",
+      "'Trebuchet MS', sans-serif",
+      "'Times New Roman', serif",
+      "'Arial Black', sans-serif",
+      "'Verdana', sans-serif"
+    ];
+    let jeeFlipIndex = 0;
+    if (jeeFlipText) {
+      setInterval(() => {
+        jeeFlipIndex = (jeeFlipIndex + 1) % jeeFlipFonts.length;
+        jeeFlipText.style.fontFamily = jeeFlipFonts[jeeFlipIndex];
+      }, 160);
+    }
+    const jeePresentation = document.getElementById("jeePresentation");
+    const jeeSlidesTrack = document.getElementById("jeeSlidesTrack");
+    const jeeSlidesViewport = document.getElementById("jeeSlidesViewport");
+    const jeeDots = document.getElementById("jeeDots");
+    const jeeProgress = document.getElementById("jeeProgress");
+    const jeePrevBtn = document.getElementById("jeePrevBtn");
+    const jeeNextBtn = document.getElementById("jeeNextBtn");
+    const jeePresentationClose = document.getElementById("jeePresentationClose");
+    const jeeScrollHint = document.getElementById("jeeScrollHint");
+    let jeeSlideObserver = null;
     const developerLink = document.getElementById("developerLink");
     const toastStack = document.getElementById("toastStack");
 
@@ -8315,6 +8653,176 @@
         <p><strong>Prototype note:</strong> this version is built for Abhishek and Aditya's study group. A public version should use proper account login, private database rules, and a TURN server for reliable calling.</p>
       `;
       infoModal.classList.remove("hidden");
+    });
+
+    const jeeSlides = [
+      {
+        tag: "The Exam",
+        img: "https://commons.wikimedia.org/wiki/Special:FilePath/Main_building_in_IIT_Bombay.jpg?width=1200",
+        credit: "IIT Bombay · Wikimedia Commons",
+        title: "What is JEE?",
+        html: `<p>The Joint Entrance Examination is India's gateway to the top engineering colleges — IITs, NITs, IIITs, and other government-funded institutes.</p><p>It's a two-stage exam: <strong>JEE Main</strong>, then <strong>JEE Advanced</strong> for IIT eligibility.</p>`
+      },
+      {
+        tag: "Competition",
+        img: "https://commons.wikimedia.org/wiki/Special:FilePath/A_student_answering_a_test.jpg?width=1200",
+        credit: "Wikimedia Commons",
+        title: "How tough is the competition?",
+        html: `<ul>
+          <li>Over 1 million students appear for JEE Main every year</li>
+          <li>Roughly the top 2.5 lakh qualify for JEE Advanced</li>
+          <li>Around 17,000 seats exist across all IITs</li>
+          <li>That puts the odds at well under 2% for an IIT seat</li>
+        </ul>`
+      },
+      {
+        tag: "Syllabus",
+        img: "https://commons.wikimedia.org/wiki/Special:FilePath/Classroom_blackboard_at_Cornell_University,_Ithaca,_NY_25.jpg?width=1200",
+        credit: "Wikimedia Commons",
+        title: "What does the exam actually test?",
+        html: `<ul>
+          <li>JEE Main Paper 1: 75 questions, 300 marks — 25 each from Physics, Chemistry, Maths</li>
+          <li>Each subject mixes MCQs and numerical-answer questions, +4 for correct, -1 for wrong</li>
+          <li>Held twice a year (January & April sessions) — your best score counts</li>
+          <li>Top ~2.5 lakh scorers move on to JEE Advanced for IIT admission</li>
+        </ul>`
+      },
+      {
+        tag: "Benefits",
+        img: "https://commons.wikimedia.org/wiki/Special:FilePath/Entrance_of_IIT_Indore.jpg?width=1200",
+        credit: "IIT Indore · Wikimedia Commons",
+        title: "Why it pays off",
+        html: `<ul>
+          <li>Access to India's best faculty, labs, and research exposure</li>
+          <li>Strong campus placements and average salary packages</li>
+          <li>A powerful alumni network across tech, business, and startups</li>
+          <li>A brand name that opens doors for higher studies abroad too</li>
+        </ul>`
+      },
+      {
+        tag: "Alumni",
+        img: "https://commons.wikimedia.org/wiki/Special:FilePath/IIT_Kharagpur_Main_Building.JPG?width=1200",
+        credit: "IIT Kharagpur · Wikimedia Commons",
+        title: "Where an IIT degree can lead",
+        html: `<ul>
+          <li>Sundar Pichai (IIT Kharagpur) — CEO of Google and Alphabet</li>
+          <li>Nandan Nilekani (IIT Bombay) — Infosys co-founder, built India's Aadhaar system</li>
+          <li>Sachin Bansal (IIT Delhi) — co-founded Flipkart</li>
+          <li>Deepinder Goyal (IIT Delhi) — founder of Zomato</li>
+        </ul>`
+      },
+      {
+        tag: "The Real Win",
+        img: "https://commons.wikimedia.org/wiki/Special:FilePath/IIT_guwahati_convocation_2023.jpg?width=1200",
+        credit: "IIT Guwahati Convocation · Wikimedia Commons",
+        title: "Why actually do it?",
+        html: `<p>JEE prep rewards deep understanding over memorization. The habits it builds — consistency, focus, breaking hard problems into small steps — outlast the exam itself.</p><p>Every focused session you log in DuoTrack is a small deposit toward that goal.</p>`
+      },
+      {
+        tag: "Strategy",
+        img: "https://commons.wikimedia.org/wiki/Special:FilePath/A_young_student_doing_exercises_on_a_whiteboard.jpg?width=1200",
+        credit: "Wikimedia Commons",
+        title: "How to actually prepare",
+        html: `<ul>
+          <li>Master NCERT textbooks first — most JEE Main questions trace back to them</li>
+          <li>Solve previous years' papers under timed, exam-like conditions</li>
+          <li>Take regular mock tests to build speed and spot weak topics early</li>
+          <li>Revise formulas and mistakes weekly instead of cramming at the end</li>
+        </ul>`
+      },
+      {
+        tag: "Options",
+        img: "https://commons.wikimedia.org/wiki/Special:FilePath/A_student_answering_a_test.jpg?width=1200",
+        credit: "Wikimedia Commons",
+        title: "Other good exams to know",
+        html: `<ul>
+          <li><strong>NEET</strong> — for medicine (MBBS/BDS)</li>
+          <li><strong>BITSAT</strong> — for BITS Pilani, Goa, Hyderabad</li>
+          <li><strong>VITEEE</strong> — for VIT campuses</li>
+          <li><strong>State CETs</strong> (MHT-CET, KCET, WBJEE, etc.) — strong state colleges</li>
+        </ul><p>JEE isn't the only path — but it's one of the best-tested ones.</p>`
+      }
+    ];
+    let jeeSlideIndex = 0;
+
+    function renderJeeSlides() {
+      jeeSlidesTrack.innerHTML = jeeSlides.map(slide => `
+        <div class="jee-slide">
+          <img class="jee-slide-bg" src="${slide.img}" alt="" loading="lazy" />
+          <span class="jee-credit">${slide.credit}</span>
+          <div class="jee-slide-content">
+            <span class="jee-slide-tag">${slide.tag}</span>
+            <h3>${slide.title}</h3>
+            ${slide.html}
+          </div>
+        </div>
+      `).join("");
+      jeeDots.innerHTML = jeeSlides.map((_, i) =>
+        `<button type="button" class="jee-dot" data-jee-dot="${i}" aria-label="Go to slide ${i + 1}"></button>`
+      ).join("");
+      jeeProgress.innerHTML = jeeSlides.map(() => `<span></span>`).join("");
+
+      const slideEls = Array.from(jeeSlidesTrack.querySelectorAll(".jee-slide"));
+      if (jeeSlideObserver) jeeSlideObserver.disconnect();
+      jeeSlideObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.6) {
+            const idx = slideEls.indexOf(entry.target);
+            if (idx !== -1) setJeeActiveIndex(idx);
+          }
+        });
+      }, { root: jeeSlidesViewport, threshold: [0, 0.6, 1] });
+      slideEls.forEach((el) => jeeSlideObserver.observe(el));
+
+      setJeeActiveIndex(0);
+    }
+
+    function setJeeActiveIndex(index) {
+      jeeSlideIndex = index;
+      jeeDots.querySelectorAll(".jee-dot").forEach((dot, i) => {
+        dot.classList.toggle("active", i === jeeSlideIndex);
+      });
+      jeeProgress.querySelectorAll("span").forEach((bar, i) => {
+        bar.classList.toggle("filled", i <= jeeSlideIndex);
+      });
+      jeePrevBtn.style.visibility = jeeSlideIndex === 0 ? "hidden" : "visible";
+      jeeNextBtn.style.visibility = jeeSlideIndex === jeeSlides.length - 1 ? "hidden" : "visible";
+      if (jeeScrollHint) jeeScrollHint.style.display = jeeSlideIndex === 0 ? "inline-flex" : "none";
+    }
+
+    function goToJeeSlide(index) {
+      const clamped = Math.max(0, Math.min(jeeSlides.length - 1, index));
+      const slideEls = jeeSlidesTrack.querySelectorAll(".jee-slide");
+      if (slideEls[clamped]) {
+        slideEls[clamped].scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+
+    function openJeePresentation() {
+      renderJeeSlides();
+      jeePresentation.classList.remove("hidden");
+      jeeSlidesViewport.scrollTop = 0;
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeJeePresentation() {
+      jeePresentation.classList.add("hidden");
+      document.body.style.overflow = "";
+    }
+
+    whyJeeBtn.addEventListener("click", openJeePresentation);
+    jeePresentationClose.addEventListener("click", closeJeePresentation);
+    jeePrevBtn.addEventListener("click", () => goToJeeSlide(jeeSlideIndex - 1));
+    jeeNextBtn.addEventListener("click", () => goToJeeSlide(jeeSlideIndex + 1));
+    jeeDots.addEventListener("click", (event) => {
+      const dot = event.target.closest("[data-jee-dot]");
+      if (dot) goToJeeSlide(Number(dot.dataset.jeeDot));
+    });
+    document.addEventListener("keydown", (event) => {
+      if (jeePresentation.classList.contains("hidden")) return;
+      if (event.key === "ArrowUp") goToJeeSlide(jeeSlideIndex - 1);
+      if (event.key === "ArrowDown") goToJeeSlide(jeeSlideIndex + 1);
+      if (event.key === "Escape") closeJeePresentation();
     });
 
     developerLink.addEventListener("click", (event) => {
