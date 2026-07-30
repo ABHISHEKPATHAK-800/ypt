@@ -1998,6 +1998,13 @@
       color: #fff;
       display: grid;
       place-items: center;
+      transition: border-color 200ms ease, box-shadow 200ms ease, background 200ms ease;
+    }
+
+    .jee-video-toggle:hover {
+      border-color: rgba(var(--accent-rgb), 0.75);
+      background: rgba(5,2,10,0.8);
+      box-shadow: 0 0 16px -3px rgba(var(--accent-rgb), 0.7);
     }
 
     .jee-slide:nth-child(even) .jee-video-toggle { right: auto; left: 16px; }
@@ -2065,6 +2072,8 @@
       border-radius: 999px;
       border: 1px solid rgba(var(--accent-rgb), 0.55);
       background: rgba(var(--accent-rgb), 0.14);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 0 0 1px rgba(var(--accent-rgb), 0.08), 0 6px 18px -6px rgba(var(--accent-rgb), 0.55);
       color: #fff;
       font-family: var(--jee-font-mono);
       font-weight: 600;
@@ -2097,7 +2106,7 @@
       background-clip: text;
       -webkit-text-fill-color: transparent;
       opacity: 0;
-      transform: translateY(18px);
+      position: relative;
     }
 
     .jee-slide-body {
@@ -2186,22 +2195,198 @@
     }
     .jee-slide.in-view .jee-slide-tag { animation-delay: 120ms; }
     .jee-slide.in-view .jee-slide-body { animation-delay: 400ms; }
-    .jee-slide.in-view h3 {
-      animation: jeeRise 760ms cubic-bezier(.16,.9,.28,1) 240ms forwards,
-                 jeeGlitch 700ms ease-out 240ms forwards;
-    }
 
     @keyframes jeeRise {
       from { opacity: 0; transform: translateY(18px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
+    /* ---- effect 1: glitch — quick rise with an RGB-split flicker ---- */
+    .jee-slide.fx-glitch h3 { transform: translateY(18px); }
+    .jee-slide.fx-glitch.in-view h3 {
+      animation: jeeRise 760ms cubic-bezier(.16,.9,.28,1) 240ms forwards,
+                 jeeGlitch 700ms ease-out 240ms forwards;
+    }
     @keyframes jeeGlitch {
       0% { text-shadow: 2px 0 var(--accent), -2px 0 var(--accent-2); }
       40% { text-shadow: -3px 0 var(--accent), 3px 0 var(--accent-2); }
       70% { text-shadow: 1px 0 var(--accent), -1px 0 var(--accent-2); }
       100% { text-shadow: 0 0 transparent; }
     }
+
+    /* ---- effect 2: wipe — a curtain slides off the title left to right ---- */
+    .jee-slide.fx-wipe h3 { opacity: 1; clip-path: inset(0 100% 0 0); }
+    .jee-slide.fx-wipe.in-view h3 {
+      animation: jeeWipeIn 900ms cubic-bezier(.7,0,.15,1) 260ms forwards;
+    }
+    @keyframes jeeWipeIn {
+      from { clip-path: inset(0 100% 0 0); }
+      to { clip-path: inset(0 0 0 0); }
+    }
+
+    /* ---- effect 3: punch — zooms in from oversized + blurred to rest ---- */
+    .jee-slide.fx-punch h3 { transform: scale(1.32); filter: blur(12px); }
+    .jee-slide.fx-punch.in-view h3 {
+      animation: jeePunchIn 680ms cubic-bezier(.2,1.5,.4,1) 220ms forwards;
+    }
+    @keyframes jeePunchIn {
+      0% { opacity: 0; transform: scale(1.32); filter: blur(12px); }
+      55% { opacity: 1; transform: scale(0.97); filter: blur(0); }
+      100% { opacity: 1; transform: scale(1); filter: blur(0); }
+    }
+
+    /* ---- effect 4: flicker — neon-sign power-on stutter ---- */
+    .jee-slide.fx-flicker h3 { transform: translateY(10px); }
+    .jee-slide.fx-flicker.in-view h3 {
+      animation: jeeFlickerIn 1200ms linear 220ms forwards;
+    }
+    @keyframes jeeFlickerIn {
+      0% { opacity: 0; transform: translateY(10px); }
+      8% { opacity: 1; }
+      12% { opacity: 0.25; }
+      16% { opacity: 1; }
+      21% { opacity: 0.35; }
+      26% { opacity: 1; transform: translateY(0); }
+      32% { opacity: 0.5; }
+      38% { opacity: 1; }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ---- effect 5: underline — rises normally, then draws a signature bar ---- */
+    .jee-slide.fx-underline h3 { transform: translateY(18px); display: inline-block; }
+    .jee-slide.fx-underline.in-view h3 {
+      animation: jeeRise 700ms cubic-bezier(.16,.9,.28,1) 240ms forwards;
+    }
+    .jee-slide.fx-underline h3::after {
+      content: "";
+      position: absolute;
+      left: 2px;
+      bottom: -12px;
+      height: 3px;
+      width: 0;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      box-shadow: 0 0 14px 1px rgba(var(--accent-rgb), 0.75);
+    }
+    .jee-slide.fx-underline.in-view h3::after {
+      animation: jeeUnderlineDraw 640ms cubic-bezier(.65,0,.15,1) 820ms forwards;
+    }
+    @keyframes jeeUnderlineDraw {
+      to { width: 88px; }
+    }
+
+    /* ---- effect 6: stagger — title enters word by word, solid ink (no gradient) ---- */
+    .jee-slide.fx-stagger h3 {
+      opacity: 1;
+      background: none;
+      -webkit-text-fill-color: #fff;
+      color: #fff;
+      text-shadow: 0 2px 24px rgba(var(--accent-rgb), 0.5);
+    }
+    .jee-slide.fx-stagger .jee-word {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(34px) rotate(3deg);
+    }
+    .jee-slide.fx-stagger.in-view .jee-word {
+      animation: jeeWordIn 620ms cubic-bezier(.16,.9,.28,1) forwards;
+      animation-delay: calc(280ms + var(--i) * 70ms);
+    }
+    @keyframes jeeWordIn {
+      to { opacity: 1; transform: translateY(0) rotate(0); }
+    }
+
+    /* ============================================================
+       LAYOUT VARIANTS — every slide picks one so the deck never
+       feels like the same template repeated 17 times
+       ============================================================ */
+
+    /* layout: full — media fills the whole slide, panel becomes a
+       bottom-anchored overlay bar with a heavy scrim behind the text */
+    .jee-slide.layout-full .jee-slide-media {
+      position: absolute;
+      inset: 0;
+      flex: none;
+      width: 100%;
+      height: 100%;
+    }
+    .jee-slide.layout-full .jee-slide-panel {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      top: auto;
+      height: auto;
+      max-height: 68%;
+      align-items: flex-end;
+      padding: 48px 60px 68px;
+      background: linear-gradient(180deg, transparent 0%, rgba(5,2,10,0.5) 32%, rgba(5,2,10,0.94) 100%);
+      border: none !important;
+    }
+    .jee-slide.layout-full .jee-slide-panel::before { display: none; }
+    .jee-slide.layout-full .jee-numeral { top: auto; bottom: 8%; opacity: 0.55; }
+    .jee-slide.layout-full .jee-slide-content { max-width: 720px; }
+
+    /* layout: framed — media becomes a floating rounded window with
+       a drop shadow, instead of a hard edge-to-edge split */
+    .jee-slide.layout-framed .jee-slide-media {
+      flex: 0 0 40%;
+      margin: 40px 0 40px 40px;
+      height: calc(100% - 80px);
+      border-radius: 26px;
+      box-shadow: 0 34px 64px -22px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.08);
+    }
+    .jee-slide:nth-child(even).layout-framed .jee-slide-media {
+      margin: 40px 40px 40px 0;
+    }
+    .jee-slide.layout-framed .jee-slide-panel {
+      padding: 64px 68px 64px 58px;
+      border: none !important;
+    }
+    .jee-slide.layout-framed .jee-slide-panel::before { display: none; }
+
+    /* layout: center — a poster-style stack: media on top, everything
+       below centered instead of side-by-side */
+    .jee-slide.layout-center { flex-direction: column !important; }
+    .jee-slide.layout-center .jee-slide-media { flex: 0 0 44%; width: 100%; }
+    .jee-slide.layout-center .jee-slide-panel {
+      flex: 1;
+      width: 100%;
+      border: none !important;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 40px 34px 56px;
+    }
+    .jee-slide.layout-center .jee-slide-panel::before {
+      left: 50%; right: auto; top: 0; bottom: auto;
+      width: 130px; height: 3px;
+      transform: translateX(-50%);
+    }
+    .jee-slide.layout-center .jee-slide-content { align-items: center; max-width: 620px; }
+    .jee-slide.layout-center .jee-slide-tag { align-self: center; }
+    .jee-slide.layout-center .jee-slide-body ul { text-align: left; }
+    .jee-slide.layout-center .jee-numeral {
+      top: auto; bottom: 3%; left: 50%; right: auto;
+      transform: translateX(-50%);
+      font-size: clamp(70px, 14vw, 140px);
+    }
+    .jee-slide.layout-center.fx-underline h3::after { left: 50%; transform: translateX(-50%); }
+    .jee-slide.layout-center.fx-underline.in-view h3::after { animation-name: jeeUnderlineDrawCenter; }
+    @keyframes jeeUnderlineDrawCenter {
+      from { width: 0; transform: translateX(-50%); }
+      to { width: 88px; transform: translateX(-50%); }
+    }
+
+    /* layout: diagonal — the split has an angled edge instead of a
+       straight vertical line, for a more dynamic silhouette */
+    .jee-slide.layout-diagonal .jee-slide-media {
+      clip-path: polygon(0 0, 100% 0, 88% 100%, 0 100%);
+    }
+    .jee-slide:nth-child(even).layout-diagonal .jee-slide-media {
+      clip-path: polygon(12% 0, 100% 0, 100% 100%, 0 100%);
+    }
+    .jee-slide.layout-diagonal .jee-slide-panel { margin-left: -5%; padding-left: 9%; }
+    .jee-slide:nth-child(even).layout-diagonal .jee-slide-panel { margin-left: 0; margin-right: -5%; padding-left: 44px; padding-right: 9%; }
 
     .jee-topbar {
       position: absolute;
@@ -2232,6 +2417,34 @@
       color: #fff;
       font-weight: 800;
       font-size: 13.5px;
+    }
+
+    .jee-topbar-right {
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .jee-counter {
+      pointer-events: none;
+      display: inline-flex;
+      align-items: baseline;
+      gap: 3px;
+      padding: 7px 13px;
+      border-radius: 999px;
+      background: rgba(10,6,18,0.5);
+      border: 1px solid rgba(255,255,255,0.14);
+      color: #fff;
+      font-family: var(--jee-font-mono);
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 1px;
+    }
+
+    .jee-counter .jee-counter-total {
+      color: rgba(255,255,255,0.5);
+      font-weight: 500;
     }
 
     .jee-scroll-hint {
@@ -2295,11 +2508,14 @@
     .jee-progress span.filled::after { width: 100%; }
 
     .jee-nav {
+      /* positioned with top math (not transform) so the global
+         `button:hover { transform: translateY(-1px) }` rule can never
+         hijack these coordinates and make the arrows jump on hover */
       position: absolute;
       right: 16px;
       z-index: 7;
-      width: 42px;
-      height: 42px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
       background: rgba(10,6,18,0.55);
       border: 1px solid rgba(255,255,255,0.18);
@@ -2309,16 +2525,26 @@
       font-weight: 800;
       display: grid;
       place-items: center;
-      transition: border-color 200ms ease, box-shadow 200ms ease;
+      transition: border-color 200ms ease, box-shadow 200ms ease, background 200ms ease;
+    }
+
+    .jee-nav svg {
+      width: 16px;
+      height: 16px;
+      transition: transform 220ms cubic-bezier(.34,1.56,.64,1);
     }
 
     .jee-nav:hover {
       border-color: var(--jee-nav-accent);
-      box-shadow: 0 0 18px -2px var(--jee-nav-accent);
+      background: rgba(10,6,18,0.75);
+      box-shadow: 0 0 20px -2px var(--jee-nav-accent);
     }
 
-    .jee-nav-prev { top: 50%; transform: translateY(-60px); }
-    .jee-nav-next { top: 50%; transform: translateY(18px); }
+    .jee-nav-prev:hover svg { transform: scale(1.2) translateY(-1px); }
+    .jee-nav-next:hover svg { transform: scale(1.2) translateY(1px); }
+
+    .jee-nav-prev { top: calc(50% - 62px); }
+    .jee-nav-next { top: calc(50% + 18px); }
 
     .jee-dots {
       position: absolute;
@@ -2338,12 +2564,21 @@
       border-radius: 50%;
       background: rgba(255,255,255,0.28);
       padding: 0;
+      transition: background 200ms ease, height 260ms cubic-bezier(.34,1.56,.64,1), width 200ms ease;
+    }
+
+    .jee-dot:hover {
+      background: rgba(255,255,255,0.55);
     }
 
     .jee-dot.active {
       background: linear-gradient(180deg, #ff2f88, #ffb020);
       height: 22px;
       border-radius: 5px;
+    }
+
+    .jee-dot.active:hover {
+      background: linear-gradient(180deg, #ff2f88, #ffb020);
     }
 
     @media (max-width: 860px) {
@@ -2361,12 +2596,71 @@
         width: 100%; height: 3px;
       }
       .jee-numeral { font-size: clamp(60px, 20vw, 100px); top: 3%; }
-      .jee-nav { width: 34px; height: 34px; right: 12px; }
-      .jee-nav-prev { transform: translateY(-50px); }
-      .jee-nav-next { transform: translateY(14px); }
+      .jee-nav { width: 36px; height: 36px; right: 12px; }
+      .jee-nav-prev { top: calc(50% - 52px); }
+      .jee-nav-next { top: calc(50% + 14px); }
       .jee-dots { right: 54px; }
       .jee-slide h3 { font-size: clamp(26px, 7.5vw, 38px); }
       .jee-slide-content { max-width: 100%; }
+
+      /* every layout variant collapses to the same safe stacked
+         design on small screens — desktop personality, mobile reliability */
+      .jee-slide.layout-full,
+      .jee-slide.layout-framed,
+      .jee-slide.layout-center,
+      .jee-slide.layout-diagonal {
+        flex-direction: column !important;
+      }
+      .jee-slide.layout-full .jee-slide-media,
+      .jee-slide.layout-framed .jee-slide-media,
+      .jee-slide.layout-diagonal .jee-slide-media,
+      .jee-slide:nth-child(even).layout-diagonal .jee-slide-media {
+        position: relative !important;
+        inset: auto !important;
+        flex: 0 0 44% !important;
+        width: 100% !important;
+        height: auto !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        clip-path: none !important;
+      }
+      .jee-slide.layout-full .jee-slide-panel,
+      .jee-slide.layout-framed .jee-slide-panel,
+      .jee-slide.layout-center .jee-slide-panel,
+      .jee-slide.layout-diagonal .jee-slide-panel,
+      .jee-slide:nth-child(even).layout-diagonal .jee-slide-panel {
+        position: relative !important;
+        left: auto; right: auto; bottom: auto; top: auto;
+        max-height: none !important;
+        margin: 0 !important;
+        padding: 26px 22px 90px !important;
+        align-items: flex-start !important;
+        justify-content: flex-start !important;
+        text-align: left !important;
+        background: linear-gradient(180deg, #0b0714 0%, #07030d 100%) !important;
+      }
+      .jee-slide.layout-full .jee-slide-panel::before,
+      .jee-slide.layout-framed .jee-slide-panel::before,
+      .jee-slide.layout-center .jee-slide-panel::before {
+        display: block !important;
+        top: 0; left: 0; right: 0; bottom: auto; width: 100%; height: 3px;
+        transform: none !important;
+      }
+      .jee-slide.layout-center .jee-slide-content,
+      .jee-slide.layout-center .jee-slide-tag { align-items: flex-start !important; align-self: flex-start !important; }
+      .jee-slide.layout-full .jee-numeral,
+      .jee-slide.layout-framed .jee-numeral,
+      .jee-slide.layout-center .jee-numeral {
+        position: absolute !important;
+        top: 3% !important; bottom: auto !important;
+        left: auto !important; right: 7% !important;
+        transform: none !important;
+        opacity: 1 !important;
+        font-size: clamp(60px, 20vw, 100px) !important;
+      }
+      .jee-slide.layout-center.fx-underline h3::after { left: 2px; transform: none; }
+      .jee-slide.layout-center.fx-underline.in-view h3::after { animation-name: jeeUnderlineDraw; }
     }
 
 
@@ -4806,13 +5100,20 @@
           <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M15.5 4.5 8 12l7.5 7.5 1.4-1.4L10.8 12l6.1-6.1z"/></svg>
           Back
         </button>
-        <span class="jee-scroll-hint" id="jeeScrollHint">
-          Scroll
-          <svg viewBox="0 0 24 24"><path d="M12 16.5 4.5 9l1.4-1.4L12 13.7l6.1-6.1L19.5 9z"/></svg>
-        </span>
+        <div class="jee-topbar-right">
+          <span class="jee-counter" id="jeeCounter" aria-hidden="true"></span>
+          <span class="jee-scroll-hint" id="jeeScrollHint">
+            Scroll
+            <svg viewBox="0 0 24 24"><path d="M12 16.5 4.5 9l1.4-1.4L12 13.7l6.1-6.1L19.5 9z"/></svg>
+          </span>
+        </div>
       </div>
-      <button type="button" class="jee-nav jee-nav-prev" id="jeePrevBtn" aria-label="Previous slide">▲</button>
-      <button type="button" class="jee-nav jee-nav-next" id="jeeNextBtn" aria-label="Next slide">▼</button>
+      <button type="button" class="jee-nav jee-nav-prev" id="jeePrevBtn" aria-label="Previous slide">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>
+      </button>
+      <button type="button" class="jee-nav jee-nav-next" id="jeeNextBtn" aria-label="Next slide">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
       <div class="jee-dots" id="jeeDots"></div>
     </div>
 
@@ -5360,6 +5661,7 @@
     const jeeNextBtn = document.getElementById("jeeNextBtn");
     const jeePresentationClose = document.getElementById("jeePresentationClose");
     const jeeScrollHint = document.getElementById("jeeScrollHint");
+    const jeeCounter = document.getElementById("jeeCounter");
     let jeeSlideObserver = null;
     const developerLink = document.getElementById("developerLink");
     const toastStack = document.getElementById("toastStack");
@@ -8953,6 +9255,8 @@
     const jeeSlides = [
       {
         tag: "The Exam",
+        layout: "split",
+        fx: "wipe",
         img: "https://commons.wikimedia.org/wiki/Special:FilePath/Main_building_in_IIT_Bombay.jpg?width=1200",
         credit: "IIT Bombay · Wikimedia Commons",
         title: "What is JEE?",
@@ -8960,6 +9264,8 @@
       },
       {
         tag: "Competition",
+        layout: "framed",
+        fx: "punch",
         img: "https://commons.wikimedia.org/wiki/Special:FilePath/A_student_answering_a_test.jpg?width=1200",
         credit: "Wikimedia Commons",
         title: "How tough is the competition?",
@@ -8972,6 +9278,8 @@
       },
       {
         tag: "Syllabus",
+        layout: "split",
+        fx: "underline",
         img: "https://commons.wikimedia.org/wiki/Special:FilePath/Classroom_blackboard_at_Cornell_University,_Ithaca,_NY_25.jpg?width=1200",
         credit: "Wikimedia Commons",
         title: "What does the exam actually test?",
@@ -8984,6 +9292,8 @@
       },
       {
         tag: "Benefits",
+        layout: "diagonal",
+        fx: "stagger",
         img: "https://commons.wikimedia.org/wiki/Special:FilePath/Entrance_of_IIT_Indore.jpg?width=1200",
         credit: "IIT Indore · Wikimedia Commons",
         title: "Why it pays off",
@@ -8996,6 +9306,8 @@
       },
       {
         tag: "Alumni",
+        layout: "framed",
+        fx: "wipe",
         img: "https://commons.wikimedia.org/wiki/Special:FilePath/IIT_Kharagpur_Main_Building.JPG?width=1200",
         credit: "IIT Kharagpur · Wikimedia Commons",
         title: "Where an IIT degree can lead",
@@ -9008,6 +9320,8 @@
       },
       {
         tag: "The Real Win",
+        layout: "center",
+        fx: "flicker",
         img: "https://commons.wikimedia.org/wiki/Special:FilePath/IIT_guwahati_convocation_2023.jpg?width=1200",
         credit: "IIT Guwahati Convocation · Wikimedia Commons",
         title: "Why actually do it?",
@@ -9015,6 +9329,8 @@
       },
       {
         tag: "Strategy",
+        layout: "split",
+        fx: "punch",
         img: "https://commons.wikimedia.org/wiki/Special:FilePath/A_young_student_doing_exercises_on_a_whiteboard.jpg?width=1200",
         credit: "Wikimedia Commons",
         title: "How to actually prepare",
@@ -9026,7 +9342,20 @@
         </ul>`
       },
       {
+        tag: "Discipline",
+        layout: "full",
+        fx: "flicker",
+        video: "https://commons.wikimedia.org/wiki/Special:FilePath/Night_sky_time_lapse.webm",
+        credit: "Night sky, time-lapse · Wikimedia Commons",
+        title: "The Hours Nobody Sees",
+        html: `<p>Toppers don't have more hours in the day — they just spend fewer of them deciding whether to start.</p>
+        <div class="jee-stat-row"><span class="jee-stat-num">2–3</span><span class="jee-stat-label">Focused, distraction-free hours a day, done daily, beats a single frantic 8-hour weekend push</span></div>
+        <p>The sky doesn't need an audience to keep turning. Neither does your revision. Log the session in DuoTrack and let the streak do the convincing.</p>`
+      },
+      {
         tag: "2026 Update",
+        layout: "framed",
+        fx: "stagger",
         img: "https://commons.wikimedia.org/wiki/Special:FilePath/Hand-writing-exam-classroom.jpg?width=1200",
         credit: "Wikimedia Commons",
         title: "The Numbers Keep Climbing",
@@ -9037,6 +9366,8 @@
       },
       {
         tag: "Outcomes",
+        layout: "full",
+        fx: "punch",
         video: "https://commons.wikimedia.org/wiki/Special:FilePath/Timelapse_at_Marine_Drive_Mumbai.webm",
         credit: "Marine Drive, Mumbai · Wikimedia Commons",
         title: "Placements That Justify The Grind",
@@ -9046,6 +9377,8 @@
       },
       {
         tag: "Alumni",
+        layout: "split",
+        fx: "wipe",
         img: "https://commons.wikimedia.org/wiki/Special:FilePath/IIT_Madras_Research_Park.jpg?width=1200",
         credit: "IIT Madras Research Park · Wikimedia Commons",
         title: "Built By IITians",
@@ -9058,6 +9391,8 @@
       },
       {
         tag: "World Rankings",
+        layout: "diagonal",
+        fx: "underline",
         img: "https://commons.wikimedia.org/wiki/Special:FilePath/IIT_Delhi.JPG?width=1200",
         credit: "IIT Delhi · Wikimedia Commons",
         title: "The World Is Watching",
@@ -9067,6 +9402,8 @@
       },
       {
         tag: "Financial Aid",
+        layout: "split",
+        fx: "stagger",
         img: "https://commons.wikimedia.org/wiki/Special:FilePath/A_Classroom_in_a_Government_Primary_school_in_Kerala.jpg?width=1200",
         credit: "Wikimedia Commons",
         title: "Money Isn't The Barrier",
@@ -9079,7 +9416,23 @@
         <p>If the seat is earned, the fee is rarely the thing that stops you.</p>`
       },
       {
+        tag: "Environment",
+        layout: "center",
+        fx: "underline",
+        video: "https://commons.wikimedia.org/wiki/Special:FilePath/Radevormwald_-_Raindrops_on_a_window_08_(1)_ies.webm",
+        credit: "Raindrops on a window · Wikimedia Commons",
+        title: "Build A Room Where Focus Lives",
+        html: `<ul>
+          <li>Phone in another room, not just face-down on the desk</li>
+          <li>One tab, one subject, one timer — running battles between three chapters loses to all three</li>
+          <li>Rainy day, exam week, ordinary Tuesday — the desk stays the same</li>
+        </ul>
+        <p>You can't control the weather outside the window. You can absolutely control what happens at the desk in front of it.</p>`
+      },
+      {
         tag: "Reality Check",
+        layout: "full",
+        fx: "flicker",
         video: "https://commons.wikimedia.org/wiki/Special:FilePath/Beauty_of_Sunrise.webm",
         credit: "Sunrise · Wikimedia Commons",
         title: "It's A Long Game",
@@ -9088,7 +9441,20 @@
         <p>Every focused session you log — here in DuoTrack or anywhere else — is a small deposit toward this. Show up tomorrow too.</p>`
       },
       {
+        tag: "Patience",
+        layout: "center",
+        fx: "wipe",
+        video: "https://commons.wikimedia.org/wiki/Special:FilePath/Clouds_(time_lapse).webm",
+        credit: "Clouds, time-lapse · Wikimedia Commons",
+        title: "Clouds Don't Rush. Things Still Move.",
+        html: `<p>Nothing about a cloud looks like it's in a hurry — and yet the whole sky rearranges itself by evening.</p>
+        <p>Your prep works the same way. No single session feels like progress. Line up ninety of them and the syllabus is a different shape entirely.</p>
+        <p>Trust the slow motion. Show up, log the block, repeat tomorrow.</p>`
+      },
+      {
         tag: "Options",
+        layout: "split",
+        fx: "punch",
         img: "https://commons.wikimedia.org/wiki/Special:FilePath/A_student_answering_a_test.jpg?width=1200",
         credit: "Wikimedia Commons",
         title: "Other good exams to know",
@@ -9105,17 +9471,26 @@
     const JEE_ICON_MUTED = '<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M16.5 12c0-1.77-1-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.42.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.94 8.94 0 0 0 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4 9.91 6.09 12 8.18V4z"/></svg>';
     const JEE_ICON_UNMUTED = '<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1-3.29-2.5-4.03v8.05c1.5-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>';
 
+    function jeeStaggerTitle(title) {
+      return title.split(" ").map((word, i) =>
+        `<span class="jee-word" style="--i:${i}">${word}</span>`
+      ).join(" ");
+    }
+
     function renderJeeSlides() {
       jeeSlidesTrack.innerHTML = jeeSlides.map((slide, i) => {
         const num = String(i + 1).padStart(2, "0");
+        const layout = slide.layout || "split";
+        const fx = slide.fx || "glitch";
         const mediaTag = slide.video
           ? `<video class="jee-slide-video" data-src="${slide.video}" muted loop playsinline preload="none"></video>`
           : `<img class="jee-slide-bg" src="${slide.img}" alt="" loading="lazy" />`;
         const muteBtn = slide.video
           ? `<button type="button" class="jee-video-toggle" data-jee-mute aria-label="Toggle video sound">${JEE_ICON_MUTED}</button>`
           : "";
+        const titleHtml = fx === "stagger" ? jeeStaggerTitle(slide.title) : slide.title;
         return `
-        <div class="jee-slide">
+        <div class="jee-slide layout-${layout} fx-${fx}">
           <div class="jee-slide-media${slide.video ? " is-video" : ""}">
             ${mediaTag}
             <div class="jee-media-reveal"></div>
@@ -9126,7 +9501,7 @@
             <span class="jee-numeral" aria-hidden="true">${num}</span>
             <div class="jee-slide-content">
               <span class="jee-slide-tag">${slide.tag}</span>
-              <h3>${slide.title}</h3>
+              <h3>${titleHtml}</h3>
               <div class="jee-slide-body">${slide.html}</div>
             </div>
           </div>
@@ -9179,6 +9554,11 @@
       jeePrevBtn.style.visibility = jeeSlideIndex === 0 ? "hidden" : "visible";
       jeeNextBtn.style.visibility = jeeSlideIndex === jeeSlides.length - 1 ? "hidden" : "visible";
       if (jeeScrollHint) jeeScrollHint.style.display = jeeSlideIndex === 0 ? "inline-flex" : "none";
+      if (jeeCounter) {
+        const num = String(jeeSlideIndex + 1).padStart(2, "0");
+        const total = String(jeeSlides.length).padStart(2, "0");
+        jeeCounter.innerHTML = `${num}<span class="jee-counter-total">/${total}</span>`;
+      }
       jeePresentation.style.setProperty("--jee-nav-accent", JEE_ACCENTS[jeeSlideIndex % JEE_ACCENTS.length]);
     }
 
