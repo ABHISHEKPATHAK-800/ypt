@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+  <script src="https://www.youtube.com/iframe_api"></script>
   <style>
     :root {
       color-scheme: light;
@@ -2884,6 +2885,255 @@
       min-width: 0;
     }
 
+    /* --- Study Music (YouTube search + playback) --- */
+    .music-search-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .music-results {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+
+    .music-result-row {
+      display: grid;
+      grid-template-columns: 48px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+      padding: 6px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+    }
+
+    .music-result-thumb {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      object-fit: cover;
+      flex: none;
+      background: var(--green-2);
+    }
+
+    .music-result-info {
+      min-width: 0;
+      display: grid;
+      gap: 2px;
+    }
+
+    .music-result-title,
+    .music-result-channel {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .music-result-title {
+      font-size: 12.5px;
+      font-weight: 700;
+    }
+
+    .music-result-channel {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .music-play-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--green-2);
+      color: var(--green);
+      flex: none;
+    }
+
+    .music-play-btn svg { width: 15px; height: 15px; }
+
+    .music-play-btn.is-playing {
+      background: var(--green);
+      color: #fff;
+    }
+
+    .music-now-playing {
+      position: relative;
+      margin-top: 14px;
+      min-height: 190px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      isolation: isolate;
+      background: #111;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .music-now-playing-bg {
+      position: absolute;
+      inset: -18px;
+      background-image: var(--music-cover);
+      background-size: cover;
+      background-position: center;
+      filter: blur(18px) saturate(1.25) brightness(.55);
+      transform: scale(1.12);
+      z-index: -2;
+    }
+
+    .music-now-playing::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(145deg, rgba(0,0,0,.2), rgba(0,0,0,.72));
+      z-index: -1;
+    }
+
+    .cassette-player {
+      min-height: 190px;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: 116px minmax(0,1fr);
+      gap: 16px;
+      align-items: center;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    .cassette-shell {
+      position: relative;
+      width: 116px;
+      height: 76px;
+      border-radius: 10px;
+      padding: 9px;
+      background: linear-gradient(145deg, #f5c85d, #d98e2e);
+      border: 2px solid rgba(255,255,255,.5);
+      box-shadow: 0 12px 26px rgba(0,0,0,.35), inset 0 0 0 2px rgba(0,0,0,.18);
+    }
+
+    .cassette-label {
+      height: 100%;
+      border-radius: 7px;
+      background: rgba(255,248,221,.88);
+      color: #21180d;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      padding: 5px 7px;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .cassette-title {
+      font: 800 8px/1.1 var(--font-body);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .cassette-window {
+      margin: 4px 0;
+      border-radius: 999px;
+      background: #332719;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 4px 11px;
+    }
+
+    .cassette-reel {
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      border: 5px dotted #eee4c9;
+      background: #15120e;
+    }
+
+    .cassette-player.is-playing .cassette-reel { animation: cassetteSpin 1.5s linear infinite; }
+    @keyframes cassetteSpin { to { transform: rotate(360deg); } }
+
+    .cassette-footer { font: 700 7px/1 var(--font-body); letter-spacing: 1.5px; }
+
+    .cassette-toggle {
+      position: absolute;
+      inset: 50% auto auto 50%;
+      transform: translate(-50%,-50%);
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: rgba(17,17,17,.86);
+      color: #fff;
+      border: 2px solid rgba(255,255,255,.8);
+      box-shadow: 0 7px 18px rgba(0,0,0,.35);
+      z-index: 3;
+    }
+    .cassette-toggle:hover { transform: translate(-50%,-50%) scale(1.08); }
+    .cassette-toggle svg { width: 17px; height: 17px; }
+
+    .music-now-playing-info { min-width: 0; display: grid; gap: 7px; }
+    .music-now-playing-title { font-size: 15px; font-weight: 900; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .music-now-playing-sub { font-size: 11px; color: rgba(255,255,255,.78); }
+    .music-open-hint { font-size: 10px; color: rgba(255,255,255,.62); }
+
+    .music-dialog {
+      width: min(760px, calc(100% - 24px));
+      border: 0;
+      padding: 0;
+      border-radius: 18px;
+      background: var(--panel);
+      color: var(--ink);
+      box-shadow: 0 28px 80px rgba(0,0,0,.42);
+    }
+    .music-dialog::backdrop { background: rgba(5,10,8,.76); backdrop-filter: blur(7px); }
+    .music-dialog-head { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 16px; border-bottom:1px solid var(--line); }
+    .music-dialog-title { min-width:0; font-weight:900; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .music-dialog-close { width:36px; height:36px; border-radius:50%; background:var(--green-2); color:var(--green); font-size:22px; }
+    .music-player-host { width:100%; aspect-ratio:16/9; background:#000; }
+    .music-player-host iframe { width:100%; height:100%; border:0; display:block; }
+    .music-dialog-actions { display:flex; gap:8px; justify-content:flex-end; padding:12px 16px 16px; }
+
+    @media (max-width: 520px) {
+      .cassette-player { grid-template-columns: 96px minmax(0,1fr); gap:12px; }
+      .cassette-shell { width:96px; height:66px; }
+      .cassette-reel { width:21px; height:21px; }
+    }
+
+    body:is(.theme-night, .night-override) .music-result-row { border-color: #2d3d34; }
+
+    /* Avatar turns into cover art (with a small pulsing music badge) while that
+       person has a track playing — shared so both accounts see it. */
+    .avatar,
+    .avatar-button {
+      position: relative;
+    }
+
+    .avatar-music-badge {
+      position: absolute;
+      right: -2px;
+      bottom: -2px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--green);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      border: 2px solid var(--panel);
+      z-index: 2;
+      animation: musicBadgePulse 1.6s ease-in-out infinite;
+    }
+
+    .avatar-music-badge svg { width: 9px; height: 9px; }
+
+    @keyframes musicBadgePulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(36, 107, 69, 0.45); }
+      50% { box-shadow: 0 0 0 4px rgba(36, 107, 69, 0); }
+    }
+
     .partner-popup-head {
       display: grid;
       grid-template-columns: auto minmax(0, 1fr);
@@ -4996,6 +5246,19 @@
           </div>
         </section>
 
+        <section class="panel music-panel" id="musicPanel">
+          <span class="eyebrow">STUDY VIBES</span>
+          <h2>Study Music</h2>
+          <p class="subtext">Search YouTube and play something while you study. Your profile picture turns into the cover art while a song is playing.</p>
+          <form id="musicSearchForm" class="music-search-row">
+            <input id="musicSearchInput" type="text" placeholder="Search a song, artist, or lofi mix" maxlength="120" />
+            <button class="secondary-btn" type="submit">Search</button>
+          </form>
+          <p id="musicSearchError" class="settings-error" aria-live="polite"></p>
+          <div id="musicResults" class="music-results"></div>
+          <div id="musicNowPlaying" class="music-now-playing hidden"></div>
+        </section>
+
         <section class="panel partner-panel">
           <div class="section-heading compact-heading"><div><span class="eyebrow">ACCOUNTABILITY</span><h2>Study Partner</h2></div><span class="live-dot" aria-label="Live"></span></div>
           <button id="partnerCard" class="partner-card" type="button"></button>
@@ -5078,6 +5341,18 @@
 
       </aside>
     </section>
+
+    <dialog id="musicDialog" class="music-dialog" aria-labelledby="musicDialogTitle">
+      <div class="music-dialog-head">
+        <div id="musicDialogTitle" class="music-dialog-title">YouTube Player</div>
+        <button id="musicDialogClose" class="music-dialog-close" type="button" aria-label="Close player">&times;</button>
+      </div>
+      <div id="musicPlayerHost" class="music-player-host"></div>
+      <div class="music-dialog-actions">
+        <button id="musicDialogToggle" class="secondary-btn" type="button">Play</button>
+        <button id="musicDialogStop" class="ghost-btn" type="button">Stop</button>
+      </div>
+    </dialog>
 
     <footer class="footer">
       <span>Made by Abhishek · Find an issue? <a href="#" id="developerLink">Contact developer</a></span>
@@ -5308,6 +5583,9 @@
     // Single Grok API key shared between both users — either person can set it once
     // from Settings and it works for both, since it's stored in the shared group data.
     const grokConfigRef = ref(database, `duotrack/groups/${GROUP_ID}/grokApiKey`);
+    // Admin-controlled YouTube Music feature: shared enabled flag + shared API key,
+    // same "one setting for both accounts" pattern as the Grok key above.
+    const musicConfigRef = ref(database, `duotrack/groups/${GROUP_ID}/musicSettings`);
 
     const USERS = {
       "abhi@990": {
@@ -5453,6 +5731,7 @@
       id: user.id,
       name: user.name,
       profilePic: "",
+      nowPlaying: null,
       selectedSubject: "Physics",
       currentSubject: "Physics",
       selectedMode: "Lecture",
@@ -5512,6 +5791,15 @@
     let grokConversation = [];
     let grokPanelOpen = false;
 
+    // --- Study Music (YouTube search + playback) ---
+    let musicFeatureEnabled = true; // default on until Firebase says otherwise; admin can disable in Settings
+    let youtubeApiKey = "";
+    let musicResults = [];
+    let musicSearchLoading = false;
+    let musicSearchErrorText = "";
+    let ytPlayer = null;
+    let ytPendingPlay = null;
+
     const loginScreen = document.getElementById("loginScreen");
     const appScreen = document.getElementById("appScreen");
     const loginSettingsBtn = document.getElementById("loginSettingsBtn");
@@ -5553,6 +5841,13 @@
     const questionsTodayStat = document.getElementById("questionsTodayStat");
     const profilePicBtn = document.getElementById("profilePicBtn");
     const profilePicInput = document.getElementById("profilePicInput");
+    const musicPanel = document.getElementById("musicPanel");
+    const musicSearchForm = document.getElementById("musicSearchForm");
+    const musicSearchInput = document.getElementById("musicSearchInput");
+    const musicSearchErrorEl = document.getElementById("musicSearchError");
+    const musicResultsEl = document.getElementById("musicResults");
+    const musicNowPlayingEl = document.getElementById("musicNowPlaying");
+    const musicPlayerHost = document.getElementById("musicPlayerHost");
     const todoForm = document.getElementById("todoForm");
     const todoInput = document.getElementById("todoInput");
     const todoList = document.getElementById("todoList");
@@ -5955,7 +6250,8 @@
       bell: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',
       chat: '<path d="M20 15a4 4 0 0 1-4 4H8l-4 3v-7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4v8Z"/>',
       shield: '<path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6l7-3Z"/>',
-      userPlus: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>'
+      userPlus: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>',
+      music: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>'
     };
 
     function settingsIcon(name, filled) {
@@ -6100,6 +6396,21 @@
         })}
 
         ${settingsSection({
+          icon: "music",
+          title: "YouTube Music",
+          description: `Lets either account search YouTube and play music while studying, right from the "Study Music" panel. Needs a free YouTube Data API key (console.cloud.google.com → enable "YouTube Data API v3" → create an API key). Shared between both accounts, same as the Grok key. While a song is playing, that person's profile picture turns into the song's cover art for both of you.`,
+          body: `
+            <form id="musicSettingsForm" class="field settings-inline-form">
+              <label class="checkbox-row"><input id="musicFeatureEnabledInput" type="checkbox" ${musicFeatureEnabled ? "checked" : ""}> Enable YouTube Music for both accounts</label>
+              <label for="musicApiKeyInput">YouTube Data API key</label>
+              <input id="musicApiKeyInput" type="password" placeholder="AIza..." value="${escapeHTML(youtubeApiKey)}" autocomplete="off">
+              <p class="subtext">${youtubeApiKey ? "A YouTube API key is currently saved and shared." : "No YouTube API key saved yet — search won't work until one is added."}</p>
+              <button class="secondary-btn" type="submit">Save YouTube Music settings</button>
+            </form>
+          `
+        })}
+
+        ${settingsSection({
           icon: "chat",
           title: "Chat administration",
           description: "Download the full chat history, or remove any specific message from either person.",
@@ -6217,6 +6528,19 @@
       return merged;
     }
 
+    // Keeps a possibly-untrusted Firebase value (written by either account) safe to
+    // interpolate into HTML later — same defensive shape as safeProfileImage/etc.
+    function normalizeNowPlaying(value) {
+      if (!value || typeof value !== "object") return null;
+      if (typeof value.videoId !== "string" || !/^[a-zA-Z0-9_-]{6,20}$/.test(value.videoId)) return null;
+      return {
+        videoId: value.videoId,
+        title: typeof value.title === "string" ? value.title.slice(0, 160) : "",
+        thumb: typeof value.thumb === "string" && value.thumb.startsWith("https://") ? value.thumb : "",
+        playing: Boolean(value.playing)
+      };
+    }
+
     function normalizeRemoteState(remote) {
       const normalized = defaultState();
       normalized.day = remote?.day || todayKey();
@@ -6248,6 +6572,7 @@
         normalized.users[account.id] = {
           ...normalized.users[account.id],
           profilePic: typeof savedUser.profilePic === "string" ? savedUser.profilePic : "",
+          nowPlaying: normalizeNowPlaying(savedUser.nowPlaying),
           selectedSubject,
           currentSubject,
           selectedMode,
@@ -7696,6 +8021,284 @@
       }
     }
 
+    // --- Study Music: shared on/off + API key, kept in sync live so an admin
+    // disabling it in Settings takes effect immediately on both devices. ---
+    function listenToMusicSettings() {
+      onValue(musicConfigRef, (snapshot) => {
+        const val = snapshot.val() || {};
+        const wasEnabled = musicFeatureEnabled;
+        musicFeatureEnabled = val.enabled !== false;
+        youtubeApiKey = typeof val.apiKey === "string" ? val.apiKey : "";
+        if (wasEnabled && !musicFeatureEnabled) {
+          stopMusicPlayback();
+        }
+        render();
+      }, (error) => {
+        console.error("Could not load YouTube Music settings", error);
+      });
+    }
+
+    async function searchYoutubeMusic(query) {
+      if (!musicFeatureEnabled) return;
+      if (!youtubeApiKey) {
+        musicSearchErrorText = "No YouTube API key saved yet — ask an admin to add one in Settings.";
+        renderMusicResults();
+        return;
+      }
+      musicSearchLoading = true;
+      musicSearchErrorText = "";
+      renderMusicResults();
+      try {
+        const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=10&videoCategoryId=10&q=${encodeURIComponent(query)}&key=${encodeURIComponent(youtubeApiKey)}`;
+        const response = await fetchWithTimeout(url, 10000);
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data?.error?.message || "YouTube search failed.");
+        }
+        musicResults = (data.items || [])
+          .filter((item) => item?.id?.videoId)
+          .map((item) => ({
+            videoId: item.id.videoId,
+            title: item.snippet?.title || "Untitled",
+            channel: item.snippet?.channelTitle || "",
+            thumb: item.snippet?.thumbnails?.medium?.url || item.snippet?.thumbnails?.default?.url || ""
+          }));
+        if (!musicResults.length) musicSearchErrorText = "No results found.";
+      } catch (error) {
+        musicResults = [];
+        musicSearchErrorText = error.message || "Could not search YouTube right now.";
+      } finally {
+        musicSearchLoading = false;
+        renderMusicResults();
+      }
+    }
+
+    function renderMusicResults() {
+      if (musicSearchErrorEl) musicSearchErrorEl.textContent = musicSearchErrorText;
+      if (!musicResultsEl) return;
+      if (musicSearchLoading) {
+        musicResultsEl.innerHTML = `<p class="subtext">Searching YouTube…</p>`;
+        return;
+      }
+      if (!musicResults.length) {
+        musicResultsEl.innerHTML = "";
+        return;
+      }
+      const user = currentUser();
+      musicResultsEl.innerHTML = musicResults.map((item) => {
+        const isThisPlaying = Boolean(user?.nowPlaying?.playing && user.nowPlaying.videoId === item.videoId);
+        return `
+          <div class="music-result-row">
+            <img class="music-result-thumb" src="${escapeHTML(item.thumb)}" alt="" loading="lazy">
+            <div class="music-result-info">
+              <span class="music-result-title">${escapeHTML(item.title)}</span>
+              <span class="music-result-channel">${escapeHTML(item.channel)}</span>
+            </div>
+            <button type="button" class="music-play-btn${isThisPlaying ? " is-playing" : ""}" data-music-play="${escapeHTML(item.videoId)}" data-music-title="${escapeHTML(item.title)}" data-music-thumb="${escapeHTML(item.thumb)}" title="${isThisPlaying ? "Pause" : "Play"}" aria-label="${isThisPlaying ? "Pause" : "Play"} ${escapeHTML(item.title)}">
+              ${isThisPlaying
+                ? '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>'
+                : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7Z"/></svg>'}
+            </button>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderMusicNowPlaying() {
+      if (!musicNowPlayingEl) return;
+      const user = currentUser();
+      const now = user?.nowPlaying;
+      if (!now || !now.videoId) {
+        musicNowPlayingEl.classList.add("hidden");
+        musicNowPlayingEl.innerHTML = "";
+        return;
+      }
+      musicNowPlayingEl.classList.remove("hidden");
+      musicNowPlayingEl.style.setProperty("--music-cover", `url(${JSON.stringify(now.thumb || "")})`);
+      musicNowPlayingEl.innerHTML = `
+        <div class="music-now-playing-bg" aria-hidden="true"></div>
+        <div class="cassette-player${now.playing ? " is-playing" : ""}" id="cassettePlayer" role="button" tabindex="0" aria-label="Open YouTube player for ${escapeHTML(now.title || "current song")}">
+          <div class="cassette-shell">
+            <div class="cassette-label">
+              <span class="cassette-title">${escapeHTML(now.title || "DuoTrack Mix")}</span>
+              <div class="cassette-window"><span class="cassette-reel"></span><span class="cassette-reel"></span></div>
+              <span class="cassette-footer">DUOTRACK • SIDE A</span>
+            </div>
+            <button type="button" class="cassette-toggle" id="musicToggleBtn" aria-label="${now.playing ? "Pause" : "Play"}">
+              ${now.playing
+                ? '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>'
+                : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7Z"/></svg>'}
+            </button>
+          </div>
+          <div class="music-now-playing-info">
+            <span class="music-now-playing-title">${escapeHTML(now.title || "Playing")}</span>
+            <span class="music-now-playing-sub">${now.playing ? "Now playing" : "Paused"}</span>
+            <span class="music-open-hint">Click the cassette to open full YouTube controls</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderMusicUI() {
+      if (musicPanel) musicPanel.classList.toggle("hidden", !musicFeatureEnabled);
+      if (!musicFeatureEnabled) return;
+      renderMusicResults();
+      renderMusicNowPlaying();
+      const now = currentUser()?.nowPlaying;
+      const dialogToggle = document.getElementById("musicDialogToggle");
+      if (dialogToggle) dialogToggle.textContent = now?.playing ? "Pause" : "Play";
+    }
+
+    // --- YouTube IFrame Player: plays audio (video kept off-screen) for whichever
+    // track the current user chose. onStateChange keeps Firebase (and therefore the
+    // avatar-swap on both devices) in sync with real play/pause/end state. ---
+    function createYtPlayer(onReadyCallback) {
+      ytPlayer = new YT.Player("musicPlayerHost", {
+        height: "390",
+        width: "700",
+        playerVars: {
+          autoplay: 0,
+          controls: 1,
+          playsinline: 1,
+          rel: 0,
+          modestbranding: 1,
+          origin: window.location.origin
+        },
+        events: {
+          onReady: () => onReadyCallback?.(),
+          onStateChange: handleYtStateChange,
+          onError: (event) => {
+            const messages = { 2: "Invalid video.", 5: "This video cannot play here.", 100: "Video unavailable.", 101: "Embedding is disabled for this video.", 150: "Embedding is disabled for this video.", 153: "Open the site through localhost or GitHub Pages." };
+            musicSearchErrorText = messages[event.data] || `YouTube playback error ${event.data}.`;
+            if (musicSearchErrorEl) musicSearchErrorEl.textContent = musicSearchErrorText;
+          }
+        }
+      });
+    }
+
+    window.onYouTubeIframeAPIReady = function () {
+      if (ytPendingPlay !== null) {
+        const callback = ytPendingPlay;
+        ytPendingPlay = null;
+        createYtPlayer(callback);
+      }
+    };
+
+    function ensureYtPlayer(onReadyCallback) {
+      if (ytPlayer) {
+        onReadyCallback?.();
+        return;
+      }
+      if (window.YT && window.YT.Player) {
+        createYtPlayer(onReadyCallback);
+      } else {
+        ytPendingPlay = onReadyCallback;
+      }
+    }
+
+    async function handleYtStateChange(event) {
+      const user = currentUser();
+      if (!user || !user.nowPlaying) return;
+      if (event.data === YT.PlayerState.PLAYING && !user.nowPlaying.playing) {
+        await writeUserPatch(user.id, { nowPlaying: { ...user.nowPlaying, playing: true } });
+      } else if (event.data === YT.PlayerState.PAUSED && user.nowPlaying.playing) {
+        await writeUserPatch(user.id, { nowPlaying: { ...user.nowPlaying, playing: false } });
+      } else if (event.data === YT.PlayerState.ENDED) {
+        await writeUserPatch(user.id, { nowPlaying: null });
+      }
+    }
+
+    async function playMusic({ videoId, title, thumb }) {
+      if (!musicFeatureEnabled) return;
+      const user = currentUser();
+      if (!user) return;
+      await writeUserPatch(user.id, { nowPlaying: { videoId, title, thumb, playing: true } });
+      ensureYtPlayer(() => ytPlayer.loadVideoById(videoId));
+    }
+
+    function pauseMusic() {
+      ytPlayer?.pauseVideo?.();
+    }
+
+    function resumeMusic() {
+      ytPlayer?.playVideo?.();
+    }
+
+    async function stopMusicPlayback() {
+      try { ytPlayer?.stopVideo?.(); } catch (_) { /* player may not be ready yet */ }
+      const user = currentUser();
+      if (user?.nowPlaying) {
+        await writeUserPatch(user.id, { nowPlaying: null });
+      }
+    }
+
+    musicSearchForm?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const query = musicSearchInput.value.trim();
+      if (!query) return;
+      await searchYoutubeMusic(query);
+    });
+
+    musicResultsEl?.addEventListener("click", async (event) => {
+      const btn = event.target.closest("[data-music-play]");
+      if (!btn) return;
+      const user = currentUser();
+      const videoId = btn.dataset.musicPlay;
+      const alreadyPlayingThis = Boolean(user?.nowPlaying?.playing && user.nowPlaying.videoId === videoId);
+      if (alreadyPlayingThis) {
+        pauseMusic();
+      } else {
+        await playMusic({ videoId, title: btn.dataset.musicTitle, thumb: btn.dataset.musicThumb });
+      }
+    });
+
+    const musicDialog = document.getElementById("musicDialog");
+    const musicDialogClose = document.getElementById("musicDialogClose");
+    const musicDialogToggle = document.getElementById("musicDialogToggle");
+    const musicDialogStop = document.getElementById("musicDialogStop");
+    const musicDialogTitle = document.getElementById("musicDialogTitle");
+
+    function openMusicDialog() {
+      const now = currentUser()?.nowPlaying;
+      if (!now?.videoId) return;
+      if (musicDialogTitle) musicDialogTitle.textContent = now.title || "YouTube Player";
+      if (musicDialogToggle) musicDialogToggle.textContent = now.playing ? "Pause" : "Play";
+      if (typeof musicDialog?.showModal === "function") musicDialog.showModal();
+      else musicDialog?.setAttribute("open", "");
+    }
+
+    musicNowPlayingEl?.addEventListener("click", async (event) => {
+      const user = currentUser();
+      if (event.target.closest("#musicToggleBtn")) {
+        event.stopPropagation();
+        if (user?.nowPlaying?.playing) pauseMusic();
+        else if (user?.nowPlaying?.videoId) resumeMusic();
+        return;
+      }
+      if (event.target.closest("#cassettePlayer")) openMusicDialog();
+    });
+
+    musicNowPlayingEl?.addEventListener("keydown", (event) => {
+      if ((event.key === "Enter" || event.key === " ") && event.target.closest("#cassettePlayer")) {
+        event.preventDefault();
+        openMusicDialog();
+      }
+    });
+
+    musicDialogClose?.addEventListener("click", () => musicDialog.close());
+    musicDialog?.addEventListener("click", (event) => {
+      const box = musicDialog.getBoundingClientRect();
+      if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) musicDialog.close();
+    });
+    musicDialogToggle?.addEventListener("click", () => {
+      const now = currentUser()?.nowPlaying;
+      if (now?.playing) pauseMusic(); else if (now?.videoId) resumeMusic();
+    });
+    musicDialogStop?.addEventListener("click", async () => {
+      await stopMusicPlayback();
+      musicDialog.close();
+    });
+
     function safeProfileImage(value) {
       return typeof value === "string" && value.startsWith("data:image/") ? value : "";
     }
@@ -7730,6 +8333,11 @@
     }
 
     function avatarMarkup(user) {
+      if (musicFeatureEnabled && user.nowPlaying && user.nowPlaying.playing && user.nowPlaying.thumb) {
+        const title = user.nowPlaying.title || "a song";
+        return `<img src="${escapeHTML(user.nowPlaying.thumb)}" alt="${escapeHTML(user.name)} is playing ${escapeHTML(title)}" title="${escapeHTML(title)}">` +
+          `<span class="avatar-music-badge" title="Playing on YouTube Music" aria-hidden="true">${settingsIcon("music", false)}</span>`;
+      }
       const image = safeProfileImage(user.profilePic);
       if (image) {
         return `<img src="${image}" alt="${escapeHTML(user.name)} profile picture">`;
@@ -7802,6 +8410,7 @@
       renderChat();
       renderChatAttachment();
       renderNotificationButton();
+      renderMusicUI();
       saveLocalHistory();
 
       if (activeModalType === "partner") {
@@ -9097,6 +9706,20 @@
         return;
       }
 
+      if (event.target.id === "musicSettingsForm") {
+        event.preventDefault();
+        const enabled = document.getElementById("musicFeatureEnabledInput").checked;
+        const apiKey = document.getElementById("musicApiKeyInput").value.trim();
+        try {
+          await set(musicConfigRef, { enabled, apiKey });
+          showToast("Saved", enabled ? "YouTube Music is on for both accounts." : "YouTube Music has been disabled for both accounts.");
+        } catch (error) {
+          showToast("Error", "Could not save YouTube Music settings.");
+        }
+        openThemeSettings();
+        return;
+      }
+
       if (event.target.id === "registerAccountForm") {
         event.preventDefault();
         const errorEl = document.getElementById("registerAccountError");
@@ -9233,6 +9856,7 @@
         <p><strong>Screen share:</strong> only starts if you explicitly choose to share your screen during a video call, and only for that call.</p>
         <p><strong>Chat edit/delete:</strong> "Delete for me" only changes what you see, on this device. "Delete for everyone" and message edits change the shared message for both accounts.</p>
         <p><strong>Mascot reminders:</strong> the hydration reminder runs entirely on your device using your browser's built-in text-to-speech. Nothing about it is sent anywhere.</p>
+        <p><strong>YouTube Music:</strong> if enabled, search queries and the video you choose to play go directly to YouTube using the shared API key set in Settings. DuoTrack only stores the currently-playing video's id, title, and thumbnail — synced live so your profile picture shows the cover art while it plays, the same way your profile photo already syncs. An admin can turn this feature off entirely from Settings.</p>
         <p><strong>Demo access:</strong> the built-in login IDs, and any account registered through Settings, are prototype credentials stored as plain text. They are not full secure accounts yet.</p>
         <p><strong>Before public sharing:</strong> Firebase Authentication and stricter database rules should be added so each person can update only their own data, and calls/microphone/camera access should only be requested over a properly secured deployment.</p>
       `;
@@ -9646,6 +10270,7 @@
     listenToChat();
     listenToTyping();
     listenToCalls();
+    listenToMusicSettings();
     scheduleHydrationReminder();
     scheduleCheckinReminder();
     requestNotificationPermissionOnce();
