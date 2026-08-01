@@ -85,6 +85,22 @@ The assistant supports KaTeX-formatted maths. It also attempts a best-effort loo
 
 The current prototype sends recent relevant chat context with AI requests. Do not place secrets or highly private information in chat when AI integration is enabled.
 
+## Study Music
+
+An administrator must first open **Settings → YouTube Music**, enable the feature, enter a YouTube Data API v3 key, and save. This setting and key are shared by both accounts.
+
+To play music:
+
+1. Enter a song, artist, or study-mix query in the **Study Music** panel.
+2. Choose **Search** to load up to ten music-category video results.
+3. Use the circular button beside a result to start or pause it.
+4. Use the cassette card to resume or pause playback, or select the card to open the full embedded YouTube controls.
+5. Choose **Stop** in the player dialog to end playback and clear the now-playing state.
+
+While a track is playing, the listener's avatar changes to the video's thumbnail with a music badge. DuoTrack synchronizes the video ID, title, thumbnail, and play/pause state through Firebase so both study partners can see it. The media itself is served directly by YouTube and is not sent through Firebase.
+
+Search depends on YouTube Data API quota and key restrictions. Playback also depends on the selected video being available and allowing embedded playback.
+
 ## Voice calls, video calls, and screen sharing
 
 Use the phone or camera button in the Study Chat header.
@@ -110,6 +126,7 @@ Settings include:
 - configure hydration and study check-in reminders;
 - add a custom eight-hour milestone sound;
 - configure the shared Groq key;
+- enable YouTube Music and configure its shared YouTube Data API key;
 - download or administer chat history;
 - download or restore a full backup;
 - register another prototype account.
@@ -165,6 +182,14 @@ Then open `http://localhost:8000`.
 - Check the Groq account's limits and model availability.
 - Confirm the browser can reach the Groq API.
 - Remember that search context is best-effort and may be blocked independently.
+
+### YouTube Music search or playback fails
+
+- Confirm the feature is enabled and a valid YouTube Data API v3 key is saved in Settings.
+- Check that the key allows the YouTube Data API v3 and the current localhost or GitHub Pages HTTP referrer.
+- Check whether the project's YouTube API quota has been exhausted.
+- Try another result if the selected video is unavailable or does not allow embedded playback.
+- Serve the app through localhost or GitHub Pages instead of opening `index.html` directly.
 
 ### Data looks out of date
 
