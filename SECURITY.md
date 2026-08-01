@@ -12,6 +12,7 @@ The repository contains only frontend code. Visitors can inspect and modify that
 - Administrative/settings protection is enforced in the client.
 - The frontend connects directly to Firebase Realtime Database.
 - The Groq API key is entered in the browser, stored in shared group data, and used directly by the browser.
+- The YouTube Data API key and feature settings are stored in shared group data and used directly by the browser. Current-track metadata is also synchronized between users.
 - Full backups and chat exports may contain private user content and configuration.
 - Profile/chat images are stored as data URLs and can increase database exposure and usage.
 
@@ -23,16 +24,19 @@ Do not use a password from any other account with this prototype. Do not place c
 2. **Use Firebase Authentication.** Map `auth.uid` to an allowed group membership instead of comparing passwords in JavaScript.
 3. **Lock down Realtime Database Rules.** Deny access by default and allow only authenticated group members to access their own permitted paths.
 4. **Move AI requests to a backend.** Store the Groq key in server-side environment configuration and proxy narrowly validated requests.
-5. **Separate roles.** Implement administrator/member authorization in trusted rules or backend code; do not rely on a hidden frontend password.
-6. **Validate writes server-side.** Restrict field types, sizes, message lengths, image sizes, and allowed state transitions.
-7. **Limit exports and restores.** Require recent authentication and an administrator role for destructive restore operations.
-8. **Add abuse controls.** Apply rate limits and quotas to account registration, messages, images, AI calls, and signaling writes.
-9. **Review data retention.** Define how long chat, images, call signaling, and historical analytics are kept.
-10. **Add dependency controls.** Pin dependencies, add a Content Security Policy, and consider self-hosting critical static assets.
+5. **Restrict the YouTube browser key.** Allow only YouTube Data API v3 requests from approved localhost and production HTTP referrers, then enable quota alerts.
+6. **Separate roles.** Implement administrator/member authorization in trusted rules or backend code; do not rely on a hidden frontend password.
+7. **Validate writes server-side.** Restrict field types, sizes, message lengths, image sizes, now-playing metadata, and allowed state transitions.
+8. **Limit exports and restores.** Require recent authentication and an administrator role for destructive restore operations.
+9. **Add abuse controls.** Apply rate limits and quotas to account registration, messages, images, AI calls, YouTube searches, and signaling writes.
+10. **Review data retention.** Define how long chat, images, call signaling, now-playing metadata, and historical analytics are kept.
+11. **Add dependency controls.** Pin dependencies, add a Content Security Policy, and consider self-hosting critical static assets.
 
 ## Firebase configuration
 
 A Firebase web API key is an application identifier and is normally visible in browser code. It is not a substitute for authentication or authorization. Protect the database with Firebase Authentication, restrictive Security Rules, App Check where appropriate, and usage alerts.
+
+The YouTube Data API key is also a browser-visible identifier rather than a secret. Protect it with API restrictions, HTTP-referrer restrictions, quota limits, and usage alerts. Restrict Firebase access to the shared `musicSettings` record so only authorized group members can read it and only administrators can change it.
 
 Never commit:
 
