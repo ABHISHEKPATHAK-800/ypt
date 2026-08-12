@@ -5392,6 +5392,7 @@
       <span>
         <a href="#" id="privacyLink">Privacy Policy</a>
         <a href="#" id="contactLink">Contact Us</a>
+        <a href="jee-syllabus-roadmap-editable-dates.html" id="plannerLink" class="hidden">Planner</a>
       </span>
     </footer>
 
@@ -5956,6 +5957,7 @@
     const closeModalBtn = document.getElementById("closeModalBtn");
     const privacyLink = document.getElementById("privacyLink");
     const contactLink = document.getElementById("contactLink");
+    const plannerLink = document.getElementById("plannerLink");
     const whyJeeBtn = document.getElementById("whyJeeBtn");
     const jeeFlipText = document.getElementById("jeeFlipText");
     const jeeFlipFonts = [
@@ -8392,6 +8394,7 @@
       topAvatar.innerHTML = avatarMarkup(user);
       profilePicBtn.innerHTML = avatarMarkup(user);
       greetingText.textContent = `Hi ${user.name}, ${getGreeting()}`;
+      plannerLink?.classList.toggle("hidden", user.id !== "aditya");
       dateText.textContent = new Date().toLocaleDateString("en-IN", {
         weekday: "long",
         day: "numeric",
