@@ -50,6 +50,7 @@
         linear-gradient(135deg, rgba(36, 107, 69, 0.13), rgba(244, 197, 66, 0.15)),
         var(--paper);
       transition: background 450ms ease, color 250ms ease;
+      cursor: url("data:image/png;base64,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") 8 8, auto;
     }
 
     h1, h2, h3, h4, .app-brand, .chat-title, .theme-option, .subject-option, .mode-option, .primary-btn, .secondary-btn, .chat-toggle, .grok-toggle {
@@ -1783,6 +1784,18 @@
       gap: 16px;
       flex-wrap: wrap;
       font-size: 13px;
+    }
+
+    .footer-tagline {
+      order: -1;
+      width: 100%;
+      flex-basis: 100%;
+      text-align: center;
+      margin: 0 0 12px;
+      font-weight: 800;
+      font-size: 14px;
+      color: var(--ink);
+      letter-spacing: 0.2px;
     }
 
     .footer a {
@@ -4922,6 +4935,22 @@
     .tune-chip {
       border-radius: var(--radius-pill, 999px);
     }
+    a,
+    button,
+    select,
+    label,
+    input[type="checkbox"],
+    input[type="radio"],
+    .theme-option,
+    .subject-option,
+    .mode-option,
+    .chat-toggle,
+    .grok-toggle,
+    .cassette-player,
+    #mascotWrap,
+    [role="button"] {
+      cursor: url("data:image/png;base64,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") 8 8, pointer !important;
+    }
   </style>
 </head>
 <body>
@@ -5355,6 +5384,7 @@
     </dialog>
 
     <footer class="footer">
+      <p class="footer-tagline">Take your time to plan — once you do, the work turns into smart work.</p>
       <span>Made by Abhishek · Find an issue? <a href="#" id="developerLink">Contact developer</a></span>
       <button type="button" id="whyJeeBtn" class="why-jee-btn" aria-label="Why JEE?">
         Why <span class="jee-flip" id="jeeFlipText">JEE</span>?
