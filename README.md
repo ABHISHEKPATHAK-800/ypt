@@ -6,7 +6,7 @@
 [![Built with](https://img.shields.io/badge/Built%20with-HTML%20%2B%20CSS%20%2B%20JavaScript-f4c542?style=for-the-badge)](./index.html)
 [![Sync](https://img.shields.io/badge/Sync-Firebase-ffca28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/docs/database)
 
-DuoTrack combines a synchronized study timer, partner accountability, task planning, live chat, calls, reports, reminders, and a study-focused AI assistant in one responsive web page. It is a personalized prototype designed primarily for two trusted users.
+DuoTrack combines a synchronized study timer, partner accountability, task planning, live chat, study music, calls, reports, reminders, and a study-focused AI assistant in one responsive web page. It is a personalized prototype designed primarily for two trusted users.
 
 **Live app:** [abhishekpathak-800.github.io/ypt](https://abhishekpathak-800.github.io/ypt/)
 
@@ -20,6 +20,7 @@ DuoTrack combines a synchronized study timer, partner accountability, task plann
 - **Live accountability:** see both users' current status, today's total, yesterday's total, subject split, mode split, questions solved, and XP.
 - **Daily planning:** sortable to-do list, quick-add study stages, priority tags, completion progress, and a D-Day countdown.
 - **Realtime study chat:** typing indicator, replies, reactions, image attachments, editing, deletion, unread counts, sounds, and browser notifications.
+- **Study music:** search YouTube's music category, play through the embedded YouTube player, control playback from a cassette-style card, and show the current track's cover art on the listener's synced avatar.
 - **Voice and video calls:** WebRTC calling with mute, camera toggle, and screen sharing during video calls.
 - **Study AI:** Groq-powered assistant with KaTeX math rendering, optional search context, an in-app panel, and `@grok`/`@a9` chat commands.
 - **Personalization:** shared themes, personal night mode, custom device background, profile image, mascot, and optional football styling.
@@ -66,6 +67,7 @@ The checked-in page is connected to the existing DuoTrack Firebase project and d
 | Account/authentication code | Must be replaced with Firebase Authentication or another real authentication system for public use. |
 | Firebase Security Rules | Decide who may read or modify each database path. They are the actual security boundary. |
 | Groq configuration | The current prototype accepts a shared key through Settings; a production version should call Groq through a protected backend. |
+| YouTube Music settings | Enable the feature and provide a YouTube Data API v3 browser key for search. Restrict the key to the API and the deployment's allowed HTTP referrers. |
 
 Firebase web configuration is visible by design in frontend apps. Never commit Firebase service-account credentials or other private server keys.
 
@@ -91,6 +93,7 @@ https://abhishekpathak-800.github.io/ypt/
 | Realtime state | Firebase Realtime Database 10.12.5 |
 | Calls | WebRTC with Firebase-based signaling and public STUN servers |
 | AI | Groq OpenAI-compatible chat-completions API |
+| Study music | YouTube Data API v3 search and YouTube IFrame Player API |
 | Math | KaTeX 0.16.9 |
 | PDF export | jsPDF 2.5.1 |
 | Search context | DuckDuckGo Instant Answer API and Wikipedia search API |
@@ -119,7 +122,7 @@ Some features require explicit browser permission:
 - **Camera** for video calls.
 - **Screen capture** for screen sharing.
 
-Study state, shared appearance, chat, call signaling, registered prototype accounts, and shared AI configuration use Firebase. Personal browser preferences such as session memory, notification choices, night-mode override, selected timer settings, welcome popup, and reminders use browser storage. See [Architecture](./docs/ARCHITECTURE.md#persistence) for the full split.
+Study state, shared appearance, chat, call signaling, registered prototype accounts, shared AI/music configuration, and current-track metadata use Firebase. YouTube receives music searches and serves the embedded player directly. Personal browser preferences such as session memory, notification choices, night-mode override, selected timer settings, welcome popup, and reminders use browser storage. See [Architecture](./docs/ARCHITECTURE.md#persistence) for the full split.
 
 ## Known limitations
 
@@ -128,6 +131,7 @@ Study state, shared appearance, chat, call signaling, registered prototype accou
 - The current app and styles are kept in one large HTML file, which makes testing and maintenance harder.
 - Calls use STUN without a dedicated TURN relay, so some restrictive networks may prevent a connection.
 - The AI key is shared through the group database and requests are made from the browser.
+- YouTube search requires a shared browser API key and is subject to API quotas, key restrictions, video availability, and each video's embedding policy.
 - There is no automated test suite, offline mode, or service worker.
 
 ## Suggested roadmap

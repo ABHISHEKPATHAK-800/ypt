@@ -1,6 +1,6 @@
 # DuoTrack architecture
 
-DuoTrack is a static, browser-only application. The entire UI, CSS, state model, Firebase integration, AI client, chat, and call logic currently live in `index.html`.
+DuoTrack is a static, browser-only application. The entire UI, CSS, state model, Firebase integration, AI and YouTube clients, chat, music player, and call logic currently live in `index.html`.
 
 ## System overview
 
@@ -35,13 +35,14 @@ The app uses one configured group under a Firebase Realtime Database tree. The m
 
 ```text
 duotrack/groups/{groupId}/
-├── users/          # Timer, totals, profile, tasks, D-Day, and histories
+├── users/          # Timer, totals, profile, now-playing track, tasks, D-Day, and histories
 ├── chat/           # Messages, images, edits, replies, and reactions
 ├── typing/         # Ephemeral typing timestamps
 ├── accounts/       # Dynamically registered prototype accounts
 ├── call/           # WebRTC offer, answer, state, and ICE candidates
 ├── appearance/     # Shared visual preferences
-└── grokApiKey      # Shared AI key in the current prototype
+├── grokApiKey      # Shared AI key in the current prototype
+└── musicSettings/  # Shared YouTube Music enabled flag and browser API key
 ```
 
 The exact shape is normalized in the browser before rendering so missing older fields receive defaults.
@@ -90,11 +91,19 @@ The frontend calls Groq's OpenAI-compatible chat-completions endpoint. It sends 
 
 This direct-browser architecture is suitable only for a trusted prototype. A production version should put the AI call behind a server or serverless function and keep provider credentials there.
 
+### Study Music
+
+The shared `musicSettings` record controls whether the feature is enabled and stores the YouTube Data API v3 browser key. A live Firebase listener applies configuration changes to both users and stops local playback when the feature is disabled.
+
+Search requests go directly from the browser to the YouTube Data API with `type=video`, music category `10`, and a maximum of ten results. Playback uses the YouTube IFrame Player API. The cassette card and player dialog control the same local player.
+
+Each user's Firebase record can contain a normalized `nowPlaying` value with the video ID, title, HTTPS thumbnail, and playing flag. Player state changes update that record, allowing both browsers to replace the listener's avatar with cover art while music is playing. Firebase carries only this metadata; YouTube serves the media directly.
+
 ## Persistence
 
 | Location | Examples | Shared? |
 | --- | --- | --- |
-| Firebase Realtime Database | User study state, histories, tasks, D-Day, profile image, chat, typing, call signaling, registered prototype accounts, shared appearance, AI configuration | Yes |
+| Firebase Realtime Database | User study state, histories, tasks, D-Day, profile image, now-playing metadata, chat, typing, call signaling, registered prototype accounts, shared appearance, AI and YouTube Music configuration | Yes |
 | `localStorage` | Remembered session, theme cache, device background, notification/chat-sound choices, timer mode/duration/tune, welcome popup, reminder settings, hidden chat IDs | Device/browser only |
 | `sessionStorage` | Current session identity fallback | Current browser tab/session |
 | Browser media streams | Microphone, camera, screen-share tracks | Live call only |
@@ -106,6 +115,8 @@ This direct-browser architecture is suitable only for a trusted prototype. A pro
 | --- | --- | --- |
 | Firebase Realtime Database | Shared application state and call signaling | Shared features stop syncing |
 | Groq API | Study AI responses | AI displays an error; core timer remains usable after Firebase connects |
+| YouTube Data API v3 | Music-category video search | Music search displays an error; other features remain usable |
+| YouTube IFrame Player API | Embedded music playback and player-state events | Playback controls fail or report an embedding/player error |
 | DuckDuckGo/Wikipedia APIs | Best-effort search snippets for AI | AI continues without search context |
 | KaTeX CDN | Mathematical rendering | AI text remains, but formula rendering may be unavailable |
 | jsPDF CDN | PDF exports | PDF actions fail |
@@ -120,6 +131,7 @@ The current code does not have a trusted application server. Anything shipped in
 - hiding a settings password in JavaScript does not protect administrative actions;
 - Firebase Security Rules must protect data independently of the UI;
 - a shared AI key stored in Firebase can be exposed to authorized or unauthorized database readers;
+- the shared YouTube browser key is readable by anyone who can read the music settings and must be restricted to YouTube Data API v3 plus approved HTTP referrers;
 - validating imported data in the browser improves stability but is not authorization.
 
 See [SECURITY.md](../SECURITY.md) for the recommended upgrade path.
@@ -163,4 +175,5 @@ The highest-value automated tests would cover:
 5. chat editing, reactions, local deletion, and shared deletion;
 6. backup validation and restore safeguards;
 7. permission-denied and offline states;
-8. multi-device writes to the same account.
+8. YouTube search errors, player state changes, feature disablement, and synchronized now-playing metadata;
+9. multi-device writes to the same account.
