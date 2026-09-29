@@ -1342,7 +1342,7 @@
     .todo-item {
       position: relative;
       display: grid;
-      grid-template-columns: auto auto auto minmax(0, 1fr) auto auto auto;
+      grid-template-columns: auto auto auto minmax(0, 1fr) auto auto auto auto;
       grid-template-rows: auto auto;
       gap: 10px 10px;
       align-items: center;
@@ -1701,6 +1701,264 @@
     .todo-delete svg { width: 13px; height: 13px; }
     .todo-delete:hover { opacity: 1; background: var(--red); color: #fff; transform: scale(1.08); }
 
+
+    /* ---------- Task resources (attach PDF / image to a task) ---------- */
+    .todo-res-btn {
+      position: relative;
+      width: 26px;
+      height: 26px;
+      flex: none;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      background: var(--panel, #fff);
+      color: var(--muted);
+      opacity: 0.8;
+      transition: opacity 160ms ease, color 160ms ease, border-color 160ms ease, transform 160ms ease, background 160ms ease;
+    }
+    .todo-res-btn svg { width: 13px; height: 13px; }
+    .todo-res-btn:hover { opacity: 1; transform: scale(1.08); color: var(--green); border-color: var(--green); }
+    .todo-res-btn.has-res { opacity: 1; background: var(--green-2); color: var(--green); border-color: transparent; }
+    .todo-res-count {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      min-width: 15px;
+      height: 15px;
+      padding: 0 3px;
+      border-radius: 999px;
+      background: var(--green);
+      color: #fff;
+      font-size: 9px;
+      font-weight: 900;
+      line-height: 15px;
+      text-align: center;
+      box-sizing: border-box;
+    }
+
+    .res-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      display: grid;
+      place-items: center;
+      padding: 16px;
+      background: rgba(8, 16, 12, 0.55);
+      backdrop-filter: blur(3px);
+      animation: resFade 160ms ease both;
+    }
+    .res-modal {
+      width: min(480px, 100%);
+      max-height: min(660px, 88vh);
+      overflow: auto;
+      background: var(--panel, #fff);
+      color: var(--ink);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+      animation: resPop 220ms cubic-bezier(.2,.8,.2,1) both;
+    }
+    @keyframes resFade { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes resPop { from { opacity: 0; transform: translateY(10px) scale(.97); } to { opacity: 1; transform: none; } }
+    .res-head { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 14px; }
+    .res-head-icon { width: 34px; height: 34px; flex: none; border-radius: 10px; display: grid; place-items: center; background: var(--green-2); color: var(--green); }
+    .res-head-icon svg { width: 17px; height: 17px; }
+    .res-head-text { min-width: 0; flex: 1; }
+    .res-head-text h3 { margin: 0; font-size: 17px; }
+    .res-head-text p { margin: 2px 0 0; font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .res-close { width: 30px; height: 30px; flex: none; border-radius: 50%; display: grid; place-items: center; background: transparent; color: var(--muted); border: 1px solid var(--line); cursor: pointer; }
+    .res-close svg { width: 14px; height: 14px; }
+    .res-close:hover { color: var(--ink); border-color: var(--ink); }
+    .res-drop {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 14px;
+      border: 1.5px dashed color-mix(in srgb, var(--green) 55%, var(--line));
+      border-radius: 14px;
+      background: color-mix(in srgb, var(--green) 6%, transparent);
+      color: var(--ink);
+      text-align: left;
+      cursor: pointer;
+      transition: background 160ms ease, border-color 160ms ease;
+    }
+    .res-drop:hover, .res-drop.is-over { background: color-mix(in srgb, var(--green) 15%, transparent); border-color: var(--green); }
+    .res-drop-icon { width: 38px; height: 38px; flex: none; border-radius: 50%; display: grid; place-items: center; background: var(--green); color: #fff; }
+    .res-drop-icon svg { width: 18px; height: 18px; }
+    .res-drop strong { display: block; font-size: 14px; }
+    .res-drop small { display: block; margin-top: 2px; font-size: 12px; color: var(--muted); font-weight: 600; }
+    .res-section { margin-top: 16px; }
+    .res-section h4 { margin: 0 0 8px; display: flex; align-items: center; gap: 6px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+    .res-section h4 span { padding: 1px 7px; border-radius: 999px; background: var(--green-2); color: var(--green); font-size: 10px; }
+    .res-row { display: flex; align-items: center; gap: 10px; padding: 8px; margin-bottom: 6px; border: 1px solid var(--line); border-radius: 12px; }
+    .res-thumb { width: 40px; height: 40px; flex: none; border-radius: 9px; display: grid; place-items: center; overflow: hidden; background: var(--green-2); color: var(--green); }
+    .res-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .res-thumb svg { width: 18px; height: 18px; }
+    .res-thumb.is-pdf { background: rgba(224, 72, 62, .14); color: #e0483e; }
+    .res-meta { min-width: 0; flex: 1; }
+    .res-name { font-size: 13px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .res-size { font-size: 11px; color: var(--muted); }
+    .res-open { flex: none; padding: 7px 13px; border-radius: 999px; background: var(--green); color: #fff; font-size: 12px; font-weight: 800; cursor: pointer; }
+    .res-open:hover { filter: brightness(1.08); }
+    .res-del { width: 28px; height: 28px; flex: none; border-radius: 50%; display: grid; place-items: center; background: rgba(224, 72, 62, .14); color: #e0483e; cursor: pointer; }
+    .res-del svg { width: 13px; height: 13px; }
+    .res-del:hover { background: #e0483e; color: #fff; }
+    .res-empty { padding: 4px 2px; font-size: 12px; color: var(--muted); }
+    .res-status { min-height: 16px; margin-top: 12px; font-size: 12px; font-weight: 700; color: #e0483e; }
+    .res-status.is-ok { color: var(--green); }
+    .res-note { margin-top: 8px; font-size: 11px; color: var(--muted); }
+
+    /* ---------- In-app document viewer (PDF reader / image viewer) ---------- */
+    .pv-root { position: fixed; inset: 0; z-index: 10100; display: flex; flex-direction: column; background: #0a0e14; color: #e7ebf1; font-size: 14px; line-height: 1.3; --pv-bar: #0d1219; --pv-line: #1b2431; --pv-hover: #1a2331; --pv-acc: #4d8dff; --pv-acc-bg: rgba(77, 141, 255, .16); --pv-mut: #8b97a8; --pv-menu: #111820; animation: resFade 160ms ease both; overscroll-behavior: contain; }
+    .pv-root *, .pv-root *::before, .pv-root *::after { box-sizing: border-box; }
+    .pv-root [hidden] { display: none !important; }
+    .pv-root button { font: inherit; color: inherit; background: transparent; border: 0; padding: 0; margin: 0; cursor: pointer; transform: none; box-shadow: none; }
+    .pv-root button:hover, .pv-root button:active { transform: none; }
+    .pv-root input, .pv-root select { font: inherit; }
+    .pv-root .pv-top { position: relative; z-index: 8; display: flex; align-items: center; gap: 8px; height: 56px; padding: 0 10px; flex: none; background: var(--pv-bar); border-bottom: 1px solid var(--pv-line); }
+    .pv-root .pv-title { max-width: 20vw; margin-left: 4px; font-size: 16px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .pv-root .pv-title-wide { max-width: 32vw; }
+    .pv-root .pv-center { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .pv-root .pv-right { flex: none; display: flex; align-items: center; gap: 4px; }
+    .pv-root .pv-btn { position: relative; width: 40px; height: 40px; flex: none; display: grid; place-items: center; border: 1px solid transparent; border-radius: 10px; color: #dbe3ee; background: transparent; transition: background 120ms ease, color 120ms ease, border-color 120ms ease; }
+    .pv-root .pv-btn svg { width: 20px; height: 20px; }
+    .pv-root .pv-btn:hover:not(:disabled) { background: var(--pv-hover); }
+    .pv-root .pv-btn:disabled { opacity: .32; cursor: default; }
+    .pv-root .pv-btn.is-on { color: var(--pv-acc); background: var(--pv-acc-bg); border-color: rgba(77, 141, 255, .38); }
+    .pv-root .pv-btn.pv-fit { background: #141b26; border-color: #232d3c; }
+    .pv-root .pv-btn.pv-fit.is-on { background: var(--pv-acc-bg); border-color: rgba(77, 141, 255, .38); }
+    .pv-root .pv-btn.pv-small { width: 32px; height: 32px; border-radius: 8px; }
+    .pv-root .pv-btn.pv-small svg { width: 16px; height: 16px; }
+    .pv-root .pv-sep { width: 1px; height: 24px; margin: 0 4px; background: var(--pv-line); flex: none; }
+    .pv-root .pv-pagebox { display: flex; align-items: center; gap: 6px; color: var(--pv-mut); font-weight: 600; margin: 0; }
+    .pv-root .pv-pageinput { width: 52px; height: 34px; padding: 0 6px; text-align: center; color: #e7ebf1; background: #141b26; border: 1px solid #232d3c; border-radius: 8px; font-weight: 600; outline: none; }
+    .pv-root .pv-pageinput:focus { border-color: var(--pv-acc); }
+    .pv-root .pv-zoombtn { min-width: 84px; height: 36px; padding: 0 8px 0 12px; display: inline-flex; align-items: center; justify-content: space-between; gap: 6px; color: #e7ebf1; background: #141b26; border: 1px solid #232d3c; border-radius: 9px; font-weight: 600; }
+    .pv-root .pv-zoombtn svg { width: 16px; height: 16px; color: var(--pv-mut); }
+    .pv-root .pv-zoombtn:hover { background: var(--pv-hover); }
+    .pv-root .pv-zoombtn.pv-static { justify-content: center; padding: 0 12px; display: inline-flex; align-items: center; cursor: default; }
+    .pv-root .pv-menuwrap { position: relative; }
+    .pv-root .pv-menu { position: absolute; top: calc(100% + 8px); left: 0; z-index: 20; min-width: 260px; padding: 8px; color: #e7ebf1; background: var(--pv-menu); border: 1px solid #222c3a; border-radius: 14px; box-shadow: 0 18px 46px rgba(0, 0, 0, .6); animation: resPop 140ms ease both; }
+    .pv-root .pv-zoommenu { min-width: 150px; left: 50%; transform: translateX(-50%); }
+    .pv-root .pv-menu-right { left: auto; right: 0; }
+    .pv-root .pv-mlabel { padding: 6px 10px 8px; color: var(--pv-mut); font-size: 13px; }
+    .pv-root .pv-msep { height: 1px; margin: 6px 4px; background: var(--pv-line); }
+    .pv-root .pv-item { width: 100%; display: flex; align-items: center; gap: 12px; padding: 10px 10px; border-radius: 9px; text-align: left; font-weight: 500; }
+    .pv-root .pv-item svg { width: 20px; height: 20px; flex: none; color: #cfd8e5; }
+    .pv-root .pv-item span { flex: 1; }
+    .pv-root .pv-item kbd { color: var(--pv-mut); font: inherit; font-size: 12px; }
+    .pv-root .pv-item:hover { background: #1a2331; }
+    .pv-root .pv-item.is-on { background: var(--pv-acc-bg); }
+    .pv-root .pv-item.is-on svg { color: var(--pv-acc); }
+    .pv-root .pv-only-sm { display: none; }
+    .pv-root .pv-tools { position: absolute; top: 64px; left: 50%; transform: translateX(-50%); z-index: 7; display: flex; align-items: center; gap: 14px; padding: 8px 12px; background: var(--pv-menu); border: 1px solid #222c3a; border-radius: 14px; box-shadow: 0 12px 30px rgba(0, 0, 0, .5); max-width: calc(100vw - 16px); flex-wrap: wrap; justify-content: center; }
+    .pv-root .pv-poplabel { color: var(--pv-mut); font-size: 13px; }
+    .pv-root .pv-seg { display: inline-flex; padding: 3px; gap: 2px; background: #0b1017; border-radius: 10px; }
+    .pv-root .pv-seg button { padding: 6px 11px; border-radius: 8px; color: var(--pv-mut); font-size: 13px; font-weight: 600; }
+    .pv-root .pv-seg button.is-on { color: #fff; background: #263246; }
+    .pv-root .pv-swatches { display: inline-flex; gap: 8px; }
+    .pv-root .pv-swatch { width: 24px; height: 24px; border-radius: 50%; background: var(--c); border: 2px solid transparent; outline: 1px solid rgba(255, 255, 255, .25); outline-offset: 1px; }
+    .pv-root .pv-swatch.is-on { border-color: #0b1017; outline: 2px solid var(--pv-acc); }
+    .pv-root .pv-main { position: relative; flex: 1; min-height: 0; display: flex; }
+    .pv-root .pv-rail { flex: none; width: 72px; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 0; background: var(--pv-bar); border-right: 1px solid var(--pv-line); }
+    .pv-root .pv-rbtn { width: 50px; height: 50px; display: grid; place-items: center; border-radius: 12px; color: #dbe3ee; transition: background 120ms ease; }
+    .pv-root .pv-rbtn svg { width: 22px; height: 22px; }
+    .pv-root .pv-rbtn:hover { background: var(--pv-hover); }
+    .pv-root .pv-rbtn.is-on { color: var(--pv-acc); background: var(--pv-acc-bg); }
+    .pv-root.pv-nosidebar .pv-rail, .pv-root.pv-nosidebar .pv-panel { display: none; }
+    .pv-root .pv-panel { flex: none; width: 290px; overflow: auto; padding: 14px; background: #0f151d; border-right: 1px solid var(--pv-line); scrollbar-color: #2a3546 transparent; }
+    .pv-root .pv-panel h4 { margin: 0 0 12px; color: var(--pv-mut); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+    .pv-root .pv-empty { color: var(--pv-mut); font-size: 13px; }
+    .pv-root .pv-outline { display: flex; flex-direction: column; }
+    .pv-root .pv-outrow { text-align: left; padding: 8px 10px; border-radius: 8px; color: #d5dde9; font-size: 13px; line-height: 1.35; }
+    .pv-root .pv-outrow:hover { background: var(--pv-hover); color: #fff; }
+    .pv-root .pv-sticky { position: sticky; top: -14px; z-index: 2; margin: -14px -14px 6px; padding: 14px 14px 4px; background: #0f151d; }
+    .pv-root .pv-searchbox { display: flex; align-items: center; gap: 4px; }
+    .pv-root .pv-searchinput { flex: 1; min-width: 0; height: 34px; padding: 0 10px; color: #e7ebf1; background: #141b26; border: 1px solid #232d3c; border-radius: 8px; outline: none; }
+    .pv-root .pv-searchinput:focus { border-color: var(--pv-acc); }
+    .pv-root .pv-searchinfo { min-height: 20px; margin: 8px 2px; color: var(--pv-mut); font-size: 12px; }
+    .pv-root .pv-hitrow { width: 100%; display: flex; gap: 8px; align-items: baseline; padding: 8px 10px; border-radius: 8px; text-align: left; font-size: 12.5px; color: #c4cedb; }
+    .pv-root .pv-hitrow:hover { background: var(--pv-hover); }
+    .pv-root .pv-hitrow.is-on { background: var(--pv-acc-bg); }
+    .pv-root .pv-hitpage { flex: none; min-width: 34px; color: var(--pv-acc); font-weight: 700; }
+    .pv-root .pv-hitsnip { min-width: 0; overflow-wrap: anywhere; }
+    .pv-root .pv-hitsnip b { color: #ffd54a; }
+    .pv-root .pv-thumbs { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+    .pv-root .pv-thumb { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 6px; border-radius: 10px; border: 2px solid transparent; }
+    .pv-root .pv-thumb canvas { display: block; background: #fff; border-radius: 3px; box-shadow: 0 2px 8px rgba(0, 0, 0, .5); }
+    .pv-root .pv-thumb span { font-size: 12px; color: var(--pv-mut); }
+    .pv-root .pv-thumb:hover { background: var(--pv-hover); }
+    .pv-root .pv-thumb.is-cur { border-color: var(--pv-acc); }
+    .pv-root .pv-thumb.is-cur span { color: var(--pv-acc); font-weight: 700; }
+    .pv-root .pv-setrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 16px; font-size: 13.5px; }
+    .pv-root .pv-setcol { flex-direction: column; align-items: stretch; gap: 8px; }
+    .pv-root .pv-setrow b { color: var(--pv-acc); font-weight: 700; }
+    .pv-root .pv-check { width: 20px; height: 20px; accent-color: var(--pv-acc); }
+    .pv-root .pv-select { height: 36px; padding: 0 8px; color: #e7ebf1; background: #141b26; border: 1px solid #232d3c; border-radius: 8px; }
+    .pv-root .pv-range { width: 100%; accent-color: var(--pv-acc); }
+    .pv-root .pv-hint { margin: 0; color: var(--pv-mut); font-size: 12px; line-height: 1.5; }
+    .pv-root .pv-scroller { flex: 1; min-width: 0; min-height: 0; overflow: auto; overflow-y: scroll; position: relative; outline: none; background: #0a0e14; overscroll-behavior: contain; touch-action: pan-x pan-y; scrollbar-color: #2a3546 #0a0e14; }
+    .pv-root .pv-scroller::-webkit-scrollbar { width: 13px; height: 13px; }
+    .pv-root .pv-scroller::-webkit-scrollbar-thumb { background: #2a3546; border-radius: 8px; border: 3px solid #0a0e14; }
+    .pv-root .pv-scroller::-webkit-scrollbar-track, .pv-root .pv-scroller::-webkit-scrollbar-corner { background: #0a0e14; }
+    .pv-root[data-tool="hand"] .pv-scroller { cursor: grab; }
+    .pv-root[data-tool="hand"] .pv-text { pointer-events: none; }
+    .pv-root .pv-scroller.is-panning { cursor: grabbing; user-select: none; }
+    .pv-root .pv-pages { position: relative; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 16px; width: max-content; min-width: 100%; }
+    .pv-root .pv-page { position: relative; flex: none; overflow: hidden; background: #fff; box-shadow: 0 2px 14px rgba(0, 0, 0, .55); }
+    .pv-root .pv-inner { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+    .pv-root .pv-canvas { display: block; }
+    .pv-root.pv-invert .pv-canvas { filter: invert(1) hue-rotate(180deg); }
+    .pv-root.pv-invert .pv-page { background: #111; }
+    .pv-root[data-tool="draw"][data-pen="er"] .pv-ann { cursor: cell; }
+    .pv-root .pv-seg button.pv-straight { display: inline-flex; align-items: center; gap: 5px; }
+    .pv-root .pv-seg button.pv-straight svg { width: 15px; height: 15px; }
+    .pv-root .pv-text { position: absolute; inset: 0; overflow: hidden; line-height: 1; text-size-adjust: none; transform-origin: 0 0; user-select: text; }
+    .pv-root .pv-text span, .pv-root .pv-text br { position: absolute; color: transparent; white-space: pre; cursor: text; transform-origin: 0 0; }
+    .pv-root .pv-text ::selection { background: rgba(60, 120, 255, .35); }
+    .pv-root .pv-text mark.pv-hit { color: transparent; background: rgba(255, 213, 0, .55); border-radius: 2px; }
+    .pv-root .pv-text mark.pv-hit.cur { background: rgba(255, 140, 0, .8); }
+    .pv-root .pv-ann { position: absolute; left: 0; top: 0; pointer-events: none; }
+    .pv-root[data-tool="draw"] .pv-ann, .pv-root[data-tool="text"] .pv-ann { pointer-events: auto; touch-action: none; }
+    .pv-root[data-tool="draw"] .pv-ann { cursor: crosshair; }
+    .pv-root[data-tool="text"] .pv-ann { cursor: text; }
+    .pv-root input.pv-textinput { position: absolute; z-index: 3; min-width: 120px; margin: 0; padding: 0 2px; line-height: 1; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; font-weight: 600; background: rgba(255, 255, 255, .85); border: 0; border-radius: 2px; outline: 1.5px dashed #4d8dff; }
+    .pv-root .pv-foot { flex: none; display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 16px; color: #cfd8e5; background: var(--pv-bar); border-top: 1px solid var(--pv-line); font-size: 14px; }
+    .pv-root .pv-foot svg { width: 18px; height: 18px; color: var(--pv-mut); }
+    .pv-root .pv-foot-page { margin-left: auto; color: var(--pv-mut); }
+    .pv-root .pv-loading { position: absolute; inset: 56px 0 0 0; z-index: 9; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: #0a0e14; color: var(--pv-mut); }
+    .pv-root .pv-spin { width: 34px; height: 34px; border-radius: 50%; border: 3px solid #223046; border-top-color: var(--pv-acc); animation: pvSpin 800ms linear infinite; }
+    @keyframes pvSpin { to { transform: rotate(360deg); } }
+    .pv-root .pv-imgscroll { display: flex; }
+    .pv-root .pv-imgwrap { position: relative; flex: none; margin: auto; padding: 0; }
+    .pv-root .pv-imgel { position: absolute; left: 50%; top: 50%; max-width: none; user-select: none; -webkit-user-drag: none; border-radius: 4px; box-shadow: 0 2px 14px rgba(0, 0, 0, .55); }
+    .pv-root .pv-imgscroll { cursor: grab; }
+    .pv-root .pv-frame { flex: 1; min-height: 0; padding: 0 12px 12px; }
+    .pv-root .pv-frame iframe { width: 100%; height: 100%; border: 0; border-radius: 8px; background: #fff; }
+    .pv-root .pv-note { color: var(--pv-mut); font-size: 13px; }
+    .pv-root .pv-linkbtn { padding: 8px 12px; border-radius: 999px; background: #1a2331; color: #e7ebf1; font-size: 13px; font-weight: 700; text-decoration: none; }
+    .pv-root.pv-present .pv-top, .pv-root.pv-present .pv-rail, .pv-root.pv-present .pv-panel, .pv-root.pv-present .pv-foot, .pv-root.pv-present .pv-tools { display: none; }
+    .pv-root.pv-present .pv-scroller { scroll-snap-type: y mandatory; background: #000; cursor: pointer; }
+    .pv-root.pv-present .pv-page { scroll-snap-align: center; box-shadow: none; }
+    .pv-root.pv-present .pv-pages { gap: 0; padding: 16px 16px; }
+    .pv-root.pv-present .pv-loading { inset: 0; }
+    @media (max-width: 860px) {
+      .pv-root .pv-hide-sm, .pv-root .pv-title, .pv-root .pv-sep { display: none; }
+      .pv-root .pv-only-sm { display: flex; }
+      .pv-root .pv-top { gap: 4px; padding: 0 6px; }
+      .pv-root .pv-btn { width: 36px; height: 36px; }
+      .pv-root .pv-center { gap: 2px; }
+      .pv-root .pv-zoombtn { min-width: 70px; padding-left: 8px; }
+      .pv-root .pv-rail { width: 52px; gap: 4px; padding: 8px 0; }
+      .pv-root .pv-rbtn { width: 42px; height: 42px; }
+      .pv-root .pv-panel { position: absolute; z-index: 6; left: 52px; top: 0; bottom: 0; width: min(300px, calc(100% - 52px)); box-shadow: 12px 0 30px rgba(0, 0, 0, .5); }
+      .pv-root .pv-pagebox span { display: none; }
+      .pv-root .pv-foot { height: 36px; }
+    }
+
     /* ---------- Mobile: touch-first reflow for the todo list ---------- */
     /* Placed after every base .todo-* rule above so these overrides always
        win the cascade tie (equal specificity, later source order) rather
@@ -1714,7 +1972,7 @@
         grid-template-columns: auto auto 1fr auto;
         grid-template-areas:
           "check tag text del"
-          "goal goal goal focus";
+          "goal goal res focus";
         row-gap: 10px;
         padding: 12px 12px 12px 16px;
       }
@@ -1724,6 +1982,8 @@
       .todo-delete { grid-area: del; justify-self: end; width: 34px; height: 34px; }
       .todo-goal-btn { grid-area: goal; justify-self: start; height: 32px; font-size: 12px; }
       .todo-focus-btn { grid-area: focus; justify-self: end; width: 34px; height: 34px; }
+      .todo-res-btn { grid-area: res; justify-self: end; width: 34px; height: 34px; }
+      .todo-res-btn svg { width: 15px; height: 15px; }
       .todo-meta-row { padding-left: 0; }
 
       .todo-goal-popover {
@@ -3577,6 +3837,199 @@
     .music-now-playing-sub { font-size: 11px; color: rgba(255,255,255,.78); }
     .music-open-hint { font-size: 10px; color: rgba(255,255,255,.62); }
 
+    /* ================= Mock tests (redesign) ================= */
+    :root { --mt-ease: cubic-bezier(.22, 1, .36, 1); }
+
+    /* round icon buttons in the top bar */
+    .mock-circle-btn { position: relative; overflow: visible; border-radius: 50% !important; width: 38px; min-height: 38px; height: 38px; flex: none; transition: transform 260ms var(--mt-ease), background 200ms ease, box-shadow 260ms var(--mt-ease), color 200ms ease; }
+    .mock-circle-btn svg { width: 18px; height: 18px; transition: transform 320ms var(--mt-ease); }
+    .mock-circle-btn:hover { background: var(--green-2); transform: translateY(-2px); box-shadow: 0 8px 18px color-mix(in srgb, var(--green) 24%, transparent); }
+    .mock-circle-btn:hover svg { transform: scale(1.12); }
+    .mock-circle-btn:active { transform: scale(.94); }
+    #fullscreenBtn.is-on { background: var(--green); color: #fff; }
+    .mock-circle-badge { position: absolute; top: -4px; right: -4px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--green); color: #fff; font-size: 10px; font-weight: 800; line-height: 17px; text-align: center; box-shadow: 0 0 0 2px var(--panel); animation: mtBadge 420ms var(--mt-ease); }
+    .mock-circle-badge[hidden] { display: none; }
+    @keyframes mtBadge { from { transform: scale(0); } to { transform: scale(1); } }
+
+    /* dialog shell */
+    .mt-dialog { width: min(640px, calc(100% - 24px)); max-height: calc(100dvh - 24px); padding: 0; border: 1px solid var(--line); border-radius: 24px; background: var(--panel); color: var(--ink); box-shadow: 0 32px 90px rgba(0, 0, 0, .34); overflow: hidden; }
+    .mt-dialog[open] { display: flex; flex-direction: column; animation: mtIn 360ms var(--mt-ease) both; }
+    .mt-dialog[open]::backdrop { background: rgba(6, 12, 9, .58); backdrop-filter: blur(8px); animation: mtFade 300ms ease both; }
+    .mt-dialog.is-closing { animation: mtOut 190ms cubic-bezier(.4, 0, 1, 1) both !important; }
+    .mt-dialog.is-closing::backdrop { animation: mtFadeOut 190ms ease both; }
+    @keyframes mtIn { from { opacity: 0; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: none; } }
+    @keyframes mtOut { to { opacity: 0; transform: translateY(8px) scale(.99); } }
+    @keyframes mtFade { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes mtFadeOut { to { opacity: 0; } }
+
+    .mt-head { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px 16px 22px; border-bottom: 1px solid var(--line); }
+    .mt-head-l { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .mt-head-icon { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; color: var(--green); background: color-mix(in srgb, var(--green) 13%, transparent); }
+    .mt-head-icon svg { width: 20px; height: 20px; }
+    .mt-eyebrow { display: block; font-size: 10.5px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+    .mt-head h2 { margin: 1px 0 0; font-size: 20px; line-height: 1.15; font-weight: 800; letter-spacing: -.01em; }
+    .mt-close { width: 36px; height: 36px; flex: none; border-radius: 50%; display: grid; place-items: center; color: var(--muted); background: color-mix(in srgb, var(--ink) 6%, transparent); transition: transform 300ms var(--mt-ease), background 180ms ease, color 180ms ease; }
+    .mt-close svg { width: 16px; height: 16px; }
+    .mt-close:hover { transform: rotate(90deg); background: color-mix(in srgb, var(--ink) 12%, transparent); color: var(--ink); }
+
+    .mt-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: grid; gap: 18px; align-content: start; padding: 20px 22px 24px; }
+    .mt-body::-webkit-scrollbar { width: 8px; }
+    .mt-body::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--ink) 18%, transparent); border-radius: 8px; }
+    .mt-dialog[open] .mt-body > * { animation: mtRise 520ms var(--mt-ease) both; }
+    .mt-dialog[open] .mt-body > :nth-child(2) { animation-delay: 70ms; }
+    .mt-dialog[open] .mt-body > :nth-child(3) { animation-delay: 140ms; }
+    .mt-dialog[open] .mt-body > :nth-child(4) { animation-delay: 210ms; }
+    @keyframes mtRise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+    /* hero: ring + stats */
+    .mt-hero { --tier: #22a06b; display: grid; grid-template-columns: 132px minmax(0, 1fr); align-items: center; gap: 24px; padding: 18px 22px; border-radius: 22px; border: 1px solid color-mix(in srgb, var(--tier) 22%, var(--line)); background: linear-gradient(135deg, color-mix(in srgb, var(--tier) 11%, var(--panel)), color-mix(in srgb, var(--tier) 3%, var(--panel))); transition: border-color 500ms ease, background 500ms ease; }
+    .mt-hero.hidden { display: none; }
+    .mt-hero[data-tier="tier-mid"] { --tier: #e0a100; }
+    .mt-hero[data-tier="tier-lo"] { --tier: #e0483e; }
+    .mt-ring { position: relative; width: 132px; height: 132px; }
+    .mt-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .mt-ring-track { fill: none; stroke: color-mix(in srgb, var(--ink) 9%, transparent); stroke-width: 9; }
+    .mt-ring-arc { fill: none; stroke: var(--tier); stroke-width: 9; stroke-linecap: round; transition: stroke-dashoffset 1.1s .12s var(--mt-ease), stroke 500ms ease; filter: drop-shadow(0 0 6px color-mix(in srgb, var(--tier) 40%, transparent)); }
+    .mt-ring-center { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+    .mt-ring-center b { font-size: 30px; line-height: 1; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+    .mt-ring-center span { margin-top: 5px; font-size: 10.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+    .mt-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .mt-stat { display: grid; gap: 3px; padding: 2px 0 2px 18px; border-left: 1px solid color-mix(in srgb, var(--ink) 10%, transparent); }
+    .mt-stat:first-child { padding-left: 0; border-left: 0; }
+    .mt-stat-label { font-size: 10.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+    .mt-stat b { font-size: 32px; line-height: 1.05; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+    .mt-stat small { font-size: 12px; font-weight: 600; color: var(--muted); }
+    .mt-stat-best b { color: #d99a00; }
+
+    /* log form */
+    .mt-form { display: grid; gap: 12px; padding: 16px 18px 18px; border: 1px solid var(--line); border-radius: 22px; background: color-mix(in srgb, var(--ink) 2.5%, var(--panel)); }
+    .mt-form-title, .mt-history-head, .mt-trend-title { font-size: 10.5px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+    .mt-score-row { display: flex; gap: 12px; align-items: stretch; }
+    .mt-score-field { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 8px; height: 58px; padding: 0 12px 0 20px; border: 1.5px solid var(--line); border-radius: 18px; background: var(--panel); transition: border-color 180ms ease, box-shadow 260ms var(--mt-ease); }
+    .mt-score-field:focus-within { border-color: var(--green); box-shadow: 0 0 0 4px color-mix(in srgb, var(--green) 16%, transparent); }
+    .mt-dialog .mt-score-field input { width: auto; min-width: 0; height: 100%; padding: 0 !important; border: 0 !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; outline: none !important; color: var(--ink); font-size: 24px; font-weight: 800; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+    .mt-dialog .mt-score-field input:first-child { flex: 1 1 auto; }
+    .mt-dialog .mt-score-field input.mt-total { flex: 0 0 56px; width: 56px; font-size: 18px; font-weight: 700; color: var(--muted); }
+    .mt-dialog .mt-score-field input::placeholder { color: color-mix(in srgb, var(--muted) 70%, transparent); font-weight: 600; }
+    .mt-slash { font-size: 22px; font-weight: 500; color: color-mix(in srgb, var(--muted) 75%, transparent); }
+    .mt-live { flex: none; min-width: 54px; padding: 5px 10px; border-radius: 999px; text-align: center; font-size: 13px; font-weight: 800; color: var(--green); background: color-mix(in srgb, var(--green) 13%, transparent); opacity: 0; transform: scale(.85); transition: opacity 180ms ease, transform 260ms var(--mt-ease), color 200ms ease, background 200ms ease; }
+    .mt-live.is-on { opacity: 1; transform: none; }
+    .mt-live.tier-mid { color: #b98200; background: rgba(224, 161, 0, .16); }
+    .mt-live.tier-lo { color: #e0483e; background: rgba(224, 72, 62, .14); }
+    .mt-add { flex: none; height: 58px; padding: 0 28px; border-radius: 18px; font-size: 15px; font-weight: 800; letter-spacing: .01em; color: #fff; background: var(--green); box-shadow: 0 8px 20px color-mix(in srgb, var(--green) 32%, transparent), inset 0 1px 0 rgba(255, 255, 255, .18); transition: transform 220ms var(--mt-ease), box-shadow 260ms var(--mt-ease), background 260ms ease, filter 200ms ease; }
+    .mt-add:hover { transform: translateY(-2px); box-shadow: 0 12px 26px color-mix(in srgb, var(--green) 40%, transparent), inset 0 1px 0 rgba(255, 255, 255, .22); filter: brightness(1.06); }
+    .mt-add:active { transform: scale(.97); }
+    .mt-add.is-saved { background: #1e9b62; animation: mtSaved 480ms var(--mt-ease); }
+    @keyframes mtSaved { 0% { transform: scale(.96); } 50% { transform: scale(1.025); } 100% { transform: scale(1); } }
+    .mt-meta-row { display: grid; grid-template-columns: minmax(0, 1fr) 200px; gap: 10px; }
+    .mt-dialog .mt-meta-row input { width: 100%; height: 46px; padding: 0 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); color: var(--ink); font-size: 14px; font-weight: 600; transition: border-color 180ms ease, box-shadow 260ms var(--mt-ease); }
+    .mt-dialog .mt-meta-row input:focus { border-color: var(--green); box-shadow: 0 0 0 4px color-mix(in srgb, var(--green) 14%, transparent); }
+    .mt-msg { margin: -2px 0 0; font-size: 13px; font-weight: 700; color: #e0483e; }
+    .mt-msg:empty { display: none; }
+
+    /* trend chart */
+    .mt-trend { padding: 16px 18px 14px; border: 1px solid var(--line); border-radius: 22px; background: var(--panel); }
+    .mt-trend.hidden { display: none; }
+    .mt-trend-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+    .mt-delta { padding: 4px 11px; border-radius: 999px; font-size: 12px; font-weight: 800; color: var(--green); background: color-mix(in srgb, var(--green) 13%, transparent); }
+    .mt-delta.is-down { color: #e0483e; background: rgba(224, 72, 62, .13); }
+    .mt-chart { position: relative; touch-action: pan-y; cursor: crosshair; }
+    .mt-chart svg { display: block; overflow: visible; }
+    .mt-grid { stroke: color-mix(in srgb, var(--ink) 9%, transparent); stroke-dasharray: 2 5; }
+    .mt-axis { fill: var(--muted); font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .mt-area { fill: url(#mtFill); }
+    .mt-line { fill: none; stroke: var(--green); stroke-width: 2.75; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 0; }
+    .mt-dot { fill: var(--panel); stroke: var(--green); stroke-width: 2.25; transform-box: fill-box; transform-origin: center; }
+    .mt-dot.is-last { fill: var(--green); }
+    .mt-pulse { fill: var(--green); opacity: 0; transform-box: fill-box; transform-origin: center; animation: mtPulse 2.4s 1.5s ease-out infinite; }
+    .mt-guide { stroke: color-mix(in srgb, var(--green) 45%, transparent); stroke-width: 1.5; opacity: 0; transition: opacity 140ms ease; }
+    .mt-hover-dot { fill: var(--green); stroke: var(--panel); stroke-width: 3; opacity: 0; transition: opacity 140ms ease; }
+    .mt-chart.is-hover .mt-guide, .mt-chart.is-hover .mt-hover-dot { opacity: 1; }
+    .mt-trend.is-anim .mt-line { stroke-dashoffset: 1; animation: mtDraw 1.15s .3s var(--mt-ease) forwards; }
+    .mt-trend.is-anim .mt-area { opacity: 0; animation: mtFade 800ms .85s ease forwards; }
+    .mt-trend.is-anim .mt-dot { opacity: 0; animation: mtDot 420ms var(--mt-ease) forwards; animation-delay: calc(.35s + var(--i) * 50ms); }
+    @keyframes mtDraw { to { stroke-dashoffset: 0; } }
+    @keyframes mtDot { from { opacity: 0; transform: scale(.2); } to { opacity: 1; transform: scale(1); } }
+    @keyframes mtPulse { 0% { opacity: .4; transform: scale(1); } 100% { opacity: 0; transform: scale(3.4); } }
+    .mt-tip { position: absolute; z-index: 2; pointer-events: none; padding: 7px 11px; border-radius: 12px; font-size: 13px; line-height: 1.3; white-space: nowrap; color: var(--ink); background: var(--panel); border: 1px solid var(--line); box-shadow: 0 10px 26px rgba(0, 0, 0, .18); }
+    .mt-tip[hidden] { display: none; }
+    .mt-tip b { font-weight: 800; }
+    .mt-tip small { display: block; font-size: 11.5px; color: var(--muted); }
+    .mt-trend-foot { display: flex; justify-content: space-between; margin: 6px 0 0 38px; font-size: 11.5px; font-weight: 600; color: var(--muted); }
+
+    /* history */
+    .mt-history-head { display: flex; align-items: center; justify-content: space-between; margin: 2px 4px 6px; }
+    .mt-list { display: grid; gap: 2px; }
+    .mt-row { --tier: #22a06b; display: grid; grid-template-columns: 46px minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 9px 10px; border-radius: 16px; transition: background 180ms ease, height 260ms var(--mt-ease), opacity 220ms ease, transform 260ms var(--mt-ease), padding 260ms var(--mt-ease); }
+    .mt-row:hover { background: color-mix(in srgb, var(--ink) 4.5%, transparent); }
+    .mt-row.tier-mid { --tier: #e0a100; }
+    .mt-row.tier-lo { --tier: #e0483e; }
+    .mt-mini { position: relative; width: 46px; height: 46px; }
+    .mt-mini svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .mt-mini-track { fill: none; stroke: color-mix(in srgb, var(--tier) 16%, transparent); stroke-width: 4; }
+    .mt-mini-arc { fill: none; stroke: var(--tier); stroke-width: 4; stroke-linecap: round; stroke-dasharray: 113.1; }
+    .mt-mini b { position: absolute; inset: 0; display: grid; place-items: center; font-size: 12px; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .mt-row-main { min-width: 0; display: grid; gap: 2px; }
+    .mt-row-top { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+    .mt-row-score { flex: none; font-size: 18px; font-weight: 800; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+    .mt-row-score small { margin-left: 3px; font-size: 13px; font-weight: 600; color: var(--muted); }
+    .mt-crown { flex: none; align-self: center; width: 15px; height: 15px; color: #e0a100; }
+    .mt-row-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; font-weight: 600; color: var(--muted); }
+    .mt-row-date { font-size: 12px; font-weight: 500; color: var(--muted); }
+    .mt-del { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: var(--muted); opacity: 0; transform: scale(.85); transition: opacity 160ms ease, transform 260ms var(--mt-ease), background 160ms ease, color 160ms ease; }
+    .mt-del svg { width: 15px; height: 15px; }
+    .mt-row:hover .mt-del, .mt-del:focus-visible { opacity: 1; transform: none; }
+    .mt-del:hover { background: rgba(224, 72, 62, .14); color: #e0483e; }
+    @media (hover: none) { .mt-del { opacity: .65; transform: none; } }
+    .mt-row.mt-anim { animation: mtRow 520ms var(--mt-ease) both; animation-delay: calc(var(--i) * 45ms + .3s); }
+    .mt-row.mt-anim .mt-mini-arc, .mt-row.is-new .mt-mini-arc { animation: mtArc 900ms var(--mt-ease) both; animation-delay: calc(var(--i) * 45ms + .45s); }
+    .mt-row.is-new { animation: mtRowNew 700ms var(--mt-ease) both; }
+    .mt-row.is-new::before { content: ""; position: absolute; }
+    .mt-row.is-flash { animation: mtRowNew 700ms var(--mt-ease) both, mtFlash 1.6s ease-out; }
+    .mt-row.is-leaving { height: 0 !important; padding-top: 0; padding-bottom: 0; opacity: 0; transform: translateX(28px); overflow: hidden; pointer-events: none; }
+    @keyframes mtRow { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+    @keyframes mtRowNew { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
+    @keyframes mtFlash { 0% { background: color-mix(in srgb, var(--tier) 22%, transparent); } 100% { background: transparent; } }
+    @keyframes mtArc { from { stroke-dashoffset: 113.1; } }
+    .mt-empty { display: grid; justify-items: center; gap: 6px; padding: 30px 12px 26px; text-align: center; animation: mtRise 520ms var(--mt-ease) both; }
+    .mt-empty svg { width: 54px; height: 54px; color: color-mix(in srgb, var(--green) 60%, var(--muted)); animation: mtFloat 3s ease-in-out infinite; }
+    .mt-empty b { font-size: 16px; font-weight: 800; }
+    .mt-empty span { max-width: 300px; font-size: 13px; line-height: 1.45; color: var(--muted); }
+    @keyframes mtFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+    @media (max-width: 560px) {
+      .mt-body { padding: 16px 16px 20px; gap: 14px; }
+      .mt-hero { grid-template-columns: 1fr; justify-items: center; gap: 16px; padding: 18px 16px; }
+      .mt-stats { width: 100%; }
+      .mt-stat { padding-left: 12px; }
+      .mt-stat b { font-size: 26px; }
+      .mt-score-row { flex-direction: column; }
+      .mt-add { height: 52px; }
+      .mt-meta-row { grid-template-columns: 1fr; }
+      .mt-head { padding: 14px 16px; }
+    }
+    body:is(.theme-night, .night-override) .mt-add,
+    body:is(.theme-night, .night-override) .mock-circle-badge,
+    body:is(.theme-night, .night-override) #fullscreenBtn.is-on { color: #06210f; }
+    body:is(.theme-night, .night-override) .mt-live.tier-mid { color: #f5c542; }
+
+    /* PDF tool popover */
+    .pv-root .pv-tools:not([hidden]) { animation: pvPopIn 260ms cubic-bezier(.2,.9,.3,1.25) both; }
+    @keyframes pvPopIn { from { opacity: 0; transform: translateX(-50%) translateY(-10px) scale(.94); } to { opacity: 1; transform: translateX(-50%); } }
+    .pv-root .pv-seg button { transition: background 180ms ease, color 180ms ease, transform 160ms cubic-bezier(.2,.8,.3,1.3); }
+    .pv-root .pv-seg button:active { transform: scale(.93); }
+    .pv-root .pv-swatch { transition: transform 180ms cubic-bezier(.2,.8,.3,1.5), outline-color 160ms ease; }
+    .pv-root .pv-swatch:hover { transform: scale(1.18); }
+    .pv-root .pv-swatch.is-on { transform: scale(1.12); }
+    .pv-root .pv-seg button.pv-straight.is-on { background: linear-gradient(135deg, #2f6df0, #4d8dff); box-shadow: 0 0 14px rgba(77, 141, 255, .55); }
+    .pv-root .pv-seg button.pv-straight.is-on svg { animation: pvStraight 420ms cubic-bezier(.2,.8,.3,1.4); }
+    @keyframes pvStraight { from { transform: rotate(-30deg) scale(.7); } to { transform: none; } }
+
+    @media (prefers-reduced-motion: reduce) {
+      .mt-dialog, .mt-dialog *, .mt-dialog::backdrop, .mock-circle-btn, .mock-circle-badge, .pv-root .pv-tools { animation: none !important; transition: none !important; }
+      .mt-line { stroke-dashoffset: 0 !important; } .mt-area, .mt-dot { opacity: 1 !important; }
+    }
+
     .music-dialog {
       width: min(760px, calc(100% - 24px));
       border: 0;
@@ -4973,6 +5426,68 @@
     .profile-tools { grid-template-columns: auto; align-items:center; }
     .avatar-button { margin:0; width:44px; height:44px; }
     .partner-panel { padding:12px 14px; background: linear-gradient(160deg, var(--panel), var(--green-2)); }
+
+    /* ---------- Mock Tests panel ---------- */
+    .mock-panel { display: flex; flex-direction: column; gap: 10px; }
+    .mock-stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .mock-stats-row.hidden { display: none; }
+    .mock-stat { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border-radius: 12px; background: var(--green-2); text-align: center; }
+    .mock-stat-label { font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+    .mock-stat-value { font-size: 18px; font-weight: 900; color: var(--green); }
+    .mock-form { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .mock-dialog .mock-list { max-height: min(46vh, 380px); }
+    .mock-score-field { flex: 1; min-width: 0; }
+    .mock-form-sep { color: var(--muted); font-weight: 800; }
+    .mock-total-input { width: 58px; flex: none; padding: 10px 8px; text-align: center; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font-weight: 700; }
+    .mock-add-btn { flex: none; padding: 10px 16px; }
+    .mock-list { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; }
+    .mock-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); }
+    .mock-row.is-strong { border-color: color-mix(in srgb, var(--green) 45%, var(--line)); background: color-mix(in srgb, var(--green) 8%, var(--panel)); }
+    .mock-row-score { font-weight: 900; font-size: 15px; color: var(--ink); }
+    .mock-row-score small { font-weight: 700; color: var(--muted); font-size: 11px; }
+    .mock-row-date { flex: 1; min-width: 0; font-size: 11px; color: var(--muted); }
+    .mock-row-del { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: rgba(224,72,62,.12); color: #e0483e; }
+    .mock-row-del svg { width: 12px; height: 12px; }
+    .mock-row-del:hover { background: #e0483e; color: #fff; }
+    .mock-empty { padding: 6px 2px; font-size: 12px; color: var(--muted); }
+
+    /* ---------- Domino's pizza celebration (150+ in a mock) ---------- */
+    .pizza-celebration { width: min(1120px, 100%); margin: 0 auto; padding: 0 20px; overflow: visible; }
+    .pizza-celebration.hidden { display: none; }
+    .pizza-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-top: 14px;
+      padding: 14px 48px 14px 16px;
+      border-radius: 18px;
+      overflow: hidden;
+      background: linear-gradient(120deg, #e31837, #ff6b3d 55%, #ffb703);
+      box-shadow: 0 18px 40px rgba(227, 24, 55, .3);
+      animation: pizzaSlideIn 480ms cubic-bezier(.2, .9, .25, 1.3) both;
+    }
+    .pizza-emoji { flex: none; font-size: 40px; line-height: 1; animation: pizzaBounce 1100ms ease-in-out infinite; filter: drop-shadow(0 6px 8px rgba(0,0,0,.25)); }
+    .pizza-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; color: #fff; }
+    .pizza-copy strong { font-size: 16px; letter-spacing: -.2px; }
+    .pizza-copy span { font-size: 12.5px; font-weight: 600; color: rgba(255,255,255,.92); }
+    .pizza-order-btn { flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: 999px; background: #fff; color: #e31837; font-weight: 900; font-size: 13px; text-decoration: none; box-shadow: 0 6px 14px rgba(0,0,0,.18); transition: transform 160ms ease; }
+    .pizza-order-btn svg { width: 15px; height: 15px; }
+    .pizza-order-icon { font-size: 15px; line-height: 1; }
+    .pizza-order-btn:hover { transform: translateY(-2px) scale(1.03); }
+    .pizza-dismiss { position: absolute; top: 8px; right: 8px; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.22); color: #fff; }
+    .pizza-dismiss svg { width: 12px; height: 12px; }
+    .pizza-dismiss:hover { background: rgba(255,255,255,.38); }
+    .pizza-confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+    .pizza-confetti span { position: absolute; top: -12px; left: var(--x); width: 8px; height: 8px; background: var(--c); border-radius: 2px; opacity: .95; animation: pizzaConfettiFall var(--dur) linear var(--delay) both; }
+    @keyframes pizzaSlideIn { from { opacity: 0; transform: translateY(-16px) scale(.97); } to { opacity: 1; transform: none; } }
+    @keyframes pizzaBounce { 0%, 100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-10px) rotate(6deg); } }
+    @keyframes pizzaConfettiFall { 0% { transform: translateY(-20px) rotate(0deg); opacity: 1; } 100% { transform: translateY(160px) rotate(360deg); opacity: 0; } }
+    @media (max-width: 720px) {
+      .pizza-box { flex-wrap: wrap; padding: 14px 40px 14px 14px; }
+      .pizza-order-btn { order: 3; width: 100%; justify-content: center; }
+    }
+
     .compact-heading { margin-bottom:6px; }
     .compact-heading h2 { font-size:16px; }
     .live-dot { width:9px; height:9px; margin-top:6px; border-radius:50%; background:#29a766; box-shadow:0 0 0 5px rgba(41,167,102,.14); }
@@ -5579,6 +6094,13 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
             <span>Settings</span>
           </button>
+          <button id="fullscreenBtn" class="icon-btn mock-circle-btn" type="button" title="Full screen" aria-label="Full screen">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+          </button>
+          <button id="mockIconBtn" class="icon-btn mock-circle-btn" type="button" title="Mock test progress" aria-label="Mock test progress">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>
+            <span id="mockBadge" class="mock-circle-badge" hidden>0</span>
+          </button>
           <button id="logoutBtn" class="ghost-btn" type="button">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
             <span>Logout</span>
@@ -5586,6 +6108,24 @@
         </div>
       </div>
     </header>
+
+    <div id="pizzaCelebration" class="pizza-celebration hidden" role="status" aria-live="polite">
+      <div class="pizza-confetti" id="pizzaConfetti" aria-hidden="true"></div>
+      <div class="pizza-box">
+        <span class="pizza-emoji" aria-hidden="true">🍕</span>
+        <div class="pizza-copy">
+          <strong id="pizzaHeadline">150+ in your mock!</strong>
+          <span id="pizzaSubline">That score earned a treat. Go grab a pizza 🎉</span>
+        </div>
+        <a id="pizzaOrderBtn" class="pizza-order-btn" href="https://www.dominos.co.in/" target="_blank" rel="noopener">
+          <span class="pizza-order-icon" aria-hidden="true">🍕</span>
+          Order on Domino's
+        </a>
+        <button id="pizzaDismissBtn" class="pizza-dismiss" type="button" aria-label="Dismiss">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+    </div>
 
     <section class="layout">
       <div class="panel timer-panel">
@@ -5899,6 +6439,54 @@
 
       </aside>
     </section>
+
+    <dialog id="mockDialog" class="mt-dialog" aria-labelledby="mockDialogTitle">
+      <header class="mt-head">
+        <div class="mt-head-l">
+          <span class="mt-head-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></span>
+          <div><span class="mt-eyebrow">Progress</span><h2 id="mockDialogTitle">Mock Tests</h2></div>
+        </div>
+        <button id="mockDialogClose" class="mt-close" type="button" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      </header>
+      <div class="mt-body">
+        <section id="mockStatsRow" class="mt-hero hidden" data-tier="tier-hi">
+          <div class="mt-ring">
+            <svg viewBox="0 0 120 120" aria-hidden="true"><circle class="mt-ring-track" cx="60" cy="60" r="52"/><circle id="mockRingArc" class="mt-ring-arc" cx="60" cy="60" r="52"/></svg>
+            <div class="mt-ring-center"><b id="mockRingPct">0%</b><span>Latest</span></div>
+          </div>
+          <div class="mt-stats">
+            <div class="mt-stat mt-stat-best"><span class="mt-stat-label">Best</span><b id="mockBestStat">0</b><small id="mockBestSub"></small></div>
+            <div class="mt-stat"><span class="mt-stat-label">Average</span><b id="mockAvgStat">0</b><small id="mockAvgSub"></small></div>
+            <div class="mt-stat"><span class="mt-stat-label">Tests</span><b id="mockCountStat">0</b><small>logged</small></div>
+          </div>
+        </section>
+
+        <form id="mockForm" class="mt-form">
+          <div class="mt-form-title">Log a test</div>
+          <div class="mt-score-row">
+            <div class="mt-score-field">
+              <input id="mockScoreInput" type="number" inputmode="numeric" min="0" placeholder="Score" required aria-label="Your score" autocomplete="off">
+              <span class="mt-slash">/</span>
+              <input id="mockTotalInput" class="mt-total" type="number" inputmode="numeric" min="1" value="300" placeholder="Total" aria-label="Total marks" autocomplete="off">
+              <span id="mockLivePct" class="mt-live" aria-hidden="true"></span>
+            </div>
+            <button class="mt-add mock-add-btn" type="submit">Add score</button>
+          </div>
+          <div class="mt-meta-row">
+            <input id="mockNameInput" type="text" maxlength="30" placeholder="Test name (optional)" aria-label="Test name" autocomplete="off">
+            <input id="mockDateInput" type="date" aria-label="Test date">
+          </div>
+          <p id="mockError" class="mt-msg" aria-live="polite"></p>
+        </form>
+
+        <section id="mockTrend" class="mt-trend hidden"></section>
+
+        <section class="mt-history">
+          <div class="mt-history-head"><span>History</span><span id="mockHistCount"></span></div>
+          <div id="mockList" class="mt-list"></div>
+        </section>
+      </div>
+    </dialog>
 
     <dialog id="musicDialog" class="music-dialog" aria-labelledby="musicDialogTitle">
       <div class="music-dialog-head">
@@ -6309,6 +6897,7 @@
       dailyTotals: {},
       todos: [],
       activeTodoId: null,
+      mockTests: [],
       dDayName: "",
       dDayDate: ""
     });
@@ -6439,6 +7028,20 @@
     const ddayName = document.getElementById("ddayName");
     const ddayQuote = document.getElementById("ddayQuote");
     const ddayEditBtn = document.getElementById("ddayEditBtn");
+    const mockStatsRow = document.getElementById("mockStatsRow");
+    const mockBestStat = document.getElementById("mockBestStat");
+    const mockAvgStat = document.getElementById("mockAvgStat");
+    const mockCountStat = document.getElementById("mockCountStat");
+    const mockForm = document.getElementById("mockForm");
+    const mockScoreInput = document.getElementById("mockScoreInput");
+    const mockTotalInput = document.getElementById("mockTotalInput");
+    const mockErrorEl = document.getElementById("mockError");
+    const mockListEl = document.getElementById("mockList");
+    const pizzaCelebration = document.getElementById("pizzaCelebration");
+    const pizzaConfettiEl = document.getElementById("pizzaConfetti");
+    const pizzaHeadlineEl = document.getElementById("pizzaHeadline");
+    const pizzaSublineEl = document.getElementById("pizzaSubline");
+    const pizzaDismissBtn = document.getElementById("pizzaDismissBtn");
     const chatWidget = document.getElementById("chatWidget");
     const chatPanel = document.getElementById("chatPanel");
     const chatToggle = document.getElementById("chatToggle");
@@ -7117,6 +7720,20 @@
       };
     }
 
+    function normalizeMockTestList(raw) {
+      /* Firebase may hand back an array or an object keyed by index */
+      const list = Array.isArray(raw) ? raw : (raw && typeof raw === "object" ? Object.values(raw) : []);
+      return list
+        .filter((t) => t && Number.isFinite(Number(t.score)) && Number.isFinite(Number(t.total)) && Number(t.total) > 0)
+        .map((t, i) => ({
+          id: typeof t.id === "string" && t.id ? t.id : `mock_legacy_${i}`,
+          score: Number(t.score),
+          total: Number(t.total),
+          date: Number(t.date) || Date.now(),
+          ...(typeof t.name === "string" && t.name ? { name: t.name.slice(0, 30) } : {})
+        }));
+    }
+
     function normalizeRemoteState(remote) {
       const normalized = defaultState();
       normalized.day = remote?.day || todayKey();
@@ -7172,6 +7789,7 @@
           dailyTotals: normalizeDailyTotals(savedUser.dailyTotals),
           todos: normalizeTodos(savedUser.todos),
           activeTodoId: typeof savedUser.activeTodoId === "string" ? savedUser.activeTodoId : null,
+          mockTests: normalizeMockTestList(savedUser.mockTests),
           dDayName: typeof savedUser.dDayName === "string" ? savedUser.dDayName.slice(0, 40) : "",
           dDayDate: /^\d{4}-\d{2}-\d{2}$/.test(savedUser.dDayDate) ? savedUser.dDayDate : ""
         };
@@ -8988,6 +9606,7 @@
       renderTodos(user);
       renderPartner(partner);
       renderDday(user);
+      renderMockTests(user);
       renderChat();
       renderChatAttachment();
       renderNotificationButton();
@@ -9237,6 +9856,1963 @@
       }
     }
 
+    /* ---------- Task resources: PDF / image attachments ----------
+       Files live in this browser's IndexedDB (not in Firebase), so they stay
+       private and never bloat the synced todo data. */
+    const RES_DB_NAME = "duotrack-resources";
+    const RES_MAX_BYTES = 30 * 1024 * 1024;
+    const RES_ICON_CLIP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>';
+    const RES_ICON_UPLOAD = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg>';
+    const RES_ICON_PDF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5M9 14h6M9 17h4"/></svg>';
+    const RES_ICON_IMG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m21 16-5-5-8 8"/></svg>';
+    const RES_ICON_TRASH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>';
+    const RES_ICON_CLOSE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+
+    let resDbPromise = null;
+    let resCountsUser = null;
+    const resCounts = new Map();
+
+    function resOpenDb() {
+      if (resDbPromise) return resDbPromise;
+      resDbPromise = new Promise((resolve, reject) => {
+        if (!window.indexedDB) { reject(new Error("IndexedDB unavailable")); return; }
+        const req = indexedDB.open(RES_DB_NAME, 2);
+        req.onupgradeneeded = () => {
+          const db = req.result;
+          if (!db.objectStoreNames.contains("meta")) {
+            const meta = db.createObjectStore("meta", { keyPath: "id" });
+            meta.createIndex("owner", "owner", { unique: false });
+          }
+          if (!db.objectStoreNames.contains("blobs")) db.createObjectStore("blobs", { keyPath: "id" });
+          if (!db.objectStoreNames.contains("annots")) db.createObjectStore("annots", { keyPath: "id" });
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+      resDbPromise.catch(() => { resDbPromise = null; });
+      return resDbPromise;
+    }
+    function resReq(request) {
+      return new Promise((resolve, reject) => {
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+    function resTxDone(tx) {
+      return new Promise((resolve, reject) => {
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+        tx.onabort = () => reject(tx.error || new Error("Storage failed"));
+      });
+    }
+    async function resList(owner) {
+      const db = await resOpenDb();
+      const rows = await resReq(db.transaction("meta").objectStore("meta").index("owner").getAll(owner));
+      return rows.sort((a, b) => b.addedAt - a.addedAt);
+    }
+    async function resAdd(owner, file, kind) {
+      const db = await resOpenDb();
+      const id = `res_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+      const tx = db.transaction(["meta", "blobs"], "readwrite");
+      tx.objectStore("meta").put({ id, owner, kind, name: file.name || "Untitled", type: file.type || "", size: file.size, addedAt: Date.now() });
+      tx.objectStore("blobs").put({ id, blob: file });
+      await resTxDone(tx);
+      return id;
+    }
+    async function resGetBlob(id) {
+      const db = await resOpenDb();
+      const row = await resReq(db.transaction("blobs").objectStore("blobs").get(id));
+      return row ? row.blob : null;
+    }
+    async function resDelete(id) {
+      const db = await resOpenDb();
+      const tx = db.transaction(["meta", "blobs", "annots"], "readwrite");
+      tx.objectStore("meta").delete(id);
+      tx.objectStore("blobs").delete(id);
+      tx.objectStore("annots").delete(id);
+      await resTxDone(tx);
+    }
+    async function resDeleteOwner(owner) {
+      const rows = await resList(owner);
+      for (const row of rows) await resDelete(row.id);
+    }
+    function resKind(file) {
+      const type = (file.type || "").toLowerCase();
+      const name = (file.name || "").toLowerCase();
+      if (type === "application/pdf" || name.endsWith(".pdf")) return "pdf";
+      if (type.startsWith("image/")) return "image";
+      return null;
+    }
+    function resFormatSize(bytes) {
+      if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+      return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+    }
+    function resApplyBadge(btn, count) {
+      if (!btn) return;
+      btn.classList.toggle("has-res", count > 0);
+      let badge = btn.querySelector(".todo-res-count");
+      if (count > 0) {
+        if (!badge) {
+          badge = document.createElement("span");
+          badge.className = "todo-res-count";
+          btn.appendChild(badge);
+        }
+        badge.textContent = String(count);
+      } else if (badge) {
+        badge.remove();
+      }
+      btn.title = count > 0 ? `${count} resource${count === 1 ? "" : "s"} attached` : "Add resource (PDF / image)";
+      btn.setAttribute("aria-label", btn.title);
+    }
+    async function resRefreshCounts(userId) {
+      try {
+        const db = await resOpenDb();
+        const rows = await resReq(db.transaction("meta").objectStore("meta").getAll());
+        resCounts.clear();
+        rows.forEach((row) => {
+          if (row.owner.startsWith(`${userId}:`)) resCounts.set(row.owner, (resCounts.get(row.owner) || 0) + 1);
+        });
+        resCountsUser = userId;
+        todoList.querySelectorAll(".todo-item").forEach((li) => {
+          resApplyBadge(li.querySelector(".todo-res-btn"), resCounts.get(`${userId}:${li.dataset.todoId}`) || 0);
+        });
+      } catch (error) {
+        /* storage unavailable — badges just stay empty */
+      }
+    }
+
+    /* ---------- In-app document viewer: PDF reader + image viewer ----------
+       PDFs are rendered by pdf.js (loaded on demand) so zoom works the same on
+       every OS: touchpad pinch / Ctrl+scroll / Ctrl +/- / buttons / touch pinch. */
+    const PDFJS_VERSION = "3.11.174";
+    const PDFJS_BASE = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VERSION}/`;
+    const PV_CSS_UNITS = 96 / 72;
+    const PV_MIN_ZOOM = 25;
+    const PV_MAX_ZOOM = 500;
+    const PV_ZOOM_STEPS = [25, 33, 50, 67, 75, 90, 100, 110, 125, 150, 175, 200, 250, 300, 400, 500];
+    const PV_PREFS_KEY = "duotrack.pdfViewer.prefs";
+    const PV_COLORS = ["#e0483e", "#f5b301", "#22a06b", "#3b82f6", "#111111"];
+    const PV_PATHS = {
+      menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
+      doc: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
+      bookmark: '<path d="M6 3h12v18l-6-4-6 4Z"/>',
+      search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+      grid: '<rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/>',
+      gear: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+      minus: '<path d="M5 12h14"/>',
+      plus: '<path d="M12 5v14M5 12h14"/>',
+      fit: '<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>',
+      rotate: '<path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/>',
+      rotateL: '<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>',
+      text: '<path d="M4 7V5h10v2M9 5v14M7 19h4M14 11v-1h7v1M17.5 10v9M16 19h3"/>',
+      pen: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+      undo: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
+      redo: '<path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/>',
+      contrast: '<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18Z" fill="currentColor"/>',
+      download: '<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>',
+      print: '<path d="M7 9V3h10v6M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/><rect x="7" y="14" width="10" height="7" rx="1"/>',
+      kebab: '<circle cx="12" cy="5" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="19" r="1.6" fill="currentColor"/>',
+      chevDown: '<path d="m6 9 6 6 6-6"/>',
+      chevUp: '<path d="m6 15 6-6 6 6"/>',
+      close: '<path d="M6 6l12 12M18 6 6 18"/>',
+      fullscreen: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+      fitWidth: '<path d="M3 5v14M21 5v14M8 12h8M11 9l-3 3 3 3M13 9l3 3-3 3"/>',
+      actual: '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M10 9.5 12 8v8"/>',
+      present: '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M12 16v4M8 20h8M10.5 8.5l3.5 2-3.5 2Z"/>',
+      hand: '<path d="M18 11V6a2 2 0 0 0-4 0M14 10V4a2 2 0 0 0-4 0v2M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/>',
+      first: '<path d="M6 5v14M18 17l-6-6 6-6"/>',
+      last: '<path d="M18 5v14M6 7l6 6-6 6"/>',
+      trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>'
+    };
+    let pdfJsPromise = null;
+
+    function pvIcon(name) {
+      return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${PV_PATHS[name] || ""}</svg>`;
+    }
+    function pvSegDist(px, py, ax, ay, bx, by) {
+      const dx = bx - ax, dy = by - ay;
+      const len2 = dx * dx + dy * dy;
+      let t = len2 ? ((px - ax) * dx + (py - ay) * dy) / len2 : 0;
+      t = Math.max(0, Math.min(1, t));
+      return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+    }
+    function pvInvColor(c, hl) {
+      const m = /^#?([0-9a-f]{6})$/i.exec(c || "");
+      if (!m) return c;
+      const n = parseInt(m[1], 16);
+      let r = n >> 16, g = (n >> 8) & 255, bl = n & 255;
+      const lum = (0.299 * r + 0.587 * g + 0.114 * bl) / 255;
+      if (lum < 0.3) return "#f2f2f2";              /* black ink -> light ink on the dark page */
+      if (hl) return c;                              /* highlighter keeps its true hue */
+      const mix = (v) => Math.round(v + (255 - v) * 0.28); /* brighten ink so it pops on dark */
+      return "#" + [mix(r), mix(g), mix(bl)].map((v) => v.toString(16).padStart(2, "0")).join("");
+    }
+    function pvClamp(value, lo, hi) { return Math.min(hi, Math.max(lo, value)); }
+    function pvNextStep(pct, dir) {
+      if (dir > 0) return PV_ZOOM_STEPS.find((step) => step > pct + 0.5) || PV_MAX_ZOOM;
+      for (let i = PV_ZOOM_STEPS.length - 1; i >= 0; i -= 1) if (PV_ZOOM_STEPS[i] < pct - 0.5) return PV_ZOOM_STEPS[i];
+      return PV_MIN_ZOOM;
+    }
+    function pvPrefs() {
+      const defaults = { invert: false, fit: "width", pinch: 1 };
+      try {
+        const saved = JSON.parse(localStorage.getItem(PV_PREFS_KEY) || "{}");
+        return { ...defaults, ...saved };
+      } catch (error) {
+        return defaults;
+      }
+    }
+    function pvSavePrefs(prefs) {
+      try { localStorage.setItem(PV_PREFS_KEY, JSON.stringify(prefs)); } catch (error) { /* private mode */ }
+    }
+    /* page-space (unrotated, in PDF points) <-> displayed-space (after user rotation) */
+    function pvRot(rot, W, H, u, v) {
+      switch (rot) {
+        case 90: return [H - v, u];
+        case 180: return [W - u, H - v];
+        case 270: return [v, W - u];
+        default: return [u, v];
+      }
+    }
+    function pvUnrot(rot, W, H, x, y) {
+      switch (rot) {
+        case 90: return [y, H - x];
+        case 180: return [W - x, H - y];
+        case 270: return [W - y, x];
+        default: return [x, y];
+      }
+    }
+    function pvDrawItem(ctx, item, rot, W, H, k, inv) {
+      if (item.t === "r") {
+        const c = pvRot(rot, W, H, item.x, item.y);
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(c[0] * k, c[1] * k, item.r * k, 0, Math.PI * 2);
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = inv ? "#ffffff" : "#444444";
+        ctx.setLineDash([4, 3]);
+        ctx.stroke();
+        ctx.restore();
+      } else if (item.t === "s") {
+        const p = item.p;
+        if (!p || p.length < 4) return;
+        const pt = (i) => { const r = pvRot(rot, W, H, p[i], p[i + 1]); return [r[0] * k, r[1] * k]; };
+        ctx.save();
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.lineWidth = item.w * k;
+        ctx.strokeStyle = inv ? pvInvColor(item.c, item.k === "hl") : item.c;
+        ctx.globalAlpha = item.k === "hl" ? (inv ? 0.5 : 0.35) : 1;
+        ctx.beginPath();
+        const first = pt(0);
+        ctx.moveTo(first[0], first[1]);
+        if (p.length === 4) {
+          const second = pt(2);
+          ctx.lineTo(second[0], second[1]);
+        } else {
+          for (let i = 2; i < p.length - 2; i += 2) {
+            const c = pt(i);
+            const n = pt(i + 2);
+            ctx.quadraticCurveTo(c[0], c[1], (c[0] + n[0]) / 2, (c[1] + n[1]) / 2);
+          }
+          const last = pt(p.length - 2);
+          ctx.lineTo(last[0], last[1]);
+        }
+        ctx.stroke();
+        ctx.restore();
+      } else if (item.t === "x" && item.str) {
+        const r = pvRot(rot, W, H, item.x, item.y);
+        ctx.save();
+        ctx.font = `600 ${item.s * k}px system-ui, -apple-system, "Segoe UI", sans-serif`;
+        ctx.fillStyle = inv ? pvInvColor(item.c) : item.c;
+        ctx.textBaseline = "top";
+        ctx.fillText(item.str, r[0] * k, r[1] * k);
+        ctx.restore();
+      }
+    }
+
+    function loadPdfJs() {
+      if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+      if (pdfJsPromise) return pdfJsPromise;
+      pdfJsPromise = new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = `${PDFJS_BASE}pdf.min.js`;
+        script.async = true;
+        script.onload = () => {
+          if (!window.pdfjsLib) { reject(new Error("PDF engine missing")); return; }
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = `${PDFJS_BASE}pdf.worker.min.js`;
+          resolve(window.pdfjsLib);
+        };
+        script.onerror = () => reject(new Error("Couldn't load the PDF engine (offline?)"));
+        document.head.appendChild(script);
+      });
+      pdfJsPromise.catch(() => { pdfJsPromise = null; });
+      return pdfJsPromise;
+    }
+
+    async function resLoadAnnots(id) {
+      const db = await resOpenDb();
+      const row = await resReq(db.transaction("annots").objectStore("annots").get(id));
+      return row && row.data ? row.data : {};
+    }
+    async function resSaveAnnots(id, data) {
+      const db = await resOpenDb();
+      const tx = db.transaction("annots", "readwrite");
+      const total = Object.values(data).reduce((sum, list) => sum + list.length, 0);
+      if (total === 0) tx.objectStore("annots").delete(id);
+      else tx.objectStore("annots").put({ id, data });
+      await resTxDone(tx);
+    }
+
+    /* Zoom gestures shared by the PDF and image viewers. */
+    function pvAttachZoomInput(scroller, api) {
+      /* Touchpad pinch reaches the page as wheel + ctrlKey on Chrome/Firefox
+         (Linux, Windows, ChromeOS); a mouse wheel with Ctrl held does too. */
+      scroller.addEventListener("wheel", (event) => {
+        if (!(event.ctrlKey || event.metaKey)) return;
+        event.preventDefault();
+        const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? 100 : 1;
+        const dy = event.deltaY * unit;
+        const factor = Math.abs(dy) >= 50
+          ? (dy < 0 ? 1.12 : 1 / 1.12)
+          : Math.exp(-dy * 0.012 * api.speed());
+        api.zoomBy(factor, event.clientX, event.clientY);
+      }, { passive: false });
+
+      let pinch = null;
+      const span = (t) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+      scroller.addEventListener("touchstart", (event) => {
+        if (event.touches.length === 2) pinch = { d: span(event.touches) };
+      }, { passive: true });
+      scroller.addEventListener("touchmove", (event) => {
+        if (!pinch || event.touches.length !== 2) return;
+        event.preventDefault();
+        const d = span(event.touches);
+        const cx = (event.touches[0].clientX + event.touches[1].clientX) / 2;
+        const cy = (event.touches[0].clientY + event.touches[1].clientY) / 2;
+        if (pinch.d > 0 && d > 0) api.zoomBy(d / pinch.d, cx, cy);
+        pinch.d = d;
+      }, { passive: false });
+      const endPinch = (event) => { if (event.touches.length < 2) pinch = null; };
+      scroller.addEventListener("touchend", endPinch, { passive: true });
+      scroller.addEventListener("touchcancel", endPinch, { passive: true });
+
+      /* Safari trackpad pinch */
+      let gestureScale = 1;
+      scroller.addEventListener("gesturestart", (event) => { event.preventDefault(); gestureScale = 1; });
+      scroller.addEventListener("gesturechange", (event) => {
+        event.preventDefault();
+        const factor = event.scale / gestureScale;
+        gestureScale = event.scale;
+        api.zoomBy(factor, event.clientX, event.clientY);
+      });
+      scroller.addEventListener("gestureend", (event) => event.preventDefault());
+    }
+
+    /* Drag-to-scroll (hand tool, Space+drag, middle mouse). */
+    function pvAttachPan(scroller, isOn) {
+      let drag = null;
+      scroller.addEventListener("pointerdown", (event) => {
+        if (event.pointerType === "touch") return;
+        if (!(event.button === 1 || (event.button === 0 && isOn()))) return;
+        event.preventDefault();
+        drag = { id: event.pointerId, x: event.clientX, y: event.clientY, l: scroller.scrollLeft, t: scroller.scrollTop };
+        try { scroller.setPointerCapture(event.pointerId); } catch (error) { /* ignore */ }
+        scroller.classList.add("is-panning");
+      });
+      scroller.addEventListener("pointermove", (event) => {
+        if (!drag || event.pointerId !== drag.id) return;
+        scroller.scrollLeft = drag.l - (event.clientX - drag.x);
+        scroller.scrollTop = drag.t - (event.clientY - drag.y);
+      });
+      const stop = (event) => {
+        if (drag && event.pointerId === drag.id) { drag = null; scroller.classList.remove("is-panning"); }
+      };
+      scroller.addEventListener("pointerup", stop);
+      scroller.addEventListener("pointercancel", stop);
+    }
+
+    function pvItem(icon, label, key, act, extra) {
+      return `<button type="button" class="pv-item${extra ? " " + extra : ""}" role="menuitem" data-act="${act}">${pvIcon(icon)}<span>${label}</span>${key ? `<kbd>${key}</kbd>` : ""}</button>`;
+    }
+
+    async function openResourceViewer(record) {
+      let stored = null;
+      try { stored = await resGetBlob(record.id); } catch (error) { stored = null; }
+      if (!stored) return;
+      if (record.kind === "pdf") openPdfViewer(record, new Blob([stored], { type: "application/pdf" }));
+      else openImageViewer(record, stored);
+    }
+
+    function openPdfViewer(record, blob) {
+      const prefs = pvPrefs();
+      const S = {
+        pdf: null, n: 0, slots: [], zoom: 100, fit: prefs.fit === "100" ? null : (prefs.fit === "page" ? "page" : "width"),
+        rot: 0, cur: 1, invert: Boolean(prefs.invert), tool: "select", hand: false, space: false,
+        pen: { kind: "pen", color: PV_COLORS[0], size: 3, straight: false }, text: { color: PV_COLORS[4], size: 15 },
+        annots: {}, undo: [], redo: [], saveTimer: 0, textEdit: null,
+        query: "", hits: [], hitIdx: -1, hitsByPage: {}, texts: {}, searchToken: 0, reveal: false,
+        panel: null, present: false, prevFit: "width", zoomTimer: 0, destroyed: false, blobUrl: "", ready: false
+      };
+      let loadingTask = null;
+
+      const root = document.createElement("div");
+      root.className = `pv-root${S.invert ? " pv-invert" : ""}`;
+      root.dataset.tool = "select";
+      root.setAttribute("role", "dialog");
+      root.setAttribute("aria-modal", "true");
+      root.setAttribute("aria-label", record.name);
+      root.innerHTML = `
+        <header class="pv-top">
+          <button type="button" class="pv-btn" data-act="sidebar" title="Toggle sidebar" aria-label="Toggle sidebar">${pvIcon("menu")}</button>
+          <div class="pv-title" data-ref="title"></div>
+          <div class="pv-center">
+            <label class="pv-pagebox" title="Go to page">
+              <input class="pv-pageinput" data-ref="pageInput" inputmode="numeric" autocomplete="off" aria-label="Page number" value="1">
+              <span data-ref="pageTotal">/ 1</span>
+            </label>
+            <span class="pv-sep pv-hide-sm"></span>
+            <button type="button" class="pv-btn" data-act="zoomOut" title="Zoom out (Ctrl -)" aria-label="Zoom out">${pvIcon("minus")}</button>
+            <div class="pv-menuwrap">
+              <button type="button" class="pv-zoombtn" data-act="zoomMenu" aria-haspopup="true" title="Zoom"><span data-ref="zoomLabel">100%</span>${pvIcon("chevDown")}</button>
+              <div class="pv-menu pv-zoommenu" data-ref="zoomMenu" role="menu" hidden>
+                ${[50, 75, 100, 125, 150, 200, 300, 400].map((z) => `<button type="button" class="pv-item" role="menuitem" data-zoom="${z}"><span>${z}%</span></button>`).join("")}
+                <div class="pv-msep"></div>
+                ${pvItem("fitWidth", "Fit width", "Ctrl 1", "fitWidth")}
+                ${pvItem("fit", "Fit page", "Ctrl 0", "fitPage")}
+              </div>
+            </div>
+            <button type="button" class="pv-btn" data-act="zoomIn" title="Zoom in (Ctrl +)" aria-label="Zoom in">${pvIcon("plus")}</button>
+            <button type="button" class="pv-btn pv-fit pv-hide-sm" data-act="fitPage" title="Fit to screen (Ctrl 0)" aria-label="Fit to screen">${pvIcon("fit")}</button>
+            <button type="button" class="pv-btn pv-hide-sm" data-act="rotate" title="Rotate right (Ctrl .)" aria-label="Rotate right">${pvIcon("rotate")}</button>
+            <span class="pv-sep pv-hide-sm"></span>
+            <button type="button" class="pv-btn pv-hide-sm" data-act="toolText" title="Add text" aria-label="Add text">${pvIcon("text")}</button>
+            <button type="button" class="pv-btn pv-hide-sm" data-act="toolDraw" title="Draw / highlight / erase" aria-label="Draw or highlight">${pvIcon("pen")}</button>
+            <button type="button" class="pv-btn pv-hide-sm" data-act="undo" title="Undo (Ctrl Z)" aria-label="Undo" disabled>${pvIcon("undo")}</button>
+            <button type="button" class="pv-btn pv-hide-sm" data-act="redo" title="Redo (Ctrl Y)" aria-label="Redo" disabled>${pvIcon("redo")}</button>
+            <button type="button" class="pv-btn" data-act="fullscreen" title="Full screen (F)" aria-label="Full screen">${pvIcon("fullscreen")}</button>
+          </div>
+          <div class="pv-right">
+            <div class="pv-menuwrap">
+              <button type="button" class="pv-btn pv-viewbtn" data-act="viewMenu" aria-haspopup="true" title="View options" aria-label="View options">${pvIcon("contrast")}</button>
+              <div class="pv-menu pv-menu-right" data-ref="viewMenu" role="menu" hidden>
+                <div class="pv-mlabel">View Options</div>
+                ${pvItem("fullscreen", "Full Screen", "F", "fullscreen")}
+                ${pvItem("fit", "Fit to Screen", "Ctrl 0", "fitPage")}
+                ${pvItem("fitWidth", "Fit Width", "Ctrl 1", "fitWidth")}
+                ${pvItem("actual", "Actual Size", "Ctrl 2", "actual")}
+                <div class="pv-msep"></div>
+                ${pvItem("contrast", "Invert PDF", "I", "invert", "pv-invert-item")}
+                ${pvItem("rotateL", "Rotate Left", "Ctrl ,", "rotateL")}
+                ${pvItem("rotate", "Rotate Right", "Ctrl .", "rotate")}
+                <div class="pv-msep"></div>
+                ${pvItem("present", "Presentation Mode", "P", "presentation")}
+              </div>
+            </div>
+            <button type="button" class="pv-btn pv-hide-sm" data-act="download" title="Download" aria-label="Download">${pvIcon("download")}</button>
+            <button type="button" class="pv-btn pv-hide-sm" data-act="print" title="Print" aria-label="Print">${pvIcon("print")}</button>
+            <div class="pv-menuwrap">
+              <button type="button" class="pv-btn" data-act="moreMenu" aria-haspopup="true" title="More" aria-label="More">${pvIcon("kebab")}</button>
+              <div class="pv-menu pv-menu-right" data-ref="moreMenu" role="menu" hidden>
+                ${pvItem("text", "Add text", "", "toolText", "pv-only-sm")}
+                ${pvItem("pen", "Draw / highlight / erase", "", "toolDraw", "pv-only-sm")}
+                ${pvItem("undo", "Undo", "", "undo", "pv-only-sm")}
+                ${pvItem("redo", "Redo", "", "redo", "pv-only-sm")}
+                ${pvItem("download", "Download", "", "download", "pv-only-sm")}
+                ${pvItem("print", "Print", "", "print", "pv-only-sm")}
+                ${pvItem("hand", "Hand tool (drag to pan)", "H", "hand", "pv-hand-item")}
+                ${pvItem("first", "First page", "Home", "firstPage")}
+                ${pvItem("last", "Last page", "End", "lastPage")}
+                <div class="pv-msep"></div>
+                ${pvItem("trash", "Clear my annotations", "", "clearAnn")}
+              </div>
+            </div>
+            <button type="button" class="pv-btn pv-closebtn" data-act="close" title="Close (Esc)" aria-label="Close viewer">${pvIcon("close")}</button>
+          </div>
+        </header>
+        <div class="pv-tools" data-ref="toolPop" hidden></div>
+        <div class="pv-main">
+          <nav class="pv-rail" aria-label="Viewer sidebar">
+            <button type="button" class="pv-rbtn is-on" data-tab="doc" title="Document" aria-label="Document">${pvIcon("doc")}</button>
+            <button type="button" class="pv-rbtn" data-tab="bookmarks" title="Bookmarks" aria-label="Bookmarks">${pvIcon("bookmark")}</button>
+            <button type="button" class="pv-rbtn" data-tab="search" title="Search (Ctrl F)" aria-label="Search">${pvIcon("search")}</button>
+            <button type="button" class="pv-rbtn" data-tab="thumbs" title="Pages" aria-label="Pages">${pvIcon("grid")}</button>
+            <button type="button" class="pv-rbtn" data-tab="settings" title="Settings" aria-label="Settings">${pvIcon("gear")}</button>
+          </nav>
+          <aside class="pv-panel" data-ref="panel" hidden>
+            <section data-panel="bookmarks" hidden>
+              <h4>Bookmarks</h4>
+              <div data-ref="outline"></div>
+            </section>
+            <section data-panel="search" hidden>
+              <div class="pv-sticky">
+              <h4>Search</h4>
+              <div class="pv-searchbox">
+                <input class="pv-searchinput" data-ref="searchInput" type="search" placeholder="Find in document" aria-label="Find in document" autocomplete="off">
+                <button type="button" class="pv-btn pv-small" data-act="searchPrev" title="Previous match" aria-label="Previous match">${pvIcon("chevUp")}</button>
+                <button type="button" class="pv-btn pv-small" data-act="searchNext" title="Next match" aria-label="Next match">${pvIcon("chevDown")}</button>
+              </div>
+              <div class="pv-searchinfo" data-ref="searchInfo"></div>
+              </div>
+              <div data-ref="searchResults"></div>
+            </section>
+            <section data-panel="thumbs" hidden>
+              <h4>Pages</h4>
+              <div class="pv-thumbs" data-ref="thumbs"></div>
+            </section>
+            <section data-panel="settings" hidden>
+              <h4>Settings</h4>
+              <label class="pv-setrow"><span>Invert colours (dark reading)</span><input type="checkbox" class="pv-check" data-ref="setInvert"></label>
+              <label class="pv-setrow pv-setcol"><span>Open PDFs at</span>
+                <select class="pv-select" data-ref="setFit">
+                  <option value="width">Fit width</option>
+                  <option value="page">Fit page</option>
+                  <option value="100">Actual size (100%)</option>
+                </select>
+              </label>
+              <label class="pv-setrow pv-setcol"><span>Touchpad pinch speed <b data-ref="setPinchVal">1.0x</b></span>
+                <input type="range" class="pv-range" data-ref="setPinch" min="0.4" max="2.5" step="0.1">
+              </label>
+              <p class="pv-hint">Zoom: pinch on the touchpad, Ctrl + scroll, Ctrl + / -, or the buttons. Drag with the hand tool (H), Space, or the middle button to pan.</p>
+            </section>
+          </aside>
+          <div class="pv-scroller" data-ref="scroller" tabindex="0" aria-label="Document pages"><div class="pv-pages" data-ref="pages"></div></div>
+        </div>
+        <footer class="pv-foot">${pvIcon("doc")}<span data-ref="footName"></span><span class="pv-foot-page" data-ref="footPage">1 / 1</span></footer>
+        <div class="pv-loading" data-ref="loading"><div class="pv-spin"></div><span data-ref="loadingText">Opening…</span></div>`;
+
+      const ref = (name) => root.querySelector(`[data-ref="${name}"]`);
+      const scroller = ref("scroller");
+      const pagesEl = ref("pages");
+      const panelEl = ref("panel");
+      const pageInput = ref("pageInput");
+      const toolPop = ref("toolPop");
+      const railBtns = Array.from(root.querySelectorAll(".pv-rbtn"));
+      ref("title").textContent = record.name;
+      ref("footName").textContent = record.name;
+      document.body.appendChild(root);
+      scroller.focus({ preventScroll: true });
+
+      const scale = () => (S.zoom / 100) * PV_CSS_UNITS;
+      const focusScroller = () => { if (!S.destroyed) scroller.focus({ preventScroll: true }); };
+
+      /* ---------- layout ---------- */
+      function dimsOf(slot) {
+        const swap = S.rot % 180 !== 0;
+        const k = scale();
+        return { w: (swap ? slot.h0 : slot.w0) * k, h: (swap ? slot.w0 : slot.h0) * k };
+      }
+      function layoutSlot(slot) {
+        const d = dimsOf(slot);
+        slot.el.style.width = `${d.w}px`;
+        slot.el.style.height = `${d.h}px`;
+        if (slot.rendered && slot.rendered.rot === S.rot) {
+          const kk = scale() / slot.rendered.scale;
+          slot.inner.style.transform = Math.abs(kk - 1) < 1e-6 ? "" : `scale(${kk})`;
+        }
+      }
+      function layoutAll() { S.slots.forEach(layoutSlot); }
+      function keepPosition(fn) {
+        const slot = S.slots[S.cur - 1];
+        const before = slot ? slot.el.getBoundingClientRect().top : 0;
+        fn();
+        if (slot) scroller.scrollTop += slot.el.getBoundingClientRect().top - before;
+      }
+      function slotIndexAt(y) {
+        let lo = 0;
+        let hi = S.slots.length - 1;
+        while (lo < hi) {
+          const mid = (lo + hi + 1) >> 1;
+          if (S.slots[mid].el.offsetTop <= y) lo = mid; else hi = mid - 1;
+        }
+        return lo;
+      }
+      function anchorAt(cx, cy) {
+        const r = scroller.getBoundingClientRect();
+        const px = (cx === undefined ? r.left + r.width / 2 : cx) - r.left;
+        const py = (cy === undefined ? r.top + r.height / 2 : cy) - r.top;
+        const y = scroller.scrollTop + py;
+        const x = scroller.scrollLeft + px;
+        const slot = S.slots[slotIndexAt(y)];
+        return {
+          slot, px, py,
+          fx: (x - slot.el.offsetLeft) / (slot.el.offsetWidth || 1),
+          fy: (y - slot.el.offsetTop) / (slot.el.offsetHeight || 1)
+        };
+      }
+      function restoreAnchor(a) {
+        scroller.scrollTop = a.slot.el.offsetTop + a.fy * a.slot.el.offsetHeight - a.py;
+        scroller.scrollLeft = a.slot.el.offsetLeft + a.fx * a.slot.el.offsetWidth - a.px;
+      }
+      function measure(page) {
+        const vp = page.getViewport({ scale: 1, rotation: (page.rotate || 0) % 360 });
+        return { w: vp.width, h: vp.height };
+      }
+
+      /* ---------- rendering ---------- */
+      function makeSlot(num, w0, h0) {
+        const el = document.createElement("div");
+        el.className = "pv-page";
+        el.dataset.page = String(num);
+        const inner = document.createElement("div");
+        inner.className = "pv-inner";
+        const canvas = document.createElement("canvas");
+        canvas.className = "pv-canvas";
+        const text = document.createElement("div");
+        text.className = "pv-text";
+        const ann = document.createElement("canvas");
+        ann.className = "pv-ann";
+        inner.append(canvas, text, ann);
+        el.appendChild(inner);
+        const slot = { num, el, inner, canvas, text, ann, w0, h0, page: null, tc: null, rendered: null, token: 0, task: null, textTask: null, visible: false, textDivs: [], textStr: [] };
+        ann.addEventListener("pointerdown", (event) => {
+          if (S.tool === "draw") startStroke(slot, event);
+          else if (S.tool === "text") startText(slot, event);
+        });
+        return slot;
+      }
+      function releaseSlot(slot) {
+        slot.token += 1;
+        if (slot.task) { try { slot.task.cancel(); } catch (error) { /* ignore */ } slot.task = null; }
+        if (slot.textTask) { try { slot.textTask.cancel(); } catch (error) { /* ignore */ } slot.textTask = null; }
+        slot.canvas.width = 0;
+        slot.canvas.height = 0;
+        slot.ann.width = 0;
+        slot.ann.height = 0;
+        slot.text.replaceChildren();
+        slot.textDivs = [];
+        slot.textStr = [];
+        slot.rendered = null;
+        slot.inner.style.transform = "";
+        slot.inner.style.width = "";
+        slot.inner.style.height = "";
+      }
+      async function renderSlot(slot) {
+        if (S.destroyed) return;
+        const token = slot.token + 1;
+        slot.token = token;
+        try {
+          if (!slot.page) slot.page = await S.pdf.getPage(slot.num);
+          if (token !== slot.token || S.destroyed) return;
+          const k = scale();
+          const viewport = slot.page.getViewport({ scale: k, rotation: ((slot.page.rotate || 0) + S.rot) % 360 });
+          let os = Math.min(window.devicePixelRatio || 1, 3);
+          const maxArea = 16777216;
+          if (viewport.width * viewport.height * os * os > maxArea) os = Math.sqrt(maxArea / (viewport.width * viewport.height));
+          const off = document.createElement("canvas");
+          off.width = Math.max(1, Math.floor(viewport.width * os));
+          off.height = Math.max(1, Math.floor(viewport.height * os));
+          const ctx = off.getContext("2d", { alpha: false });
+          ctx.fillStyle = "#fff";
+          ctx.fillRect(0, 0, off.width, off.height);
+          if (slot.task) { try { slot.task.cancel(); } catch (error) { /* ignore */ } }
+          const task = slot.page.render({ canvasContext: ctx, viewport, transform: os === 1 ? null : [os, 0, 0, os, 0, 0] });
+          slot.task = task;
+          await task.promise;
+          if (token !== slot.token || S.destroyed) return;
+          slot.task = null;
+          off.className = "pv-canvas";
+          off.style.width = `${viewport.width}px`;
+          off.style.height = `${viewport.height}px`;
+          slot.canvas.replaceWith(off);
+          slot.canvas = off;
+          slot.inner.style.width = `${viewport.width}px`;
+          slot.inner.style.height = `${viewport.height}px`;
+          slot.inner.style.transform = "";
+          slot.rendered = { scale: k, rot: S.rot, w: viewport.width, h: viewport.height, os };
+          slot.ann.width = off.width;
+          slot.ann.height = off.height;
+          slot.ann.style.width = `${viewport.width}px`;
+          slot.ann.style.height = `${viewport.height}px`;
+          drawAnnots(slot);
+          layoutSlot(slot);
+          await renderText(slot, viewport, token);
+        } catch (error) {
+          if (!error || error.name !== "RenderingCancelledException") console.warn("PDF page render failed", slot.num, error);
+        }
+      }
+      async function renderText(slot, viewport, token) {
+        if (!slot.tc) slot.tc = await slot.page.getTextContent();
+        if (token !== slot.token || S.destroyed) return;
+        slot.text.replaceChildren();
+        slot.text.style.width = `${viewport.width}px`;
+        slot.text.style.height = `${viewport.height}px`;
+        slot.text.style.setProperty("--scale-factor", String(viewport.scale));
+        slot.textDivs = [];
+        slot.textStr = [];
+        const task = window.pdfjsLib.renderTextLayer({ textContentSource: slot.tc, container: slot.text, viewport, textDivs: slot.textDivs, textContentItemsStr: slot.textStr });
+        slot.textTask = task;
+        await task.promise;
+        if (token !== slot.token || S.destroyed) return;
+        slot.textTask = null;
+        applyHighlights(slot);
+        if (S.reveal && S.hits[S.hitIdx] && S.hits[S.hitIdx].page === slot.num) revealHit();
+      }
+      function ensure(slot) {
+        if (!slot.rendered || slot.rendered.rot !== S.rot) { renderSlot(slot); return; }
+        if (!S.zoomTimer && slot.rendered.scale !== scale()) renderSlot(slot);
+      }
+      function scheduleRerender() {
+        clearTimeout(S.zoomTimer);
+        S.zoomTimer = setTimeout(() => {
+          S.zoomTimer = 0;
+          S.slots.forEach((slot) => {
+            if (slot.visible) { if (!slot.rendered || slot.rendered.scale !== scale() || slot.rendered.rot !== S.rot) renderSlot(slot); }
+            else if (slot.rendered) releaseSlot(slot);
+          });
+        }, 150);
+      }
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          const slot = S.slots[Number(entry.target.dataset.page) - 1];
+          if (!slot) return;
+          slot.visible = entry.isIntersecting;
+          if (entry.isIntersecting) ensure(slot);
+          else if (slot.rendered) releaseSlot(slot);
+        });
+      }, { root: scroller, rootMargin: "700px 0px" });
+
+      /* ---------- zoom / fit / rotate / navigation ---------- */
+      function syncZoomUI() {
+        ref("zoomLabel").textContent = `${Math.round(S.zoom)}%`;
+        root.querySelectorAll('[data-act="fitPage"].pv-fit').forEach((b) => b.classList.toggle("is-on", S.fit === "page"));
+      }
+      function setZoom(pct, cx, cy, keepFit) {
+        pct = pvClamp(pct, PV_MIN_ZOOM, PV_MAX_ZOOM);
+        if (!keepFit) S.fit = null;
+        if (Math.abs(pct - S.zoom) < 0.01) { syncZoomUI(); return; }
+        const a = anchorAt(cx, cy);
+        S.zoom = pct;
+        layoutAll();
+        restoreAnchor(a);
+        syncZoomUI();
+        scheduleRerender();
+        updateCurrent();
+      }
+      function computeFit(mode) {
+        const slot = S.slots[S.cur - 1] || S.slots[0];
+        const swap = S.rot % 180 !== 0;
+        const w = swap ? slot.h0 : slot.w0;
+        const h = swap ? slot.w0 : slot.h0;
+        const availW = Math.max(60, scroller.clientWidth - 32);
+        const availH = Math.max(60, scroller.clientHeight - 32);
+        const s = mode === "width" ? availW / w : Math.min(availW / w, availH / h);
+        return pvClamp((s / PV_CSS_UNITS) * 100, PV_MIN_ZOOM, 400);
+      }
+      function applyFit(mode) {
+        const page = S.cur;
+        S.fit = mode;
+        setZoom(computeFit(mode), undefined, undefined, true);
+        goToPage(page);
+      }
+      function zoomStep(dir) { setZoom(pvNextStep(S.zoom, dir)); }
+      function rotate(delta) {
+        S.rot = (S.rot + delta + 360) % 360;
+        const page = S.cur;
+        S.slots.forEach((slot) => { releaseSlot(slot); });
+        layoutAll();
+        if (S.fit) setZoom(computeFit(S.fit), undefined, undefined, true);
+        goToPage(page);
+        S.slots.forEach((slot) => { if (slot.visible) renderSlot(slot); });
+        buildThumbs();
+      }
+      function goToPage(n) {
+        n = pvClamp(Math.round(Number(n)) || 1, 1, Math.max(1, S.n));
+        const slot = S.slots[n - 1];
+        if (!slot) return;
+        scroller.scrollTop = slot.el.offsetTop - 12;
+        if (scroller.scrollWidth > scroller.clientWidth + 1) {
+          scroller.scrollLeft = slot.el.offsetLeft + slot.el.offsetWidth / 2 - scroller.clientWidth / 2;
+        }
+        S.cur = n;
+        syncPageUI();
+      }
+      function syncPageUI() {
+        if (document.activeElement !== pageInput) pageInput.value = String(S.cur);
+        ref("pageTotal").textContent = `/ ${S.n}`;
+        ref("footPage").textContent = `${S.cur} / ${S.n}`;
+        root.querySelectorAll(".pv-thumb").forEach((t) => {
+          const on = Number(t.dataset.page) === S.cur;
+          if (on !== t.classList.contains("is-cur")) {
+            t.classList.toggle("is-cur", on);
+            if (on && S.panel === "thumbs") t.scrollIntoView({ block: "nearest" });
+          }
+        });
+      }
+      function updateCurrent() {
+        if (!S.slots.length) return;
+        const n = slotIndexAt(scroller.scrollTop + scroller.clientHeight * 0.4) + 1;
+        if (n !== S.cur) { S.cur = n; syncPageUI(); }
+      }
+      let scrollRaf = 0;
+      scroller.addEventListener("scroll", () => {
+        if (scrollRaf) return;
+        scrollRaf = requestAnimationFrame(() => { scrollRaf = 0; updateCurrent(); });
+      }, { passive: true });
+      pageInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") { goToPage(pageInput.value); pageInput.blur(); focusScroller(); }
+      });
+      pageInput.addEventListener("focus", () => pageInput.select());
+      pageInput.addEventListener("blur", () => { pageInput.value = String(S.cur); });
+
+      pvAttachZoomInput(scroller, {
+        zoomBy: (factor, cx, cy) => setZoom(S.zoom * factor, cx, cy),
+        speed: () => Number(prefs.pinch) || 1
+      });
+      pvAttachPan(scroller, () => S.hand || S.space);
+
+      let resizeRaf = 0;
+      const ro = new ResizeObserver(() => {
+        if (!S.ready || !S.fit) return;
+        cancelAnimationFrame(resizeRaf);
+        resizeRaf = requestAnimationFrame(() => {
+          if (S.destroyed || !S.fit) return;
+          const target = computeFit(S.fit);
+          if (Math.abs(target - S.zoom) > 0.4) applyFit(S.fit);
+        });
+      });
+      ro.observe(scroller);
+
+      /* ---------- annotations (pen / highlighter / text), saved per file ---------- */
+      function drawAnnots(slot, extra) {
+        if (!slot.rendered) return;
+        const ctx = slot.ann.getContext("2d");
+        ctx.clearRect(0, 0, slot.ann.width, slot.ann.height);
+        const k = slot.rendered.scale * slot.rendered.os;
+        (S.annots[slot.num] || []).forEach((item) => pvDrawItem(ctx, item, slot.rendered.rot, slot.w0, slot.h0, k, S.invert));
+        if (extra) pvDrawItem(ctx, extra, slot.rendered.rot, slot.w0, slot.h0, k, S.invert);
+      }
+      function toPage(slot, cx, cy) {
+        const r = slot.ann.getBoundingClientRect();
+        const swap = S.rot % 180 !== 0;
+        const x = ((cx - r.left) / (r.width || 1)) * (swap ? slot.h0 : slot.w0);
+        const y = ((cy - r.top) / (r.height || 1)) * (swap ? slot.w0 : slot.h0);
+        return pvUnrot(S.rot, slot.w0, slot.h0, x, y);
+      }
+      function syncUndoUI() {
+        root.querySelectorAll('[data-act="undo"]').forEach((b) => { b.disabled = S.undo.length === 0; });
+        root.querySelectorAll('[data-act="redo"]').forEach((b) => { b.disabled = S.redo.length === 0; });
+      }
+      function scheduleSave() {
+        clearTimeout(S.saveTimer);
+        S.saveTimer = setTimeout(flushSave, 500);
+      }
+      function flushSave() {
+        clearTimeout(S.saveTimer);
+        S.saveTimer = 0;
+        resSaveAnnots(record.id, S.annots).catch(() => {});
+      }
+      function afterAnnotChange(pageNum) {
+        const slot = S.slots[pageNum - 1];
+        if (slot) drawAnnots(slot);
+        syncUndoUI();
+        scheduleSave();
+      }
+      function pushAnnot(pageNum, item) {
+        (S.annots[pageNum] = S.annots[pageNum] || []).push(item);
+        S.undo.push({ page: pageNum, item });
+        S.redo.length = 0;
+        afterAnnotChange(pageNum);
+      }
+      function undoAnnot() {
+        finishText(true);
+        const a = S.undo.pop();
+        if (!a) return;
+        const list = (S.annots[a.page] = S.annots[a.page] || []);
+        if (a.del) a.items.forEach((it) => list.push(it));
+        else { const i = list.indexOf(a.item); if (i >= 0) list.splice(i, 1); }
+        S.redo.push(a);
+        afterAnnotChange(a.page);
+      }
+      function redoAnnot() {
+        const a = S.redo.pop();
+        if (!a) return;
+        const list = (S.annots[a.page] = S.annots[a.page] || []);
+        if (a.del) a.items.forEach((it) => { const i = list.indexOf(it); if (i >= 0) list.splice(i, 1); });
+        else list.push(a.item);
+        S.undo.push(a);
+        afterAnnotChange(a.page);
+      }
+      function clearAnnots() {
+        const total = Object.values(S.annots).reduce((sum, list) => sum + list.length, 0);
+        if (!total) return;
+        if (!window.confirm("Remove all your drawings and text notes from this PDF?")) return;
+        const pages = Object.keys(S.annots).map(Number);
+        S.annots = {};
+        S.undo.length = 0;
+        S.redo.length = 0;
+        pages.forEach((p) => { const slot = S.slots[p - 1]; if (slot) drawAnnots(slot); });
+        syncUndoUI();
+        flushSave();
+      }
+      function eraseAt(slot, u, v, r, hit) {
+        const list = S.annots[slot.num];
+        if (!list || !list.length) return;
+        for (let i = list.length - 1; i >= 0; i -= 1) {
+          const it = list[i];
+          let touched = false;
+          if (it.t === "s" && it.p) {
+            const reach = it.w / 2 + r;
+            const p = it.p;
+            for (let j = 0; j + 3 < p.length && !touched; j += 2) touched = pvSegDist(u, v, p[j], p[j + 1], p[j + 2], p[j + 3]) <= reach;
+          } else if (it.t === "x" && it.str) {
+            const w = it.str.length * it.s * 0.6;
+            touched = u >= it.x - r && u <= it.x + w + r && v >= it.y - r && v <= it.y + it.s * 1.2 + r;
+          }
+          if (touched) { list.splice(i, 1); hit.push(it); }
+        }
+      }
+      function startStroke(slot, event) {
+        if (event.button !== 0 || !slot.rendered) return;
+        event.preventDefault();
+        finishText(true);
+        try { slot.ann.setPointerCapture(event.pointerId); } catch (error) { /* ignore */ }
+        let finished = false;
+        const listen = (move, up) => {
+          const onMove = (e) => {
+            if (e.pointerId !== event.pointerId) return;
+            /* left button no longer held -> stop immediately */
+            if (e.pointerType === "mouse" && !(e.buttons & 1)) { end(e); return; }
+            move(e);
+          };
+          const end = (e) => {
+            if (finished || (e && e.pointerId !== event.pointerId)) return;
+            finished = true;
+            slot.ann.removeEventListener("pointermove", onMove);
+            slot.ann.removeEventListener("pointerup", end);
+            slot.ann.removeEventListener("pointercancel", end);
+            slot.ann.removeEventListener("lostpointercapture", end);
+            window.removeEventListener("pointerup", end);
+            window.removeEventListener("blur", end);
+            try { slot.ann.releasePointerCapture(event.pointerId); } catch (error) { /* ignore */ }
+            up();
+          };
+          slot.ann.addEventListener("pointermove", onMove);
+          slot.ann.addEventListener("pointerup", end);
+          slot.ann.addEventListener("pointercancel", end);
+          slot.ann.addEventListener("lostpointercapture", end);
+          window.addEventListener("pointerup", end);
+          window.addEventListener("blur", end);
+        };
+
+        /* ----- eraser: removes whole strokes / notes the cursor touches ----- */
+        if (S.pen.kind === "er") {
+          const r = S.pen.size;
+          const hit = [];
+          const at = (e) => {
+            const pt = toPage(slot, e.clientX, e.clientY);
+            eraseAt(slot, pt[0], pt[1], r, hit);
+            drawAnnots(slot, { t: "r", x: pt[0], y: pt[1], r });
+          };
+          at(event);
+          listen(at, () => {
+            if (hit.length) {
+              S.undo.push({ page: slot.num, items: hit, del: true });
+              S.redo.length = 0;
+              afterAnnotChange(slot.num);
+            } else drawAnnots(slot);
+          });
+          return;
+        }
+
+        const hl = S.pen.kind === "hl";
+        const item = { t: "s", k: S.pen.kind, c: S.pen.color, w: hl ? S.pen.size * 4 : S.pen.size, p: [] };
+        const start = toPage(slot, event.clientX, event.clientY);
+        const rnd = (n) => Math.round(n * 10) / 10;
+        const add = (e) => {
+          const pt = toPage(slot, e.clientX, e.clientY);
+          if (S.pen.straight || e.shiftKey) {
+            /* snap to a perfectly straight line (horizontal / vertical when close) in on-screen space */
+            const a = pvRot(S.rot, slot.w0, slot.h0, start[0], start[1]);
+            const b = pvRot(S.rot, slot.w0, slot.h0, pt[0], pt[1]);
+            let dx = b[0] - a[0];
+            let dy = b[1] - a[1];
+            const ang = Math.atan2(Math.abs(dy), Math.abs(dx));
+            if (ang < 0.17) dy = 0; else if (ang > 1.4) dx = 0;
+            const en = pvUnrot(S.rot, slot.w0, slot.h0, a[0] + dx, a[1] + dy);
+            item.p = [rnd(start[0]), rnd(start[1]), rnd(en[0]), rnd(en[1])];
+            return;
+          }
+          const p = item.p;
+          const lu = p[p.length - 2];
+          const lv = p[p.length - 1];
+          if (lu === undefined || Math.hypot(pt[0] - lu, pt[1] - lv) > 0.4) p.push(rnd(pt[0]), rnd(pt[1]));
+        };
+        let moved = false;
+        if (!hl) { add(event); drawAnnots(slot, item); }
+        listen((e) => {
+          /* highlighter: only paints while the left button is held down AND the pointer is moving */
+          if (hl && !moved) {
+            if (Math.hypot(e.clientX - event.clientX, e.clientY - event.clientY) < 3) return;
+            moved = true;
+            add(event);
+          }
+          moved = true;
+          add(e);
+          drawAnnots(slot, item);
+        }, () => {
+          if (hl) {
+            if (!moved || item.p.length < 4) { drawAnnots(slot); return; }
+          } else if (item.p.length === 2) item.p.push(item.p[0] + 0.05, item.p[1]);
+          pushAnnot(slot.num, item);
+        });
+      }
+      function finishText(save) {
+        const edit = S.textEdit;
+        if (!edit) return;
+        S.textEdit = null;
+        const str = edit.input.value.trim();
+        const connected = edit.input.isConnected;
+        if (connected) edit.input.remove();
+        if (save && str) pushAnnot(edit.slot.num, { t: "x", x: edit.u, y: edit.v, s: edit.size, c: edit.color, str: str.slice(0, 300) });
+      }
+      function startText(slot, event) {
+        if (event.button !== 0 || !slot.rendered) return;
+        event.preventDefault();
+        finishText(true);
+        const pt = toPage(slot, event.clientX, event.clientY);
+        const er = slot.el.getBoundingClientRect();
+        const input = document.createElement("input");
+        input.type = "text";
+        input.className = "pv-textinput";
+        input.maxLength = 300;
+        input.setAttribute("aria-label", "Text note");
+        input.style.left = `${event.clientX - er.left}px`;
+        input.style.top = `${event.clientY - er.top}px`;
+        input.style.fontSize = `${S.text.size * scale()}px`;
+        input.style.color = S.text.color;
+        slot.el.appendChild(input);
+        S.textEdit = { slot, input, u: pt[0], v: pt[1], size: S.text.size, color: S.text.color };
+        input.addEventListener("keydown", (e) => {
+          e.stopPropagation();
+          if (e.key === "Enter") finishText(true);
+          else if (e.key === "Escape") finishText(false);
+        });
+        input.addEventListener("blur", () => { if (S.textEdit && S.textEdit.input === input) finishText(true); });
+        input.focus();
+      }
+
+      /* ---------- tools popover ---------- */
+      function setTool(tool) {
+        if (S.tool === tool) tool = "select";
+        finishText(true);
+        S.tool = tool;
+        S.hand = false;
+        root.dataset.tool = tool;
+        root.querySelectorAll('[data-act="toolText"]').forEach((b) => b.classList.toggle("is-on", tool === "text"));
+        root.querySelectorAll('[data-act="toolDraw"]').forEach((b) => b.classList.toggle("is-on", tool === "draw"));
+        root.querySelectorAll(".pv-hand-item").forEach((b) => b.classList.remove("is-on"));
+        renderToolPop();
+      }
+      function toggleHand() {
+        const on = !S.hand;
+        if (S.tool !== "select") setTool("select");
+        S.hand = on;
+        root.dataset.tool = on ? "hand" : "select";
+        root.querySelectorAll(".pv-hand-item").forEach((b) => b.classList.toggle("is-on", on));
+      }
+      function renderToolPop() {
+        root.dataset.pen = S.pen.kind;
+        if (S.tool === "select") { toolPop.hidden = true; toolPop.innerHTML = ""; return; }
+        const draw = S.tool === "draw";
+        const eras = draw && S.pen.kind === "er";
+        const cfg = draw ? S.pen : S.text;
+        const sizes = eras ? [6, 12, 22] : (draw ? (S.pen.kind === "hl" ? [2, 4, 6] : [1.5, 3, 6]) : [11, 15, 22]);
+        const labels = draw ? ["Thin", "Medium", "Thick"] : ["Small", "Medium", "Large"];
+        toolPop.hidden = false;
+        toolPop.innerHTML = `
+          ${draw ? `<div class="pv-seg"><button type="button" data-pen="pen" class="${S.pen.kind === "pen" ? "is-on" : ""}">Pen</button><button type="button" data-pen="hl" class="${S.pen.kind === "hl" ? "is-on" : ""}">Highlighter</button><button type="button" data-pen="er" class="${eras ? "is-on" : ""}">Eraser</button></div>` : `<span class="pv-poplabel">Click on the page to type</span>`}
+          ${draw && !eras ? `<div class="pv-seg"><button type="button" data-straight="1" class="pv-straight${S.pen.straight ? " is-on" : ""}" title="Snap strokes to a straight line (or hold Shift)" aria-pressed="${S.pen.straight ? "true" : "false"}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 18 20 6"/><circle cx="4" cy="18" r="1.6"/><circle cx="20" cy="6" r="1.6"/></svg>Straight line</button></div>` : ""}
+          ${eras ? `<span class="pv-poplabel">Drag over drawings or notes to erase them</span>` : `<div class="pv-swatches">${PV_COLORS.map((c) => `<button type="button" class="pv-swatch${cfg.color === c ? " is-on" : ""}" data-color="${c}" style="--c:${S.invert ? pvInvColor(c, draw && S.pen.kind === "hl") : c}" aria-label="Colour ${c}"></button>`).join("")}</div>`}
+          <div class="pv-seg">${sizes.map((s, i) => `<button type="button" data-size="${s}" class="${cfg.size === s ? "is-on" : ""}">${labels[i]}</button>`).join("")}</div>`;
+      }
+      toolPop.addEventListener("click", (event) => {
+        const cfg = S.tool === "draw" ? S.pen : S.text;
+        const pen = event.target.closest("[data-pen]");
+        const color = event.target.closest("[data-color]");
+        const size = event.target.closest("[data-size]");
+        if (pen) {
+          S.pen.kind = pen.dataset.pen;
+          if (S.pen.kind === "er") S.pen.size = 12;
+          else {
+            S.pen.color = S.pen.kind === "hl" ? PV_COLORS[1] : PV_COLORS[0];
+            S.pen.size = S.pen.kind === "hl" ? 4 : 3;
+          }
+        }
+        if (event.target.closest("[data-straight]")) S.pen.straight = !S.pen.straight;
+        if (color) cfg.color = color.dataset.color;
+        if (size) cfg.size = Number(size.dataset.size);
+        renderToolPop();
+      });
+
+      /* ---------- search (results list + highlights in the text layer) ---------- */
+      async function pageStrings(n) {
+        if (S.texts[n]) return S.texts[n];
+        const page = await S.pdf.getPage(n);
+        const tc = await page.getTextContent();
+        S.texts[n] = tc.items.map((it) => (typeof it.str === "string" ? it.str : ""));
+        return S.texts[n];
+      }
+      function clearHighlights() {
+        S.slots.forEach((slot) => {
+          slot.textDivs.forEach((div, i) => {
+            if (div && div._hl) { div.textContent = slot.textStr[i]; div._hl = false; }
+          });
+        });
+      }
+      function applyHighlights(slot) {
+        slot.textDivs.forEach((div, i) => {
+          if (div && div._hl) { div.textContent = slot.textStr[i]; div._hl = false; }
+        });
+        if (!S.query) return;
+        const byItem = S.hitsByPage[slot.num];
+        if (!byItem) return;
+        byItem.forEach((list, i) => {
+          const div = slot.textDivs[i];
+          const str = slot.textStr[i];
+          if (!div || div.textContent !== str) return;
+          const frag = document.createDocumentFragment();
+          let pos = 0;
+          list.forEach((h) => {
+            if (h.start > pos) frag.appendChild(document.createTextNode(str.slice(pos, h.start)));
+            const mark = document.createElement("mark");
+            mark.className = `pv-hit${h.gi === S.hitIdx ? " cur" : ""}`;
+            mark.textContent = str.slice(h.start, h.start + h.len);
+            frag.appendChild(mark);
+            pos = h.start + h.len;
+          });
+          if (pos < str.length) frag.appendChild(document.createTextNode(str.slice(pos)));
+          div.replaceChildren(frag);
+          div._hl = true;
+        });
+      }
+      function revealHit() {
+        S.reveal = false;
+        const hit = S.hits[S.hitIdx];
+        if (!hit) return;
+        const slot = S.slots[hit.page - 1];
+        const mark = slot && slot.text.querySelector(".pv-hit.cur");
+        if (!mark) return;
+        const sr = scroller.getBoundingClientRect();
+        const mr = mark.getBoundingClientRect();
+        scroller.scrollTop += mr.top - sr.top - sr.height * 0.35;
+        if (mr.left < sr.left + 20 || mr.right > sr.right - 20) scroller.scrollLeft += mr.left - sr.left - sr.width * 0.3;
+      }
+      function updateSearchInfo(text) {
+        const info = ref("searchInfo");
+        if (text !== undefined) { info.textContent = text; return; }
+        if (!S.query) info.textContent = "";
+        else if (!S.hits.length) info.textContent = "No results";
+        else info.textContent = `${S.hitIdx + 1} of ${S.hits.length}${S.hits.length >= 1000 ? "+" : ""}`;
+      }
+      function renderHitList() {
+        const box = ref("searchResults");
+        box.replaceChildren();
+        S.hits.slice(0, 300).forEach((h, i) => {
+          const row = document.createElement("button");
+          row.type = "button";
+          row.className = "pv-hitrow";
+          row.dataset.hit = String(i);
+          const pg = document.createElement("span");
+          pg.className = "pv-hitpage";
+          pg.textContent = `p.${h.page}`;
+          const snip = document.createElement("span");
+          snip.className = "pv-hitsnip";
+          const from = Math.max(0, h.start - 24);
+          snip.append(document.createTextNode((from > 0 ? "…" : "") + h.str.slice(from, h.start)));
+          const b = document.createElement("b");
+          b.textContent = h.str.slice(h.start, h.start + h.len);
+          snip.append(b, document.createTextNode(h.str.slice(h.start + h.len, h.start + h.len + 40)));
+          row.append(pg, snip);
+          box.appendChild(row);
+        });
+      }
+      async function runSearch(raw) {
+        const token = S.searchToken + 1;
+        S.searchToken = token;
+        const query = raw.trim();
+        clearHighlights();
+        S.query = query;
+        S.hits = [];
+        S.hitsByPage = {};
+        S.hitIdx = -1;
+        ref("searchResults").replaceChildren();
+        if (!query) { updateSearchInfo(); return; }
+        updateSearchInfo("Searching…");
+        const needle = query.toLowerCase();
+        for (let n = 1; n <= S.n; n += 1) {
+          if (token !== S.searchToken || S.destroyed) return;
+          let strs;
+          try { strs = await pageStrings(n); } catch (error) { continue; }
+          strs.forEach((str, i) => {
+            if (!str) return;
+            const low = str.toLowerCase();
+            let from = 0;
+            let at = low.indexOf(needle, from);
+            while (at !== -1 && S.hits.length < 1000) {
+              const hit = { page: n, item: i, start: at, len: needle.length, str, gi: S.hits.length };
+              S.hits.push(hit);
+              const byItem = (S.hitsByPage[n] = S.hitsByPage[n] || new Map());
+              if (!byItem.has(i)) byItem.set(i, []);
+              byItem.get(i).push(hit);
+              from = at + needle.length;
+              at = low.indexOf(needle, from);
+            }
+          });
+          if (n % 6 === 0) updateSearchInfo(`Searching… ${n}/${S.n}`);
+        }
+        if (token !== S.searchToken) return;
+        renderHitList();
+        if (!S.hits.length) { updateSearchInfo(); return; }
+        const start = S.hits.findIndex((h) => h.page >= S.cur);
+        goHit(start === -1 ? 0 : start);
+      }
+      function goHit(i) {
+        if (!S.hits.length) return;
+        S.hitIdx = ((i % S.hits.length) + S.hits.length) % S.hits.length;
+        updateSearchInfo();
+        ref("searchResults").querySelectorAll(".pv-hitrow").forEach((row) => {
+          const on = Number(row.dataset.hit) === S.hitIdx;
+          row.classList.toggle("is-on", on);
+          if (on) row.scrollIntoView({ block: "nearest" });
+        });
+        S.slots.forEach((slot) => { if (slot.rendered) applyHighlights(slot); });
+        const hit = S.hits[S.hitIdx];
+        const slot = S.slots[hit.page - 1];
+        S.reveal = true;
+        goToPage(hit.page);
+        if (slot.rendered && slot.textDivs.length) revealHit();
+      }
+      const searchInput = ref("searchInput");
+      searchInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          if (searchInput.value.trim() !== S.query) runSearch(searchInput.value);
+          else if (S.hits.length) goHit(S.hitIdx + (event.shiftKey ? -1 : 1));
+        }
+      });
+      searchInput.addEventListener("input", () => {
+        clearTimeout(searchInput._t);
+        searchInput._t = setTimeout(() => runSearch(searchInput.value), 350);
+      });
+      ref("searchResults").addEventListener("click", (event) => {
+        const row = event.target.closest("[data-hit]");
+        if (row) goHit(Number(row.dataset.hit));
+      });
+
+      /* ---------- thumbnails + bookmarks ---------- */
+      let thumbIO = null;
+      function buildThumbs() {
+        const box = ref("thumbs");
+        if (thumbIO) thumbIO.disconnect();
+        box.replaceChildren();
+        if (!S.slots.length) return;
+        thumbIO = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting && !entry.target._done) { entry.target._done = true; renderThumb(entry.target); }
+          });
+        }, { root: panelEl, rootMargin: "300px 0px" });
+        S.slots.forEach((slot) => {
+          const swap = S.rot % 180 !== 0;
+          const w = 124;
+          const h = Math.round(w * ((swap ? slot.w0 : slot.h0) / (swap ? slot.h0 : slot.w0)));
+          const item = document.createElement("button");
+          item.type = "button";
+          item.className = `pv-thumb${slot.num === S.cur ? " is-cur" : ""}`;
+          item.dataset.page = String(slot.num);
+          item.setAttribute("aria-label", `Page ${slot.num}`);
+          const canvas = document.createElement("canvas");
+          canvas.style.width = `${w}px`;
+          canvas.style.height = `${h}px`;
+          const label = document.createElement("span");
+          label.textContent = String(slot.num);
+          item.append(canvas, label);
+          box.appendChild(item);
+          thumbIO.observe(item);
+        });
+      }
+      async function renderThumb(item) {
+        if (S.destroyed) return;
+        try {
+          const page = await S.pdf.getPage(Number(item.dataset.page));
+          const rot = ((page.rotate || 0) + S.rot) % 360;
+          const base = page.getViewport({ scale: 1, rotation: rot });
+          const k = 124 / base.width;
+          const vp = page.getViewport({ scale: k, rotation: rot });
+          const dpr = Math.min(window.devicePixelRatio || 1, 2);
+          const canvas = item.querySelector("canvas");
+          canvas.width = Math.floor(vp.width * dpr);
+          canvas.height = Math.floor(vp.height * dpr);
+          canvas.style.width = `${vp.width}px`;
+          canvas.style.height = `${vp.height}px`;
+          const ctx = canvas.getContext("2d", { alpha: false });
+          ctx.fillStyle = "#fff";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          await page.render({ canvasContext: ctx, viewport: vp, transform: dpr === 1 ? null : [dpr, 0, 0, dpr, 0, 0] }).promise;
+        } catch (error) { /* thumbnail is optional */ }
+      }
+      ref("thumbs").addEventListener("click", (event) => {
+        const item = event.target.closest(".pv-thumb");
+        if (item) { goToPage(Number(item.dataset.page)); focusScroller(); }
+      });
+      async function destToPage(dest) {
+        try {
+          const arr = typeof dest === "string" ? await S.pdf.getDestination(dest) : dest;
+          if (!Array.isArray(arr) || !arr.length) return null;
+          const first = arr[0];
+          if (typeof first === "number") return first + 1;
+          return (await S.pdf.getPageIndex(first)) + 1;
+        } catch (error) { return null; }
+      }
+      async function buildOutline() {
+        const box = ref("outline");
+        let outline = null;
+        try { outline = await S.pdf.getOutline(); } catch (error) { outline = null; }
+        if (!outline || !outline.length) {
+          box.innerHTML = '<div class="pv-empty">This PDF has no bookmarks.</div>';
+          return;
+        }
+        const make = (items, depth) => {
+          const list = document.createElement("div");
+          list.className = "pv-outline";
+          items.forEach((it) => {
+            const row = document.createElement("button");
+            row.type = "button";
+            row.className = "pv-outrow";
+            row.style.paddingLeft = `${10 + depth * 14}px`;
+            row.textContent = it.title || "Untitled";
+            row.addEventListener("click", async () => {
+              const n = await destToPage(it.dest);
+              if (n) { goToPage(n); focusScroller(); }
+            });
+            list.appendChild(row);
+            if (it.items && it.items.length) list.appendChild(make(it.items, depth + 1));
+          });
+          return list;
+        };
+        box.replaceChildren(make(outline, 0));
+      }
+
+      /* ---------- panels, menus, settings ---------- */
+      function showPanel(name) {
+        S.panel = name;
+        panelEl.hidden = !name;
+        panelEl.querySelectorAll("[data-panel]").forEach((sec) => { sec.hidden = sec.dataset.panel !== name; });
+        railBtns.forEach((b) => b.classList.toggle("is-on", (b.dataset.tab === "doc" && !name) || b.dataset.tab === name));
+        if (name === "search") { searchInput.focus(); searchInput.select(); }
+        if (name === "thumbs") { const cur = root.querySelector(".pv-thumb.is-cur"); if (cur) cur.scrollIntoView({ block: "nearest" }); }
+      }
+      railBtns.forEach((b) => b.addEventListener("click", () => {
+        const tab = b.dataset.tab;
+        if (tab === "doc" || tab === S.panel) showPanel(null); else showPanel(tab);
+        if (!S.panel) focusScroller();
+      }));
+      function closeMenus() { root.querySelectorAll(".pv-menu").forEach((m) => { m.hidden = true; }); }
+      function toggleMenu(name) {
+        const menu = ref(name);
+        const willOpen = menu.hidden;
+        closeMenus();
+        menu.hidden = !willOpen;
+      }
+      function syncInvertUI() {
+        root.classList.toggle("pv-invert", S.invert);
+        root.querySelectorAll(".pv-invert-item").forEach((b) => b.classList.toggle("is-on", S.invert));
+        ref("setInvert").checked = S.invert;
+        S.slots.forEach((slot) => { if (slot && slot.rendered) drawAnnots(slot); });
+        try { renderToolPop(); } catch (error) { /* popover not ready yet */ }
+      }
+      function setInvert(on) {
+        S.invert = on;
+        prefs.invert = on;
+        pvSavePrefs(prefs);
+        syncInvertUI();
+      }
+      ref("setInvert").addEventListener("change", (e) => setInvert(e.target.checked));
+      ref("setFit").value = prefs.fit === "page" || prefs.fit === "100" ? prefs.fit : "width";
+      ref("setFit").addEventListener("change", (e) => { prefs.fit = e.target.value; pvSavePrefs(prefs); });
+      ref("setPinch").value = String(prefs.pinch || 1);
+      ref("setPinchVal").textContent = `${Number(prefs.pinch || 1).toFixed(1)}x`;
+      ref("setPinch").addEventListener("input", (e) => {
+        prefs.pinch = Number(e.target.value);
+        ref("setPinchVal").textContent = `${prefs.pinch.toFixed(1)}x`;
+        pvSavePrefs(prefs);
+      });
+
+      /* ---------- fullscreen / presentation / download / print ---------- */
+      function toggleFullscreen() {
+        if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+        else if (root.requestFullscreen) root.requestFullscreen().catch(() => {});
+      }
+      function enterPresentation() {
+        if (S.present) return;
+        S.present = true;
+        S.prevFit = S.fit || "width";
+        root.classList.add("pv-present");
+        closeMenus();
+        if (root.requestFullscreen) root.requestFullscreen().catch(() => {});
+        applyFit("page");
+      }
+      function exitPresentation() {
+        if (!S.present) return;
+        S.present = false;
+        root.classList.remove("pv-present");
+        if (document.fullscreenElement === root) document.exitFullscreen().catch(() => {});
+        applyFit(S.prevFit);
+      }
+      function onFsChange() {
+        if (S.present && !document.fullscreenElement) exitPresentation();
+      }
+      document.addEventListener("fullscreenchange", onFsChange);
+      scroller.addEventListener("click", (event) => {
+        if (!S.present || event.target.closest(".pv-textinput")) return;
+        const r = scroller.getBoundingClientRect();
+        goToPage(S.cur + (event.clientX - r.left < r.width / 3 ? -1 : 1));
+      });
+      function blobUrl() {
+        if (!S.blobUrl) S.blobUrl = URL.createObjectURL(blob);
+        return S.blobUrl;
+      }
+      function downloadFile() {
+        const a = document.createElement("a");
+        a.href = blobUrl();
+        a.download = /\.pdf$/i.test(record.name) ? record.name : `${record.name}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      }
+      function printFile() {
+        const frame = document.createElement("iframe");
+        frame.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;opacity:0;";
+        frame.src = blobUrl();
+        frame.onload = () => {
+          try { frame.contentWindow.focus(); frame.contentWindow.print(); }
+          catch (error) { window.open(blobUrl(), "_blank", "noopener"); }
+          setTimeout(() => frame.remove(), 60000);
+        };
+        document.body.appendChild(frame);
+      }
+
+      /* ---------- actions ---------- */
+      function run(act) {
+        switch (act) {
+          case "sidebar": root.classList.toggle("pv-nosidebar"); break;
+          case "zoomOut": zoomStep(-1); break;
+          case "zoomIn": zoomStep(1); break;
+          case "zoomMenu": toggleMenu("zoomMenu"); return;
+          case "viewMenu": toggleMenu("viewMenu"); return;
+          case "moreMenu": toggleMenu("moreMenu"); return;
+          case "fitPage": applyFit("page"); break;
+          case "fitWidth": applyFit("width"); break;
+          case "actual": setZoom(100); break;
+          case "rotate": rotate(90); break;
+          case "rotateL": rotate(-90); break;
+          case "toolText": setTool("text"); break;
+          case "toolDraw": setTool("draw"); break;
+          case "undo": undoAnnot(); break;
+          case "redo": redoAnnot(); break;
+          case "download": downloadFile(); break;
+          case "print": printFile(); break;
+          case "fullscreen": toggleFullscreen(); break;
+          case "invert": setInvert(!S.invert); break;
+          case "presentation": enterPresentation(); break;
+          case "hand": toggleHand(); break;
+          case "firstPage": goToPage(1); break;
+          case "lastPage": goToPage(S.n); break;
+          case "clearAnn": clearAnnots(); break;
+          case "searchPrev": goHit(S.hitIdx - 1); return;
+          case "searchNext": goHit(S.hitIdx + 1); return;
+          case "close": close(); return;
+          default: break;
+        }
+        closeMenus();
+        if (!S.textEdit) focusScroller();
+      }
+      root.addEventListener("click", (event) => {
+        const z = event.target.closest("[data-zoom]");
+        if (z) { setZoom(Number(z.dataset.zoom)); closeMenus(); focusScroller(); return; }
+        const btn = event.target.closest("[data-act]");
+        if (btn && !btn.disabled) run(btn.dataset.act);
+      });
+      root.addEventListener("pointerdown", (event) => {
+        if (!event.target.closest(".pv-menuwrap")) closeMenus();
+      });
+
+      /* ---------- keyboard ---------- */
+      function onKey(event) {
+        if (S.destroyed) return;
+        const target = event.target;
+        if (target && target.classList && target.classList.contains("pv-textinput")) return;
+        const typing = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT" || target.isContentEditable);
+        const ctrl = event.ctrlKey || event.metaKey;
+        const key = event.key;
+        const stop = () => { event.preventDefault(); event.stopPropagation(); };
+        if (key === "Escape") {
+          stop();
+          if (typing) { target.blur(); focusScroller(); return; }
+          if (root.querySelector(".pv-menu:not([hidden])")) { closeMenus(); return; }
+          if (S.present) { exitPresentation(); return; }
+          if (S.tool !== "select") { setTool(S.tool); return; }
+          if (S.hand) { toggleHand(); return; }
+          close();
+          return;
+        }
+        if (ctrl && !event.altKey) {
+          if (key === "+" || key === "=") { stop(); zoomStep(1); return; }
+          if (key === "-" || key === "_") { stop(); zoomStep(-1); return; }
+          if (key === "0") { stop(); applyFit("page"); return; }
+          if (key === "1") { stop(); applyFit("width"); return; }
+          if (key === "2") { stop(); setZoom(100); return; }
+          if (key === "," || key === "<") { stop(); rotate(-90); return; }
+          if (key === "." || key === ">") { stop(); rotate(90); return; }
+          if (key === "f" || key === "F") { stop(); showPanel("search"); return; }
+          if (!typing && (key === "z" || key === "Z")) { stop(); if (event.shiftKey) redoAnnot(); else undoAnnot(); return; }
+          if (!typing && (key === "y" || key === "Y")) { stop(); redoAnnot(); return; }
+          return;
+        }
+        if (typing || event.altKey) return;
+        if (S.present) {
+          if (["ArrowRight", "ArrowDown", "PageDown", " ", "Enter"].includes(key)) { stop(); goToPage(S.cur + 1); return; }
+          if (["ArrowLeft", "ArrowUp", "PageUp", "Backspace"].includes(key)) { stop(); goToPage(S.cur - 1); return; }
+        }
+        if (key === " ") { S.space = true; return; }
+        if (key === "Home") { stop(); goToPage(1); return; }
+        if (key === "End") { stop(); goToPage(S.n); return; }
+        if (key === "f" || key === "F") { stop(); toggleFullscreen(); return; }
+        if (key === "p" || key === "P") { stop(); enterPresentation(); return; }
+        if (key === "i" || key === "I") { stop(); setInvert(!S.invert); return; }
+        if (key === "r") { stop(); rotate(90); return; }
+        if (key === "R") { stop(); rotate(-90); return; }
+        if (key === "h" || key === "H") { stop(); toggleHand(); return; }
+      }
+      function onKeyUp(event) { if (event.key === " ") S.space = false; }
+      window.addEventListener("keydown", onKey, true);
+      window.addEventListener("keyup", onKeyUp, true);
+
+      /* ---------- lifecycle ---------- */
+      function close() {
+        if (S.destroyed) return;
+        finishText(true);
+        flushSave();
+        S.destroyed = true;
+        window.removeEventListener("keydown", onKey, true);
+        window.removeEventListener("keyup", onKeyUp, true);
+        document.removeEventListener("fullscreenchange", onFsChange);
+        ro.disconnect();
+        io.disconnect();
+        if (thumbIO) thumbIO.disconnect();
+        clearTimeout(S.zoomTimer);
+        if (document.fullscreenElement === root) document.exitFullscreen().catch(() => {});
+        try { if (loadingTask) loadingTask.destroy(); } catch (error) { /* ignore */ }
+        root.remove();
+        if (S.blobUrl) setTimeout(() => URL.revokeObjectURL(S.blobUrl), 30000);
+      }
+
+      function fail(message) {
+        if (S.destroyed) return;
+        close();
+        openNativePdfFrame(record, blob, message);
+      }
+
+      (async () => {
+        try {
+          const lib = await loadPdfJs();
+          const data = new Uint8Array(await blob.arrayBuffer());
+          loadingTask = lib.getDocument({ data });
+          loadingTask.onPassword = (update, reason) => {
+            const pw = window.prompt(reason === 2 ? "Wrong password. Try again:" : "This PDF is password-protected. Enter the password:");
+            if (pw === null) { try { loadingTask.destroy(); } catch (error) { /* ignore */ } fail("Password required to open this PDF."); }
+            else update(pw);
+          };
+          S.pdf = await loadingTask.promise;
+          if (S.destroyed) return;
+          S.n = S.pdf.numPages;
+          const first = await S.pdf.getPage(1);
+          const dims = measure(first);
+          try { S.annots = await resLoadAnnots(record.id); } catch (error) { S.annots = {}; }
+          for (let i = 1; i <= S.n; i += 1) {
+            const slot = makeSlot(i, dims.w, dims.h);
+            if (i === 1) slot.page = first;
+            S.slots.push(slot);
+            pagesEl.appendChild(slot.el);
+          }
+          layoutAll();
+          S.slots.forEach((slot) => io.observe(slot.el));
+          syncInvertUI();
+          syncPageUI();
+          if (S.fit) setZoom(computeFit(S.fit), undefined, undefined, true); else setZoom(100);
+          S.ready = true;
+          ref("loading").hidden = true;
+          scroller.scrollTop = 0;
+          syncUndoUI();
+          buildThumbs();
+          buildOutline();
+          (async () => {
+            for (let start = 2; start <= S.n; start += 25) {
+              const batch = [];
+              for (let i = start; i < Math.min(S.n + 1, start + 25); i += 1) batch.push(S.pdf.getPage(i).then((page) => ({ i, d: measure(page) })));
+              const res = await Promise.all(batch);
+              if (S.destroyed) return;
+              keepPosition(() => res.forEach(({ i, d }) => {
+                const slot = S.slots[i - 1];
+                if (Math.abs(slot.w0 - d.w) > 0.5 || Math.abs(slot.h0 - d.h) > 0.5) { slot.w0 = d.w; slot.h0 = d.h; layoutSlot(slot); }
+              }));
+            }
+            if (S.fit && !S.destroyed) { const t = computeFit(S.fit); if (Math.abs(t - S.zoom) > 0.4) applyFit(S.fit); }
+          })().catch(() => {});
+        } catch (error) {
+          if (!S.destroyed) fail((error && error.message) || "Couldn't open this PDF.");
+        }
+      })();
+    }
+
+    function openNativePdfFrame(record, blob, message) {
+      const url = URL.createObjectURL(blob);
+      const root = document.createElement("div");
+      root.className = "pv-root pv-fallback";
+      root.setAttribute("role", "dialog");
+      root.setAttribute("aria-modal", "true");
+      root.innerHTML = `<header class="pv-top"><div class="pv-title" data-ref="t"></div><div class="pv-center pv-note" data-ref="n"></div><div class="pv-right"><a class="pv-linkbtn" target="_blank" rel="noopener">Open in new tab</a><button type="button" class="pv-btn pv-closebtn" aria-label="Close viewer">${pvIcon("close")}</button></div></header><div class="pv-frame"><iframe title="PDF"></iframe></div>`;
+      root.querySelector('[data-ref="t"]').textContent = record.name;
+      root.querySelector('[data-ref="n"]').textContent = `${message || "Using the browser's own PDF viewer."}`;
+      root.querySelector("a").href = url;
+      root.querySelector("iframe").src = url;
+      const onKey = (event) => { if (event.key === "Escape") { event.stopImmediatePropagation(); close(); } };
+      function close() {
+        window.removeEventListener("keydown", onKey, true);
+        root.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 30000);
+      }
+      window.addEventListener("keydown", onKey, true);
+      root.querySelector("button").addEventListener("click", close);
+      document.body.appendChild(root);
+    }
+
+    function openImageViewer(record, blob) {
+      const url = URL.createObjectURL(blob);
+      const prefs = pvPrefs();
+      const S = { zoom: 1, fit: true, rot: 0, nw: 0, nh: 0, destroyed: false };
+      const root = document.createElement("div");
+      root.className = "pv-root pv-img";
+      root.setAttribute("role", "dialog");
+      root.setAttribute("aria-modal", "true");
+      root.setAttribute("aria-label", record.name);
+      root.innerHTML = `
+        <header class="pv-top">
+          <div class="pv-title pv-title-wide" data-ref="title"></div>
+          <div class="pv-center">
+            <button type="button" class="pv-btn" data-act="zoomOut" title="Zoom out (Ctrl -)" aria-label="Zoom out">${pvIcon("minus")}</button>
+            <span class="pv-zoombtn pv-static" data-ref="zoomLabel">100%</span>
+            <button type="button" class="pv-btn" data-act="zoomIn" title="Zoom in (Ctrl +)" aria-label="Zoom in">${pvIcon("plus")}</button>
+            <button type="button" class="pv-btn pv-fit is-on" data-act="fit" title="Fit to screen (Ctrl 0)" aria-label="Fit to screen">${pvIcon("fit")}</button>
+            <button type="button" class="pv-btn" data-act="actual" title="Actual size (Ctrl 2)" aria-label="Actual size">${pvIcon("actual")}</button>
+            <button type="button" class="pv-btn" data-act="rotate" title="Rotate (Ctrl .)" aria-label="Rotate">${pvIcon("rotate")}</button>
+          </div>
+          <div class="pv-right">
+            <button type="button" class="pv-btn" data-act="download" title="Download" aria-label="Download">${pvIcon("download")}</button>
+            <button type="button" class="pv-btn pv-closebtn" data-act="close" title="Close (Esc)" aria-label="Close viewer">${pvIcon("close")}</button>
+          </div>
+        </header>
+        <div class="pv-scroller pv-imgscroll" data-ref="scroller" tabindex="0"><div class="pv-imgwrap" data-ref="wrap"><img class="pv-imgel" alt="" draggable="false"></div></div>
+        <div class="pv-loading" data-ref="loading"><div class="pv-spin"></div><span>Opening…</span></div>`;
+      const ref = (name) => root.querySelector(`[data-ref="${name}"]`);
+      const scroller = ref("scroller");
+      const wrap = ref("wrap");
+      const img = root.querySelector(".pv-imgel");
+      ref("title").textContent = record.name;
+      document.body.appendChild(root);
+      scroller.focus({ preventScroll: true });
+
+      function layout() {
+        const swap = S.rot % 180 !== 0;
+        const w = S.nw * S.zoom;
+        const h = S.nh * S.zoom;
+        wrap.style.width = `${swap ? h : w}px`;
+        wrap.style.height = `${swap ? w : h}px`;
+        img.style.width = `${w}px`;
+        img.style.height = `${h}px`;
+        img.style.transform = `translate(-50%, -50%) rotate(${S.rot}deg)`;
+        ref("zoomLabel").textContent = `${Math.round(S.zoom * 100)}%`;
+        root.querySelector(".pv-fit").classList.toggle("is-on", S.fit);
+      }
+      function fitZoom() {
+        const swap = S.rot % 180 !== 0;
+        const w = swap ? S.nh : S.nw;
+        const h = swap ? S.nw : S.nh;
+        const availW = Math.max(60, scroller.clientWidth - 32);
+        const availH = Math.max(60, scroller.clientHeight - 32);
+        return Math.min(1, availW / w, availH / h);
+      }
+      function setZoom(z, cx, cy, keepFit) {
+        z = pvClamp(z, 0.05, 8);
+        if (!keepFit) S.fit = false;
+        const r = scroller.getBoundingClientRect();
+        const px = (cx === undefined ? r.left + r.width / 2 : cx) - r.left;
+        const py = (cy === undefined ? r.top + r.height / 2 : cy) - r.top;
+        const wr = wrap.getBoundingClientRect();
+        const fx = (r.left + px - wr.left) / (wr.width || 1);
+        const fy = (r.top + py - wr.top) / (wr.height || 1);
+        S.zoom = z;
+        layout();
+        const nr = wrap.getBoundingClientRect();
+        scroller.scrollLeft += nr.left + fx * nr.width - (r.left + px);
+        scroller.scrollTop += nr.top + fy * nr.height - (r.top + py);
+      }
+      function fit() { S.fit = true; setZoom(fitZoom(), undefined, undefined, true); }
+      pvAttachZoomInput(scroller, {
+        zoomBy: (f, cx, cy) => setZoom(S.zoom * f, cx, cy),
+        speed: () => Number(prefs.pinch) || 1
+      });
+      pvAttachPan(scroller, () => true);
+      scroller.addEventListener("dblclick", () => { if (S.fit) setZoom(1); else fit(); });
+      const ro = new ResizeObserver(() => { if (S.fit && S.nw) setZoom(fitZoom(), undefined, undefined, true); });
+      ro.observe(scroller);
+
+      function download() {
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = record.name || "image";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      }
+      function rotate() { S.rot = (S.rot + 90) % 360; if (S.fit) setZoom(fitZoom(), undefined, undefined, true); else layout(); }
+      function close() {
+        if (S.destroyed) return;
+        S.destroyed = true;
+        window.removeEventListener("keydown", onKey, true);
+        ro.disconnect();
+        root.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 30000);
+      }
+      function onKey(event) {
+        if (S.destroyed) return;
+        const ctrl = event.ctrlKey || event.metaKey;
+        const stop = () => { event.preventDefault(); event.stopPropagation(); };
+        if (event.key === "Escape") { stop(); close(); return; }
+        if (ctrl && (event.key === "+" || event.key === "=")) { stop(); setZoom(S.zoom * 1.25); return; }
+        if (ctrl && (event.key === "-" || event.key === "_")) { stop(); setZoom(S.zoom / 1.25); return; }
+        if (ctrl && event.key === "0") { stop(); fit(); return; }
+        if (ctrl && event.key === "2") { stop(); setZoom(1); return; }
+        if (ctrl && (event.key === "." || event.key === ">")) { stop(); rotate(); return; }
+      }
+      window.addEventListener("keydown", onKey, true);
+      root.addEventListener("click", (event) => {
+        const btn = event.target.closest("[data-act]");
+        if (!btn) return;
+        switch (btn.dataset.act) {
+          case "zoomIn": setZoom(S.zoom * 1.25); break;
+          case "zoomOut": setZoom(S.zoom / 1.25); break;
+          case "fit": fit(); break;
+          case "actual": setZoom(1); break;
+          case "rotate": rotate(); break;
+          case "download": download(); break;
+          case "close": close(); return;
+          default: break;
+        }
+        scroller.focus({ preventScroll: true });
+      });
+      img.onload = () => {
+        S.nw = img.naturalWidth || 1;
+        S.nh = img.naturalHeight || 1;
+        ref("loading").hidden = true;
+        fit();
+      };
+      img.onerror = () => { ref("loading").querySelector("span").textContent = "Couldn't display this image."; ref("loading").querySelector(".pv-spin").hidden = true; };
+      img.src = url;
+    }
+
+    function openResourceDialog(todo, userId) {
+      const owner = `${userId}:${todo.id}`;
+      let thumbUrls = [];
+
+      const backdrop = document.createElement("div");
+      backdrop.className = "res-backdrop";
+      backdrop.setAttribute("role", "dialog");
+      backdrop.setAttribute("aria-modal", "true");
+      backdrop.setAttribute("aria-label", "Task resources");
+      const modal = document.createElement("div");
+      modal.className = "res-modal";
+
+      const head = document.createElement("div");
+      head.className = "res-head";
+      const headIcon = document.createElement("span");
+      headIcon.className = "res-head-icon";
+      headIcon.innerHTML = RES_ICON_CLIP;
+      const headText = document.createElement("div");
+      headText.className = "res-head-text";
+      const h3 = document.createElement("h3");
+      h3.textContent = "Resources";
+      const sub = document.createElement("p");
+      sub.textContent = todo.text;
+      headText.append(h3, sub);
+      const closeBtn = document.createElement("button");
+      closeBtn.type = "button";
+      closeBtn.className = "res-close";
+      closeBtn.setAttribute("aria-label", "Close");
+      closeBtn.innerHTML = RES_ICON_CLOSE;
+      head.append(headIcon, headText, closeBtn);
+
+      const fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.accept = "application/pdf,.pdf,image/*";
+      fileInput.multiple = true;
+      fileInput.hidden = true;
+
+      const drop = document.createElement("button");
+      drop.type = "button";
+      drop.className = "res-drop";
+      drop.innerHTML = `<span class="res-drop-icon">${RES_ICON_UPLOAD}</span><span><strong>Upload PDF or image</strong><small>Choose files or drop them here</small></span>`;
+
+      const makeSection = (label, icon) => {
+        const section = document.createElement("div");
+        section.className = "res-section";
+        const h4 = document.createElement("h4");
+        const count = document.createElement("span");
+        count.textContent = "0";
+        h4.append(document.createTextNode(label + " "), count);
+        const list = document.createElement("div");
+        section.append(h4, list);
+        return { section, list, count };
+      };
+      const pdfSec = makeSection("PDFs");
+      const imgSec = makeSection("Images");
+
+      const status = document.createElement("div");
+      status.className = "res-status";
+      status.setAttribute("role", "status");
+      const note = document.createElement("div");
+      note.className = "res-note";
+      note.textContent = "Saved on this device only. Max 30 MB per file.";
+
+      modal.append(head, fileInput, drop, pdfSec.section, imgSec.section, status, note);
+      backdrop.appendChild(modal);
+
+      const emptyEl = (text) => {
+        const el = document.createElement("div");
+        el.className = "res-empty";
+        el.textContent = text;
+        return el;
+      };
+
+      function buildRow(record) {
+        const row = document.createElement("div");
+        row.className = "res-row";
+        const thumb = document.createElement("span");
+        thumb.className = `res-thumb${record.kind === "pdf" ? " is-pdf" : ""}`;
+        thumb.innerHTML = record.kind === "pdf" ? RES_ICON_PDF : RES_ICON_IMG;
+        if (record.kind === "image") {
+          resGetBlob(record.id).then((blob) => {
+            if (!blob) return;
+            const url = URL.createObjectURL(blob);
+            if (!thumb.isConnected) { URL.revokeObjectURL(url); return; }
+            thumbUrls.push(url);
+            const img = document.createElement("img");
+            img.alt = "";
+            img.src = url;
+            thumb.replaceChildren(img);
+          }).catch(() => {});
+        }
+        const meta = document.createElement("div");
+        meta.className = "res-meta";
+        const name = document.createElement("div");
+        name.className = "res-name";
+        name.textContent = record.name;
+        name.title = record.name;
+        const size = document.createElement("div");
+        size.className = "res-size";
+        size.textContent = resFormatSize(record.size);
+        meta.append(name, size);
+        const open = document.createElement("button");
+        open.type = "button";
+        open.className = "res-open";
+        open.textContent = record.kind === "pdf" ? "Open PDF" : "Open image";
+        open.addEventListener("click", () => openResourceViewer(record));
+        const del = document.createElement("button");
+        del.type = "button";
+        del.className = "res-del";
+        del.title = "Remove";
+        del.setAttribute("aria-label", `Remove ${record.name}`);
+        del.innerHTML = RES_ICON_TRASH;
+        del.addEventListener("click", async () => {
+          if (!window.confirm(`Remove "${record.name}"?`)) return;
+          try { await resDelete(record.id); } catch (error) { /* ignore */ }
+          await refresh();
+          resRefreshCounts(userId);
+        });
+        row.append(thumb, meta, open, del);
+        return row;
+      }
+
+      async function refresh() {
+        let rows = [];
+        try {
+          rows = await resList(owner);
+        } catch (error) {
+          status.className = "res-status";
+          status.textContent = "Couldn't read saved resources in this browser.";
+        }
+        thumbUrls.forEach((url) => URL.revokeObjectURL(url));
+        thumbUrls = [];
+        const pdfs = rows.filter((row) => row.kind === "pdf");
+        const imgs = rows.filter((row) => row.kind === "image");
+        pdfSec.count.textContent = String(pdfs.length);
+        imgSec.count.textContent = String(imgs.length);
+        pdfSec.list.replaceChildren(...(pdfs.length ? pdfs.map(buildRow) : [emptyEl("No PDF added yet")]));
+        imgSec.list.replaceChildren(...(imgs.length ? imgs.map(buildRow) : [emptyEl("No image added yet")]));
+      }
+
+      async function handleFiles(fileList) {
+        const files = Array.from(fileList || []);
+        if (!files.length) return;
+        status.className = "res-status";
+        status.textContent = "";
+        let added = 0;
+        const problems = [];
+        for (const file of files) {
+          const kind = resKind(file);
+          if (!kind) { problems.push(`${file.name}: only PDF or image files`); continue; }
+          if (file.size > RES_MAX_BYTES) { problems.push(`${file.name}: larger than 30 MB`); continue; }
+          try { await resAdd(owner, file, kind); added += 1; } catch (error) { problems.push(`${file.name}: couldn't save (storage full?)`); }
+        }
+        if (problems.length) {
+          status.textContent = problems.join(" · ");
+        } else if (added) {
+          status.className = "res-status is-ok";
+          status.textContent = `${added} file${added === 1 ? "" : "s"} added`;
+        }
+        await refresh();
+        resRefreshCounts(userId);
+      }
+
+      drop.addEventListener("click", () => fileInput.click());
+      fileInput.addEventListener("change", () => { handleFiles(fileInput.files); fileInput.value = ""; });
+      drop.addEventListener("dragover", (event) => { event.preventDefault(); drop.classList.add("is-over"); });
+      drop.addEventListener("dragleave", () => drop.classList.remove("is-over"));
+      drop.addEventListener("drop", (event) => {
+        event.preventDefault();
+        drop.classList.remove("is-over");
+        handleFiles(event.dataTransfer && event.dataTransfer.files);
+      });
+
+      const onKey = (event) => {
+        if (event.key === "Escape" && !document.querySelector(".pv-root")) close();
+      };
+      function close() {
+        document.removeEventListener("keydown", onKey);
+        thumbUrls.forEach((url) => URL.revokeObjectURL(url));
+        thumbUrls = [];
+        backdrop.remove();
+        resRefreshCounts(userId);
+      }
+      document.addEventListener("keydown", onKey);
+      closeBtn.addEventListener("click", close);
+      backdrop.addEventListener("mousedown", (event) => { if (event.target === backdrop) close(); });
+
+      document.body.appendChild(backdrop);
+      refresh();
+      loadPdfJs().catch(() => {});
+    }
+
     function renderTodos(user) {
       todoList.innerHTML = "";
       updateTodoProgress(user);
@@ -9322,6 +11898,16 @@
           openGoalPopover(todo, goalBtn);
         });
 
+        const resBtn = document.createElement("button");
+        resBtn.type = "button";
+        resBtn.className = "todo-res-btn";
+        resBtn.innerHTML = RES_ICON_CLIP;
+        resApplyBadge(resBtn, resCounts.get(`${user.id}:${todo.id}`) || 0);
+        resBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          openResourceDialog(todo, (currentUser() || user).id);
+        });
+
         const focusBtn = document.createElement("button");
         focusBtn.type = "button";
         focusBtn.className = `todo-focus-btn${isAttached ? " is-attached" : ""}${isRunningThis ? " is-running" : ""}`;
@@ -9355,9 +11941,10 @@
             patch.activeTodoId = null;
           }
           await writeUserPatch(liveUser.id, patch);
+          resDeleteOwner(`${liveUser.id}:${todo.id}`).then(() => resRefreshCounts(liveUser.id)).catch(() => {});
         });
 
-        item.append(dragHandle, checkbox, tagIcon, text, goalBtn, focusBtn, remove);
+        item.append(dragHandle, checkbox, tagIcon, text, goalBtn, resBtn, focusBtn, remove);
 
         if (todo.goalMin) {
           const metaRow = document.createElement("div");
@@ -9379,6 +11966,8 @@
 
         todoList.appendChild(item);
       });
+
+      if (resCountsUser !== user.id) resRefreshCounts(user.id);
     }
 
     todoList.addEventListener("dragover", (event) => {
@@ -9462,6 +12051,188 @@
     }
 
     let ddayEditing = false;
+
+    const PIZZA_MARK_THRESHOLD = 150;
+    const PIZZA_CONFETTI_COLORS = ["#ffffff", "#ffe27a", "#ffb703", "#ff6b3d", "#c8f7dc"];
+
+    function normalizeMockTests(user) {
+      return Array.isArray(user.mockTests) ? user.mockTests : [];
+    }
+
+    let mockSig = "";
+    let mockAnimNext = false;
+    let mockNewId = "";
+    function mockCountUp(el, to, ms) {
+      if (!el) return;
+      if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) { el.textContent = String(to); return; }
+      const t0 = performance.now();
+      const step = (now) => {
+        const k = Math.min(1, (now - t0) / ms);
+        el.textContent = String(Math.round(to * (1 - Math.pow(1 - k, 3))));
+        if (k < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }
+    function mockTier(pct) { return pct >= 70 ? "" : (pct >= 45 ? " tier-mid" : " tier-low"); }
+    function renderMockTests(user) {
+      const tests = normalizeMockTests(user).slice().sort((a, b) => b.date - a.date);
+      const badge = document.getElementById("mockBadge");
+      if (badge) { badge.hidden = !tests.length; if (String(tests.length) !== badge.textContent) { badge.textContent = String(tests.length); badge.style.animation = "none"; void badge.offsetWidth; badge.style.animation = ""; } }
+
+      /* skip the DOM rewrite when nothing changed (render() runs often) */
+      const sig = JSON.stringify(tests.map((t) => [t.id, t.score, t.total, t.date, t.name || ""]));
+      if (sig === mockSig && !mockAnimNext) return;
+      mockSig = sig;
+      const animate = mockAnimNext;
+      mockAnimNext = false;
+
+      if (!tests.length) {
+        mockStatsRow.classList.add("hidden");
+        const tr0 = document.getElementById("mockTrend");
+        if (tr0) tr0.classList.add("hidden");
+        mockListEl.innerHTML = '<p class="mock-empty">No mock tests logged yet. Add your first score above and it will show up here.</p>';
+        return;
+      }
+
+      const best = tests.reduce((max, t) => (t.score > max.score ? t : max), tests[0]);
+      const avg = Math.round(tests.reduce((sum, t) => sum + t.score, 0) / tests.length);
+      mockStatsRow.classList.remove("hidden");
+      if (animate) {
+        mockCountUp(mockBestStat, best.score, 900);
+        mockCountUp(mockAvgStat, avg, 900);
+        mockCountUp(mockCountStat, tests.length, 700);
+      } else {
+        mockBestStat.textContent = String(best.score);
+        mockAvgStat.textContent = String(avg);
+        mockCountStat.textContent = String(tests.length);
+      }
+
+      const esc = (v) => String(v).replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
+      mockListEl.innerHTML = tests.map((t, idx) => {
+        const dateLabel = new Date(t.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+        const strong = t.score >= PIZZA_MARK_THRESHOLD ? " is-strong" : "";
+        const pct = t.total ? Math.round((t.score / t.total) * 100) : 0;
+        const isNew = t.id === mockNewId ? " is-new" : "";
+        const anim = animate && !isNew ? " mock-anim" : "";
+        const isBest = t.id === best.id && tests.length > 1 ? '<span class="mock-row-best">BEST</span>' : "";
+        return `<div class="mock-row${strong}${mockTier(pct)}${anim}${isNew}" data-mock-id="${t.id}" style="--i:${Math.min(idx, 10)};--pct:${Math.min(100, pct)}%">
+          <div class="mock-row-main">
+            <span class="mock-row-score">${t.score}<small> / ${t.total}</small>${isBest}</span>
+            <span class="mock-row-info">${t.name ? `<span class="mock-row-name">${esc(t.name)}</span>` : ""}<span class="mock-row-date">${dateLabel}</span></span>
+            <span class="mock-row-pct">${pct}%</span>
+            <button class="mock-row-del" type="button" data-mock-del="${t.id}" aria-label="Delete score" title="Delete">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>
+            </button>
+          </div>
+          <div class="mock-row-bar"><i></i></div>
+        </div>`;
+      }).join("");
+      mockNewId = "";
+
+      const tr = document.getElementById("mockTrend");
+      if (tr) {
+        if (tests.length < 2) tr.classList.add("hidden");
+        else {
+          const asc = tests.slice().sort((a, b) => a.date - b.date).slice(-20);
+          const pcts = asc.map((t) => (t.total ? (t.score / t.total) * 100 : 0));
+          const lo = Math.max(0, Math.floor(Math.min(...pcts) / 10) * 10 - 5);
+          const hi = Math.min(100, Math.ceil(Math.max(...pcts) / 10) * 10 + 5);
+          const W = 600, H = 150, px = 14, py = 16;
+          const xy = pcts.map((v, i) => [px + (i * (W - px * 2)) / (pcts.length - 1), H - py - ((v - lo) / Math.max(1, hi - lo)) * (H - py * 2)]);
+          const line = xy.map((q, i) => (i ? "L" : "M") + q[0].toFixed(1) + " " + q[1].toFixed(1)).join(" ");
+          const area = line + ` L${xy[xy.length - 1][0].toFixed(1)} ${H - 4} L${xy[0][0].toFixed(1)} ${H - 4} Z`;
+          const grid = [0.25, 0.5, 0.75].map((f) => `<line x1="0" x2="${W}" y1="${(H * f).toFixed(1)}" y2="${(H * f).toFixed(1)}"/>`).join("");
+          const dots = xy.map((q, i) => `<circle class="mock-trend-dot${i === xy.length - 1 ? " is-last" : ""}" style="--i:${i}" cx="${q[0].toFixed(1)}" cy="${q[1].toFixed(1)}" r="${i === xy.length - 1 ? 6 : 4.5}"/>`).join("");
+          const last = xy[xy.length - 1];
+          const delta = Math.round(pcts[pcts.length - 1] - pcts[pcts.length - 2]);
+          const deltaHtml = `<span class="mock-trend-delta${delta < 0 ? " is-down" : ""}">${delta >= 0 ? "\u25B2 +" : "\u25BC "}${delta}% vs previous</span>`;
+          tr.innerHTML = `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true"><defs><linearGradient id="mockTrendFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--green)" stop-opacity=".32"/><stop offset="1" stop-color="var(--green)" stop-opacity="0"/></linearGradient></defs><g class="mock-trend-grid">${grid}</g><path class="mock-trend-area" d="${area}"/><path class="mock-trend-line" pathLength="1" d="${line}"/>${dots}<circle class="mock-trend-pulse" cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="6"/></svg><div class="mock-trend-foot"><span>Score % \u00b7 last ${asc.length} tests</span>${deltaHtml}</div>`;
+          tr.classList.toggle("is-anim", animate);
+          tr.classList.remove("hidden");
+        }
+      }
+    }
+
+    function spawnPizzaConfetti() {
+      const pieces = [];
+      for (let i = 0; i < 26; i += 1) {
+        const left = Math.round(Math.random() * 100);
+        const color = PIZZA_CONFETTI_COLORS[i % PIZZA_CONFETTI_COLORS.length];
+        const duration = (900 + Math.random() * 700).toFixed(0);
+        const delay = (Math.random() * 400).toFixed(0);
+        pieces.push(`<span style="--x:${left}%;--c:${color};--dur:${duration}ms;--delay:${delay}ms"></span>`);
+      }
+      pizzaConfettiEl.innerHTML = pieces.join("");
+    }
+
+    function celebrateMockScore(score, total) {
+      pizzaHeadlineEl.textContent = `${score}/${total} in your mock!`;
+      pizzaSublineEl.textContent = "That's a strong score \u2014 time to treat yourself. Order a pizza on Domino's \uD83C\uDF89";
+      pizzaCelebration.classList.remove("hidden");
+      const box = pizzaCelebration.querySelector(".pizza-box");
+      box.style.animation = "none";
+      void box.offsetWidth;
+      box.style.animation = "";
+      spawnPizzaConfetti();
+    }
+
+    mockForm?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      mockErrorEl.textContent = "";
+      const user = currentUser();
+      if (!user) return;
+
+      const score = Number(mockScoreInput.value);
+      const total = Number(mockTotalInput.value) || 300;
+      if (!Number.isFinite(score) || score < 0) {
+        mockErrorEl.textContent = "Enter a valid score.";
+        return;
+      }
+      if (score > total) {
+        mockErrorEl.textContent = "Score can't be more than the total.";
+        return;
+      }
+
+      const dateVal = document.getElementById("mockDateInput")?.value;
+      const nameVal = (document.getElementById("mockNameInput")?.value || "").trim().slice(0, 30);
+      const when = dateVal ? new Date(dateVal + "T12:00:00").getTime() : Date.now();
+      const entry = { id: `mock_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`, score, total, date: Number.isFinite(when) ? when : Date.now() };
+      if (nameVal) entry.name = nameVal;
+      const updated = [...normalizeMockTests(user), entry];
+      mockNewId = entry.id;
+      mockScoreInput.value = "";
+      { const ni = document.getElementById("mockNameInput"); if (ni) ni.value = ""; }
+      await writeUserPatch(user.id, { mockTests: updated });
+      renderMockTests(currentUser() || user);
+      const addBtn = mockForm.querySelector(".mock-add-btn");
+      if (addBtn) {
+        addBtn.classList.remove("is-saved"); void addBtn.offsetWidth;
+        addBtn.classList.add("is-saved");
+        addBtn.textContent = "\u2713 Saved";
+        setTimeout(() => { addBtn.classList.remove("is-saved"); addBtn.textContent = "Add score"; }, 1300);
+      }
+      mockListEl.scrollTo?.({ top: 0, behavior: "smooth" });
+
+      if (score >= PIZZA_MARK_THRESHOLD) {
+        celebrateMockScore(score, total);
+      }
+    });
+
+    mockListEl?.addEventListener("click", async (event) => {
+      const btn = event.target.closest("[data-mock-del]");
+      if (!btn) return;
+      const user = currentUser();
+      if (!user) return;
+      const updated = normalizeMockTests(user).filter((t) => t.id !== btn.dataset.mockDel);
+      const row = btn.closest(".mock-row");
+      if (row) { row.classList.add("is-leaving"); await new Promise((r) => setTimeout(r, 230)); }
+      await writeUserPatch(user.id, { mockTests: updated });
+    });
+
+    pizzaDismissBtn?.addEventListener("click", () => {
+      pizzaCelebration.classList.add("hidden");
+      pizzaConfettiEl.innerHTML = "";
+    });
 
     function renderDday(user) {
       if (!user || ddayEditing) return;
@@ -9944,6 +12715,37 @@
       loadLocallyDeletedChat();
       refreshChatMessagesState();
       render();
+    });
+
+    const fullscreenBtn = document.getElementById("fullscreenBtn");
+    fullscreenBtn?.addEventListener("click", () => {
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+      else document.documentElement.requestFullscreen?.().catch(() => {});
+    });
+    document.addEventListener("fullscreenchange", () => {
+      const on = Boolean(document.fullscreenElement);
+      fullscreenBtn?.setAttribute("title", on ? "Exit full screen" : "Full screen");
+      fullscreenBtn?.classList.toggle("is-on", on);
+    });
+    const mockIconBtn = document.getElementById("mockIconBtn");
+    const mockDialog = document.getElementById("mockDialog");
+    mockIconBtn?.addEventListener("click", () => {
+      try { const u = currentUser(); if (u) { mockAnimNext = true; renderMockTests(u); } } catch (error) { /* ignore */ }
+      const di = document.getElementById("mockDateInput");
+      if (di) { const d = new Date(); di.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; }
+      if (typeof mockDialog.showModal === "function") mockDialog.showModal();
+      else mockDialog.setAttribute("open", "");
+    });
+    function closeMockDialog() {
+      if (!mockDialog.open || mockDialog.classList.contains("is-closing")) return;
+      mockDialog.classList.add("is-closing");
+      setTimeout(() => { mockDialog.classList.remove("is-closing"); mockDialog.close(); }, 190);
+    }
+    mockDialog?.addEventListener("cancel", (event) => { event.preventDefault(); closeMockDialog(); });
+    document.getElementById("mockDialogClose")?.addEventListener("click", closeMockDialog);
+    mockDialog?.addEventListener("click", (event) => {
+      const box = mockDialog.getBoundingClientRect();
+      if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) closeMockDialog();
     });
 
     logoutBtn.addEventListener("click", async () => {
