@@ -1945,6 +1945,70 @@
     .pv-root.pv-present .pv-page { scroll-snap-align: center; box-shadow: none; }
     .pv-root.pv-present .pv-pages { gap: 0; padding: 16px 16px; }
     .pv-root.pv-present .pv-loading { inset: 0; }
+
+    /* ---------- Magic crop + in-viewer Ask AI ---------- */
+    .pv-root .pv-magic { color: #c4b5fd; }
+    .pv-root[data-tool="crop"] .pv-ann { pointer-events: auto; touch-action: none; cursor: crosshair; }
+    .pv-root[data-tool="crop"] .pv-scroller { user-select: none; -webkit-user-select: none; }
+    .pv-root .pv-croprect { position: absolute; z-index: 4; pointer-events: none; border: 2px solid #a78bfa; border-radius: 2px; background: rgba(167, 139, 250, .08); box-shadow: 0 0 0 100vmax rgba(5, 8, 14, .55); }
+    .pv-root .pv-croprect.is-busy { border-style: dashed; animation: pvCropPulse 900ms ease-in-out infinite alternate; }
+    @keyframes pvCropPulse { from { background: rgba(167, 139, 250, .06); } to { background: rgba(167, 139, 250, .3); } }
+    .pv-root .pv-cropask { display: inline-flex; align-items: center; gap: 7px; padding: 7px 14px; border-radius: 10px; color: #fff; font-weight: 700; font-size: 13px; background: linear-gradient(135deg, #7c4dff, #4b2fc7); }
+    .pv-root .pv-cropask svg { width: 16px; height: 16px; }
+    .pv-root .pv-cropask kbd { font: inherit; font-size: 11px; padding: 1px 6px; border-radius: 5px; background: rgba(255, 255, 255, .22); }
+    .pv-root .pv-cropask:disabled { opacity: .38; cursor: default; }
+    .pv-root .pv-poplabel b { color: #e7ebf1; }
+    .pv-root .pv-ai { position: relative; flex: none; width: var(--pv-ai-w, min(400px, 42vw)); display: flex; flex-direction: column; min-height: 0; background: #0f151d; border-left: 1px solid var(--pv-line); }
+    .pv-root .pv-ai-head { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px 8px 14px; border-bottom: 1px solid var(--pv-line); font-weight: 700; }
+    .pv-root .pv-ai-title { display: flex; align-items: center; gap: 8px; }
+    .pv-root .pv-ai-title svg { width: 18px; height: 18px; color: #a78bfa; }
+    .pv-root .pv-ai-title small { color: var(--pv-mut); font-weight: 600; font-size: 10px; letter-spacing: .08em; }
+    .pv-root .pv-ai-msgs { flex: 1; min-height: 0; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; scrollbar-color: #2a3546 #0f151d; }
+    .pv-root .pv-ai-empty { margin: auto 6px; text-align: center; color: var(--pv-mut); font-size: 13px; line-height: 1.55; }
+    .pv-root .pv-ai-empty svg { width: 30px; height: 30px; color: #a78bfa; margin-bottom: 8px; }
+    .pv-root .pv-ai-msg { max-width: 95%; padding: 9px 11px; overflow-wrap: anywhere; line-height: 1.45; font-size: 14px; }
+    .pv-root .pv-ai-msg.mine { align-self: flex-end; background: #1d3a6b; border-radius: 13px 13px 4px 13px; }
+    .pv-root .pv-ai-msg.bot { align-self: flex-start; background: #151d29; border: 1px solid #232d3c; border-radius: 13px 13px 13px 4px; color: #e7ebf1; }
+    .pv-root .pv-ai-msg.err { border-color: rgba(224, 72, 62, .5); color: #ffb4ae; }
+    .pv-root .pv-ai-who { display: flex; align-items: center; gap: 4px; margin-bottom: 3px; font-size: 11px; font-weight: 700; color: #a78bfa; }
+    .pv-root .pv-ai-who svg { width: 11px; height: 11px; }
+    .pv-root .pv-ai-crop { display: block; max-width: 100%; max-height: 220px; margin: 0 0 6px; border-radius: 8px; background: #fff; }
+    .pv-root .pv-ai-msg .ai-rich, .pv-root .pv-ai-msg .ai-rich * { color: inherit; }
+    .pv-root .pv-ai-msg .ai-rich strong { color: #fff; }
+    .pv-root .pv-dots { display: inline-flex; gap: 4px; padding: 4px 2px; }
+    .pv-root .pv-dots i { width: 6px; height: 6px; border-radius: 50%; background: #a78bfa; animation: pvDot 1s ease-in-out infinite; }
+    .pv-root .pv-dots i:nth-child(2) { animation-delay: .15s; }
+    .pv-root .pv-dots i:nth-child(3) { animation-delay: .3s; }
+    @keyframes pvDot { 0%, 80%, 100% { opacity: .25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
+    .pv-root .pv-ai-attach { flex: none; display: flex; align-items: center; gap: 10px; margin: 0 12px 8px; padding: 8px; background: #141b26; border: 1px solid #232d3c; border-radius: 10px; }
+    .pv-root .pv-ai-attach img { width: 68px; height: 46px; object-fit: cover; border-radius: 6px; background: #fff; flex: none; }
+    .pv-root .pv-ai-attach div { flex: 1; min-width: 0; display: grid; gap: 1px; font-size: 12px; color: var(--pv-mut); }
+    .pv-root .pv-ai-attach b { color: #e7ebf1; font-size: 13px; }
+    .pv-root .pv-ai-form { flex: none; display: flex; gap: 8px; padding: 10px 12px 12px; border-top: 1px solid var(--pv-line); }
+    .pv-root .pv-ai-form input { flex: 1; min-width: 0; height: 40px; padding: 0 12px; color: #e7ebf1; background: #141b26; border: 1px solid #232d3c; border-radius: 10px; outline: none; }
+    .pv-root .pv-ai-form input:focus { border-color: #7c4dff; }
+    .pv-root .pv-ai-send { width: 44px; height: 40px; display: grid; place-items: center; border-radius: 10px; color: #fff; background: linear-gradient(135deg, #7c4dff, #4b2fc7); flex: none; }
+    .pv-root .pv-ai-send:disabled { opacity: .45; cursor: default; }
+    .pv-root .pv-ai-send svg { width: 18px; height: 18px; }
+.settings-select { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: transparent; color: var(--ink); font: inherit; }
+    .settings-select option { background: #fff; color: #111; }
+    .pv-root .pv-ai-tts { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 6px 12px; border-bottom: 1px solid var(--pv-line); font-size: 11px; color: var(--pv-mut); }
+    .pv-root .pv-ai-tts label { display: flex; align-items: center; gap: 4px; }
+    .pv-root .pv-ai-tts select { height: 24px; color: #e7ebf1; background: #141b26; border: 1px solid #232d3c; border-radius: 6px; font-size: 11px; padding: 0 4px; }
+    .pv-root .pv-ai-tts-msg { flex: none; padding: 6px 12px; border-bottom: 1px solid var(--pv-line); font-size: 11px; color: #ffb4ae; }
+    .pv-root .pv-ai-tts-msg:empty { display: none; }
+    .pv-root .pv-ai-speak { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; padding: 1px 7px; border-radius: 999px; border: 1px solid #2f3b50; color: #c4b5fd; background: transparent; font-size: 11px; font-weight: 600; cursor: pointer; }
+    .pv-root .pv-ai-speak svg { width: 12px; height: 12px; }
+    .pv-root .pv-ai-speak:hover, .pv-root .pv-ai-speak.is-on { background: rgba(124, 77, 255, .2); border-color: #7c4dff; }
+    .pv-root .pv-ai-who { width: 100%; }
+    .pv-root .pv-ai-resize { position: absolute; left: -3px; top: 0; bottom: 0; width: 8px; cursor: col-resize; z-index: 3; touch-action: none; }
+    .pv-root .pv-ai-resize:hover, .pv-root .pv-ai-resize.is-active { background: rgba(124, 77, 255, .55); }
+    .pv-root .pv-ai-head-btns { display: flex; align-items: center; gap: 2px; }
+    @media (max-width: 860px) { .pv-root .pv-ai-resize { display: none; } }
+    .pv-root.pv-present .pv-ai { display: none; }
+    @media (max-width: 860px) {
+      .pv-root .pv-ai { position: absolute; z-index: 12; right: 0; top: 0; bottom: 0; width: min(100%, 420px); box-shadow: -12px 0 30px rgba(0, 0, 0, .5); }
+    }
     @media (max-width: 860px) {
       .pv-root .pv-hide-sm, .pv-root .pv-title, .pv-root .pv-sep { display: none; }
       .pv-root .pv-only-sm { display: flex; }
@@ -6731,6 +6795,8 @@
     // Single Grok API key shared between both users — either person can set it once
     // from Settings and it works for both, since it's stored in the shared group data.
     const grokConfigRef = ref(database, `duotrack/groups/${GROUP_ID}/grokApiKey`);
+    // Gemini key + model for the PDF viewer's AI panel (shared between both accounts).
+    const geminiConfigRef = ref(database, `duotrack/groups/${GROUP_ID}/geminiSettings`);
     // Admin-controlled YouTube Music feature: shared enabled flag + shared API key,
     // same "one setting for both accounts" pattern as the Grok key above.
     const musicConfigRef = ref(database, `duotrack/groups/${GROUP_ID}/musicSettings`);
@@ -6937,7 +7003,19 @@
     let locallyDeletedChatIds = new Set();
     const GROK_TIP_SEEN_KEY = "duotrackGrokTipSeen";
     const GROK_MODEL = "openai/gpt-oss-120b";
+    // gpt-oss-120b is text-only, so cropped images go to a Groq vision model instead.
+    const GROK_VISION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct";
     let grokApiKey = "";
+    // Gemini is used ONLY by the PDF viewer's "Study AI" panel (cropped questions).
+    const GEMINI_DEFAULT_MODEL = "gemini-3.8-flash";
+    // Read-aloud (TTS) preferences for the PDF AI panel — edited in Settings, read by the viewer.
+    const TTS_PREFS_KEY = "duotrack.pdfViewer.tts";
+    function getTtsPrefs() {
+      const defaults = { engine: "gemini", lang: "hinglish", auto: false };
+      try { return { ...defaults, ...JSON.parse(localStorage.getItem(TTS_PREFS_KEY) || "{}") }; } catch (e) { return defaults; }
+    }
+    let geminiApiKey = "";
+    let geminiModel = GEMINI_DEFAULT_MODEL;
     let grokConversation = [];
     let grokPanelOpen = false;
 
@@ -7564,6 +7642,46 @@
               <input id="grokApiKeyInput" type="password" placeholder="gsk_..." value="${escapeHTML(grokApiKey)}" autocomplete="off">
               <p class="subtext">${grokApiKey ? "A Grok API key is currently saved and shared." : "No Grok API key saved yet."}</p>
               <button class="secondary-btn" type="submit">Save Grok key</button>
+            </form>
+          `
+        })}
+
+        ${settingsSection({
+          icon: "sparkle",
+          title: "PDF AI (Gemini)",
+          description: `Used only by the <strong>Study AI</strong> panel inside the PDF viewer (crop a question → Ask AI). Get a free key from aistudio.google.com → Get API key. Shared between both accounts. Chat's @grok / @a9 keep using the Groq key above.`,
+          tone: "ai",
+          body: `
+            <form id="geminiSettingsForm" class="field settings-inline-form">
+              <label for="geminiApiKeyInput">Gemini API key</label>
+              <input id="geminiApiKeyInput" type="password" placeholder="AIza..." value="${escapeHTML(geminiApiKey)}" autocomplete="off">
+              <label for="geminiModelInput">Model</label>
+              <input id="geminiModelInput" type="text" placeholder="${GEMINI_DEFAULT_MODEL}" value="${escapeHTML(geminiModel)}" autocomplete="off" spellcheck="false">
+              <p class="subtext">${geminiApiKey ? "A Gemini API key is currently saved and shared." : "No Gemini API key saved yet — the PDF AI won't answer until one is added."}</p>
+              <button class="secondary-btn" type="submit">Save Gemini settings</button>
+            </form>
+          `
+        })}
+
+        ${settingsSection({
+          icon: "sparkle",
+          title: "Read answers aloud (PDF AI)",
+          description: `Controls the <strong>Listen</strong> button on answers in the PDF viewer's Study AI panel. "Gemini (natural)" uses the Gemini key above; "Browser (free)" uses voices installed on this device.`,
+          tone: "ai",
+          body: `
+            <form id="ttsSettingsForm" class="field settings-inline-form">
+              <label for="ttsEngineInput">Voice</label>
+              <select id="ttsEngineInput" class="settings-select">
+                <option value="gemini" ${getTtsPrefs().engine === "gemini" ? "selected" : ""}>Gemini (natural)</option>
+                <option value="browser" ${getTtsPrefs().engine === "browser" ? "selected" : ""}>Browser (free)</option>
+              </select>
+              <label for="ttsLangInput">Read in</label>
+              <select id="ttsLangInput" class="settings-select">
+                <option value="hinglish" ${getTtsPrefs().lang === "hinglish" ? "selected" : ""}>Hinglish</option>
+                <option value="english" ${getTtsPrefs().lang === "english" ? "selected" : ""}>English</option>
+              </select>
+              <label class="checkbox-row"><input id="ttsAutoInput" type="checkbox" ${getTtsPrefs().auto ? "checked" : ""}> Auto-read new answers</label>
+              <button class="secondary-btn" type="submit">Save voice settings</button>
             </form>
           `
         })}
@@ -8986,7 +9104,7 @@
     // slang/abuse) or "savage" (@a9 only — same brain, dialled-up roast tone).
     // searchContext: optional plain-text web search snippets to ground the reply.
     // Returns the assistant's reply text, or throws on failure.
-    async function callGrokApi(promptText, history, mode = "normal", searchContext = "") {
+    async function callGrokApi(promptText, history, mode = "normal", searchContext = "", imageDataUrl = "") {
       if (!grokApiKey) {
         throw new Error("No AI API key set yet. Add one in Settings → AI Assistant.");
       }
@@ -9035,19 +9153,28 @@
         ...(history || []).slice(-40),
         { role: "user", content: searchContext ? `${promptText}\n\n[WEB SEARCH RESULTS]\n${searchContext}` : promptText }
       ];
+      if (imageDataUrl) {
+        // Cropped question from the PDF viewer -> send it to the vision model together with the text.
+        messages[0].content += "\n\nSCREENSHOT: The student attached a cropped screenshot of a question (or notes) from their study PDF. First read it completely and carefully: every option, given value, figure and condition. If any part is blurry or cut off, say exactly which part instead of guessing. Then answer the student's message about it. For MCQs, clearly name the correct option at the end.";
+        const lastMsg = messages[messages.length - 1];
+        lastMsg.content = [
+          { type: "text", text: lastMsg.content },
+          { type: "image_url", image_url: { url: imageDataUrl } }
+        ];
+      }
       let response;
       try {
-        response = await fetchWithTimeout("https://api.groq.com/openai/v1/chat/completions", 30000, {
+        response = await fetchWithTimeout("https://api.groq.com/openai/v1/chat/completions", imageDataUrl ? 60000 : 30000, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${grokApiKey}`
           },
           body: JSON.stringify({
-            model: GROK_MODEL,
+            model: imageDataUrl ? GROK_VISION_MODEL : GROK_MODEL,
             messages,
-            temperature: 0.7,
-            max_tokens: 1500
+            temperature: imageDataUrl ? 0.3 : 0.7,
+            max_tokens: imageDataUrl ? 2500 : 1500
           })
         });
       } catch (error) {
@@ -9062,6 +9189,133 @@
       }
       const data = await response.json();
       return data?.choices?.[0]?.message?.content?.trim() || "(No response from Grok.)";
+    }
+
+    // --- Gemini for the PDF viewer's Study AI panel (cropped questions) ---
+    async function loadGeminiSettings() {
+      try {
+        const snapshot = await get(geminiConfigRef);
+        const val = snapshot.val();
+        if (val && typeof val === "object") {
+          geminiApiKey = typeof val.apiKey === "string" ? val.apiKey : "";
+          geminiModel = (typeof val.model === "string" && val.model.trim()) || GEMINI_DEFAULT_MODEL;
+        }
+      } catch (error) {
+        console.error("Could not load Gemini settings", error);
+      }
+    }
+
+    async function saveGeminiSettings(apiKey, model) {
+      geminiApiKey = apiKey.trim();
+      geminiModel = model.trim().replace(/^models\//, "") || GEMINI_DEFAULT_MODEL;
+      await set(geminiConfigRef, { apiKey: geminiApiKey, model: geminiModel });
+    }
+
+    // Gemini generateContent REST call (works straight from the browser, no SDK/npm needed).
+    // history: [{role: "user"|"assistant", content}], imageDataUrl: optional cropped question.
+    async function callGeminiPdfApi(promptText, history, imageDataUrl = "") {
+      if (!geminiApiKey) {
+        throw new Error("No Gemini API key set yet. Add one in Settings → PDF AI (Gemini).");
+      }
+      const systemText = [
+        "You are 'AI', a study buddy inside a PDF viewer used by JEE (Indian engineering entrance exam) students. The student crops a question or notes from their study PDF and asks you about it.",
+        "",
+        "LANGUAGE: Reply ONLY in Hinglish — natural Hindi-English mixed speech written in Roman/Latin script (no Devanagari). Keep vocabulary simple, NCERT-level clarity, short sentences, explain a hard term the first time you use it. Tone: warm, helpful dost — no roasting, no slang/abuse.",
+        "",
+        "ACCURACY: Academic content must be correct. Double-check every formula, constant, unit and numerical answer. If a value depends on a convention (e.g. g = 9.8 vs 9.81 m/s²), say which one you use. Agar pakka sure nahi ho to seedha bol do, guess mat maro.",
+        "",
+        "SCREENSHOT: If an image is attached, it is a cropped screenshot of a question (or notes) from the student's PDF. First read it completely and carefully: every option, given value, figure and condition. If any part is blurry or cut off, say exactly which part instead of guessing. Then answer the student's message about it. For MCQs, clearly name the correct option at the end.",
+        "",
+        "LENGTH: Simple/casual message = 1-3 lines. Doubt, numerical or explanation = explain properly, step by step, no filler.",
+        "",
+        "MATH FORMATTING: The chat renders KaTeX, so write every formula in LaTeX:",
+        "- Inline math: \\( ... \\) on a single line, never split one expression across lines.",
+        "- Standalone/important formula on its own line: \\[ ... \\]",
+        "- Never use plain $ for math (write 'Rs' for currency). Only \\( \\) and \\[ \\] are math delimiters.",
+        "- Use \\frac{a}{b}, ^{}, _{}, \\sqrt{}, \\theta, \\pi, \\Delta etc. instead of plain-text a/b or x^2.",
+        "",
+        "FORMATTING:",
+        "- Paragraphs short (3-4 lines max).",
+        "- Numericals: concept/formula first, then values substituted step-by-step on separate lines, then the final answer clearly with units on its own line.",
+        "- Multiple points/steps: bullet list with lines starting '- '.",
+        "- NEVER use asterisks (*) anywhere — no **bold**, no *emphasis*. Use a label like 'Answer:' on its own line instead. Plain text only, no markdown symbols.",
+        "- Blank line between distinct ideas.",
+        "- No filler like 'Great question!' — start directly with the answer."
+      ].join("\n");
+
+      const contents = (history || []).slice(-30)
+        .map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: String(m.content || "") }] }))
+        .filter((c) => c.parts[0].text);
+      const userParts = [];
+      if (imageDataUrl) {
+        const comma = imageDataUrl.indexOf(",");
+        const mime = (/^data:([^;,]+)/.exec(imageDataUrl) || [])[1] || "image/jpeg";
+        if (comma > 0) userParts.push({ inlineData: { mimeType: mime, data: imageDataUrl.slice(comma + 1) } });
+      }
+      userParts.push({ text: promptText });
+      contents.push({ role: "user", parts: userParts });
+
+      // Gemini sometimes returns 503 "high demand" spikes: retry once, then fall back to older Flash models.
+      const modelsToTry = [...new Set([geminiModel || GEMINI_DEFAULT_MODEL, "gemini-3.7-flash", "gemini-3.5-flash"])];
+      const requestBody = JSON.stringify({
+        systemInstruction: { parts: [{ text: systemText }] },
+        contents,
+        generationConfig: { maxOutputTokens: 8192 }
+      });
+      const readError = async (res) => {
+        try {
+          const errJson = await res.json();
+          return errJson?.error?.message || JSON.stringify(errJson);
+        } catch (e) {
+          return "";
+        }
+      };
+      let response = null;
+      let failure = "";
+      outer:
+      for (const model of modelsToTry) {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+        for (let attempt = 0; attempt < 2; attempt++) {
+          if (attempt) await new Promise((resolve) => setTimeout(resolve, 1500));
+          try {
+            response = await fetchWithTimeout(url, 90000, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "x-goog-api-key": geminiApiKey },
+              body: requestBody
+            });
+          } catch (error) {
+            if (error.name === "AbortError") {
+              throw new Error("Gemini took too long to reply (timed out). Try again in a bit.");
+            }
+            throw new Error("Couldn't reach Gemini — check your internet connection.");
+          }
+          if (response.ok) break outer;
+          const detail = await readError(response);
+          if ([429, 500, 502, 503, 504].includes(response.status)) {
+            failure = `${response.status}: ${detail}`;
+            continue;                                   // retry, then try the next model
+          }
+          if (response.status === 404 && model !== modelsToTry[0]) {
+            failure = `${response.status}: ${detail}`;
+            break;                                      // fallback model not available, skip it
+          }
+          throw new Error(`Gemini error (${response.status}): ${String(detail).slice(0, 220)}`);
+        }
+      }
+      if (!response || !response.ok) {
+        throw new Error(`Gemini is very busy right now, please try again in a minute. (${String(failure).slice(0, 160)})`);
+      }
+      const data = await response.json();
+      const candidate = data?.candidates?.[0];
+      const text = (candidate?.content?.parts || [])
+        .filter((part) => !part.thought && typeof part.text === "string")
+        .map((part) => part.text)
+        .join("")
+        .trim();
+      if (text) return text;
+      const blocked = data?.promptFeedback?.blockReason;
+      if (blocked) throw new Error(`Gemini blocked this request (${blocked}). Try re-cropping or rephrasing.`);
+      throw new Error(`Gemini returned no answer${candidate?.finishReason ? ` (${candidate.finishReason})` : ""}. Try again.`);
     }
 
     // Best-effort free web search (no API key / backend needed) so the AI can
@@ -9987,9 +10241,9 @@
     const PDFJS_VERSION = "3.11.174";
     const PDFJS_BASE = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VERSION}/`;
     const PV_CSS_UNITS = 96 / 72;
-    const PV_MIN_ZOOM = 25;
+    const PV_MIN_ZOOM = 5;
     const PV_MAX_ZOOM = 500;
-    const PV_ZOOM_STEPS = [25, 33, 50, 67, 75, 90, 100, 110, 125, 150, 175, 200, 250, 300, 400, 500];
+    const PV_ZOOM_STEPS = [5, 10, 15, 25, 33, 50, 67, 75, 90, 100, 110, 125, 150, 175, 200, 250, 300, 400, 500];
     const PV_PREFS_KEY = "duotrack.pdfViewer.prefs";
     const PV_COLORS = ["#e0483e", "#f5b301", "#22a06b", "#3b82f6", "#111111"];
     const PV_PATHS = {
@@ -10022,7 +10276,12 @@
       hand: '<path d="M18 11V6a2 2 0 0 0-4 0M14 10V4a2 2 0 0 0-4 0v2M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/>',
       first: '<path d="M6 5v14M18 17l-6-6 6-6"/>',
       last: '<path d="M18 5v14M6 7l6 6-6 6"/>',
-      trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>'
+      trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
+      crop: '<path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/><path d="M20.5 1l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7Z" fill="currentColor" stroke-width="1"/>',
+      spark: '<path d="M12 3l1.9 5.4L19 10l-5.1 1.6L12 17l-1.9-5.4L5 10l5.1-1.6Z"/><path d="M19 15l.8 2.2 2.2.8-2.2.8L19 21l-.8-2.2-2.2-.8 2.2-.8Z"/>',
+      send: '<path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4Z"/>',
+      speaker: '<path d="M11 5 6 9H3v6h3l5 4Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/>',
+      stopSq: '<rect x="6" y="6" width="12" height="12" rx="2"/>'
     };
     let pdfJsPromise = null;
 
@@ -10276,7 +10535,7 @@
             <div class="pv-menuwrap">
               <button type="button" class="pv-zoombtn" data-act="zoomMenu" aria-haspopup="true" title="Zoom"><span data-ref="zoomLabel">100%</span>${pvIcon("chevDown")}</button>
               <div class="pv-menu pv-zoommenu" data-ref="zoomMenu" role="menu" hidden>
-                ${[50, 75, 100, 125, 150, 200, 300, 400].map((z) => `<button type="button" class="pv-item" role="menuitem" data-zoom="${z}"><span>${z}%</span></button>`).join("")}
+                ${[5, 10, 25, 50, 75, 100, 125, 150, 200, 300, 400].map((z) => `<button type="button" class="pv-item" role="menuitem" data-zoom="${z}"><span>${z}%</span></button>`).join("")}
                 <div class="pv-msep"></div>
                 ${pvItem("fitWidth", "Fit width", "Ctrl 1", "fitWidth")}
                 ${pvItem("fit", "Fit page", "Ctrl 0", "fitPage")}
@@ -10288,6 +10547,7 @@
             <span class="pv-sep pv-hide-sm"></span>
             <button type="button" class="pv-btn pv-hide-sm" data-act="toolText" title="Add text" aria-label="Add text">${pvIcon("text")}</button>
             <button type="button" class="pv-btn pv-hide-sm" data-act="toolDraw" title="Draw / highlight / erase" aria-label="Draw or highlight">${pvIcon("pen")}</button>
+            <button type="button" class="pv-btn pv-hide-sm pv-magic" data-act="toolCrop" title="Magic crop: select a question and ask AI (C)" aria-label="Magic crop and ask AI">${pvIcon("crop")}</button>
             <button type="button" class="pv-btn pv-hide-sm" data-act="undo" title="Undo (Ctrl Z)" aria-label="Undo" disabled>${pvIcon("undo")}</button>
             <button type="button" class="pv-btn pv-hide-sm" data-act="redo" title="Redo (Ctrl Y)" aria-label="Redo" disabled>${pvIcon("redo")}</button>
             <button type="button" class="pv-btn" data-act="fullscreen" title="Full screen (F)" aria-label="Full screen">${pvIcon("fullscreen")}</button>
@@ -10316,6 +10576,7 @@
               <div class="pv-menu pv-menu-right" data-ref="moreMenu" role="menu" hidden>
                 ${pvItem("text", "Add text", "", "toolText", "pv-only-sm")}
                 ${pvItem("pen", "Draw / highlight / erase", "", "toolDraw", "pv-only-sm")}
+                ${pvItem("crop", "Magic crop → Ask AI", "C", "toolCrop", "pv-only-sm")}
                 ${pvItem("undo", "Undo", "", "undo", "pv-only-sm")}
                 ${pvItem("redo", "Redo", "", "redo", "pv-only-sm")}
                 ${pvItem("download", "Download", "", "download", "pv-only-sm")}
@@ -10377,6 +10638,27 @@
             </section>
           </aside>
           <div class="pv-scroller" data-ref="scroller" tabindex="0" aria-label="Document pages"><div class="pv-pages" data-ref="pages"></div></div>
+          <aside class="pv-ai" data-ref="ai" hidden aria-label="Ask AI about a cropped question">
+            <div class="pv-ai-resize" data-ref="aiResize" title="Drag to resize" aria-hidden="true"></div>
+            <div class="pv-ai-head">
+              <span class="pv-ai-title">${pvIcon("spark")}Study AI <small>ASSISTANT</small></span>
+              <span class="pv-ai-head-btns">
+                <button type="button" class="pv-btn pv-small pv-hide-sm" data-act="aiWide" title="Bigger / smaller panel" aria-label="Toggle big or small AI panel">${pvIcon("fullscreen")}</button>
+                <button type="button" class="pv-btn pv-small" data-act="aiClose" title="Close (Esc)" aria-label="Close AI panel">${pvIcon("close")}</button>
+              </span>
+            </div>
+            <div class="pv-ai-tts-msg" data-ref="ttsMsg"></div>
+            <div class="pv-ai-msgs" data-ref="aiMsgs" aria-live="polite"></div>
+            <div class="pv-ai-attach" data-ref="aiAttach" hidden>
+              <img data-ref="aiThumb" alt="Cropped question">
+              <div><b>Cropped question</b><span>Attached to your questions</span></div>
+              <button type="button" class="pv-btn pv-small" data-act="aiDetach" title="Remove image" aria-label="Remove attached image">${pvIcon("close")}</button>
+            </div>
+            <form class="pv-ai-form" data-ref="aiForm">
+              <input data-ref="aiInput" type="text" maxlength="600" autocomplete="off" placeholder="Type your question…" aria-label="Your question for the AI">
+              <button type="submit" class="pv-ai-send" data-ref="aiSend" aria-label="Send">${pvIcon("send")}</button>
+            </form>
+          </aside>
         </div>
         <footer class="pv-foot">${pvIcon("doc")}<span data-ref="footName"></span><span class="pv-foot-page" data-ref="footPage">1 / 1</span></footer>
         <div class="pv-loading" data-ref="loading"><div class="pv-spin"></div><span data-ref="loadingText">Opening…</span></div>`;
@@ -10468,6 +10750,7 @@
         ann.addEventListener("pointerdown", (event) => {
           if (S.tool === "draw") startStroke(slot, event);
           else if (S.tool === "text") startText(slot, event);
+          else if (S.tool === "crop") startCrop(slot, event);
         });
         return slot;
       }
@@ -10607,6 +10890,7 @@
       }
       function zoomStep(dir) { setZoom(pvNextStep(S.zoom, dir)); }
       function rotate(delta) {
+        clearCrop();
         S.rot = (S.rot + delta + 360) % 360;
         const page = S.cur;
         S.slots.forEach((slot) => { releaseSlot(slot); });
@@ -10896,11 +11180,13 @@
       function setTool(tool) {
         if (S.tool === tool) tool = "select";
         finishText(true);
+        if (tool !== "crop") clearCrop();
         S.tool = tool;
         S.hand = false;
         root.dataset.tool = tool;
         root.querySelectorAll('[data-act="toolText"]').forEach((b) => b.classList.toggle("is-on", tool === "text"));
         root.querySelectorAll('[data-act="toolDraw"]').forEach((b) => b.classList.toggle("is-on", tool === "draw"));
+        root.querySelectorAll('[data-act="toolCrop"]').forEach((b) => b.classList.toggle("is-on", tool === "crop"));
         root.querySelectorAll(".pv-hand-item").forEach((b) => b.classList.remove("is-on"));
         renderToolPop();
       }
@@ -10914,6 +11200,12 @@
       function renderToolPop() {
         root.dataset.pen = S.pen.kind;
         if (S.tool === "select") { toolPop.hidden = true; toolPop.innerHTML = ""; return; }
+        if (S.tool === "crop") {
+          const ready = Boolean(S.crop && S.crop.done);
+          toolPop.hidden = false;
+          toolPop.innerHTML = `<span class="pv-poplabel">${ready ? "Press <b>Enter</b> to send to AI · drag again to redo · <b>Esc</b> to cancel" : "Drag a box around the question you want to ask about"}</span><button type="button" class="pv-cropask" data-crop-ask${ready ? "" : " disabled"}>${pvIcon("spark")}Ask AI <kbd>Enter</kbd></button>`;
+          return;
+        }
         const draw = S.tool === "draw";
         const eras = draw && S.pen.kind === "er";
         const cfg = draw ? S.pen : S.text;
@@ -10927,6 +11219,7 @@
           <div class="pv-seg">${sizes.map((s, i) => `<button type="button" data-size="${s}" class="${cfg.size === s ? "is-on" : ""}">${labels[i]}</button>`).join("")}</div>`;
       }
       toolPop.addEventListener("click", (event) => {
+        if (S.tool === "crop") { if (event.target.closest("[data-crop-ask]")) confirmCrop(); return; }
         const cfg = S.tool === "draw" ? S.pen : S.text;
         const pen = event.target.closest("[data-pen]");
         const color = event.target.closest("[data-color]");
@@ -10944,6 +11237,461 @@
         if (size) cfg.size = Number(size.dataset.size);
         renderToolPop();
       });
+
+      /* ---------- magic crop -> Ask AI ---------- */
+      const aiEl = ref("ai");
+      const aiMsgs = ref("aiMsgs");
+      const aiAttach = ref("aiAttach");
+      const aiThumb = ref("aiThumb");
+      const aiForm = ref("aiForm");
+      const aiInput = ref("aiInput");
+      const aiSend = ref("aiSend");
+      const aiResize = ref("aiResize");
+      const AI_W_KEY = "duotrack.pdfViewer.aiWidth";
+      const AI_MIN_W = 300;
+      const aiMaxW = () => Math.max(AI_MIN_W, Math.min(900, Math.round(window.innerWidth * 0.8)));
+      const aiSmallW = () => Math.max(AI_MIN_W, Math.min(400, Math.round(window.innerWidth * 0.42)));
+      const aiBigW = () => Math.min(aiMaxW(), Math.min(760, Math.round(window.innerWidth * 0.65)));
+      function setAiWidth(w, save = true) {
+        w = Math.max(AI_MIN_W, Math.min(aiMaxW(), Math.round(w)));
+        aiEl.style.setProperty("--pv-ai-w", w + "px");
+        if (save) { try { localStorage.setItem(AI_W_KEY, String(w)); } catch (e) { /* private mode */ } }
+      }
+      function toggleAiWide() {
+        const cur = aiEl.getBoundingClientRect().width;
+        setAiWidth(cur > (aiSmallW() + aiBigW()) / 2 ? aiSmallW() : aiBigW());
+      }
+      try { const savedW = Number(localStorage.getItem(AI_W_KEY)); if (savedW) setAiWidth(savedW, false); } catch (e) { /* ignore */ }
+      aiResize.addEventListener("pointerdown", (event) => {
+        event.preventDefault();
+        const startX = event.clientX;
+        const startW = aiEl.getBoundingClientRect().width;
+        aiResize.setPointerCapture(event.pointerId);
+        aiResize.classList.add("is-active");
+        const move = (e) => setAiWidth(startW + (startX - e.clientX), false);
+        const up = () => {
+          aiResize.classList.remove("is-active");
+          aiResize.removeEventListener("pointermove", move);
+          aiResize.removeEventListener("pointerup", up);
+          aiResize.removeEventListener("pointercancel", up);
+          setAiWidth(aiEl.getBoundingClientRect().width);
+        };
+        aiResize.addEventListener("pointermove", move);
+        aiResize.addEventListener("pointerup", up);
+        aiResize.addEventListener("pointercancel", up);
+      });
+      S.crop = null;
+      S.aiOpen = false;
+      S.aiBusy = false;
+      S.aiImage = "";
+      S.aiShown = "";
+      S.aiChat = [];
+
+      function clearCrop() {
+        if (!S.crop) return;
+        try { S.crop.rect.remove(); } catch (error) { /* ignore */ }
+        S.crop = null;
+      }
+      function startCrop(slot, event) {
+        if (event.button !== 0 || !slot.rendered || S.hand || S.space) return;
+        event.preventDefault();
+        clearCrop();
+        const fx = (cx) => { const b = slot.el.getBoundingClientRect(); return pvClamp((cx - b.left) / (b.width || 1), 0, 1); };
+        const fy = (cy) => { const b = slot.el.getBoundingClientRect(); return pvClamp((cy - b.top) / (b.height || 1), 0, 1); };
+        const rect = document.createElement("div");
+        rect.className = "pv-croprect";
+        slot.el.appendChild(rect);
+        const sx = fx(event.clientX);
+        const sy = fy(event.clientY);
+        const sel = { slot, rect, page: slot.num, rot: S.rot, x0: sx, y0: sy, x1: sx, y1: sy, done: false };
+        S.crop = sel;
+        renderToolPop();
+        const paint = () => {
+          const l = Math.min(sel.x0, sel.x1), r = Math.max(sel.x0, sel.x1);
+          const t = Math.min(sel.y0, sel.y1), b = Math.max(sel.y0, sel.y1);
+          rect.style.left = `${l * 100}%`;
+          rect.style.top = `${t * 100}%`;
+          rect.style.width = `${(r - l) * 100}%`;
+          rect.style.height = `${(b - t) * 100}%`;
+        };
+        paint();
+        try { slot.ann.setPointerCapture(event.pointerId); } catch (error) { /* ignore */ }
+        let finished = false;
+        const onMove = (e) => {
+          if (e.pointerId !== event.pointerId) return;
+          if (e.pointerType === "mouse" && !(e.buttons & 1)) { end(e); return; }
+          sel.x1 = fx(e.clientX);
+          sel.y1 = fy(e.clientY);
+          paint();
+        };
+        const end = (e) => {
+          if (finished || (e && e.pointerId !== event.pointerId)) return;
+          finished = true;
+          slot.ann.removeEventListener("pointermove", onMove);
+          slot.ann.removeEventListener("pointerup", end);
+          slot.ann.removeEventListener("pointercancel", end);
+          slot.ann.removeEventListener("lostpointercapture", end);
+          window.removeEventListener("pointerup", end);
+          window.removeEventListener("blur", end);
+          try { slot.ann.releasePointerCapture(event.pointerId); } catch (error) { /* ignore */ }
+          if (S.crop !== sel) return;
+          const b = slot.el.getBoundingClientRect();
+          const w = Math.abs(sel.x1 - sel.x0) * b.width;
+          const h = Math.abs(sel.y1 - sel.y0) * b.height;
+          if (w < 14 || h < 14) { clearCrop(); renderToolPop(); return; }   /* just a click, not a selection */
+          const x0 = Math.min(sel.x0, sel.x1), x1 = Math.max(sel.x0, sel.x1);
+          const y0 = Math.min(sel.y0, sel.y1), y1 = Math.max(sel.y0, sel.y1);
+          sel.x0 = x0; sel.x1 = x1; sel.y0 = y0; sel.y1 = y1;
+          sel.done = true;
+          renderToolPop();
+        };
+        slot.ann.addEventListener("pointermove", onMove);
+        slot.ann.addEventListener("pointerup", end);
+        slot.ann.addEventListener("pointercancel", end);
+        slot.ann.addEventListener("lostpointercapture", end);
+        window.addEventListener("pointerup", end);
+        window.addEventListener("blur", end);
+      }
+      /* Re-renders just the selected area straight from the PDF: sharp at any zoom,
+         with no pen strokes, notes, or dark-mode inversion baked in. */
+      async function renderCropImage(sel) {
+        const slot = S.slots[sel.page - 1];
+        const page = slot.page || await S.pdf.getPage(slot.num);
+        const rot = ((page.rotate || 0) + sel.rot) % 360;
+        const base = page.getViewport({ scale: 1, rotation: rot });
+        const rx = sel.x0 * base.width, ry = sel.y0 * base.height;
+        const rw = Math.max(1, (sel.x1 - sel.x0) * base.width);
+        const rh = Math.max(1, (sel.y1 - sel.y0) * base.height);
+        const k = Math.max(0.5, Math.min(4, 1800 / Math.max(rw, rh)));
+        const viewport = page.getViewport({ scale: k, rotation: rot, offsetX: -rx * k, offsetY: -ry * k });
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.ceil(rw * k));
+        canvas.height = Math.max(1, Math.ceil(rh * k));
+        const ctx = canvas.getContext("2d", { alpha: false });
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        await page.render({ canvasContext: ctx, viewport }).promise;
+        let url = "";
+        for (const q of [0.92, 0.8, 0.65]) {
+          url = canvas.toDataURL("image/jpeg", q);
+          if (url.length < 3500000) break;      /* keep the request comfortably small */
+        }
+        canvas.width = canvas.height = 0;
+        return url;
+      }
+      async function confirmCrop() {
+        const sel = S.crop;
+        if (!sel || !sel.done || sel.busy) return;
+        sel.busy = true;
+        sel.rect.classList.add("is-busy");
+        try {
+          const url = await renderCropImage(sel);
+          if (S.destroyed) return;
+          S.aiImage = url;
+          clearCrop();
+          openAi();
+          renderToolPop();
+          aiInput.focus();
+        } catch (error) {
+          console.warn("Magic crop failed", error);
+          sel.busy = false;
+          sel.rect.classList.remove("is-busy");
+          S.aiChat.push({ role: "assistant", content: "Couldn't capture that area. Please try selecting it again.", err: true });
+          openAi();
+        }
+      }
+
+      /* ----- read answers aloud (Gemini TTS or the browser's own voices) ----- */
+      const GEMINI_TTS_MODEL = "gemini-3.8-flash-tts";
+      const GEMINI_TTS_VOICE = "Kore";
+      S.tts = { engine: "gemini", lang: "hinglish", auto: false, idx: -1, state: "idle", token: 0, audio: null, cancelPlay: null };
+      const refreshTtsPrefs = () => Object.assign(S.tts, getTtsPrefs());   // voice / language / auto-read live in Settings
+      refreshTtsPrefs();
+      const ttsMsgEl = ref("ttsMsg");
+
+      /* Turns an answer (with LaTeX + list markers) into text that sounds natural when spoken. */
+      function speakableText(raw) {
+        const greek = { alpha: "alpha", beta: "beta", gamma: "gamma", Gamma: "gamma", delta: "delta", Delta: "delta", epsilon: "epsilon", varepsilon: "epsilon", theta: "theta", Theta: "theta", lambda: "lambda", mu: "mu", nu: "nu", pi: "pi", rho: "rho", sigma: "sigma", Sigma: "sigma", tau: "tau", phi: "phi", varphi: "phi", omega: "omega", Omega: "omega", eta: "eta", kappa: "kappa" };
+        let t = String(raw || "");
+        t = t.replace(/\^\s*\{?\s*\\circ\s*\}?/g, " degree ")
+          .replace(/\\text(?:bf|rm|it)?\s*\{([^{}]*)\}/g, "$1")
+          .replace(/\\sqrt\s*\{([^{}]*)\}/g, " root of $1 ")
+          .replace(/\^\s*\{\s*2\s*\}|\^\s*2\b/g, " squared ")
+          .replace(/\^\s*\{\s*3\s*\}|\^\s*3\b/g, " cubed ")
+          .replace(/\^\s*\{([^{}]*)\}/g, " to the power $1 ")
+          .replace(/_\s*\{([^{}]*)\}/g, " $1 ");
+        for (let i = 0; i < 6; i++) t = t.replace(/\\[dt]?frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, " $1 by $2 ");
+        t = t.replace(/\\sqrt\s*\{([^{}]*)\}/g, " root of $1 ")
+          .replace(/\\text(?:bf|rm|it)?\s*\{([^{}]*)\}/g, "$1")
+          .replace(/\^\s*\{\s*2\s*\}|\^\s*2\b/g, " squared ")
+          .replace(/\^\s*\{\s*3\s*\}|\^\s*3\b/g, " cubed ")
+          .replace(/\^\s*\{\s*-\s*1\s*\}/g, " inverse ")
+          .replace(/\^\s*\{([^{}]*)\}/g, " to the power $1 ")
+          .replace(/\^\s*(\w)/g, " to the power $1 ")
+          .replace(/_\s*\{([^{}]*)\}/g, " $1 ")
+          .replace(/_(\w)/g, " $1 ")
+          .replace(/\\times|\\cdot/g, " times ")
+          .replace(/\\div/g, " divided by ")
+          .replace(/\\pm/g, " plus minus ")
+          .replace(/\\(?:leq|le)\b/g, " less than or equal to ")
+          .replace(/\\(?:geq|ge)\b/g, " greater than or equal to ")
+          .replace(/\\neq/g, " not equal to ")
+          .replace(/\\approx/g, " approximately ")
+          .replace(/\\(?:rightarrow|to)\b/g, " gives ")
+          .replace(/\\infty/g, " infinity ")
+          .replace(/\\circ/g, " degree ")
+          .replace(/\\[\[\]()]/g, " ")
+          .replace(/\\([a-zA-Z]+)/g, (m, name) => (greek[name] ? ` ${greek[name]} ` : " "))
+          .replace(/\\[,;:! ]/g, " ").replace(/[\\^_]/g, " ")
+          .replace(/[{}$]/g, " ")
+          .replace(/^\s*[-•]\s+/gm, "")
+          .replace(/(^|[\s(=])-(?=[\w(])/g, "$1minus ")
+          .replace(/=/g, " equals ").replace(/\+/g, " plus ").replace(/[−–]/g, " minus ")
+          .replace(/×/g, " times ").replace(/÷/g, " divided by ").replace(/≈/g, " approximately ")
+          .replace(/≤/g, " less than or equal to ").replace(/≥/g, " greater than or equal to ")
+          .replace(/→/g, " gives ").replace(/%/g, " percent ").replace(/\*/g, "");
+        return t.split(/\n+/).map((line) => line.replace(/\s+/g, " ").trim()).filter(Boolean)
+          .map((line) => (/[.!?:।]$/.test(line) ? line : line + ".")).join(" ");
+      }
+      function splitForTts(text, max) {
+        const parts = text.split(/(?<=[.!?।])\s+/);
+        const out = [];
+        let cur = "";
+        const push = (piece) => {
+          while (piece.length > max) {
+            let cut = piece.lastIndexOf(" ", max);
+            if (cut < max / 2) cut = max;
+            out.push(piece.slice(0, cut).trim());
+            piece = piece.slice(cut).trim();
+          }
+          return piece;
+        };
+        for (const part of parts) {
+          if ((cur + " " + part).trim().length <= max) { cur = (cur + " " + part).trim(); continue; }
+          if (cur) out.push(cur);
+          cur = push(part);
+        }
+        if (cur) out.push(cur);
+        return out.filter(Boolean);
+      }
+      function updateSpeakButtons() {
+        aiMsgs.querySelectorAll('[data-act="aiSpeak"]').forEach((b) => {
+          const on = Number(b.dataset.idx) === S.tts.idx && S.tts.state !== "idle";
+          b.classList.toggle("is-on", on);
+          b.innerHTML = pvIcon(on ? "stopSq" : "speaker") + (on ? (S.tts.state === "loading" ? "Loading…" : "Stop") : "Listen");
+        });
+      }
+      function stopSpeech() {
+        S.tts.token++;
+        try { if (S.tts.audio) { S.tts.audio.pause(); S.tts.audio = null; } } catch (e) { /* ignore */ }
+        try { if ("speechSynthesis" in window) window.speechSynthesis.cancel(); } catch (e) { /* ignore */ }
+        if (S.tts.cancelPlay) { const done = S.tts.cancelPlay; S.tts.cancelPlay = null; done(); }
+        S.tts.state = "idle"; S.tts.idx = -1;
+        updateSpeakButtons();
+      }
+      function b64ToBytes(b64) {
+        const bin = atob(b64);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        return bytes;
+      }
+      function pcmToWavBlob(pcm, rate) {
+        const buf = new ArrayBuffer(44 + pcm.length);
+        const v = new DataView(buf);
+        const w = (o, str) => { for (let i = 0; i < str.length; i++) v.setUint8(o + i, str.charCodeAt(i)); };
+        w(0, "RIFF"); v.setUint32(4, 36 + pcm.length, true); w(8, "WAVE"); w(12, "fmt ");
+        v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+        v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+        w(36, "data"); v.setUint32(40, pcm.length, true);
+        new Uint8Array(buf, 44).set(pcm);
+        return new Blob([buf], { type: "audio/wav" });
+      }
+      /* One chunk of text -> object URL of playable audio, via the Gemini TTS model. */
+      async function geminiTtsChunk(text) {
+        if (!geminiApiKey) throw new Error("Add a Gemini API key in Settings → PDF AI (Gemini) to use the Gemini voice, or pick Browser (free).");
+        const style = S.tts.lang === "hinglish"
+          ? "Warm, clear Indian-accent teacher speaking at a relaxed pace. The text is Hinglish (Hindi written in Roman letters): pronounce Hindi words like a native Hindi speaker and read maths and science terms in English."
+          : "Warm, clear, friendly teacher in neutral English at a relaxed, steady pace.";
+        const build = (withMeta) => JSON.stringify({
+          contents: [{ role: "user", parts: [withMeta ? { text, speech_metadata: { style } } : { text }] }],
+          generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: GEMINI_TTS_VOICE } } } }
+        });
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_TTS_MODEL}:generateContent`;
+        let withMeta = true;
+        let data = null;
+        let lastErr = "";
+        for (let attempt = 0; attempt < 3 && !data; attempt++) {
+          if (attempt) await new Promise((r) => setTimeout(r, 1500));
+          let res;
+          try {
+            res = await fetchWithTimeout(url, 60000, { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": geminiApiKey }, body: build(withMeta) });
+          } catch (e) { throw new Error("Couldn't reach Gemini voice — check your internet connection."); }
+          if (res.ok) { data = await res.json(); break; }
+          let detail = "";
+          try { detail = (await res.json())?.error?.message || ""; } catch (e) { /* ignore */ }
+          lastErr = `${res.status}: ${detail}`;
+          if (res.status === 400 && withMeta) { withMeta = false; continue; }     // retry without the style hint
+          if ([429, 500, 502, 503, 504].includes(res.status)) continue;
+          throw new Error(`Gemini voice error (${lastErr.slice(0, 200)})`);
+        }
+        if (!data) throw new Error(`Gemini voice is busy right now — try again, or switch Voice to Browser. (${lastErr.slice(0, 120)})`);
+        const part = (data?.candidates?.[0]?.content?.parts || []).find((x) => (x.inlineData || x.inline_data)?.data);
+        const inline = part && (part.inlineData || part.inline_data);
+        if (!inline) throw new Error("Gemini voice returned no audio. Try again.");
+        const mime = String(inline.mimeType || inline.mime_type || "");
+        const bytes = b64ToBytes(inline.data);
+        const isWav = /wav/i.test(mime) || (bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46);
+        const blob = isWav ? new Blob([bytes], { type: "audio/wav" }) : pcmToWavBlob(bytes, Number((/rate=(\d+)/.exec(mime) || [])[1]) || 24000);
+        return URL.createObjectURL(blob);
+      }
+      function playAudioUrl(url) {
+        return new Promise((resolve, reject) => {
+          const a = new Audio(url);
+          S.tts.audio = a;
+          S.tts.cancelPlay = () => { URL.revokeObjectURL(url); resolve(); };
+          a.onended = () => { URL.revokeObjectURL(url); S.tts.cancelPlay = null; resolve(); };
+          a.onerror = () => { URL.revokeObjectURL(url); S.tts.cancelPlay = null; reject(new Error("Couldn't play the audio.")); };
+          a.play().catch((e) => { URL.revokeObjectURL(url); reject(e); });
+        });
+      }
+      async function speakWithGemini(text, token) {
+        const chunks = splitForTts(text, 1200);
+        let next = geminiTtsChunk(chunks[0]).then((u) => ({ u }), (e) => ({ e }));
+        for (let i = 0; i < chunks.length; i++) {
+          const res = await next;
+          if (token !== S.tts.token) { if (res.u) URL.revokeObjectURL(res.u); return; }
+          if (res.e) throw res.e;
+          if (i + 1 < chunks.length) next = geminiTtsChunk(chunks[i + 1]).then((u) => ({ u }), (e) => ({ e }));
+          S.tts.state = "playing"; updateSpeakButtons();
+          await playAudioUrl(res.u);
+          if (token !== S.tts.token) return;
+        }
+      }
+      function getVoicesReady() {
+        return new Promise((resolve) => {
+          const synth = window.speechSynthesis;
+          const now = synth.getVoices();
+          if (now.length) return resolve(now);
+          const done = () => resolve(synth.getVoices());
+          synth.addEventListener("voiceschanged", done, { once: true });
+          setTimeout(done, 1200);
+        });
+      }
+      function pickBrowserVoice(voices) {
+        const order = S.tts.lang === "hinglish" ? ["en-IN", "hi-IN", "en-GB", "en-US", "en"] : ["en-US", "en-GB", "en-IN", "en"];
+        for (const code of order) {
+          const hit = voices.find((v) => v.lang && v.lang.replace("_", "-").toLowerCase().startsWith(code.toLowerCase()));
+          if (hit) return hit;
+        }
+        return voices[0];
+      }
+      async function speakWithBrowser(text, token) {
+        if (!("speechSynthesis" in window)) throw new Error("This browser has no built-in speech. Switch Voice to Gemini (natural).");
+        const voices = await getVoicesReady();
+        if (!voices.length) throw new Error("No browser voices are installed on this system (common on Linux). Switch Voice to Gemini (natural).");
+        const voice = pickBrowserVoice(voices);
+        S.tts.state = "playing"; updateSpeakButtons();
+        for (const chunk of splitForTts(text, 220)) {
+          if (token !== S.tts.token) return;
+          await new Promise((resolve) => {
+            const u = new SpeechSynthesisUtterance(chunk);
+            u.voice = voice; u.lang = voice.lang; u.rate = 0.95;
+            u.onend = resolve; u.onerror = resolve;
+            S.tts.cancelPlay = resolve;
+            window.speechSynthesis.speak(u);
+          });
+        }
+      }
+      async function speakMessage(idx) {
+        const msg = S.aiChat[idx];
+        if (!msg || msg.role !== "assistant") return;
+        const wasThis = S.tts.idx === idx && S.tts.state !== "idle";
+        refreshTtsPrefs();
+        stopSpeech();
+        ttsMsgEl.textContent = "";
+        if (wasThis) return;
+        const text = speakableText(msg.content);
+        if (!text) return;
+        const token = ++S.tts.token;
+        S.tts.idx = idx; S.tts.state = "loading"; updateSpeakButtons();
+        try {
+          if (S.tts.engine === "browser") await speakWithBrowser(text, token); else await speakWithGemini(text, token);
+        } catch (error) {
+          if (token === S.tts.token) ttsMsgEl.textContent = (error && error.message) || "Couldn't read that aloud.";
+        }
+        if (token === S.tts.token) { S.tts.state = "idle"; S.tts.idx = -1; updateSpeakButtons(); }
+      }
+
+      /* ----- AI side panel ----- */
+      function renderAiAttach() {
+        aiAttach.hidden = !S.aiImage;
+        if (S.aiImage) aiThumb.src = S.aiImage; else aiThumb.removeAttribute("src");
+        aiInput.placeholder = S.aiImage ? "Ask about this question… (or just press Enter to solve)" : "Type your question…";
+      }
+      function renderAi() {
+        if (!S.aiChat.length && !S.aiBusy) {
+          aiMsgs.innerHTML = `<div class="pv-ai-empty">${pvIcon("spark")}<br>Use the <b>crop</b> tool, drag a box around a question and press <b>Enter</b>.<br>Then type your doubt and the AI will answer.</div>`;
+          return;
+        }
+        aiMsgs.innerHTML = S.aiChat.map((m, i) => m.role === "user"
+          ? `<div class="pv-ai-msg mine">${m.img ? `<img class="pv-ai-crop" src="${m.img}" alt="Cropped question">` : ""}<span>${linkifyText(escapeHTML(m.content))}</span></div>`
+          : `<div class="pv-ai-msg bot${m.err ? " err" : ""}"><div class="pv-ai-who">${pvIcon("spark")}AI${m.err ? "" : `<button type="button" class="pv-ai-speak${S.tts.idx === i && S.tts.state !== "idle" ? " is-on" : ""}" data-act="aiSpeak" data-idx="${i}" title="Read this answer aloud">${pvIcon(S.tts.idx === i && S.tts.state !== "idle" ? "stopSq" : "speaker")}${S.tts.idx === i && S.tts.state === "loading" ? "Loading…" : S.tts.idx === i && S.tts.state === "playing" ? "Stop" : "Listen"}</button>`}</div><div class="ai-rich">${renderAiRichText(escapeHTML(m.content))}</div></div>`
+        ).join("") + (S.aiBusy ? `<div class="pv-ai-msg bot"><span class="pv-dots"><i></i><i></i><i></i></span></div>` : "");
+        aiMsgs.scrollTop = aiMsgs.scrollHeight;
+        renderMathIn(aiMsgs);
+      }
+      function openAi() {
+        S.aiOpen = true;
+        aiEl.hidden = false;
+        renderAi();
+        renderAiAttach();
+      }
+      function closeAi() {
+        stopSpeech();
+        S.aiOpen = false;
+        aiEl.hidden = true;
+        focusScroller();
+      }
+      function detachImage() {
+        S.aiImage = "";
+        renderAiAttach();
+        aiInput.focus();
+      }
+      async function sendAi(text) {
+        if (S.aiBusy) return;
+        text = String(text || "").trim();
+        if (!text && !S.aiImage) return;
+        if (!text) text = "Solve this question step by step.";
+        const img = S.aiImage;
+        const showImg = img && S.aiShown !== img;
+        if (showImg) S.aiShown = img;
+        S.aiChat.push({ role: "user", content: text, img: showImg ? img : "" });
+        S.aiImage = "";
+        renderAiAttach();
+        S.aiBusy = true;
+        aiSend.disabled = true;
+        renderAi();
+        try {
+          const history = S.aiChat.slice(0, -1).filter((m) => !m.err).map(({ role, content }) => ({ role, content }));
+          const reply = await callGeminiPdfApi(text, history, img);
+          S.aiChat.push({ role: "assistant", content: reply });
+          refreshTtsPrefs();
+          if (S.tts.auto && !S.destroyed) setTimeout(() => speakMessage(S.aiChat.length - 1), 0);
+        } catch (error) {
+          S.aiChat.push({ role: "assistant", content: (error && error.message) || "Couldn't reply right now.", err: true });
+          if (img && !S.aiImage) { S.aiImage = img; renderAiAttach(); }   /* failed: keep the crop attached so you can retry */
+        }
+        S.aiBusy = false;
+        aiSend.disabled = false;
+        if (!S.destroyed) { renderAi(); aiInput.focus(); }
+      }
+      aiForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const value = aiInput.value;
+        aiInput.value = "";
+        sendAi(value);
+      });
+      renderAi();
 
       /* ---------- search (results list + highlights in the text layer) ---------- */
       async function pageStrings(n) {
@@ -11293,8 +12041,9 @@
       }
 
       /* ---------- actions ---------- */
-      function run(act) {
+      function run(act, btnEl) {
         switch (act) {
+          case "aiSpeak": speakMessage(Number(btnEl && btnEl.dataset.idx)); return;
           case "sidebar": root.classList.toggle("pv-nosidebar"); break;
           case "zoomOut": zoomStep(-1); break;
           case "zoomIn": zoomStep(1); break;
@@ -11308,6 +12057,10 @@
           case "rotateL": rotate(-90); break;
           case "toolText": setTool("text"); break;
           case "toolDraw": setTool("draw"); break;
+          case "toolCrop": setTool("crop"); break;
+          case "aiClose": closeAi(); return;
+          case "aiDetach": detachImage(); return;
+          case "aiWide": toggleAiWide(); return;
           case "undo": undoAnnot(); break;
           case "redo": redoAnnot(); break;
           case "download": downloadFile(); break;
@@ -11331,7 +12084,7 @@
         const z = event.target.closest("[data-zoom]");
         if (z) { setZoom(Number(z.dataset.zoom)); closeMenus(); focusScroller(); return; }
         const btn = event.target.closest("[data-act]");
-        if (btn && !btn.disabled) run(btn.dataset.act);
+        if (btn && !btn.disabled) run(btn.dataset.act, btn);
       });
       root.addEventListener("pointerdown", (event) => {
         if (!event.target.closest(".pv-menuwrap")) closeMenus();
@@ -11351,11 +12104,14 @@
           if (typing) { target.blur(); focusScroller(); return; }
           if (root.querySelector(".pv-menu:not([hidden])")) { closeMenus(); return; }
           if (S.present) { exitPresentation(); return; }
+          if (S.crop) { clearCrop(); renderToolPop(); return; }
+          if (S.aiOpen) { closeAi(); return; }
           if (S.tool !== "select") { setTool(S.tool); return; }
           if (S.hand) { toggleHand(); return; }
           close();
           return;
         }
+        if (key === "Enter" && !typing && !ctrl && S.tool === "crop" && S.crop && S.crop.done) { stop(); confirmCrop(); return; }
         if (ctrl && !event.altKey) {
           if (key === "+" || key === "=") { stop(); zoomStep(1); return; }
           if (key === "-" || key === "_") { stop(); zoomStep(-1); return; }
@@ -11383,6 +12139,7 @@
         if (key === "r") { stop(); rotate(90); return; }
         if (key === "R") { stop(); rotate(-90); return; }
         if (key === "h" || key === "H") { stop(); toggleHand(); return; }
+        if (key === "c" || key === "C") { stop(); setTool("crop"); return; }
       }
       function onKeyUp(event) { if (event.key === " ") S.space = false; }
       window.addEventListener("keydown", onKey, true);
@@ -11394,6 +12151,7 @@
         finishText(true);
         flushSave();
         S.destroyed = true;
+        stopSpeech();
         window.removeEventListener("keydown", onKey, true);
         window.removeEventListener("keyup", onKeyUp, true);
         document.removeEventListener("fullscreenchange", onFsChange);
@@ -13360,6 +14118,33 @@
         return;
       }
 
+      if (event.target.id === "ttsSettingsForm") {
+        event.preventDefault();
+        const prefs = {
+          engine: document.getElementById("ttsEngineInput").value === "browser" ? "browser" : "gemini",
+          lang: document.getElementById("ttsLangInput").value === "english" ? "english" : "hinglish",
+          auto: document.getElementById("ttsAutoInput").checked
+        };
+        try { localStorage.setItem(TTS_PREFS_KEY, JSON.stringify(prefs)); } catch (e) { /* private mode */ }
+        showToast("Saved", "Read-aloud settings saved.");
+        openThemeSettings();
+        return;
+      }
+
+      if (event.target.id === "geminiSettingsForm") {
+        event.preventDefault();
+        const newKey = document.getElementById("geminiApiKeyInput").value.trim();
+        const newModel = document.getElementById("geminiModelInput").value.trim();
+        try {
+          await saveGeminiSettings(newKey, newModel);
+          showToast("Saved", newKey ? "Gemini key saved — PDF AI will use it on both accounts." : "Gemini key cleared.");
+        } catch (error) {
+          showToast("Error", "Could not save the Gemini settings.");
+        }
+        openThemeSettings();
+        return;
+      }
+
       if (event.target.id === "musicSettingsForm") {
         event.preventDefault();
         const enabled = document.getElementById("musicFeatureEnabledInput").checked;
@@ -13919,6 +14704,7 @@
     loadLocallyDeletedChat();
     await loadDynamicAccounts();
     loadGrokApiKey();
+    loadGeminiSettings();
     state = defaultState();
     listenToFirebase();
     listenToChat();
