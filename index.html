@@ -1997,6 +1997,7 @@
     .pv-root .pv-ai-tts select { height: 24px; color: #e7ebf1; background: #141b26; border: 1px solid #232d3c; border-radius: 6px; font-size: 11px; padding: 0 4px; }
     .pv-root .pv-ai-tts-msg { flex: none; padding: 6px 12px; border-bottom: 1px solid var(--pv-line); font-size: 11px; color: #ffb4ae; }
     .pv-root .pv-ai-tts-msg:empty { display: none; }
+    .pv-root .pv-ai-tts-msg.is-info { color: #c4b5fd; }
     .pv-root .pv-ai-speak { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; padding: 1px 7px; border-radius: 999px; border: 1px solid #2f3b50; color: #c4b5fd; background: transparent; font-size: 11px; font-weight: 600; cursor: pointer; }
     .pv-root .pv-ai-speak svg { width: 12px; height: 12px; }
     .pv-root .pv-ai-speak:hover, .pv-root .pv-ai-speak.is-on { background: rgba(124, 77, 255, .2); border-color: #7c4dff; }
@@ -7666,7 +7667,7 @@
         ${settingsSection({
           icon: "sparkle",
           title: "Read answers aloud (PDF AI)",
-          description: `Controls the <strong>Listen</strong> button on answers in the PDF viewer's Study AI panel. "Gemini (natural)" uses the Gemini key above; "Browser (free)" uses voices installed on this device.`,
+          description: `Controls the <strong>Listen</strong> button on answers in the PDF viewer's Study AI panel. "Gemini (natural)" uses the Gemini key above; "Browser (free)" uses voices installed on this device. If the Gemini voice limit runs out (429) or Gemini fails, reading automatically continues with the free browser voice.`,
           tone: "ai",
           body: `
             <form id="ttsSettingsForm" class="field settings-inline-form">
@@ -10548,6 +10549,7 @@
             <button type="button" class="pv-btn pv-hide-sm" data-act="toolText" title="Add text" aria-label="Add text">${pvIcon("text")}</button>
             <button type="button" class="pv-btn pv-hide-sm" data-act="toolDraw" title="Draw / highlight / erase" aria-label="Draw or highlight">${pvIcon("pen")}</button>
             <button type="button" class="pv-btn pv-hide-sm pv-magic" data-act="toolCrop" title="Magic crop: select a question and ask AI (C)" aria-label="Magic crop and ask AI">${pvIcon("crop")}</button>
+            <button type="button" class="pv-btn pv-hide-sm" data-act="aiOpen" title="Study AI chat &amp; history" aria-label="Open Study AI chat">${pvIcon("spark")}</button>
             <button type="button" class="pv-btn pv-hide-sm" data-act="undo" title="Undo (Ctrl Z)" aria-label="Undo" disabled>${pvIcon("undo")}</button>
             <button type="button" class="pv-btn pv-hide-sm" data-act="redo" title="Redo (Ctrl Y)" aria-label="Redo" disabled>${pvIcon("redo")}</button>
             <button type="button" class="pv-btn" data-act="fullscreen" title="Full screen (F)" aria-label="Full screen">${pvIcon("fullscreen")}</button>
@@ -10643,6 +10645,7 @@
             <div class="pv-ai-head">
               <span class="pv-ai-title">${pvIcon("spark")}Study AI <small>ASSISTANT</small></span>
               <span class="pv-ai-head-btns">
+                <button type="button" class="pv-btn pv-small" data-act="aiClear" title="Clear chat history for this PDF" aria-label="Clear AI chat history">${pvIcon("trash")}</button>
                 <button type="button" class="pv-btn pv-small pv-hide-sm" data-act="aiWide" title="Bigger / smaller panel" aria-label="Toggle big or small AI panel">${pvIcon("fullscreen")}</button>
                 <button type="button" class="pv-btn pv-small" data-act="aiClose" title="Close (Esc)" aria-label="Close AI panel">${pvIcon("close")}</button>
               </span>
@@ -11286,6 +11289,48 @@
       S.aiImage = "";
       S.aiShown = "";
       S.aiChat = [];
+      /* Chat history is kept per PDF in this browser (text + small thumbnails of cropped questions). */
+      const AI_CHAT_KEY = `duotrack.pdfViewer.aiChat:${record.id}`;
+      try {
+        const savedChat = JSON.parse(localStorage.getItem(AI_CHAT_KEY) || "[]");
+        if (Array.isArray(savedChat)) {
+          S.aiChat = savedChat
+            .filter((m) => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
+            .map((m) => ({ role: m.role, content: m.content, img: typeof m.img === "string" ? m.img : "", thumb: typeof m.img === "string" ? m.img : "" }));
+        }
+      } catch (e) { S.aiChat = []; }
+      function saveAiChat() {
+        const keep = S.aiChat.filter((m) => !m.err).slice(-60)
+          .map((m) => (m.thumb ? { role: m.role, content: m.content, img: m.thumb } : { role: m.role, content: m.content }));
+        try {
+          if (keep.length) localStorage.setItem(AI_CHAT_KEY, JSON.stringify(keep)); else localStorage.removeItem(AI_CHAT_KEY);
+        } catch (e) {
+          try { localStorage.setItem(AI_CHAT_KEY, JSON.stringify(keep.map(({ role, content }) => ({ role, content })))); } catch (e2) { /* storage full */ }
+        }
+      }
+      function makeThumb(url) {
+        return new Promise((resolve) => {
+          const im = new Image();
+          im.onload = () => {
+            const w = Math.min(280, im.naturalWidth || 280);
+            const h = Math.max(1, Math.round((im.naturalHeight || 1) * w / (im.naturalWidth || 1)));
+            const c = document.createElement("canvas");
+            c.width = w; c.height = h;
+            c.getContext("2d").drawImage(im, 0, 0, w, h);
+            resolve(c.toDataURL("image/jpeg", 0.6));
+          };
+          im.onerror = () => resolve("");
+          im.src = url;
+        });
+      }
+      function clearAiChat() {
+        if (S.aiChat.length && !window.confirm("Clear the AI chat history for this PDF?")) return;
+        stopSpeech();
+        S.aiChat = [];
+        S.aiShown = "";
+        saveAiChat();
+        renderAi();
+      }
 
       function clearCrop() {
         if (!S.crop) return;
@@ -11531,7 +11576,13 @@
           try { detail = (await res.json())?.error?.message || ""; } catch (e) { /* ignore */ }
           lastErr = `${res.status}: ${detail}`;
           if (res.status === 400 && withMeta) { withMeta = false; continue; }     // retry without the style hint
-          if ([429, 500, 502, 503, 504].includes(res.status)) continue;
+          if (res.status === 429) {
+            const quotaErr = new Error(`Gemini voice limit reached (${lastErr.slice(0, 160)})`);
+            quotaErr.quota = true;
+            quotaErr.perDay = /per\s*day|perday/i.test(detail);
+            throw quotaErr;
+          }
+          if ([500, 502, 503, 504].includes(res.status)) continue;
           throw new Error(`Gemini voice error (${lastErr.slice(0, 200)})`);
         }
         if (!data) throw new Error(`Gemini voice is busy right now — try again, or switch Voice to Browser. (${lastErr.slice(0, 120)})`);
@@ -11560,7 +11611,7 @@
         for (let i = 0; i < chunks.length; i++) {
           const res = await next;
           if (token !== S.tts.token) { if (res.u) URL.revokeObjectURL(res.u); return; }
-          if (res.e) throw res.e;
+          if (res.e) { res.e.resumeFrom = chunks.slice(i).join(" "); throw res.e; }
           if (i + 1 < chunks.length) next = geminiTtsChunk(chunks[i + 1]).then((u) => ({ u }), (e) => ({ e }));
           S.tts.state = "playing"; updateSpeakButtons();
           await playAudioUrl(res.u);
@@ -11586,9 +11637,9 @@
         return voices[0];
       }
       async function speakWithBrowser(text, token) {
-        if (!("speechSynthesis" in window)) throw new Error("This browser has no built-in speech. Switch Voice to Gemini (natural).");
+        if (!("speechSynthesis" in window)) throw new Error("This browser has no built-in speech engine.");
         const voices = await getVoicesReady();
-        if (!voices.length) throw new Error("No browser voices are installed on this system (common on Linux). Switch Voice to Gemini (natural).");
+        if (!voices.length) throw new Error("No free browser voices found on this system. On Linux Mint install them with: sudo apt install speech-dispatcher espeak-ng — then restart the browser.");
         const voice = pickBrowserVoice(voices);
         S.tts.state = "playing"; updateSpeakButtons();
         for (const chunk of splitForTts(text, 220)) {
@@ -11602,22 +11653,50 @@
           });
         }
       }
+      const TTS_PAUSE_KEY = "duotrack.pdfViewer.ttsGeminiPause";
+      function geminiTtsPaused() {
+        try { return Number(localStorage.getItem(TTS_PAUSE_KEY)) > Date.now(); } catch (e) { return false; }
+      }
+      function pauseGeminiTts(perDay) {
+        /* Skip Gemini for a while after a 429 so every click doesn't wait for a failure first. */
+        try { localStorage.setItem(TTS_PAUSE_KEY, String(Date.now() + (perDay ? 3 * 3600e3 : 15 * 60e3))); } catch (e) { /* ignore */ }
+      }
+      function ttsNote(message, isInfo) {
+        ttsMsgEl.textContent = message;
+        ttsMsgEl.classList.toggle("is-info", !!isInfo);
+      }
       async function speakMessage(idx) {
         const msg = S.aiChat[idx];
         if (!msg || msg.role !== "assistant") return;
         const wasThis = S.tts.idx === idx && S.tts.state !== "idle";
         refreshTtsPrefs();
         stopSpeech();
-        ttsMsgEl.textContent = "";
+        ttsNote("", false);
         if (wasThis) return;
         const text = speakableText(msg.content);
         if (!text) return;
         const token = ++S.tts.token;
         S.tts.idx = idx; S.tts.state = "loading"; updateSpeakButtons();
         try {
-          if (S.tts.engine === "browser") await speakWithBrowser(text, token); else await speakWithGemini(text, token);
+          if (S.tts.engine === "browser") {
+            await speakWithBrowser(text, token);
+          } else if (geminiTtsPaused()) {
+            ttsNote("Gemini voice limit reached — reading with the free browser voice for now.", true);
+            await speakWithBrowser(text, token);
+          } else {
+            try {
+              await speakWithGemini(text, token);
+            } catch (error) {
+              if (token !== S.tts.token) throw error;
+              if (error && error.quota) pauseGeminiTts(error.perDay);
+              ttsNote(error && error.quota
+                ? "Gemini voice limit reached — switched to the free browser voice."
+                : "Gemini voice unavailable — switched to the free browser voice.", true);
+              await speakWithBrowser((error && error.resumeFrom) || text, token);
+            }
+          }
         } catch (error) {
-          if (token === S.tts.token) ttsMsgEl.textContent = (error && error.message) || "Couldn't read that aloud.";
+          if (token === S.tts.token) ttsNote((error && error.message) || "Couldn't read that aloud.", false);
         }
         if (token === S.tts.token) { S.tts.state = "idle"; S.tts.idx = -1; updateSpeakButtons(); }
       }
@@ -11665,7 +11744,10 @@
         const img = S.aiImage;
         const showImg = img && S.aiShown !== img;
         if (showImg) S.aiShown = img;
-        S.aiChat.push({ role: "user", content: text, img: showImg ? img : "" });
+        const userMsg = { role: "user", content: text, img: showImg ? img : "" };
+        S.aiChat.push(userMsg);
+        saveAiChat();
+        if (userMsg.img) makeThumb(userMsg.img).then((t) => { if (t) { userMsg.thumb = t; saveAiChat(); } });
         S.aiImage = "";
         renderAiAttach();
         S.aiBusy = true;
@@ -11675,6 +11757,7 @@
           const history = S.aiChat.slice(0, -1).filter((m) => !m.err).map(({ role, content }) => ({ role, content }));
           const reply = await callGeminiPdfApi(text, history, img);
           S.aiChat.push({ role: "assistant", content: reply });
+          saveAiChat();
           refreshTtsPrefs();
           if (S.tts.auto && !S.destroyed) setTimeout(() => speakMessage(S.aiChat.length - 1), 0);
         } catch (error) {
@@ -12059,6 +12142,8 @@
           case "toolDraw": setTool("draw"); break;
           case "toolCrop": setTool("crop"); break;
           case "aiClose": closeAi(); return;
+          case "aiOpen": if (S.aiOpen) closeAi(); else openAi(); return;
+          case "aiClear": clearAiChat(); return;
           case "aiDetach": detachImage(); return;
           case "aiWide": toggleAiWide(); return;
           case "undo": undoAnnot(); break;
