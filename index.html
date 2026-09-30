@@ -6798,6 +6798,7 @@
     const grokConfigRef = ref(database, `duotrack/groups/${GROUP_ID}/grokApiKey`);
     // Gemini key + model for the PDF viewer's AI panel (shared between both accounts).
     const geminiConfigRef = ref(database, `duotrack/groups/${GROUP_ID}/geminiSettings`);
+    const geminiTtsKeysRef = ref(database, `duotrack/groups/${GROUP_ID}/geminiTtsKeys`);
     // Admin-controlled YouTube Music feature: shared enabled flag + shared API key,
     // same "one setting for both accounts" pattern as the Grok key above.
     const musicConfigRef = ref(database, `duotrack/groups/${GROUP_ID}/musicSettings`);
@@ -7017,6 +7018,8 @@
     }
     let geminiApiKey = "";
     let geminiModel = GEMINI_DEFAULT_MODEL;
+    // 3 backup Gemini keys used ONLY for the read-aloud voice: when one key's limit runs out, the next one takes over.
+    let geminiTtsExtraKeys = ["", "", ""];
     let grokConversation = [];
     let grokPanelOpen = false;
 
@@ -7660,6 +7663,25 @@
               <input id="geminiModelInput" type="text" placeholder="${GEMINI_DEFAULT_MODEL}" value="${escapeHTML(geminiModel)}" autocomplete="off" spellcheck="false">
               <p class="subtext">${geminiApiKey ? "A Gemini API key is currently saved and shared." : "No Gemini API key saved yet — the PDF AI won't answer until one is added."}</p>
               <button class="secondary-btn" type="submit">Save Gemini settings</button>
+            </form>
+          `
+        })}
+
+        ${settingsSection({
+          icon: "sparkle",
+          title: "Backup Gemini keys (voice)",
+          description: `Up to 3 extra Google/Gemini API keys used <strong>only for the read-aloud voice</strong>. Order: main key above → backup 1 → backup 2 → backup 3. When a key's voice limit runs out (429), the next one takes over automatically; if all are used up, the free browser voice reads instead. Shared between both accounts. Use keys from different Google projects — keys in the same project share one limit.`,
+          tone: "ai",
+          body: `
+            <form id="geminiTtsKeysForm" class="field settings-inline-form">
+              <label for="geminiTtsKey1">Backup key 1</label>
+              <input id="geminiTtsKey1" type="password" placeholder="AIza..." value="${escapeHTML(geminiTtsExtraKeys[0])}" autocomplete="off">
+              <label for="geminiTtsKey2">Backup key 2</label>
+              <input id="geminiTtsKey2" type="password" placeholder="AIza..." value="${escapeHTML(geminiTtsExtraKeys[1])}" autocomplete="off">
+              <label for="geminiTtsKey3">Backup key 3</label>
+              <input id="geminiTtsKey3" type="password" placeholder="AIza..." value="${escapeHTML(geminiTtsExtraKeys[2])}" autocomplete="off">
+              <p class="subtext">${geminiTtsExtraKeys.filter(Boolean).length} of 3 backup keys saved.</p>
+              <button class="secondary-btn" type="submit">Save backup keys</button>
             </form>
           `
         })}
@@ -9204,6 +9226,23 @@
       } catch (error) {
         console.error("Could not load Gemini settings", error);
       }
+    }
+
+    async function loadGeminiTtsKeys() {
+      try {
+        const snapshot = await get(geminiTtsKeysRef);
+        const val = snapshot.val();
+        if (val && typeof val === "object") {
+          geminiTtsExtraKeys = [0, 1, 2].map((i) => (typeof val[i] === "string" ? val[i] : ""));
+        }
+      } catch (error) {
+        console.error("Could not load backup Gemini voice keys", error);
+      }
+    }
+
+    async function saveGeminiTtsKeys(keys) {
+      geminiTtsExtraKeys = [0, 1, 2].map((i) => String(keys[i] || "").trim());
+      await set(geminiTtsKeysRef, geminiTtsExtraKeys);
     }
 
     async function saveGeminiSettings(apiKey, model) {
@@ -11553,7 +11592,10 @@
       }
       /* One chunk of text -> object URL of playable audio, via the Gemini TTS model. */
       async function geminiTtsChunk(text) {
-        if (!geminiApiKey) throw new Error("Add a Gemini API key in Settings → PDF AI (Gemini) to use the Gemini voice, or pick Browser (free).");
+        const allKeys = ttsKeyList();
+        if (!allKeys.length) throw new Error("Add a Gemini API key in Settings → PDF AI (Gemini) to use the Gemini voice, or pick Browser (free).");
+        const available = allKeys.filter((k) => !ttsKeyPaused(k));
+        if (!available.length) { const e = new Error("All Gemini voice keys have hit their limit."); e.quota = true; throw e; }
         const style = S.tts.lang === "hinglish"
           ? "Warm, clear Indian-accent teacher speaking at a relaxed pace. The text is Hinglish (Hindi written in Roman letters): pronounce Hindi words like a native Hindi speaker and read maths and science terms in English."
           : "Warm, clear, friendly teacher in neutral English at a relaxed, steady pace.";
@@ -11562,30 +11604,39 @@
           generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: GEMINI_TTS_VOICE } } } }
         });
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_TTS_MODEL}:generateContent`;
-        let withMeta = true;
         let data = null;
         let lastErr = "";
-        for (let attempt = 0; attempt < 3 && !data; attempt++) {
-          if (attempt) await new Promise((r) => setTimeout(r, 1500));
-          let res;
-          try {
-            res = await fetchWithTimeout(url, 60000, { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": geminiApiKey }, body: build(withMeta) });
-          } catch (e) { throw new Error("Couldn't reach Gemini voice — check your internet connection."); }
-          if (res.ok) { data = await res.json(); break; }
-          let detail = "";
-          try { detail = (await res.json())?.error?.message || ""; } catch (e) { /* ignore */ }
-          lastErr = `${res.status}: ${detail}`;
-          if (res.status === 400 && withMeta) { withMeta = false; continue; }     // retry without the style hint
-          if (res.status === 429) {
-            const quotaErr = new Error(`Gemini voice limit reached (${lastErr.slice(0, 160)})`);
-            quotaErr.quota = true;
-            quotaErr.perDay = /per\s*day|perday/i.test(detail);
-            throw quotaErr;
+        let quotaHit = false;
+        for (let ki = 0; ki < available.length && !data; ki++) {
+          const key = available[ki];
+          let withMeta = true;
+          for (let attempt = 0; attempt < 3 && !data; attempt++) {
+            if (attempt) await new Promise((r) => setTimeout(r, 1500));
+            let res;
+            try {
+              res = await fetchWithTimeout(url, 60000, { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": key }, body: build(withMeta) });
+            } catch (e) { throw new Error("Couldn't reach Gemini voice — check your internet connection."); }
+            if (res.ok) { data = await res.json(); break; }
+            const raw = await res.text().catch(() => "");
+            let detail = "";
+            try { detail = JSON.parse(raw)?.error?.message || ""; } catch (e) { /* ignore */ }
+            lastErr = `${res.status}: ${detail}`;
+            if (res.status === 400 && withMeta) { withMeta = false; continue; }     // retry without the style hint
+            if (res.status === 429) {                                               // this key is out -> next key
+              quotaHit = true;
+              pauseTtsKey(key, /per\s*day|perday/i.test(raw));
+              if (ki + 1 < available.length) ttsNote(`Voice key ${allKeys.indexOf(key) + 1} hit its limit — using the next key.`, true);
+              break;
+            }
+            if ([400, 401, 403].includes(res.status)) break;                        // bad / disabled key -> try the next one
+            if ([500, 502, 503, 504].includes(res.status)) continue;
+            throw new Error(`Gemini voice error (${lastErr.slice(0, 200)})`);
           }
-          if ([500, 502, 503, 504].includes(res.status)) continue;
-          throw new Error(`Gemini voice error (${lastErr.slice(0, 200)})`);
         }
-        if (!data) throw new Error(`Gemini voice is busy right now — try again, or switch Voice to Browser. (${lastErr.slice(0, 120)})`);
+        if (!data) {
+          if (quotaHit) { const qe = new Error(`Gemini voice limit reached on all keys (${lastErr.slice(0, 120)})`); qe.quota = true; throw qe; }
+          throw new Error(`Gemini voice error (${lastErr.slice(0, 160) || "busy"}) — try again, or switch Voice to Browser.`);
+        }
         const part = (data?.candidates?.[0]?.content?.parts || []).find((x) => (x.inlineData || x.inline_data)?.data);
         const inline = part && (part.inlineData || part.inline_data);
         if (!inline) throw new Error("Gemini voice returned no audio. Try again.");
@@ -11653,13 +11704,23 @@
           });
         }
       }
-      const TTS_PAUSE_KEY = "duotrack.pdfViewer.ttsGeminiPause";
-      function geminiTtsPaused() {
-        try { return Number(localStorage.getItem(TTS_PAUSE_KEY)) > Date.now(); } catch (e) { return false; }
+      /* Voice keys: main key + up to 3 backups. A key that hit its limit is skipped for a while. */
+      const TTS_KEYPAUSE_KEY = "duotrack.pdfViewer.ttsKeyPause";
+      function ttsKeyList() {
+        return [...new Set([geminiApiKey, ...geminiTtsExtraKeys].map((k) => String(k || "").trim()).filter(Boolean))];
       }
-      function pauseGeminiTts(perDay) {
-        /* Skip Gemini for a while after a 429 so every click doesn't wait for a failure first. */
-        try { localStorage.setItem(TTS_PAUSE_KEY, String(Date.now() + (perDay ? 3 * 3600e3 : 15 * 60e3))); } catch (e) { /* ignore */ }
+      function readKeyPauses() {
+        try { return JSON.parse(localStorage.getItem(TTS_KEYPAUSE_KEY) || "{}") || {}; } catch (e) { return {}; }
+      }
+      function ttsKeyPaused(key) { return (readKeyPauses()[key.slice(-8)] || 0) > Date.now(); }
+      function pauseTtsKey(key, perDay) {
+        const map = readKeyPauses();
+        map[key.slice(-8)] = Date.now() + (perDay ? 3 * 3600e3 : 90e3);   /* daily limit: ~3h, per-minute limit: 90s */
+        try { localStorage.setItem(TTS_KEYPAUSE_KEY, JSON.stringify(map)); } catch (e) { /* ignore */ }
+      }
+      function geminiTtsPaused() {
+        const keys = ttsKeyList();
+        return keys.length > 0 && keys.every(ttsKeyPaused);
       }
       function ttsNote(message, isInfo) {
         ttsMsgEl.textContent = message;
@@ -11688,7 +11749,6 @@
               await speakWithGemini(text, token);
             } catch (error) {
               if (token !== S.tts.token) throw error;
-              if (error && error.quota) pauseGeminiTts(error.perDay);
               ttsNote(error && error.quota
                 ? "Gemini voice limit reached — switched to the free browser voice."
                 : "Gemini voice unavailable — switched to the free browser voice.", true);
@@ -14203,6 +14263,19 @@
         return;
       }
 
+      if (event.target.id === "geminiTtsKeysForm") {
+        event.preventDefault();
+        const keys = [1, 2, 3].map((n) => document.getElementById(`geminiTtsKey${n}`).value.trim());
+        try {
+          await saveGeminiTtsKeys(keys);
+          showToast("Saved", `${keys.filter(Boolean).length} backup voice key(s) saved — shared with both accounts.`);
+        } catch (error) {
+          showToast("Error", "Could not save the backup voice keys.");
+        }
+        openThemeSettings();
+        return;
+      }
+
       if (event.target.id === "ttsSettingsForm") {
         event.preventDefault();
         const prefs = {
@@ -14790,6 +14863,7 @@
     await loadDynamicAccounts();
     loadGrokApiKey();
     loadGeminiSettings();
+    loadGeminiTtsKeys();
     state = defaultState();
     listenToFirebase();
     listenToChat();
