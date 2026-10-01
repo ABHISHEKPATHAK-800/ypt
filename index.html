@@ -1953,21 +1953,6 @@
     .pv-root .pv-croprect { position: absolute; z-index: 4; pointer-events: none; border: 2px solid #a78bfa; border-radius: 2px; background: rgba(167, 139, 250, .08); box-shadow: 0 0 0 100vmax rgba(5, 8, 14, .55); }
     .pv-root .pv-croprect.is-busy { border-style: dashed; animation: pvCropPulse 900ms ease-in-out infinite alternate; }
     @keyframes pvCropPulse { from { background: rgba(167, 139, 250, .06); } to { background: rgba(167, 139, 250, .3); } }
-    .pv-root .pv-croprect.is-multi { box-shadow: none; background: rgba(167, 139, 250, .14); }
-    .pv-root .pv-croprect.is-done { z-index: 5; box-shadow: none; border-color: #8b5cf6; background: rgba(167, 139, 250, .16); }
-    .pv-root .pv-cropnum { position: absolute; top: -2px; left: -2px; min-width: 24px; height: 24px; padding: 0 7px; border: 0; border-radius: 3px 0 9px 0; background: #7c4dff; color: #fff; font: 800 12px/24px inherit; text-align: center; cursor: pointer; pointer-events: auto; }
-    .pv-root .pv-cropnum::before { content: attr(data-n); }
-    .pv-root .pv-cropnum:hover { background: #e0483e; }
-    .pv-root .pv-cropnum:hover::before { content: "\00d7"; font-size: 15px; }
-    .pv-root .pv-cropclear { padding: 6px 11px; border-radius: 9px; border: 1px solid rgba(255, 255, 255, .18); background: transparent; color: inherit; font-weight: 700; font-size: 12px; cursor: pointer; }
-    .pv-root .pv-cropclear:disabled { opacity: .38; cursor: default; }
-    .pv-root .pv-ai-cropwrap { position: relative; margin: 0 0 6px; }
-    .pv-root .pv-ai-cropwrap .pv-ai-crop { margin: 0; }
-    .pv-root .pv-ai-cropnum { position: absolute; top: 6px; left: 6px; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: #7c4dff; color: #fff; font-size: 12px; font-weight: 800; box-shadow: 0 1px 4px rgba(0, 0, 0, .4); }
-    .pv-root .pv-ai-q { margin: 8px 0 0; padding: 9px 11px 10px; border-radius: 11px; background: rgba(124, 77, 255, .08); border: 1px solid rgba(124, 77, 255, .3); border-left: 4px solid #7c4dff; }
-    .pv-root .pv-ai-q + .pv-ai-q { margin-top: 14px; }
-    .pv-root .pv-ai-qhead { display: flex; align-items: center; gap: 8px; margin: 0 0 7px; padding-bottom: 7px; border-bottom: 1px dashed rgba(167, 139, 250, .4); font-size: 12px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: #c4b5fd; }
-    .pv-root .pv-ai-qhead b { display: grid; place-items: center; width: 21px; height: 21px; border-radius: 50%; background: #7c4dff; color: #fff; font-size: 11px; letter-spacing: 0; }
     .pv-root .pv-cropask { display: inline-flex; align-items: center; gap: 7px; padding: 7px 14px; border-radius: 10px; color: #fff; font-weight: 700; font-size: 13px; background: linear-gradient(135deg, #7c4dff, #4b2fc7); }
     .pv-root .pv-cropask svg { width: 16px; height: 16px; }
     .pv-root .pv-cropask kbd { font: inherit; font-size: 11px; padding: 1px 6px; border-radius: 5px; background: rgba(255, 255, 255, .22); }
@@ -2000,7 +1985,7 @@
     .pv-root .pv-ai-tray { flex: 1; min-width: 0; display: flex; gap: 8px; overflow-x: auto; padding: 4px 4px 2px 0; }
     .pv-root .pv-ai-th { position: relative; flex: none; }
     .pv-root .pv-ai-th i { position: absolute; left: 3px; bottom: 3px; padding: 0 5px; border-radius: 5px; background: rgba(0, 0, 0, .7); color: #fff; font-size: 10px; font-style: normal; font-weight: 700; }
-    .pv-root .pv-ai-th button { position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; border-radius: 50%; border: 0; background: #ef4444; color: #fff; font-size: 13px; line-height: 18px; padding: 0; cursor: pointer; }
+    .pv-root .pv-ai-th button { position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; border-radius: 50%; border: 1px solid #3a475c; background: #232d3c; color: #e7ebf1; font-size: 13px; line-height: 18px; padding: 0; cursor: pointer; }
     .pv-root .pv-ai-msg.mine .pv-ai-crop + .pv-ai-crop { margin-top: 4px; }
     .pv-root .pv-ai-attach div { flex: 1; min-width: 0; display: grid; gap: 1px; font-size: 12px; color: var(--pv-mut); }
     .pv-root .pv-ai-attach b { color: #e7ebf1; font-size: 13px; }
@@ -9313,7 +9298,7 @@
         const mime = (/^data:([^;,]+)/.exec(dataUrl) || [])[1] || "image/jpeg";
         if (comma > 0) userParts.push({ inlineData: { mimeType: mime, data: dataUrl.slice(comma + 1) } });
       });
-      userParts.push({ text: imageList.length > 1 ? `(${imageList.length} separate cropped images are attached, in order. Answer each one separately. Start each answer with a line containing exactly \"=== Question N ===\" (N = 1, 2, 3… in the same order as the images) and nothing else on that line.)\n${promptText}` : promptText });
+      userParts.push({ text: imageList.length > 1 ? `(${imageList.length} separate cropped images are attached, in order. Answer each one separately, numbered 1, 2, 3…)\n${promptText}` : promptText });
       contents.push({ role: "user", parts: userParts });
 
       // Gemini sometimes returns 503 "high demand" spikes: retry once, then fall back to older Flash models.
@@ -9331,37 +9316,36 @@
           return "";
         }
       };
-      const chatKeys = [...new Set([geminiApiKey, ...geminiTtsExtraKeys].map((k) => String(k || "").trim()).filter(Boolean))];
       let response = null;
       let failure = "";
-      /* Any overload / quota / bad-key hiccup silently moves on to the next key, then the next model. Nothing is shown on screen. */
       outer:
-      for (let pass = 0; pass < 2; pass++) {
-        if (pass) await new Promise((resolve) => setTimeout(resolve, 2000));
-        for (const model of modelsToTry) {
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
-          for (let ki = 0; ki < chatKeys.length; ki++) {
-            const key = chatKeys[ki];
-            try {
-              response = await fetchWithTimeout(url, 90000, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "x-goog-api-key": key },
-                body: requestBody
-              });
-            } catch (error) {
-              if (error.name === "AbortError") {
-                throw new Error("Gemini took too long to reply (timed out). Try again in a bit.");
-              }
-              throw new Error("Couldn't reach Gemini — check your internet connection.");
+      for (const model of modelsToTry) {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+        for (let attempt = 0; attempt < 2; attempt++) {
+          if (attempt) await new Promise((resolve) => setTimeout(resolve, 1500));
+          try {
+            response = await fetchWithTimeout(url, 90000, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "x-goog-api-key": geminiApiKey },
+              body: requestBody
+            });
+          } catch (error) {
+            if (error.name === "AbortError") {
+              throw new Error("Gemini took too long to reply (timed out). Try again in a bit.");
             }
-            if (response.ok) break outer;
-            const detail = await readError(response);
-            failure = `${response.status}: ${detail}`;
-            if ([429, 500, 502, 503, 504].includes(response.status)) continue;          // next key, then next model
-            if (response.status === 404 && model !== modelsToTry[0]) break;             // fallback model not available, skip it
-            if ([400, 401, 403].includes(response.status) && ki < chatKeys.length - 1) continue;   // bad key -> try the next one
-            throw new Error(`Gemini error (${response.status}): ${String(detail).slice(0, 220)}`);
+            throw new Error("Couldn't reach Gemini — check your internet connection.");
           }
+          if (response.ok) break outer;
+          const detail = await readError(response);
+          if ([429, 500, 502, 503, 504].includes(response.status)) {
+            failure = `${response.status}: ${detail}`;
+            continue;                                   // retry, then try the next model
+          }
+          if (response.status === 404 && model !== modelsToTry[0]) {
+            failure = `${response.status}: ${detail}`;
+            break;                                      // fallback model not available, skip it
+          }
+          throw new Error(`Gemini error (${response.status}): ${String(detail).slice(0, 220)}`);
         }
       }
       if (!response || !response.ok) {
@@ -11264,14 +11248,9 @@
         root.dataset.pen = S.pen.kind;
         if (S.tool === "select") { toolPop.hidden = true; toolPop.innerHTML = ""; return; }
         if (S.tool === "crop") {
-          const n = S.crops.length;
-          const ready = n > 0;
-          const full = n + S.aiImages.length >= PV_MAX_CROPS;
+          const ready = Boolean(S.crop && S.crop.done);
           toolPop.hidden = false;
-          const label = full ? `Maximum ${PV_MAX_CROPS} questions reached · press <b>Enter</b> to send`
-            : ready ? `<b>${n}</b> selected · drag to add more · press <b>Enter</b> to send all · <b>Esc</b> to cancel`
-            : "Drag a box around a question — you can select several, one after another";
-          toolPop.innerHTML = `<span class="pv-poplabel">${label}</span>${ready ? `<button type="button" class="pv-cropclear" data-crop-clear>Clear</button>` : ""}<button type="button" class="pv-cropask" data-crop-ask${ready ? "" : " disabled"}>${pvIcon("spark")}Ask AI${n > 1 ? ` (${n})` : ""} <kbd>Enter</kbd></button>`;
+          toolPop.innerHTML = `<span class="pv-poplabel">${ready ? "Press <b>Enter</b> to send to AI · drag again to redo · <b>Esc</b> to cancel" : "Drag a box around the question you want to ask about"}</span><button type="button" class="pv-cropask" data-crop-ask${ready ? "" : " disabled"}>${pvIcon("spark")}Ask AI <kbd>Enter</kbd></button>`;
           return;
         }
         const draw = S.tool === "draw";
@@ -11287,11 +11266,7 @@
           <div class="pv-seg">${sizes.map((s, i) => `<button type="button" data-size="${s}" class="${cfg.size === s ? "is-on" : ""}">${labels[i]}</button>`).join("")}</div>`;
       }
       toolPop.addEventListener("click", (event) => {
-        if (S.tool === "crop") {
-          if (event.target.closest("[data-crop-ask]")) confirmCrop();
-          else if (event.target.closest("[data-crop-clear]")) { clearCrop(); renderToolPop(); }
-          return;
-        }
+        if (S.tool === "crop") { if (event.target.closest("[data-crop-ask]")) confirmCrop(); return; }
         const cfg = S.tool === "draw" ? S.pen : S.text;
         const pen = event.target.closest("[data-pen]");
         const color = event.target.closest("[data-color]");
@@ -11353,9 +11328,6 @@
         aiResize.addEventListener("pointercancel", up);
       });
       S.crop = null;
-      S.crops = [];
-      S.cropBusy = false;
-      const PV_MAX_CROPS = 8;
       S.aiOpen = false;
       S.aiBusy = false;
       S.aiImages = [];
@@ -11408,29 +11380,18 @@
       }
 
       function clearCrop() {
-        if (S.crop) { try { S.crop.rect.remove(); } catch (error) { /* ignore */ } S.crop = null; }
-        S.crops.forEach((c) => { try { c.rect.remove(); } catch (error) { /* ignore */ } });
-        S.crops = [];
-      }
-      function renumberCrops() {
-        S.crops.forEach((c, i) => { const b = c.rect.querySelector(".pv-cropnum"); if (b) b.dataset.n = String(i + 1); });
-      }
-      function dropCrop(sel) {
-        try { sel.rect.remove(); } catch (error) { /* ignore */ }
-        S.crops = S.crops.filter((c) => c !== sel);
-        renumberCrops();
-        renderToolPop();
+        if (!S.crop) return;
+        try { S.crop.rect.remove(); } catch (error) { /* ignore */ }
+        S.crop = null;
       }
       function startCrop(slot, event) {
         if (event.button !== 0 || !slot.rendered || S.hand || S.space) return;
-        if (S.crops.length + S.aiImages.length >= PV_MAX_CROPS) return;
         event.preventDefault();
-        if (S.crop) { try { S.crop.rect.remove(); } catch (error) { /* ignore */ } S.crop = null; }
+        clearCrop();
         const fx = (cx) => { const b = slot.el.getBoundingClientRect(); return pvClamp((cx - b.left) / (b.width || 1), 0, 1); };
         const fy = (cy) => { const b = slot.el.getBoundingClientRect(); return pvClamp((cy - b.top) / (b.height || 1), 0, 1); };
         const rect = document.createElement("div");
         rect.className = "pv-croprect";
-        if (S.crops.length) rect.classList.add("is-multi");
         slot.el.appendChild(rect);
         const sx = fx(event.clientX);
         const sy = fy(event.clientY);
@@ -11469,24 +11430,11 @@
           const b = slot.el.getBoundingClientRect();
           const w = Math.abs(sel.x1 - sel.x0) * b.width;
           const h = Math.abs(sel.y1 - sel.y0) * b.height;
-          if (w < 14 || h < 14) { try { rect.remove(); } catch (error) { /* ignore */ } S.crop = null; renderToolPop(); return; }   /* just a click, not a selection */
+          if (w < 14 || h < 14) { clearCrop(); renderToolPop(); return; }   /* just a click, not a selection */
           const x0 = Math.min(sel.x0, sel.x1), x1 = Math.max(sel.x0, sel.x1);
           const y0 = Math.min(sel.y0, sel.y1), y1 = Math.max(sel.y0, sel.y1);
           sel.x0 = x0; sel.x1 = x1; sel.y0 = y0; sel.y1 = y1;
           sel.done = true;
-          rect.classList.remove("is-multi");
-          rect.classList.add("is-done");
-          const num = document.createElement("button");
-          num.type = "button";
-          num.className = "pv-cropnum";
-          num.title = "Remove this selection";
-          num.setAttribute("aria-label", "Remove this selection");
-          num.addEventListener("pointerdown", (e) => e.stopPropagation());
-          num.addEventListener("click", (e) => { e.stopPropagation(); e.preventDefault(); dropCrop(sel); });
-          rect.appendChild(num);
-          S.crops.push(sel);
-          S.crop = null;
-          renumberCrops();
           renderToolPop();
         };
         slot.ann.addEventListener("pointermove", onMove);
@@ -11498,7 +11446,7 @@
       }
       /* Re-renders just the selected area straight from the PDF: sharp at any zoom,
          with no pen strokes, notes, or dark-mode inversion baked in. */
-      async function renderCropImage(sel, maxLen = 3500000) {
+      async function renderCropImage(sel) {
         const slot = S.slots[sel.page - 1];
         const page = slot.page || await S.pdf.getPage(slot.num);
         const rot = ((page.rotate || 0) + sel.rot) % 360;
@@ -11516,44 +11464,38 @@
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         await page.render({ canvasContext: ctx, viewport }).promise;
         let url = "";
-        for (const q of [0.92, 0.8, 0.65, 0.5]) {
+        for (const q of [0.92, 0.8, 0.65]) {
           url = canvas.toDataURL("image/jpeg", q);
-          if (url.length < maxLen) break;      /* keep the request comfortably small */
+          if (url.length < 3500000) break;      /* keep the request comfortably small */
         }
         canvas.width = canvas.height = 0;
         return url;
       }
       async function confirmCrop() {
-        if (S.cropBusy || !S.crops.length) return;
-        S.cropBusy = true;
-        const list = S.crops.slice();
-        list.forEach((c) => c.rect.classList.add("is-busy"));
-        const total = Math.max(1, S.aiImages.length + list.length);
-        const maxLen = Math.max(900000, Math.min(3500000, Math.floor(12000000 / total)));   /* keep many crops under the request-size limit */
+        const sel = S.crop;
+        if (!sel || !sel.done || sel.busy) return;
+        sel.busy = true;
+        sel.rect.classList.add("is-busy");
         try {
-          const urls = [];
-          for (const sel of list) {
-            urls.push(await renderCropImage(sel, maxLen));
-            if (S.destroyed) return;
-          }
-          S.aiImages = S.aiImages.concat(urls).slice(-PV_MAX_CROPS);
+          const url = await renderCropImage(sel);
+          if (S.destroyed) return;
+          S.aiImages.push(url);
+          S.aiImages = S.aiImages.slice(-6);        /* several crops can be attached before sending (max 6) */
           clearCrop();
           openAi();
           renderToolPop();
           aiInput.focus();
         } catch (error) {
           console.warn("Magic crop failed", error);
-          list.forEach((c) => c.rect.classList.remove("is-busy"));
+          sel.busy = false;
+          sel.rect.classList.remove("is-busy");
           S.aiChat.push({ role: "assistant", content: "Couldn't capture that area. Please try selecting it again.", err: true });
           openAi();
         }
-        S.cropBusy = false;
       }
 
       /* ----- read answers aloud (Gemini TTS or the browser's own voices) ----- */
       const GEMINI_TTS_MODEL = "gemini-3.8-flash-tts";
-      /* Backup voice models: if one is overloaded / out of quota the next one takes over without any message. */
-      const GEMINI_TTS_MODELS = [...new Set([GEMINI_TTS_MODEL, "gemini-2.5-flash-preview-tts", "gemini-2.5-pro-preview-tts"])];
       const GEMINI_TTS_VOICE = "Kore";
       S.tts = { engine: "gemini", lang: "hinglish", auto: false, idx: -1, state: "idle", token: 0, audio: null, cancelPlay: null };
       const refreshTtsPrefs = () => Object.assign(S.tts, getTtsPrefs());   // voice / language / auto-read live in Settings
@@ -11657,10 +11599,9 @@
         new Uint8Array(buf, 44).set(pcm);
         return new Blob([buf], { type: "audio/wav" });
       }
-      /* One chunk of text -> object URL of playable audio. Silent failover across every key x every voice model, round after round. */
-      const ttsCool = {};                                          /* overloaded key+model pairs rest ~15s (in memory only) */
-      const ttsPairId = (k, m) => `${k.slice(-8)}|${m}`;
-      const ttsCooling = (k, m) => (ttsCool[ttsPairId(k, m)] || 0) > Date.now();
+      /* One chunk of text -> object URL of playable audio, via the Gemini TTS model. */
+      const ttsKeyCool = {};                                        /* overloaded keys rest ~20s (in memory only) */
+      const ttsKeyCooling = (k) => (ttsKeyCool[k.slice(-8)] || 0) > Date.now();
       async function geminiTtsChunk(text, rounds = 4) {
         const allKeys = ttsKeyList();
         if (!allKeys.length) throw new Error("Add a Gemini API key in Settings → PDF AI (Gemini) to use the Gemini voice, or pick Browser (free).");
@@ -11671,50 +11612,45 @@
           contents: [{ role: "user", parts: [withMeta ? { text, speech_metadata: { style } } : { text }] }],
           generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: GEMINI_TTS_VOICE } } } }
         });
-        let inline = null;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_TTS_MODEL}:generateContent`;
+        let data = null;
         let lastErr = "";
         let withMeta = true;
-        for (let round = 0; round < rounds && !inline; round++) {
+        /* Any failure (overload, quota, bad key, network) silently moves on to the next key; whole rounds repeat before giving up. */
+        for (let round = 0; round < rounds && !data; round++) {
           if (round) await new Promise((r) => setTimeout(r, Math.min(1500 * round, 5000)));
-          let pairs = [];
-          for (const m of GEMINI_TTS_MODELS) for (const k of allKeys) if (!ttsPairPaused(k, m)) pairs.push([k, m]);
-          if (!pairs.length) break;
-          const rested = pairs.filter(([k, m]) => !ttsCooling(k, m));
-          if (rested.length) pairs = rested;
-          for (const [key, model] of pairs) {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-            const headers = { "Content-Type": "application/json", "x-goog-api-key": key };
+          let pool = allKeys.filter((k) => !ttsKeyPaused(k));
+          if (!pool.length) break;
+          const rested = pool.filter((k) => !ttsKeyCooling(k));
+          if (rested.length) pool = rested;
+          for (const key of pool) {
             let res;
             try {
-              res = await fetchWithTimeout(url, 45000, { method: "POST", headers, body: build(withMeta) });
+              res = await fetchWithTimeout(url, 45000, { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": key }, body: build(withMeta) });
               if (res.status === 400 && withMeta) {                                 // retry without the style hint
                 withMeta = false;
-                res = await fetchWithTimeout(url, 45000, { method: "POST", headers, body: build(false) });
+                res = await fetchWithTimeout(url, 45000, { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": key }, body: build(false) });
               }
-            } catch (e) { lastErr = "network"; ttsCool[ttsPairId(key, model)] = Date.now() + 15000; continue; }
-            if (res.ok) {
-              let data = null;
-              try { data = await res.json(); } catch (e) { /* ignore */ }
-              const part = (data?.candidates?.[0]?.content?.parts || []).find((x) => (x.inlineData || x.inline_data)?.data);
-              const found = part && (part.inlineData || part.inline_data);
-              if (found) { inline = found; break; }
-              lastErr = "no audio"; ttsCool[ttsPairId(key, model)] = Date.now() + 15000; continue;
-            }
+            } catch (e) { lastErr = "network"; ttsKeyCool[key.slice(-8)] = Date.now() + 20000; continue; }
+            if (res.ok) { data = await res.json(); break; }
             const raw = await res.text().catch(() => "");
             let detail = "";
             try { detail = JSON.parse(raw)?.error?.message || ""; } catch (e) { /* ignore */ }
             lastErr = `${res.status}: ${detail}`;
-            if (res.status === 429) { pauseTtsPair(key, model, /per\s*day|perday/i.test(raw) ? 3 * 3600e3 : 90e3); continue; }
-            if (res.status === 404) { pauseTtsPair(key, model, 6 * 3600e3); continue; }      /* this key can't use that model: skip it */
-            if ([400, 401, 403].includes(res.status)) { pauseTtsPair(key, model, 90e3); continue; }
-            ttsCool[ttsPairId(key, model)] = Date.now() + 15000;                            /* 5xx and anything else: rest briefly, move on */
+            if (res.status === 429) { pauseTtsKey(key, /per\s*day|perday/i.test(raw)); continue; }
+            if ([500, 502, 503, 504].includes(res.status)) { ttsKeyCool[key.slice(-8)] = Date.now() + 20000; continue; }
+            if ([400, 401, 403].includes(res.status)) { pauseTtsKey(key, false); continue; }
+            throw new Error(`Gemini voice error (${lastErr.slice(0, 200)})`);
           }
         }
-        if (!inline) {
+        if (!data) {
           const e = new Error(`Gemini voice unavailable (${lastErr.slice(0, 140) || "all keys busy"})`);
-          e.quota = geminiTtsPaused();
+          e.quota = allKeys.every(ttsKeyPaused);
           throw e;
         }
+        const part = (data?.candidates?.[0]?.content?.parts || []).find((x) => (x.inlineData || x.inline_data)?.data);
+        const inline = part && (part.inlineData || part.inline_data);
+        if (!inline) throw new Error("Gemini voice returned no audio. Try again.");
         const mime = String(inline.mimeType || inline.mime_type || "");
         const bytes = b64ToBytes(inline.data);
         const isWav = /wav/i.test(mime) || (bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46);
@@ -11734,23 +11670,14 @@
       async function speakWithGemini(text, token) {
         const chunks = splitForTts(text, 1200);
         const jobs = [];
-        const run = (i, rounds) => geminiTtsChunk(chunks[i], rounds).then((u) => ({ u }), (e) => ({ e }));
-        const start = (i) => { if (i < chunks.length && !jobs[i]) jobs[i] = run(i, i === 0 ? 4 : 8); };
+        const start = (i) => { if (i < chunks.length && !jobs[i]) jobs[i] = geminiTtsChunk(chunks[i], i === 0 ? 4 : 8).then((u) => ({ u }), (e) => ({ e })); };
         const cleanup = (from) => { for (let j = from; j < jobs.length; j++) if (jobs[j]) jobs[j].then((r) => { if (r.u) URL.revokeObjectURL(r.u); }); };
-        start(0); start(1); start(2);                               /* stay three chunks ahead so a slow moment never cuts the voice */
+        start(0); start(1);                                         /* stay two chunks ahead so a slow moment never cuts the voice */
         for (let i = 0; i < chunks.length; i++) {
-          let res = await jobs[i];
-          /* Hiccup in the middle of reading: keep retrying quietly on the same voice (other keys / models are tried inside).
-             The free browser voice is never used halfway through, and nothing changes on screen. */
-          for (let again = 0; res.e && i > 0 && again < 8 && token === S.tts.token; again++) {
-            await new Promise((r) => setTimeout(r, Math.min(4000 * (again + 1), 15000)));
-            if (token !== S.tts.token) break;
-            jobs[i] = run(i, 8);
-            res = await jobs[i];
-          }
+          const res = await jobs[i];
           if (token !== S.tts.token) { if (res.u) URL.revokeObjectURL(res.u); cleanup(i + 1); return; }
           if (res.e) { res.e.started = i > 0; res.e.resumeFrom = chunks.slice(i).join(" "); cleanup(i + 1); throw res.e; }
-          start(i + 3);
+          start(i + 2);
           S.tts.state = "playing"; updateSpeakButtons();
           await playAudioUrl(res.u);
           if (token !== S.tts.token) { cleanup(i + 1); return; }
@@ -11799,16 +11726,15 @@
       function readKeyPauses() {
         try { return JSON.parse(localStorage.getItem(TTS_KEYPAUSE_KEY) || "{}") || {}; } catch (e) { return {}; }
       }
-      function ttsPairPaused(key, model) { return (readKeyPauses()[ttsPairId(key, model)] || 0) > Date.now(); }
-      function pauseTtsPair(key, model, ms) {
+      function ttsKeyPaused(key) { return (readKeyPauses()[key.slice(-8)] || 0) > Date.now(); }
+      function pauseTtsKey(key, perDay) {
         const map = readKeyPauses();
-        map[ttsPairId(key, model)] = Date.now() + ms;
+        map[key.slice(-8)] = Date.now() + (perDay ? 3 * 3600e3 : 90e3);   /* daily limit: ~3h, per-minute limit: 90s */
         try { localStorage.setItem(TTS_KEYPAUSE_KEY, JSON.stringify(map)); } catch (e) { /* ignore */ }
       }
-      /* True only when EVERY key is out of quota on EVERY voice model (the free voice is the very last resort). */
       function geminiTtsPaused() {
         const keys = ttsKeyList();
-        return keys.length > 0 && keys.every((k) => GEMINI_TTS_MODELS.every((m) => ttsPairPaused(k, m)));
+        return keys.length > 0 && keys.every(ttsKeyPaused);
       }
       function ttsNote(message, isInfo) {
         ttsMsgEl.textContent = message;
@@ -11822,9 +11748,7 @@
         stopSpeech();
         ttsNote("", false);
         if (wasThis) return;
-        const resume = S.tts.resume && S.tts.resume.idx === idx ? S.tts.resume.text : "";
-        S.tts.resume = null;
-        const text = resume || speakableText(String(msg.content || "").replace(/^[ \t]*={3}[ \t]*Question[ \t]+(\d+)[ \t]*={3}[ \t]*$/gim, "Question $1."));
+        const text = speakableText(msg.content);
         if (!text) return;
         const token = ++S.tts.token;
         S.tts.idx = idx; S.tts.state = "loading"; updateSpeakButtons();
@@ -11836,7 +11760,7 @@
               await speakWithGemini(text, token);
             } catch (error) {
               if (token !== S.tts.token) throw error;
-              if (error && error.started) { S.tts.resume = { idx, text: error.resumeFrom }; throw new Error("Voice paused — press Listen to continue from here."); }
+              if (error && error.started) throw new Error("Voice stopped — Gemini is overloaded right now. Press Listen to continue.");
               await speakWithBrowser((error && error.resumeFrom) || text, token);   /* nothing was spoken yet, so this is the only fallback left */
             }
           }
@@ -11853,26 +11777,14 @@
         aiTray.innerHTML = S.aiImages.map((u, i) => `<span class="pv-ai-th"><img src="${u}" alt="Crop ${i + 1}"><i>${i + 1}</i><button type="button" data-act="aiDrop" data-idx="${i}" title="Remove this crop" aria-label="Remove crop ${i + 1}">×</button></span>`).join("");
         aiInput.placeholder = n > 1 ? `Ask about these ${n} questions… (or press Enter to solve all)` : n ? "Ask about this question… (or just press Enter to solve)" : "Type your question…";
       }
-      /* A multi-question answer ("=== Question 1 ===" markers) becomes separate numbered cards with a clear divider. */
-      function renderAiAnswer(content) {
-        const text = String(content || "");
-        const parts = text.split(/^[ \t]*={3}[ \t]*Question[ \t]+(\d+)[ \t]*={3}[ \t]*$/gim);
-        const plain = (t) => `<div class="ai-rich">${renderAiRichText(escapeHTML(t))}</div>`;
-        if (parts.length < 3) return plain(text);
-        let out = parts[0].trim() ? plain(parts[0].trim()) : "";
-        for (let i = 1; i < parts.length; i += 2) {
-          out += `<section class="pv-ai-q"><header class="pv-ai-qhead"><b>${escapeHTML(parts[i])}</b>Question ${escapeHTML(parts[i])}</header>${plain((parts[i + 1] || "").trim())}</section>`;
-        }
-        return out;
-      }
       function renderAi() {
         if (!S.aiChat.length && !S.aiBusy) {
           aiMsgs.innerHTML = `<div class="pv-ai-empty">${pvIcon("spark")}<br>Use the <b>crop</b> tool, drag a box around a question and press <b>Enter</b>.<br>Then type your doubt and the AI will answer.</div>`;
           return;
         }
         aiMsgs.innerHTML = S.aiChat.map((m, i) => m.role === "user"
-          ? `<div class="pv-ai-msg mine">${(m.imgs || []).map((u, qi, arr) => arr.length > 1 ? `<div class="pv-ai-cropwrap"><b class="pv-ai-cropnum">${qi + 1}</b><img class="pv-ai-crop" src="${u}" alt="Cropped question ${qi + 1}"></div>` : `<img class="pv-ai-crop" src="${u}" alt="Cropped question">`).join("")}<span>${linkifyText(escapeHTML(m.content))}</span></div>`
-          : `<div class="pv-ai-msg bot${m.err ? " err" : ""}"><div class="pv-ai-who">${pvIcon("spark")}AI${m.err ? "" : `<button type="button" class="pv-ai-speak${S.tts.idx === i && S.tts.state !== "idle" ? " is-on" : ""}" data-act="aiSpeak" data-idx="${i}" title="Read this answer aloud">${pvIcon(S.tts.idx === i && S.tts.state !== "idle" ? "stopSq" : "speaker")}${S.tts.idx === i && S.tts.state === "loading" ? "Loading…" : S.tts.idx === i && S.tts.state === "playing" ? "Stop" : "Listen"}</button>`}</div>${renderAiAnswer(m.content)}</div>`
+          ? `<div class="pv-ai-msg mine">${(m.imgs || []).map((u) => `<img class="pv-ai-crop" src="${u}" alt="Cropped question">`).join("")}<span>${linkifyText(escapeHTML(m.content))}</span></div>`
+          : `<div class="pv-ai-msg bot${m.err ? " err" : ""}"><div class="pv-ai-who">${pvIcon("spark")}AI${m.err ? "" : `<button type="button" class="pv-ai-speak${S.tts.idx === i && S.tts.state !== "idle" ? " is-on" : ""}" data-act="aiSpeak" data-idx="${i}" title="Read this answer aloud">${pvIcon(S.tts.idx === i && S.tts.state !== "idle" ? "stopSq" : "speaker")}${S.tts.idx === i && S.tts.state === "loading" ? "Loading…" : S.tts.idx === i && S.tts.state === "playing" ? "Stop" : "Listen"}</button>`}</div><div class="ai-rich">${renderAiRichText(escapeHTML(m.content))}</div></div>`
         ).join("") + (S.aiBusy ? `<div class="pv-ai-msg bot"><span class="pv-dots"><i></i><i></i><i></i></span></div>` : "");
         aiMsgs.scrollTop = aiMsgs.scrollHeight;
         renderMathIn(aiMsgs);
@@ -12353,14 +12265,14 @@
           if (typing) { target.blur(); focusScroller(); return; }
           if (root.querySelector(".pv-menu:not([hidden])")) { closeMenus(); return; }
           if (S.present) { exitPresentation(); return; }
-          if (S.crop || S.crops.length) { clearCrop(); renderToolPop(); return; }
+          if (S.crop) { clearCrop(); renderToolPop(); return; }
           if (S.aiOpen) { closeAi(); return; }
           if (S.tool !== "select") { setTool(S.tool); return; }
           if (S.hand) { toggleHand(); return; }
           close();
           return;
         }
-        if (key === "Enter" && !typing && !ctrl && S.tool === "crop" && S.crops.length > 0) { stop(); confirmCrop(); return; }
+        if (key === "Enter" && !typing && !ctrl && S.tool === "crop" && S.crop && S.crop.done) { stop(); confirmCrop(); return; }
         if (ctrl && !event.altKey) {
           if (key === "+" || key === "=") { stop(); zoomStep(1); return; }
           if (key === "-" || key === "_") { stop(); zoomStep(-1); return; }
