@@ -7694,6 +7694,9 @@
               <input id="geminiTtsKey3" type="password" placeholder="AIza..." value="${escapeHTML(geminiTtsExtraKeys[2])}" autocomplete="off">
               <p class="subtext">${geminiTtsExtraKeys.filter(Boolean).length} of 3 backup keys saved.</p>
               <button class="secondary-btn" type="submit">Save backup keys</button>
+              <button class="secondary-btn" type="button" id="geminiKeyTestBtn">Test all keys (voice)</button>
+              <button class="secondary-btn" type="button" id="geminiKeyResetBtn">Reset key limits</button>
+              <div id="geminiKeyTestOut" class="subtext" style="white-space: pre-line;"></div>
             </form>
           `
         })}
@@ -9228,6 +9231,44 @@
         }
       } catch (error) {
         console.error("Could not load Gemini settings", error);
+      }
+    }
+
+    /* Sample test: sends one tiny voice request per key (one at a time) and reports what each key says. */
+    async function testVoiceKeys(outEl) {
+      const slots = [["Main key", geminiApiKey], ["Backup key 1", geminiTtsExtraKeys[0]], ["Backup key 2", geminiTtsExtraKeys[1]], ["Backup key 3", geminiTtsExtraKeys[2]]];
+      const lines = slots.map(([name]) => `${name}: waiting…`);
+      const paint = () => { outEl.textContent = lines.join("\n"); };
+      const seen = {};
+      paint();
+      for (let i = 0; i < slots.length; i++) {
+        const name = slots[i][0];
+        const key = String(slots[i][1] || "").trim();
+        if (!key) { lines[i] = `${name}: not set`; paint(); continue; }
+        if (seen[key]) { lines[i] = `${name}: same key as ${seen[key]} (adds nothing)`; paint(); continue; }
+        seen[key] = name;
+        lines[i] = `${name}: testing…`; paint();
+        const t0 = performance.now();
+        try {
+          const res = await fetchWithTimeout("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash-tts:generateContent", 60000, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+            body: JSON.stringify({
+              contents: [{ role: "user", parts: [{ text: "Hello." }] }],
+              generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } } } }
+            })
+          });
+          if (res.ok) {
+            lines[i] = `${name}: ✅ works (${((performance.now() - t0) / 1000).toFixed(1)}s)`;
+          } else {
+            let msg = "";
+            try { msg = (await res.json())?.error?.message || ""; } catch (e) { /* ignore */ }
+            lines[i] = `${name}: ${res.status === 429 ? "⛔ limit reached" : `❌ error ${res.status}`} — ${msg.slice(0, 110)}`;
+          }
+        } catch (e) {
+          lines[i] = `${name}: ❌ ${e.name === "AbortError" ? "timed out" : "network error"}`;
+        }
+        paint();
       }
     }
 
@@ -11705,48 +11746,61 @@
         return new Blob([buf], { type: "audio/wav" });
       }
       /* One chunk of text -> object URL of playable audio (Gemini 3.8 Flash TTS). Any failure silently tries the next key. */
-      async function geminiTtsChunk(text, budgetMs = 240000) {
+      async function geminiTtsChunk(text, budgetMs = 150000, shouldStop = () => false) {
         const allKeys = ttsKeyList();
         if (!allKeys.length) throw new Error("Add a Gemini API key in Settings → PDF AI (Gemini) to use the voice.");
         const models = S.tts.liteTts ? GEMINI_TTS_MODELS : [GEMINI_TTS_MODELS[0]];
         const style = "One consistent character from the first word to the last: a cool, confident, playful young woman chatting with her study buddy. Keep the same voice, pitch, warmth, energy and conversational pace throughout. Let humour and emotion show naturally inside the lines, with a dramatic stretch on 'ohhh', a little sigh at 'uff' and a playful air-kiss sound for 'muaaaa'. The text is Hinglish (Hindi written in Roman letters): pronounce Hindi words like a native Hindi speaker and read maths and science terms in English.";
-        const build = (withMeta) => JSON.stringify({
-          contents: [{ role: "user", parts: [withMeta ? { text, speech_metadata: { style } } : { text }] }],
+        const body = JSON.stringify({
+          contents: [{ role: "user", parts: [{ text, speech_metadata: { style } }] }],
           generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: GEMINI_TTS_VOICE } } } }
         });
         const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-        const deadline = Date.now() + budgetMs;                   /* patient: keeps trying every key (and model) for up to ~2 minutes */
+        const stopped = () => { if (shouldStop()) { const e = new Error("stopped"); e.stopped = true; throw e; } };
+        const deadline = Date.now() + budgetMs;
         let data = null;
         let lastErr = "";
         let backoff = 0;
-        let failed = null;                                        /* {key, model} of the last failed attempt, for the 4-second notice */
+        let failed = null;                                        /* {key, model} of the last failed attempt */
+        let announced = false;
         while (!data && Date.now() < deadline) {
+          stopped();
+          /* strict order: main key -> backup 1 -> backup 2 -> backup 3 (then the Flash-Lite model, if switched on) */
           let cands = [];
-          models.forEach((model) => {
-            const alive = allKeys.filter((k) => !ttsKeyPaused(k, model));
-            const off = alive.length ? ttsRR % alive.length : 0;
-            alive.slice(off).concat(alive.slice(0, off)).forEach((key) => cands.push({ key, model }));
-          });
+          const resting = [];
+          models.forEach((model) => allKeys.forEach((key) => {
+            if (ttsKeyPaused(key, model)) { if (model === models[0]) resting.push(key); } else cands.push({ key, model });
+          }));
           if (!cands.length) {
-            /* every key is resting on every model: wait for the first one to come back, if that is within the budget */
             const soonest = Math.min(...models.flatMap((m) => allKeys.map((k) => readKeyPauses()[ttsId(k, m)] || 0)));
             if (soonest - Date.now() > deadline - Date.now()) break;
-            await sleep(Math.max(500, soonest - Date.now() + 300));
+            let waitMs = Math.max(500, soonest - Date.now() + 300);
+            while (waitMs > 0 && Date.now() < deadline) {
+              stopped();
+              ttsNote(`All voice keys are resting after their limit — retrying in ${Math.ceil(waitMs / 1000)}s…`, true, true);
+              const step = Math.min(waitMs, 1000);
+              await sleep(step);
+              waitMs -= step;
+            }
             continue;
           }
-          const rested = cands.filter((c) => !ttsKeyCooling(c.key, c.model));
-          if (rested.length) cands = rested;
+          cands = [...cands.filter((c) => !ttsKeyCooling(c.key, c.model)), ...cands.filter((c) => ttsKeyCooling(c.key, c.model))];
+          if (!announced && resting.length && cands[0].key !== allKeys[0]) {      /* tell WHY earlier keys were skipped */
+            announced = true;
+            ttsNote(`${resting.map(ttsKeyLabel).join(", ")} at limit — using ${ttsKeyLabel(cands[0].key)}`, true);
+          }
           for (const { key, model } of cands) {
+            stopped();
             if (failed && (failed.key !== key || failed.model !== model)) {
-              ttsNote(`${ttsKeyLabel(failed.key)} is busy — switched to ${ttsKeyLabel(key)}${model !== GEMINI_TTS_MODELS[0] ? " (Flash-Lite voice)" : ""}`, true);
+              ttsNote(`${ttsKeyLabel(failed.key)} busy — switched to ${ttsKeyLabel(key)}${model !== GEMINI_TTS_MODELS[0] ? " (Flash-Lite voice)" : ""}`, true);
               failed = null;
             }
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
             let res;
             try {
-              res = await fetchWithTimeout(url, 150000, { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": key }, body: build(true) });
+              res = await fetchWithTimeout(url, 60000, { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": key }, body });
             } catch (e) { lastErr = "network"; ttsKeyCool[ttsId(key, model)] = Date.now() + 20000; failed = { key, model }; continue; }
-            if (res.ok) { data = await res.json(); ttsRR++; break; }
+            if (res.ok) { data = await res.json(); break; }
             const raw = await res.text().catch(() => "");
             let detail = "";
             try { detail = JSON.parse(raw)?.error?.message || ""; } catch (e) { /* ignore */ }
@@ -11756,14 +11810,15 @@
             if (res.status === 429) { pauseTtsKey(key, model, quotaPauseMs(raw)); continue; }
             if ([500, 502, 503, 504].includes(res.status)) { ttsKeyCool[ttsId(key, model)] = Date.now() + 20000; continue; }
             if ([401, 403].includes(res.status) || (res.status === 400 && /api key|API_KEY/i.test(detail))) { pauseTtsKey(key, model, 5 * 60e3); continue; }
-            if (res.status === 404 && model !== models[0]) { pauseTtsKey(key, model, 3600e3); continue; }   /* backup voice model not available */
+            if (res.status === 404 && model !== models[0]) { pauseTtsKey(key, model, 3600e3); continue; }
             throw new Error(`Gemini voice error (${lastErr.slice(0, 200)})`);
           }
           if (!data) { backoff = Math.min(backoff + 1500, 5000); await sleep(backoff); }
         }
+        stopped();
         if (!data) {
           throw new Error(/^429/.test(lastErr)
-            ? `All ${allKeys.length} voice key${allKeys.length > 1 ? "s are" : " is"} rate-limited right now. Try again in a minute (keys from one Google project share a single limit).`
+            ? `All ${allKeys.length} voice key${allKeys.length > 1 ? "s are" : " is"} rate-limited right now. Open Settings → Test all keys to see which ones work.`
             : `Gemini voice unavailable (${lastErr.slice(0, 120) || "all keys busy"})`);
         }
         const part = (data?.candidates?.[0]?.content?.parts || []).find((x) => (x.inlineData || x.inline_data)?.data);
@@ -11786,35 +11841,40 @@
         });
       }
       async function speakWithGemini(text, token) {
-        /* The whole answer is ONE request so the voice keeps the same tone from start to end (max ~6500 characters per request). */
-        const chunks = splitForTts(text, 6500);
+        /* Short first part so it starts quickly; the rest in a few bigger parts. Same style + same key order for every part. */
+        const head = text.length > 900 ? (splitForTts(text, 700)[0] || text) : "";
+        const chunks = (head ? [head, ...splitForTts(text.slice(text.indexOf(head) + head.length).trim(), 2500)] : splitForTts(text, 2500)).filter(Boolean);
         const jobs = [];
         let chain = Promise.resolve(null);
-        /* Audio for the next chunks is generated one request at a time while the current chunk plays. */
+        const stopNow = () => token !== S.tts.token;
         chunks.forEach((chunk, i) => {
           jobs[i] = chain = chain.then(async (prev) => {
-            if (token !== S.tts.token) return { stopped: true };
+            if (stopNow()) return { stopped: true };
             if (prev && (prev.e || prev.stopped)) return prev;
-            return geminiTtsChunk(chunk).then((u) => ({ u }), (e) => ({ e }));
+            return geminiTtsChunk(chunk, 150000, stopNow).then((u) => ({ u }), (e) => (e && e.stopped ? { stopped: true } : { e }));
           });
         });
         const cleanup = (from) => { for (let j = from; j < jobs.length; j++) jobs[j].then((r) => { if (r && r.u) URL.revokeObjectURL(r.u); }); };
         for (let i = 0; i < chunks.length; i++) {
           const res = await jobs[i];
-          if (token !== S.tts.token || res.stopped) { if (res.u) URL.revokeObjectURL(res.u); cleanup(i + 1); return; }
+          if (stopNow() || res.stopped) { if (res.u) URL.revokeObjectURL(res.u); cleanup(i + 1); return; }
           if (res.e) { res.e.started = i > 0; cleanup(i + 1); throw res.e; }
+          clearStickyNote();
           S.tts.state = "playing"; updateSpeakButtons();
           await playAudioUrl(res.u);
-          if (token !== S.tts.token) { cleanup(i + 1); return; }
+          if (stopNow()) { cleanup(i + 1); return; }
         }
       }
       let ttsNoteTimer = 0;
-      function ttsNote(message, isInfo) {
+      let ttsNoteSticky = false;
+      function ttsNote(message, isInfo, sticky) {
         clearTimeout(ttsNoteTimer);
+        ttsNoteSticky = !!(message && sticky);
         ttsMsgEl.textContent = message;
         ttsMsgEl.classList.toggle("is-info", !!isInfo);
-        if (message) ttsNoteTimer = setTimeout(() => { ttsMsgEl.textContent = ""; }, 4000);   /* notices disappear after 4 seconds */
+        if (message && !sticky) ttsNoteTimer = setTimeout(() => { ttsMsgEl.textContent = ""; }, 4000);   /* notices disappear after 4 seconds */
       }
+      function clearStickyNote() { if (ttsNoteSticky) ttsNote(""); }
       async function speakMessage(idx) {
         const msg = S.aiChat[idx];
         if (!msg || msg.role !== "assistant") return;
@@ -14957,6 +15017,19 @@
     loadGrokApiKey();
     loadGeminiSettings();
     loadGeminiTtsKeys();
+    document.addEventListener("click", (event) => {
+      const testBtn = event.target.closest("#geminiKeyTestBtn");
+      if (testBtn) {
+        const out = document.getElementById("geminiKeyTestOut");
+        testBtn.disabled = true;
+        testVoiceKeys(out).finally(() => { testBtn.disabled = false; });
+        return;
+      }
+      if (event.target.closest("#geminiKeyResetBtn")) {
+        try { localStorage.removeItem("duotrack.pdfViewer.ttsKeyPause3"); localStorage.removeItem("duotrack.pdfViewer.ansKeyPause2"); } catch (e) { /* ignore */ }
+        showToast("Reset", "Voice and answer key limits cleared — all keys will be tried again in order.");
+      }
+    });
     state = defaultState();
     listenToFirebase();
     listenToChat();
