@@ -7681,8 +7681,8 @@
 
         ${settingsSection({
           icon: "sparkle",
-          title: "Backup Gemini keys (voice)",
-          description: `Up to 3 extra Google/Gemini API keys used <strong>only for the read-aloud voice</strong>. Order: main key above → backup 1 → backup 2 → backup 3. When a key's voice limit runs out (429), the next one takes over automatically; if all are used up, the free browser voice reads instead. Shared between both accounts. Use keys from different Google projects — keys in the same project share one limit.`,
+          title: "Backup Gemini keys (answers & voice)",
+          description: `Up to 3 extra Google/Gemini API keys. Order: main key above → backup 1 → backup 2 → backup 3. If a key fails or its limit runs out (429 / overload), the next one takes over silently — for <strong>PDF answers and the read-aloud voice</strong>. Only if every key fails does the voice fall back to the free browser voice. Shared between both accounts. Use keys from different Google projects — keys in the same project share one limit.`,
           tone: "ai",
           body: `
             <form id="geminiTtsKeysForm" class="field settings-inline-form">
@@ -9263,10 +9263,25 @@
       await set(geminiConfigRef, { apiKey: geminiApiKey, model: geminiModel });
     }
 
+    // Main key first, then backup keys 1-3 (Settings). Used silently when a key fails.
+    function geminiAllKeys() {
+      return [...new Set([geminiApiKey, ...geminiTtsExtraKeys].map((k) => String(k || "").trim()).filter(Boolean))];
+    }
+    const GEMINI_ANS_PAUSE_KEY = "duotrack.pdfViewer.ansKeyPause";
+    const geminiAnsCool = {};                                    /* overloaded key+model rests ~20s (memory only) */
+    const ansId = (key, model) => `${key.slice(-8)}|${model}`;
+    function ansPauses() { try { return JSON.parse(localStorage.getItem(GEMINI_ANS_PAUSE_KEY) || "{}") || {}; } catch (e) { return {}; } }
+    function ansKeyPaused(key, model) { return (ansPauses()[ansId(key, model)] || 0) > Date.now(); }
+    function pauseAnsKey(key, model, perDay) {
+      const map = ansPauses();
+      map[ansId(key, model)] = Date.now() + (perDay ? 3 * 3600e3 : 60e3);
+      try { localStorage.setItem(GEMINI_ANS_PAUSE_KEY, JSON.stringify(map)); } catch (e) { /* ignore */ }
+    }
+
     // Gemini generateContent REST call (works straight from the browser, no SDK/npm needed).
     // history: [{role: "user"|"assistant", content}], imageDataUrl: optional cropped question.
     async function callGeminiPdfApi(promptText, history, imageDataUrl = "", opts = {}) {
-      if (!geminiApiKey) {
+      if (!geminiAllKeys().length) {
         throw new Error("No Gemini API key set yet. Add one in Settings → PDF AI (Gemini).");
       }
       const systemText = [
@@ -9312,7 +9327,8 @@
       userParts.push({ text: opts.reuse ? `(Reference only: the student's earlier cropped image${imageList.length > 1 ? "s are" : " is"} attached again. Answer the new message below using ${imageList.length > 1 ? "them" : "it"}.)\n${promptText}` : imageList.length > 1 ? `(${imageList.length} separate cropped images are attached, in order. Answer each one separately, numbered 1, 2, 3…)\n${promptText}` : promptText });
       contents.push({ role: "user", parts: userParts });
 
-      // Gemini sometimes returns 503 "high demand" spikes: retry once, then fall back to older Flash models.
+      // Any failure (quota 429, overload 503, bad key, network) silently moves to the next key, then the next model.
+      const keys = geminiAllKeys();
       const modelsToTry = [...new Set([geminiModel || GEMINI_DEFAULT_MODEL, "gemini-3.7-flash", "gemini-3.5-flash"])];
       const requestBody = JSON.stringify({
         systemInstruction: { parts: [{ text: systemText }] },
@@ -9329,38 +9345,43 @@
       };
       let response = null;
       let failure = "";
+      let sawQuota = false;
       outer:
       for (const model of modelsToTry) {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
-        for (let attempt = 0; attempt < 2; attempt++) {
-          if (attempt) await new Promise((resolve) => setTimeout(resolve, 1500));
-          try {
-            response = await fetchWithTimeout(url, 90000, {
-              method: "POST",
-              headers: { "Content-Type": "application/json", "x-goog-api-key": geminiApiKey },
-              body: requestBody
-            });
-          } catch (error) {
-            if (error.name === "AbortError") {
-              throw new Error("Gemini took too long to reply (timed out). Try again in a bit.");
+        for (let round = 0; round < 2; round++) {
+          if (round) await new Promise((resolve) => setTimeout(resolve, 1500));
+          let pool = keys.filter((k) => !ansKeyPaused(k, model));
+          if (!pool.length) break;
+          const rested = pool.filter((k) => (geminiAnsCool[ansId(k, model)] || 0) <= Date.now());
+          if (rested.length) pool = rested;
+          for (const key of pool) {
+            try {
+              response = await fetchWithTimeout(url, 90000, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+                body: requestBody
+              });
+            } catch (error) {
+              failure = error.name === "AbortError" ? "timed out" : "network";
+              geminiAnsCool[ansId(key, model)] = Date.now() + 20000;
+              continue;
             }
-            throw new Error("Couldn't reach Gemini — check your internet connection.");
-          }
-          if (response.ok) break outer;
-          const detail = await readError(response);
-          if ([429, 500, 502, 503, 504].includes(response.status)) {
+            if (response.ok) break outer;
+            const detail = await readError(response);
             failure = `${response.status}: ${detail}`;
-            continue;                                   // retry, then try the next model
+            if (response.status === 429) { sawQuota = true; pauseAnsKey(key, model, /per\s*day|perday/i.test(detail)); continue; }
+            if ([500, 502, 503, 504].includes(response.status)) { geminiAnsCool[ansId(key, model)] = Date.now() + 20000; continue; }
+            if ([401, 403].includes(response.status) || (response.status === 400 && /api key|API_KEY/i.test(detail))) { pauseAnsKey(key, model, false); continue; }
+            if (response.status === 404) break;                       // this model isn't available -> next model
+            throw new Error(`Gemini error (${response.status}): ${String(detail).slice(0, 220)}`);
           }
-          if (response.status === 404 && model !== modelsToTry[0]) {
-            failure = `${response.status}: ${detail}`;
-            break;                                      // fallback model not available, skip it
-          }
-          throw new Error(`Gemini error (${response.status}): ${String(detail).slice(0, 220)}`);
         }
       }
       if (!response || !response.ok) {
-        throw new Error(`Gemini is very busy right now, please try again in a minute. (${String(failure).slice(0, 160)})`);
+        throw new Error(sawQuota && keys.every((k) => modelsToTry.every((m) => ansKeyPaused(k, m)))
+          ? "All Gemini keys have hit their limit for now. Try again a bit later."
+          : `Gemini is very busy right now, please try again in a minute. (${String(failure).slice(0, 160)})`);
       }
       const data = await response.json();
       const candidate = data?.candidates?.[0];
@@ -14357,7 +14378,7 @@
         const keys = [1, 2, 3].map((n) => document.getElementById(`geminiTtsKey${n}`).value.trim());
         try {
           await saveGeminiTtsKeys(keys);
-          showToast("Saved", `${keys.filter(Boolean).length} backup voice key(s) saved — shared with both accounts.`);
+          showToast("Saved", `${keys.filter(Boolean).length} backup key(s) saved — used for answers and voice, shared with both accounts.`);
         } catch (error) {
           showToast("Error", "Could not save the backup voice keys.");
         }
