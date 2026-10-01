@@ -7025,7 +7025,7 @@
     // Read-aloud (TTS) preferences for the PDF AI panel — edited in Settings, read by the viewer.
     const TTS_PREFS_KEY = "duotrack.pdfViewer.tts";
     function getTtsPrefs() {
-      const defaults = { engine: "gemini", lang: "hinglish", auto: false, lite: true };
+      const defaults = { engine: "gemini", lang: "hinglish", auto: false, liteTts: false };
       try { return { ...defaults, ...JSON.parse(localStorage.getItem(TTS_PREFS_KEY) || "{}") }; } catch (e) { return defaults; }
     }
     let geminiApiKey = "";
@@ -7706,7 +7706,7 @@
           body: `
             <form id="ttsSettingsForm" class="field settings-inline-form">
               <label class="checkbox-row"><input id="ttsAutoInput" type="checkbox" ${getTtsPrefs().auto ? "checked" : ""}> Auto-read new answers</label>
-              <label class="checkbox-row"><input id="ttsLiteInput" type="checkbox" ${getTtsPrefs().lite !== false ? "checked" : ""}> Also try Gemini 3.8 Flash-Lite TTS (extra quota) when every key hits the Flash TTS limit</label>
+              <label class="checkbox-row"><input id="ttsLiteInput" type="checkbox" ${getTtsPrefs().liteTts ? "checked" : ""}> Also try Gemini 3.8 Flash-Lite TTS when every key hits the Flash TTS limit (extra quota, but the voice tone can differ slightly)</label>
               <button class="secondary-btn" type="submit">Save voice settings</button>
             </form>
           `
@@ -11576,7 +11576,7 @@
       /* ----- read answers aloud (Gemini TTS or the browser's own voices) ----- */
       const GEMINI_TTS_MODEL = "gemini-3.8-flash-tts";
       const GEMINI_TTS_VOICE = "Kore";                                   /* female voice; delivery/emotion is decided by Gemini */
-      S.tts = { engine: "gemini", lang: "hinglish", auto: false, lite: true, idx: -1, state: "idle", token: 0, audio: null, cancelPlay: null };
+      S.tts = { engine: "gemini", lang: "hinglish", auto: false, liteTts: false, idx: -1, state: "idle", token: 0, audio: null, cancelPlay: null };
       const refreshTtsPrefs = () => Object.assign(S.tts, getTtsPrefs());   // voice / language / auto-read live in Settings
       refreshTtsPrefs();
       const ttsMsgEl = ref("ttsMsg");
@@ -11705,11 +11705,11 @@
         return new Blob([buf], { type: "audio/wav" });
       }
       /* One chunk of text -> object URL of playable audio (Gemini 3.8 Flash TTS). Any failure silently tries the next key. */
-      async function geminiTtsChunk(text, budgetMs = 120000) {
+      async function geminiTtsChunk(text, budgetMs = 240000) {
         const allKeys = ttsKeyList();
         if (!allKeys.length) throw new Error("Add a Gemini API key in Settings → PDF AI (Gemini) to use the voice.");
-        const models = S.tts.lite === false ? [GEMINI_TTS_MODELS[0]] : GEMINI_TTS_MODELS;
-        const style = "A cool, confident, playful young woman chatting with her study buddy. You decide the best delivery for every line: let humour, surprise and emotion come through naturally in the opening line (like 'Ohhh, aa gaye firse!'), then explain clearly at a comfortable pace. Perform the vocal reactions where they are written: a dramatic stretch on 'ohhh', a little sigh at 'uff', a playful air-kiss sound for 'muaaaa'. The text is Hinglish (Hindi written in Roman letters): pronounce Hindi words like a native Hindi speaker and read maths and science terms in English.";
+        const models = S.tts.liteTts ? GEMINI_TTS_MODELS : [GEMINI_TTS_MODELS[0]];
+        const style = "One consistent character from the first word to the last: a cool, confident, playful young woman chatting with her study buddy. Keep the same voice, pitch, warmth, energy and conversational pace throughout. Let humour and emotion show naturally inside the lines, with a dramatic stretch on 'ohhh', a little sigh at 'uff' and a playful air-kiss sound for 'muaaaa'. The text is Hinglish (Hindi written in Roman letters): pronounce Hindi words like a native Hindi speaker and read maths and science terms in English.";
         const build = (withMeta) => JSON.stringify({
           contents: [{ role: "user", parts: [withMeta ? { text, speech_metadata: { style } } : { text }] }],
           generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: GEMINI_TTS_VOICE } } } }
@@ -11718,7 +11718,6 @@
         const deadline = Date.now() + budgetMs;                   /* patient: keeps trying every key (and model) for up to ~2 minutes */
         let data = null;
         let lastErr = "";
-        let withMeta = true;
         let backoff = 0;
         let failed = null;                                        /* {key, model} of the last failed attempt, for the 4-second notice */
         while (!data && Date.now() < deadline) {
@@ -11745,11 +11744,7 @@
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
             let res;
             try {
-              res = await fetchWithTimeout(url, 45000, { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": key }, body: build(withMeta) });
-              if (res.status === 400 && withMeta) {                                 // retry without the style hint
-                withMeta = false;
-                res = await fetchWithTimeout(url, 45000, { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": key }, body: build(false) });
-              }
+              res = await fetchWithTimeout(url, 150000, { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": key }, body: build(true) });
             } catch (e) { lastErr = "network"; ttsKeyCool[ttsId(key, model)] = Date.now() + 20000; failed = { key, model }; continue; }
             if (res.ok) { data = await res.json(); ttsRR++; break; }
             const raw = await res.text().catch(() => "");
@@ -11791,9 +11786,8 @@
         });
       }
       async function speakWithGemini(text, token) {
-        /* One request for a normal answer (fewer requests = fewer 429s); long answers: a short first part so it starts quickly. */
-        const head = text.length > 1500 ? (splitForTts(text, 900)[0] || text) : "";
-        const chunks = (head ? [head, ...splitForTts(text.slice(text.indexOf(head) + head.length).trim(), 2800)] : splitForTts(text, 2800)).filter(Boolean);
+        /* The whole answer is ONE request so the voice keeps the same tone from start to end (max ~6500 characters per request). */
+        const chunks = splitForTts(text, 6500);
         const jobs = [];
         let chain = Promise.resolve(null);
         /* Audio for the next chunks is generated one request at a time while the current chunk plays. */
@@ -14380,7 +14374,7 @@
         const prefs = {
           lang: "hinglish",
           auto: document.getElementById("ttsAutoInput").checked,
-          lite: document.getElementById("ttsLiteInput").checked
+          liteTts: document.getElementById("ttsLiteInput").checked
         };
         try { localStorage.setItem(TTS_PREFS_KEY, JSON.stringify(prefs)); } catch (e) { /* private mode */ }
         showToast("Saved", "Read-aloud settings saved.");
