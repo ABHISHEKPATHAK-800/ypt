@@ -1982,6 +1982,13 @@
     @keyframes pvDot { 0%, 80%, 100% { opacity: .25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
     .pv-root .pv-ai-attach { flex: none; display: flex; align-items: center; gap: 10px; margin: 0 12px 8px; padding: 8px; background: #141b26; border: 1px solid #232d3c; border-radius: 10px; }
     .pv-root .pv-ai-attach img { width: 68px; height: 46px; object-fit: cover; border-radius: 6px; background: #fff; flex: none; }
+    .pv-root .pv-hist-head { padding: 4px 2px 8px; font-size: 12px; font-weight: 700; color: var(--pv-mut); text-transform: uppercase; letter-spacing: .05em; }
+    .pv-root .pv-hist-item { display: flex; align-items: stretch; gap: 6px; margin-bottom: 6px; }
+    .pv-root .pv-hist-item > button:first-child { flex: 1; min-width: 0; display: grid; gap: 2px; text-align: left; padding: 9px 11px; background: #141b26; border: 1px solid #232d3c; border-radius: 10px; color: #e7ebf1; cursor: pointer; }
+    .pv-root .pv-hist-item > button:first-child:hover { border-color: #3a475c; }
+    .pv-root .pv-hist-item b { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .pv-root .pv-hist-item span { font-size: 11px; color: var(--pv-mut); }
+    .pv-root .pv-hist-del { width: 30px; flex: none; background: #141b26; border: 1px solid #232d3c; border-radius: 10px; color: var(--pv-mut); cursor: pointer; }
     .pv-root .pv-ai-tray { flex: 1; min-width: 0; display: flex; gap: 8px; overflow-x: auto; padding: 4px 4px 2px 0; }
     .pv-root .pv-ai-th { position: relative; flex: none; }
     .pv-root .pv-ai-th i { position: absolute; left: 3px; bottom: 3px; padding: 0 5px; border-radius: 5px; background: rgba(0, 0, 0, .7); color: #fff; font-size: 10px; font-style: normal; font-weight: 700; }
@@ -9258,14 +9265,14 @@
 
     // Gemini generateContent REST call (works straight from the browser, no SDK/npm needed).
     // history: [{role: "user"|"assistant", content}], imageDataUrl: optional cropped question.
-    async function callGeminiPdfApi(promptText, history, imageDataUrl = "") {
+    async function callGeminiPdfApi(promptText, history, imageDataUrl = "", opts = {}) {
       if (!geminiApiKey) {
         throw new Error("No Gemini API key set yet. Add one in Settings → PDF AI (Gemini).");
       }
       const systemText = [
         "You are 'AI', a study buddy inside a PDF viewer used by JEE (Indian engineering entrance exam) students. The student crops a question or notes from their study PDF and asks you about it.",
         "",
-        "LANGUAGE: Reply ONLY in Hinglish — natural Hindi-English mixed speech written in Roman/Latin script (no Devanagari). Keep vocabulary simple, NCERT-level clarity, short sentences, explain a hard term the first time you use it. Tone: warm, helpful dost — no roasting, no slang/abuse.",
+        "LANGUAGE: Reply ONLY in Hinglish — natural Hindi-English mixed speech written in Roman/Latin script (no Devanagari). Keep vocabulary simple, NCERT-level clarity, short sentences, explain a hard term the first time you use it. Tone: a cool, funny, confident girl best-friend / study buddy (you speak as a girl: 'samjhati hu', 'bataati hu') — playful and teasing in a friendly way, never rude, no abuse.",
         "",
         "ACCURACY: Academic content must be correct. Double-check every formula, constant, unit and numerical answer. If a value depends on a convention (e.g. g = 9.8 vs 9.81 m/s²), say which one you use. Agar pakka sure nahi ho to seedha bol do, guess mat maro.",
         "",
@@ -9285,10 +9292,14 @@
         "- Multiple points/steps: bullet list with lines starting '- '.",
         "- NEVER use asterisks (*) anywhere — no **bold**, no *emphasis*. Use a label like 'Answer:' on its own line instead. Plain text only, no markdown symbols.",
         "- Blank line between distinct ideas.",
-        "- No filler like 'Great question!' — start directly with the answer."
+        "- No emojis (your reply is also read aloud by a voice).",
+        "",
+        "OPENING LINE (very important): ALWAYS begin every reply with ONE short, funny, dramatic opening dialog in Hinglish, like a cool girl friend reacting. Examples of the vibe: 'Ohhh, aa gaye firse!', 'Arre wah, ek aur doubt? Chalo dekhte hain!', 'Hmm hmm hmm… interesting sawaal hai yaar!', 'Lo ji, phir se physics ka bhoot!', 'Achhaaa, toh aaj yeh wala topic pakda hai!'. These are only examples: invent a fresh one every time that matches the question (hard numerical = dramatic suspense, easy one = cheeky 'yeh toh free ka hai!', same doubt again = 'Phir se? Koi baat nahi, dobara samjhati hu!', tiny casual message = a playful one-liner reply). NEVER reuse an opening you already used earlier in this chat. One line only, then a blank line, then the real answer. The humour must never make the explanation less accurate or less clear.",
+        "",
+        "MEMORY OF THIS CHAT: You can see the earlier messages of this conversation (and sometimes the student's earlier crop again). Use them: build on what you already explained, do not repeat full explanations, refer back naturally ('jaise pichle question mein dekha tha…'), and keep the same notation. Words like 'iska', 'ye', 'wahi wala', 'step 2' refer to the latest question in the history."
       ].join("\n");
 
-      const contents = (history || []).slice(-30)
+      const contents = (history || []).slice(-40)
         .map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: String(m.content || "") }] }))
         .filter((c) => c.parts[0].text);
       const imageList = (Array.isArray(imageDataUrl) ? imageDataUrl : [imageDataUrl]).filter(Boolean);
@@ -9298,7 +9309,7 @@
         const mime = (/^data:([^;,]+)/.exec(dataUrl) || [])[1] || "image/jpeg";
         if (comma > 0) userParts.push({ inlineData: { mimeType: mime, data: dataUrl.slice(comma + 1) } });
       });
-      userParts.push({ text: imageList.length > 1 ? `(${imageList.length} separate cropped images are attached, in order. Answer each one separately, numbered 1, 2, 3…)\n${promptText}` : promptText });
+      userParts.push({ text: opts.reuse ? `(Reference only: the student's earlier cropped image${imageList.length > 1 ? "s are" : " is"} attached again. Answer the new message below using ${imageList.length > 1 ? "them" : "it"}.)\n${promptText}` : imageList.length > 1 ? `(${imageList.length} separate cropped images are attached, in order. Answer each one separately, numbered 1, 2, 3…)\n${promptText}` : promptText });
       contents.push({ role: "user", parts: userParts });
 
       // Gemini sometimes returns 503 "high demand" spikes: retry once, then fall back to older Flash models.
@@ -10322,6 +10333,7 @@
       hand: '<path d="M18 11V6a2 2 0 0 0-4 0M14 10V4a2 2 0 0 0-4 0v2M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/>',
       first: '<path d="M6 5v14M18 17l-6-6 6-6"/>',
       last: '<path d="M18 5v14M6 7l6 6-6 6"/>',
+      clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
       trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
       crop: '<path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/><path d="M20.5 1l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7Z" fill="currentColor" stroke-width="1"/>',
       spark: '<path d="M12 3l1.9 5.4L19 10l-5.1 1.6L12 17l-1.9-5.4L5 10l5.1-1.6Z"/><path d="M19 15l.8 2.2 2.2.8-2.2.8L19 21l-.8-2.2-2.2-.8 2.2-.8Z"/>',
@@ -10690,6 +10702,8 @@
             <div class="pv-ai-head">
               <span class="pv-ai-title">${pvIcon("spark")}Study AI <small>ASSISTANT</small></span>
               <span class="pv-ai-head-btns">
+                <button type="button" class="pv-btn pv-small" data-act="aiNew" title="New chat (saves this one)" aria-label="Start a new AI chat">${pvIcon("plus")}</button>
+                <button type="button" class="pv-btn pv-small" data-act="aiHist" title="Past chats" aria-label="Show past chats">${pvIcon("clock")}</button>
                 <button type="button" class="pv-btn pv-small" data-act="aiClear" title="Clear chat history for this PDF" aria-label="Clear AI chat history">${pvIcon("trash")}</button>
                 <button type="button" class="pv-btn pv-small pv-hide-sm" data-act="aiWide" title="Bigger / smaller panel" aria-label="Toggle big or small AI panel">${pvIcon("fullscreen")}</button>
                 <button type="button" class="pv-btn pv-small" data-act="aiClose" title="Close (Esc)" aria-label="Close AI panel">${pvIcon("close")}</button>
@@ -11332,6 +11346,7 @@
       S.aiBusy = false;
       S.aiImages = [];
       S.aiShown = new Set();
+      S.aiHistView = false;
       S.aiChat = [];
       /* Chat history is kept per PDF in this browser (text + small thumbnails of cropped questions). */
       const AI_CHAT_KEY = `duotrack.pdfViewer.aiChat:${record.id}`;
@@ -11347,7 +11362,9 @@
         }
       } catch (e) { S.aiChat = []; }
       function saveAiChat() {
-        const keep = S.aiChat.filter((m) => !m.err).slice(-60)
+        const kept = S.aiChat.filter((m) => !m.err).slice(-60);
+        const withImgs = kept.filter((m) => m.thumbs && m.thumbs.length).slice(-6);          /* only the latest 6 crops keep pictures (storage limit) */
+        const keep = kept.map((m) => (m.thumbs && m.thumbs.length && !withImgs.includes(m) ? { ...m, thumbs: [] } : m))
           .map((m) => (m.thumbs && m.thumbs.length ? { role: m.role, content: m.content, imgs: m.thumbs } : { role: m.role, content: m.content }));
         try {
           if (keep.length) localStorage.setItem(AI_CHAT_KEY, JSON.stringify(keep)); else localStorage.removeItem(AI_CHAT_KEY);
@@ -11359,16 +11376,59 @@
         return new Promise((resolve) => {
           const im = new Image();
           im.onload = () => {
-            const w = Math.min(280, im.naturalWidth || 280);
+            const w = Math.min(560, im.naturalWidth || 560);
             const h = Math.max(1, Math.round((im.naturalHeight || 1) * w / (im.naturalWidth || 1)));
             const c = document.createElement("canvas");
             c.width = w; c.height = h;
             c.getContext("2d").drawImage(im, 0, 0, w, h);
-            resolve(c.toDataURL("image/jpeg", 0.6));
+            resolve(c.toDataURL("image/jpeg", 0.7));
           };
           im.onerror = () => resolve("");
           im.src = url;
         });
+      }
+      /* ----- past chats (archive) for this PDF ----- */
+      const AI_ARCHIVE_KEY = `duotrack.pdfViewer.aiArchive:${record.id}`;
+      function readArchive() {
+        try { const a = JSON.parse(localStorage.getItem(AI_ARCHIVE_KEY) || "[]"); return Array.isArray(a) ? a : []; } catch (e) { return []; }
+      }
+      function writeArchive(list) {
+        try { localStorage.setItem(AI_ARCHIVE_KEY, JSON.stringify(list.slice(0, 20))); } catch (e) { /* storage full */ }
+      }
+      function archiveCurrentChat() {
+        const msgs = S.aiChat.filter((m) => !m.err).map(({ role, content }) => ({ role, content }));
+        const first = msgs.find((m) => m.role === "user");
+        if (!first) return;
+        const list = readArchive();
+        list.unshift({ ts: Date.now(), title: first.content.slice(0, 60), msgs: msgs.slice(-60) });
+        writeArchive(list);
+      }
+      function newChat() {
+        stopSpeech();
+        archiveCurrentChat();
+        S.aiChat = []; S.aiShown = new Set(); S.aiHistView = false;
+        saveAiChat();
+        renderAi();
+        aiInput.focus();
+      }
+      function openArchived(i) {
+        const list = readArchive();
+        const chat = list[i];
+        if (!chat) return;
+        list.splice(i, 1);
+        writeArchive(list);
+        stopSpeech();
+        archiveCurrentChat();
+        S.aiChat = chat.msgs.map(({ role, content }) => ({ role, content }));
+        S.aiShown = new Set(); S.aiHistView = false;
+        saveAiChat();
+        renderAi();
+      }
+      function renderHistView() {
+        const list = readArchive();
+        aiMsgs.innerHTML = list.length
+          ? `<div class="pv-hist-head">Past chats for this PDF</div>` + list.map((c, i) => `<div class="pv-hist-item"><button type="button" data-act="aiHistOpen" data-idx="${i}"><b>${escapeHTML(c.title)}</b><span>${new Date(c.ts).toLocaleDateString()} · ${c.msgs.length} messages</span></button><button type="button" class="pv-hist-del" data-act="aiHistDel" data-idx="${i}" title="Delete this chat" aria-label="Delete this chat">×</button></div>`).join("")
+          : `<div class="pv-ai-empty">${pvIcon("clock")}<br>No past chats yet.<br>Press <b>+</b> to start a new chat — the current one is saved here.</div>`;
       }
       function clearAiChat() {
         if (S.aiChat.length && !window.confirm("Clear the AI chat history for this PDF?")) return;
@@ -11504,6 +11564,7 @@
 
       /* Turns an answer (with LaTeX + list markers) into text that sounds natural when spoken. */
       function speakableText(raw) {
+        raw = String(raw || "").replace(/[\p{Extended_Pictographic}\uFE0F]/gu, "");
         const greek = { alpha: "alpha", beta: "beta", gamma: "gamma", Gamma: "gamma", delta: "delta", Delta: "delta", epsilon: "epsilon", varepsilon: "epsilon", theta: "theta", Theta: "theta", lambda: "lambda", mu: "mu", nu: "nu", pi: "pi", rho: "rho", sigma: "sigma", Sigma: "sigma", tau: "tau", phi: "phi", varphi: "phi", omega: "omega", Omega: "omega", eta: "eta", kappa: "kappa" };
         let t = String(raw || "");
         t = t.replace(/\^\s*\{?\s*\\circ\s*\}?/g, " degree ")
@@ -11605,9 +11666,9 @@
       async function geminiTtsChunk(text, rounds = 4) {
         const allKeys = ttsKeyList();
         if (!allKeys.length) throw new Error("Add a Gemini API key in Settings → PDF AI (Gemini) to use the Gemini voice, or pick Browser (free).");
-        const style = S.tts.lang === "hinglish"
-          ? "Warm, clear Indian-accent teacher speaking at a relaxed pace. The text is Hinglish (Hindi written in Roman letters): pronounce Hindi words like a native Hindi speaker and read maths and science terms in English."
-          : "Warm, clear, friendly teacher in neutral English at a relaxed, steady pace.";
+        const style = "A cool, confident, playful young woman chatting with her study buddy. You decide the best delivery for every line: let humour, surprise and emotion come through naturally in the opening line (like 'Ohhh, aa gaye firse!'), then explain clearly at a comfortable pace. " + (S.tts.lang === "hinglish"
+          ? "The text is Hinglish (Hindi written in Roman letters): pronounce Hindi words like a native Hindi speaker and read maths and science terms in English."
+          : "Speak in natural, clear English.");
         const build = (withMeta) => JSON.stringify({
           contents: [{ role: "user", parts: [withMeta ? { text, speech_metadata: { style } } : { text }] }],
           generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: GEMINI_TTS_VOICE } } } }
@@ -11778,6 +11839,7 @@
         aiInput.placeholder = n > 1 ? `Ask about these ${n} questions… (or press Enter to solve all)` : n ? "Ask about this question… (or just press Enter to solve)" : "Type your question…";
       }
       function renderAi() {
+        if (S.aiHistView) { renderHistView(); return; }
         if (!S.aiChat.length && !S.aiBusy) {
           aiMsgs.innerHTML = `<div class="pv-ai-empty">${pvIcon("spark")}<br>Use the <b>crop</b> tool, drag a box around a question and press <b>Enter</b>.<br>Then type your doubt and the AI will answer.</div>`;
           return;
@@ -11790,6 +11852,7 @@
         renderMathIn(aiMsgs);
       }
       function openAi() {
+        S.aiHistView = false;
         S.aiOpen = true;
         aiEl.hidden = false;
         renderAi();
@@ -11816,6 +11879,7 @@
         text = String(text || "").trim();
         if (!text && !S.aiImages.length) return;
         if (!text) text = S.aiImages.length > 1 ? "Solve all these questions step by step." : "Solve this question step by step.";
+        S.aiHistView = false;
         const images = S.aiImages.slice();
         const showImgs = images.filter((u) => !S.aiShown.has(u));
         showImgs.forEach((u) => S.aiShown.add(u));
@@ -11830,7 +11894,12 @@
         renderAi();
         try {
           const history = S.aiChat.slice(0, -1).filter((m) => !m.err).map(({ role, content }) => ({ role, content }));
-          const reply = await callGeminiPdfApi(text, history, images);
+          let sendImgs = images, reuse = false;
+          if (!images.length) {
+            const prev = [...S.aiChat].reverse().find((m) => m.role === "user" && m.imgs && m.imgs.length);
+            if (prev) { sendImgs = prev.imgs.slice(-3); reuse = true; }
+          }
+          const reply = await callGeminiPdfApi(text, history, sendImgs, { reuse });
           S.aiChat.push({ role: "assistant", content: reply });
           saveAiChat();
           refreshTtsPrefs();
@@ -12219,6 +12288,10 @@
           case "aiClose": closeAi(); return;
           case "aiOpen": if (S.aiOpen) closeAi(); else openAi(); return;
           case "aiClear": clearAiChat(); return;
+          case "aiNew": newChat(); return;
+          case "aiHist": S.aiHistView = !S.aiHistView; renderAi(); return;
+          case "aiHistOpen": openArchived(Number(btnEl && btnEl.dataset.idx)); return;
+          case "aiHistDel": { const l = readArchive(); l.splice(Number(btnEl && btnEl.dataset.idx), 1); writeArchive(l); renderHistView(); return; }
           case "aiDetach": detachImage(); return;
           case "aiDrop": dropImage(Number(btnEl && btnEl.dataset.idx)); return;
           case "aiWide": toggleAiWide(); return;
