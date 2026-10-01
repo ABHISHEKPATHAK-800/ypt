@@ -9306,6 +9306,8 @@
         "",
         "OPENING LINE (very important): ALWAYS begin every reply with ONE short, funny, dramatic opening dialog in Hinglish, like a cool girl friend reacting. Examples of the vibe: 'Ohhh, aa gaye firse!', 'Arre wah, ek aur doubt? Chalo dekhte hain!', 'Hmm hmm hmm… interesting sawaal hai yaar!', 'Lo ji, phir se physics ka bhoot!', 'Achhaaa, toh aaj yeh wala topic pakda hai!'. These are only examples: invent a fresh one every time that matches the question (hard numerical = dramatic suspense, easy one = cheeky 'yeh toh free ka hai!', same doubt again = 'Phir se? Koi baat nahi, dobara samjhati hu!', tiny casual message = a playful one-liner reply). NEVER reuse an opening you already used earlier in this chat. One line only, then a blank line, then the real answer. The humour must never make the explanation less accurate or less clear.",
         "",
+        "VOICE EXPRESSIONS: Your reply is also read aloud in your own cool girl voice, so write the way you talk. Sprinkle short, natural vocal reactions written as pronounceable words — 'haha', 'hehe', 'ohhh', 'hmmm', 'uff', 'arre waah' — and an affectionate 'muaaaa' when the student gets something right or as a cheerful sign-off. Stretch the letters for effect ('ohhhh', 'muaaaa'). Use them sparingly (about 2-4 per reply), placed exactly where the voice should laugh, sigh or blow a kiss, and never inside a formula or in the middle of a calculation. The explanation itself must stay accurate and clear.",
+        "",
         "MEMORY OF THIS CHAT: You can see the earlier messages of this conversation (and sometimes the student's earlier crop again). Use them: build on what you already explained, do not repeat full explanations, refer back naturally ('jaise pichle question mein dekha tha…'), and keep the same notation. Words like 'iska', 'ye', 'wahi wala', 'step 2' refer to the latest question in the history."
       ].join("\n");
 
@@ -11693,22 +11695,30 @@
         return new Blob([buf], { type: "audio/wav" });
       }
       /* One chunk of text -> object URL of playable audio (Gemini 3.8 Flash TTS). Any failure silently tries the next key. */
-      async function geminiTtsChunk(text, rounds = 4) {
+      async function geminiTtsChunk(text, budgetMs = 120000) {
         const allKeys = ttsKeyList();
         if (!allKeys.length) throw new Error("Add a Gemini API key in Settings → PDF AI (Gemini) to use the voice.");
-        const style = "A cool, confident, playful young woman chatting with her study buddy. You decide the best delivery for every line: let humour, surprise and emotion come through naturally in the opening line (like 'Ohhh, aa gaye firse!'), then explain clearly at a comfortable pace. The text is Hinglish (Hindi written in Roman letters): pronounce Hindi words like a native Hindi speaker and read maths and science terms in English.";
+        const style = "A cool, confident, playful young woman chatting with her study buddy. You decide the best delivery for every line: let humour, surprise and emotion come through naturally in the opening line (like 'Ohhh, aa gaye firse!'), then explain clearly at a comfortable pace. Perform the vocal reactions exactly where they are written: really laugh at 'haha' or 'hehe', a dramatic stretch on 'ohhh', a little sigh at 'uff', a playful air-kiss sound for 'muaaaa'. The text is Hinglish (Hindi written in Roman letters): pronounce Hindi words like a native Hindi speaker and read maths and science terms in English.";
         const build = (withMeta) => JSON.stringify({
           contents: [{ role: "user", parts: [withMeta ? { text, speech_metadata: { style } } : { text }] }],
           generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: GEMINI_TTS_VOICE } } } }
         });
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_TTS_MODEL}:generateContent`;
+        const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+        const deadline = Date.now() + budgetMs;                   /* patient: keep trying all keys for up to ~2 minutes */
         let data = null;
         let lastErr = "";
         let withMeta = true;
-        for (let round = 0; round < rounds && !data; round++) {
-          if (round) await new Promise((r) => setTimeout(r, Math.min(1500 * round, 5000)));
+        let backoff = 0;
+        while (!data && Date.now() < deadline) {
           let pool = allKeys.filter((k) => !ttsKeyPaused(k));
-          if (!pool.length) { lastErr = lastErr || "all keys are resting after their limit"; break; }
+          if (!pool.length) {
+            /* every key is resting after a limit: wait for the first one to come back, if that happens within the budget */
+            const soonest = Math.min(...allKeys.map((k) => readKeyPauses()[k.slice(-8)] || 0));
+            if (soonest - Date.now() > deadline - Date.now()) break;
+            await sleep(Math.max(500, soonest - Date.now() + 300));
+            continue;
+          }
           const rested = pool.filter((k) => !ttsKeyCooling(k));
           if (rested.length) pool = rested;
           for (const key of pool) {
@@ -11730,8 +11740,11 @@
             if ([401, 403].includes(res.status) || (res.status === 400 && /api key|API_KEY/i.test(detail))) { pauseTtsKey(key, 5 * 60e3); continue; }
             throw new Error(`Gemini voice error (${lastErr.slice(0, 200)})`);
           }
+          if (!data) { backoff = Math.min(backoff + 1500, 5000); await sleep(backoff); }
         }
-        if (!data) throw new Error(`Gemini voice unavailable (${lastErr.slice(0, 160) || "all keys busy"})`);
+        if (!data) {
+          throw new Error(`Gemini voice unavailable (${lastErr.slice(0, 120) || "all keys busy"})` + (/^429/.test(lastErr) ? " — all keys are rate-limited right now. Keys from the same Google project share one limit, so use keys from different projects." : ""));
+        }
         const part = (data?.candidates?.[0]?.content?.parts || []).find((x) => (x.inlineData || x.inline_data)?.data);
         const inline = part && (part.inlineData || part.inline_data);
         if (!inline) throw new Error("Gemini voice returned no audio. Try again.");
@@ -11752,7 +11765,8 @@
         });
       }
       async function speakWithGemini(text, token) {
-        const chunks = splitForTts(text, 1200);
+        const head = splitForTts(text, 700)[0] || text;
+        const chunks = [head, ...splitForTts(text.slice(text.indexOf(head) + head.length).trim(), 2000)].filter(Boolean);
         const jobs = [];
         let chain = Promise.resolve(null);
         /* Audio for the next chunks is generated one request at a time while the current chunk plays. */
@@ -11760,7 +11774,7 @@
           jobs[i] = chain = chain.then(async (prev) => {
             if (token !== S.tts.token) return { stopped: true };
             if (prev && (prev.e || prev.stopped)) return prev;
-            return geminiTtsChunk(chunk, i === 0 ? 4 : 8).then((u) => ({ u }), (e) => ({ e }));
+            return geminiTtsChunk(chunk).then((u) => ({ u }), (e) => ({ e }));
           });
         });
         const cleanup = (from) => { for (let j = from; j < jobs.length; j++) jobs[j].then((r) => { if (r && r.u) URL.revokeObjectURL(r.u); }); };
