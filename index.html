@@ -6828,6 +6828,14 @@
       }
     };
 
+    // Administrator portal login. This is NOT a study account (it is not in USERS), so it never shows up as a study partner.
+    // Only a hash of the credentials is kept here, not the plain text.
+    const ADMIN_LOGIN_ID = "abhi@9905";
+    const ADMIN_HASH = "dbbc84c88e9cbc7613842ebfe5ab67937c8097b6c8be4b94b1433eda6ea98270";
+    const adminLayoutRef = ref(database, `duotrack/groups/${GROUP_ID}/adminLayout`);
+    let adminLayout = { all: 1, icons: {} };      // shared by everyone, saved by the administrator
+    let adminEditing = false;                      // true while the icon layout editor is open (render() pauses)
+
     const USERS_BY_ID = Object.fromEntries(Object.values(USERS).map((user) => [user.id, user]));
 
     // Registered accounts beyond the two built-in ones live in Firebase (not in this
@@ -9912,6 +9920,7 @@
     }
 
     function render() {
+      if (adminEditing) return;
       if (!currentUserId || !state.users[currentUserId]) {
         loginScreen.classList.remove("hidden");
         appScreen.classList.add("hidden");
@@ -11465,6 +11474,7 @@
       }
       function newChat() {
         stopSpeech();
+        clearTtsCache();
         archiveCurrentChat();
         S.aiChat = []; S.aiShown = new Set(); S.aiHistView = false;
         saveAiChat();
@@ -11478,6 +11488,7 @@
         list.splice(i, 1);
         writeArchive(list);
         stopSpeech();
+        clearTtsCache();
         archiveCurrentChat();
         S.aiChat = chat.msgs.map(({ role, content }) => ({ role, content }));
         S.aiShown = new Set(); S.aiHistView = false;
@@ -11493,6 +11504,7 @@
       function clearAiChat() {
         if (S.aiChat.length && !window.confirm("Clear the AI chat history for this PDF?")) return;
         stopSpeech();
+        clearTtsCache();
         S.aiChat = [];
         S.aiShown = new Set();
         saveAiChat();
@@ -11618,6 +11630,12 @@
       const GEMINI_TTS_MODEL = "gemini-3.8-flash-tts";
       const GEMINI_TTS_VOICE = "Kore";                                   /* female voice; delivery/emotion is decided by Gemini */
       S.tts = { engine: "gemini", lang: "hinglish", auto: false, liteTts: false, idx: -1, state: "idle", token: 0, audio: null, cancelPlay: null };
+      /* Replay cache: audio already generated for an answer is replayed from memory (no new API requests) until a new question is asked. */
+      S.ttsCache = new Map();
+      function clearTtsCache() {
+        S.ttsCache.forEach((entry) => entry.urls.forEach((u) => { if (u) URL.revokeObjectURL(u); }));
+        S.ttsCache.clear();
+      }
       const refreshTtsPrefs = () => Object.assign(S.tts, getTtsPrefs());   // voice / language / auto-read live in Settings
       refreshTtsPrefs();
       const ttsMsgEl = ref("ttsMsg");
@@ -11834,13 +11852,13 @@
         return new Promise((resolve, reject) => {
           const a = new Audio(url);
           S.tts.audio = a;
-          S.tts.cancelPlay = () => { URL.revokeObjectURL(url); resolve(); };
-          a.onended = () => { URL.revokeObjectURL(url); S.tts.cancelPlay = null; resolve(); };
-          a.onerror = () => { URL.revokeObjectURL(url); S.tts.cancelPlay = null; reject(new Error("Couldn't play the audio.")); };
-          a.play().catch((e) => { URL.revokeObjectURL(url); reject(e); });
+          S.tts.cancelPlay = () => { resolve(); };
+          a.onended = () => { S.tts.cancelPlay = null; resolve(); };
+          a.onerror = () => { S.tts.cancelPlay = null; reject(new Error("Couldn't play the audio.")); };
+          a.play().catch((e) => { reject(e); });
         });
       }
-      async function speakWithGemini(text, token) {
+      async function speakWithGemini(text, token, entry = { urls: [] }) {
         /* Short first part so it starts quickly; the rest in a few bigger parts. Same style + same key order for every part. */
         const head = text.length > 900 ? (splitForTts(text, 700)[0] || text) : "";
         const chunks = (head ? [head, ...splitForTts(text.slice(text.indexOf(head) + head.length).trim(), 2500)] : splitForTts(text, 2500)).filter(Boolean);
@@ -11849,20 +11867,20 @@
         const stopNow = () => token !== S.tts.token;
         chunks.forEach((chunk, i) => {
           jobs[i] = chain = chain.then(async (prev) => {
+            if (entry.urls[i]) return { u: entry.urls[i] };                          /* replay: already generated -> no API request */
             if (stopNow()) return { stopped: true };
             if (prev && (prev.e || prev.stopped)) return prev;
-            return geminiTtsChunk(chunk, 150000, stopNow).then((u) => ({ u }), (e) => (e && e.stopped ? { stopped: true } : { e }));
+            return geminiTtsChunk(chunk, 150000, stopNow).then((u) => { entry.urls[i] = u; return { u }; }, (e) => (e && e.stopped ? { stopped: true } : { e }));
           });
         });
-        const cleanup = (from) => { for (let j = from; j < jobs.length; j++) jobs[j].then((r) => { if (r && r.u) URL.revokeObjectURL(r.u); }); };
         for (let i = 0; i < chunks.length; i++) {
           const res = await jobs[i];
-          if (stopNow() || res.stopped) { if (res.u) URL.revokeObjectURL(res.u); cleanup(i + 1); return; }
-          if (res.e) { res.e.started = i > 0; cleanup(i + 1); throw res.e; }
+          if (stopNow() || res.stopped) return;
+          if (res.e) { res.e.started = i > 0; throw res.e; }
           clearStickyNote();
           S.tts.state = "playing"; updateSpeakButtons();
           await playAudioUrl(res.u);
-          if (stopNow()) { cleanup(i + 1); return; }
+          if (stopNow()) return;
         }
       }
       let ttsNoteTimer = 0;
@@ -11888,7 +11906,13 @@
         const token = ++S.tts.token;
         S.tts.idx = idx; S.tts.state = "loading"; updateSpeakButtons();
         try {
-          await speakWithGemini(text, token);
+          let entry = S.ttsCache.get(idx);
+          if (!entry || entry.text !== text) {
+            if (entry) entry.urls.forEach((u) => { if (u) URL.revokeObjectURL(u); });
+            entry = { text, urls: [] };
+            S.ttsCache.set(idx, entry);
+          }
+          await speakWithGemini(text, token, entry);
         } catch (error) {
           if (token === S.tts.token) ttsNote(error && error.started ? "Voice stopped — Gemini is overloaded right now. Press Listen to continue." : ((error && error.message) || "Couldn't read that aloud."), false);
         }
@@ -11949,6 +11973,7 @@
         showImgs.forEach((u) => S.aiShown.add(u));
         const userMsg = { role: "user", content: text, imgs: showImgs };
         S.aiChat.push(userMsg);
+        clearTtsCache();
         saveAiChat();
         if (showImgs.length) Promise.all(showImgs.map(makeThumb)).then((ts) => { userMsg.thumbs = ts.filter(Boolean); saveAiChat(); });
         S.aiImages = [];
@@ -12450,6 +12475,7 @@
         flushSave();
         S.destroyed = true;
         stopSpeech();
+        clearTtsCache();
         window.removeEventListener("keydown", onKey, true);
         window.removeEventListener("keyup", onKeyUp, true);
         document.removeEventListener("fullscreenchange", onFsChange);
@@ -13755,8 +13781,293 @@
       pdf.save(`duotrack-chat-history-${todayKey()}.pdf`);
     }
 
+    /* ================= Administrator portal ================= */
+    const ADMIN_ICON_SELECTOR = "#appScreen header button[id]";
+    const adminClamp = (n, lo, hi) => Math.min(hi, Math.max(lo, Number(n) || 0));
+    let adminFails = 0;
+    let adminLockUntil = 0;
+
+    /* A missing value must fall back to the DEFAULT (1 / 0), never be clamped up to the minimum. */
+    const adminNum = (v, def, lo, hi) => {
+      const n = typeof v === "number" ? v : (typeof v === "string" && v.trim() !== "" ? Number(v) : NaN);
+      return Number.isFinite(n) ? adminClamp(n, lo, hi) : def;
+    };
+    function normalizeAdminLayout(raw) {
+      const out = { all: adminNum(raw && raw.all, 1, 0.5, 2), icons: {} };
+      Object.entries((raw && raw.icons) || {}).forEach(([id, c]) => {
+        if (!c || typeof c !== "object") return;
+        out.icons[id] = { x: adminNum(c.x, 0, -700, 700), y: adminNum(c.y, 0, -700, 700), s: adminNum(c.s, 1, 0.4, 3) };
+      });
+      return out;
+    }
+    function applyAdminLayout(layout = adminLayout) {
+      document.querySelectorAll(ADMIN_ICON_SELECTOR).forEach((el) => {
+        const c = layout.icons[el.id] || { x: 0, y: 0, s: 1 };
+        const scale = (layout.all || 1) * (c.s || 1);
+        el.style.translate = c.x || c.y ? `${c.x}px ${c.y}px` : "";
+        el.style.scale = scale !== 1 ? String(scale) : "";
+      });
+    }
+    onValue(adminLayoutRef, (snapshot) => {
+      adminLayout = normalizeAdminLayout(snapshot.val());
+      if (!adminEditing) applyAdminLayout();
+    });
+    const adminHeader = document.querySelector("#appScreen header");
+    if (adminHeader) new MutationObserver(() => { if (!adminEditing) applyAdminLayout(); }).observe(adminHeader, { childList: true, subtree: true });
+
+    async function sha256Hex(text) {
+      const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+      return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+    }
+    async function handleAdminLogin() {
+      if (Date.now() < adminLockUntil) {
+        loginError.textContent = `Too many wrong attempts. Try again in ${Math.ceil((adminLockUntil - Date.now()) / 1000)}s.`;
+        return;
+      }
+      let ok = false;
+      try {
+        ok = (await sha256Hex(`duotrack-admin|${loginId.value.trim()}|${password.value}`)) === ADMIN_HASH;
+      } catch (e) {
+        loginError.textContent = "Admin login needs a secure page (https:// or file://).";
+        return;
+      }
+      if (!ok) {
+        adminFails += 1;
+        if (adminFails >= 5) { adminLockUntil = Date.now() + 60000; adminFails = 0; }
+        loginError.textContent = "Wrong login ID or password.";
+        return;
+      }
+      adminFails = 0;
+      loginError.textContent = "";
+      loginForm.reset();
+      openAdminPortal();
+    }
+
+    function ensureAdminUi() {
+      if (document.getElementById("adminPortal")) return;
+      const style = document.createElement("style");
+      style.textContent = `
+        #adminPortal { position: fixed; inset: 0; z-index: 9000; overflow: auto; background: #0e1420; color: #e7ebf1; font: 14px/1.5 system-ui, sans-serif; padding: 18px; }
+        #adminPortal[hidden], #adminToolbar[hidden] { display: none; }
+        #adminPortal .ap-wrap { max-width: 860px; margin: 0 auto; display: grid; gap: 16px; }
+        #adminPortal h1 { margin: 0; font-size: 20px; } #adminPortal h2 { margin: 0 0 6px; font-size: 16px; }
+        #adminPortal .ap-card { background: #151d2c; border: 1px solid #25314a; border-radius: 14px; padding: 16px; }
+        #adminPortal .ap-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        #adminPortal p, #adminPortal .ap-note { margin: 4px 0 10px; color: #9aa7bd; font-size: 13px; }
+        #adminPortal button, #adminToolbar button { font: inherit; padding: 8px 12px; border-radius: 9px; border: 1px solid #34425f; background: #1d2840; color: #e7ebf1; cursor: pointer; }
+        #adminPortal button.ap-primary, #adminToolbar button.ap-primary { background: #5b6cff; border-color: #5b6cff; }
+        #adminPortal .ap-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        #adminPortal .ap-user { border-top: 1px solid #25314a; padding-top: 12px; margin-top: 12px; }
+        #adminPortal .ap-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin: 8px 0; }
+        #adminPortal label { display: grid; gap: 3px; font-size: 12px; color: #9aa7bd; }
+        #adminPortal input { font: inherit; padding: 7px 9px; border-radius: 8px; border: 1px solid #34425f; background: #0e1420; color: #e7ebf1; }
+        #adminToolbar { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 9100; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; max-width: 94vw; padding: 10px 12px; background: #0e1420f2; color: #e7ebf1; border: 1px solid #34425f; border-radius: 14px; box-shadow: 0 10px 30px #0008; font: 13px system-ui, sans-serif; }
+        #adminToolbar input[type=range] { width: 120px; }
+        .admin-selected { outline: 2px dashed #5b6cff !important; outline-offset: 3px; }
+        body.admin-editing #appScreen header button { cursor: grab; }`;
+      document.head.appendChild(style);
+      const portal = document.createElement("div");
+      portal.id = "adminPortal";
+      portal.hidden = true;
+      document.body.appendChild(portal);
+      const bar = document.createElement("div");
+      bar.id = "adminToolbar";
+      bar.hidden = true;
+      bar.innerHTML = `
+        <span id="adminSelLabel">Drag an icon to move it</span>
+        <button type="button" data-ad="smaller">Icon −</button><button type="button" data-ad="bigger">Icon +</button><button type="button" data-ad="resetOne">Reset icon</button>
+        <label>All icons <input id="adminAllSize" type="range" min="0.5" max="2" step="0.05"></label>
+        <button type="button" data-ad="resetAll">Reset all</button>
+        <button type="button" class="ap-primary" data-ad="save">Save for everyone</button>
+        <button type="button" data-ad="cancel">Cancel</button>`;
+      document.body.appendChild(bar);
+    }
+
+    function openAdminPortal() {
+      ensureAdminUi();
+      loginScreen.classList.add("hidden");
+      renderAdminPortal();
+      document.getElementById("adminPortal").hidden = false;
+    }
+    function closeAdminPortal() {
+      const portal = document.getElementById("adminPortal");
+      if (portal) portal.hidden = true;
+      loginScreen.classList.remove("hidden");
+      appScreen.classList.add("hidden");
+    }
+
+    const adminMinutes = (seconds) => Math.round((Number(seconds) || 0) / 60);
+    function adminStudyCard(user) {
+      const elapsed = user.running && user.startedAt ? Math.max(0, Math.floor((Date.now() - user.startedAt) / 1000)) : 0;
+      const sub = (name) => (user.subjectSecondsToday?.[name] || 0) + (user.running && user.currentSubject === name ? elapsed : 0);
+      const mode = (name) => (user.modeSecondsToday?.[name] || 0) + (user.running && user.currentMode === name ? elapsed : 0);
+      return `
+        <div class="ap-user" data-user="${escapeHTML(user.id)}">
+          <div class="ap-row"><strong>${escapeHTML(user.name)}</strong><span class="ap-note">${user.running ? "timer running now" : "timer stopped"}</span></div>
+          <div class="ap-grid">
+            <label>Today total (min)<input type="number" min="0" max="1440" data-f="total" value="${adminMinutes(liveSeconds(user))}"></label>
+            ${SUBJECTS.map((n) => `<label>${escapeHTML(n)} (min)<input type="number" min="0" max="1440" data-f="sub:${escapeHTML(n)}" value="${adminMinutes(sub(n))}"></label>`).join("")}
+            ${MODES.map((n) => `<label>${escapeHTML(n)} (min)<input type="number" min="0" max="1440" data-f="mode:${escapeHTML(n)}" value="${adminMinutes(mode(n))}"></label>`).join("")}
+          </div>
+          <button type="button" class="ap-primary" data-ap="saveStudy">Save ${escapeHTML(user.name)}'s time</button>
+        </div>`;
+    }
+    function renderAdminPortal() {
+      const portal = document.getElementById("adminPortal");
+      portal.innerHTML = `
+        <div class="ap-wrap">
+          <div class="ap-top"><h1>🔐 Main Secure Administrator Login Portal</h1><button type="button" data-ap="logout">Log out</button></div>
+          <div class="ap-card">
+            <h2>App icons</h2>
+            <p>Open the live layout editor: drag any header icon to move it, resize one icon or all icons, then save. The saved layout is applied for everyone.</p>
+            <div class="ap-row"><button type="button" class="ap-primary" data-ap="editIcons">Open icon layout editor</button><button type="button" data-ap="resetLayout">Reset layout for everyone</button></div>
+          </div>
+          <div class="ap-card">
+            <h2>Study time — today</h2>
+            <p>Change today's study time for any user. Typing in a subject updates the total; you can also edit the total directly. Only today is changed.</p>
+            ${Object.values(state.users).map(adminStudyCard).join("") || "<p>No users loaded yet.</p>"}
+          </div>
+        </div>`;
+    }
+
+    // --- study time save ---
+    async function saveAdminStudy(card) {
+      const id = card.dataset.user;
+      const val = (f) => Math.max(0, Math.min(1440, Math.floor(Number(card.querySelector(`[data-f="${f}"]`)?.value) || 0))) * 60;
+      const subjects = Object.fromEntries(SUBJECTS.map((n) => [n, val(`sub:${n}`)]).filter(([, v]) => v > 0));
+      const modes = Object.fromEntries(MODES.map((n) => [n, val(`mode:${n}`)]).filter(([, v]) => v > 0));
+      const total = val("total");
+      await runTransaction(userRef(id), (u) => {
+        if (!u) return u;
+        u.todaySeconds = total;
+        u.subjectSecondsToday = subjects;
+        u.modeSecondsToday = modes;
+        if (u.running) u.startedAt = Date.now();     // keep the live timer from counting the old elapsed time twice
+        return u;
+      });
+      showToast("Saved", "Today's study time updated.");
+      setTimeout(renderAdminPortal, 600);
+    }
+
+    // --- icon layout editor ---
+    let adminWork = null;
+    let adminSelected = "";
+    function adminSelect(id) {
+      adminSelected = id;
+      document.querySelectorAll(ADMIN_ICON_SELECTOR).forEach((el) => el.classList.toggle("admin-selected", el.id === id));
+      document.getElementById("adminSelLabel").textContent = id ? `Selected: ${id}` : "Drag an icon to move it";
+    }
+    function startLayoutEditor() {
+      ensureAdminUi();
+      adminWork = normalizeAdminLayout(JSON.parse(JSON.stringify(adminLayout)));
+      adminEditing = true;
+      document.body.classList.add("admin-editing");
+      document.getElementById("adminPortal").hidden = true;
+      loginScreen.classList.add("hidden");
+      appScreen.classList.remove("hidden");
+      document.getElementById("adminToolbar").hidden = false;
+      document.getElementById("adminAllSize").value = String(adminWork.all);
+      adminSelect("");
+      applyAdminLayout(adminWork);
+    }
+    function stopLayoutEditor() {
+      adminEditing = false;
+      document.body.classList.remove("admin-editing");
+      document.getElementById("adminToolbar").hidden = true;
+      adminSelect("");
+      applyAdminLayout(adminLayout);
+      appScreen.classList.add("hidden");
+      document.getElementById("adminPortal").hidden = false;
+    }
+    function adminCfg(id) {
+      return (adminWork.icons[id] = adminWork.icons[id] || { x: 0, y: 0, s: 1 });
+    }
+
+    document.addEventListener("pointerdown", (event) => {
+      if (!adminEditing) return;
+      const el = event.target.closest(ADMIN_ICON_SELECTOR);
+      if (!el) return;
+      event.preventDefault();
+      event.stopPropagation();
+      adminSelect(el.id);
+      const cfg = adminCfg(el.id);
+      const sx = event.clientX, sy = event.clientY, ox = cfg.x, oy = cfg.y;
+      const move = (e) => {
+        cfg.x = adminClamp(ox + e.clientX - sx, -700, 700);
+        cfg.y = adminClamp(oy + e.clientY - sy, -700, 700);
+        applyAdminLayout(adminWork);
+      };
+      const up = () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); };
+      window.addEventListener("pointermove", move);
+      window.addEventListener("pointerup", up);
+    }, true);
+    // while editing, nothing in the app may react to clicks except the editor toolbar
+    document.addEventListener("click", (event) => {
+      if (adminEditing && !event.target.closest("#adminToolbar")) { event.preventDefault(); event.stopPropagation(); }
+    }, true);
+
+    document.addEventListener("click", async (event) => {
+      const ad = event.target.closest("[data-ad]");
+      if (ad && adminEditing) {
+        const act = ad.dataset.ad;
+        if (act === "bigger" || act === "smaller") {
+          if (!adminSelected) { showToast("Pick an icon", "Click an icon first."); return; }
+          const c = adminCfg(adminSelected);
+          c.s = adminClamp(+(c.s + (act === "bigger" ? 0.1 : -0.1)).toFixed(2), 0.4, 3);
+        } else if (act === "resetOne" && adminSelected) {
+          delete adminWork.icons[adminSelected];
+        } else if (act === "resetAll") {
+          adminWork = { all: 1, icons: {} };
+          document.getElementById("adminAllSize").value = "1";
+        } else if (act === "save") {
+          try {
+            await set(adminLayoutRef, adminWork);
+            showToast("Saved", "Icon layout saved — it now applies for everyone.");
+            stopLayoutEditor();
+          } catch (error) {
+            showToast("Error", "Could not save the layout.");
+          }
+          return;
+        } else if (act === "cancel") {
+          stopLayoutEditor();
+          return;
+        }
+        applyAdminLayout(adminWork);
+        return;
+      }
+      const ap = event.target.closest("[data-ap]");
+      if (!ap) return;
+      const act = ap.dataset.ap;
+      if (act === "logout") closeAdminPortal();
+      else if (act === "editIcons") startLayoutEditor();
+      else if (act === "resetLayout") {
+        if (window.confirm("Reset all icons to their default size and position for everyone?")) {
+          await set(adminLayoutRef, null).catch(() => {});
+          showToast("Reset", "Icon layout reset for everyone.");
+        }
+      } else if (act === "saveStudy") {
+        ap.disabled = true;
+        try { await saveAdminStudy(ap.closest(".ap-user")); } catch (error) { showToast("Error", "Could not save the study time."); }
+        ap.disabled = false;
+      }
+    });
+    document.addEventListener("input", (event) => {
+      if (event.target.id === "adminAllSize" && adminEditing) {
+        adminWork.all = adminClamp(event.target.value, 0.5, 2);
+        applyAdminLayout(adminWork);
+        return;
+      }
+      const f = event.target.dataset && event.target.dataset.f;
+      if (f && f.startsWith("sub:")) {                      // subjects add up to the day's total
+        const card = event.target.closest(".ap-user");
+        const sum = [...card.querySelectorAll('[data-f^="sub:"]')].reduce((t, i) => t + (Number(i.value) || 0), 0);
+        card.querySelector('[data-f="total"]').value = sum;
+      }
+    });
+
     loginForm.addEventListener("submit", (event) => {
       event.preventDefault();
+      if (loginId.value.trim() === ADMIN_LOGIN_ID) { handleAdminLogin(); return; }
       const account = USERS[loginId.value.trim()];
       if (!account || account.password !== password.value) {
         loginError.textContent = "Wrong login ID or password.";
