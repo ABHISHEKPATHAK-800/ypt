@@ -7682,7 +7682,7 @@
         ${settingsSection({
           icon: "sparkle",
           title: "Backup Gemini keys (answers & voice)",
-          description: `Up to 3 extra Google/Gemini API keys. Order: main key above → backup 1 → backup 2 → backup 3. If a key fails or its limit runs out (429 / overload), the next one takes over silently — for <strong>PDF answers and the read-aloud voice</strong>. Only if every key fails does the voice fall back to the free browser voice. Shared between both accounts. Use keys from different Google projects — keys in the same project share one limit.`,
+          description: `Up to 3 extra Google/Gemini API keys. Order: main key above → backup 1 → backup 2 → backup 3. If a key fails or its limit runs out (429 / overload), the next one takes over silently, for <strong>PDF answers and the read-aloud voice</strong>. Shared between both accounts. Use keys from different Google projects — keys in the same project share one limit.`,
           tone: "ai",
           body: `
             <form id="geminiTtsKeysForm" class="field settings-inline-form">
@@ -7701,20 +7701,10 @@
         ${settingsSection({
           icon: "sparkle",
           title: "Read answers aloud (PDF AI)",
-          description: `Controls the <strong>Listen</strong> button on answers in the PDF viewer's Study AI panel. "Gemini (natural)" uses the Gemini key above; "Browser (free)" uses voices installed on this device. If the Gemini voice limit runs out (429) or Gemini fails, reading automatically continues with the free browser voice.`,
+          description: `Controls the <strong>Listen</strong> button on answers in the PDF viewer's Study AI panel. It reads with <strong>Gemini 3.8 Flash TTS</strong> in a cool Hinglish girl voice, using your Gemini key (and the backup keys below).`,
           tone: "ai",
           body: `
             <form id="ttsSettingsForm" class="field settings-inline-form">
-              <label for="ttsEngineInput">Voice</label>
-              <select id="ttsEngineInput" class="settings-select">
-                <option value="gemini" ${getTtsPrefs().engine === "gemini" ? "selected" : ""}>Gemini (natural)</option>
-                <option value="browser" ${getTtsPrefs().engine === "browser" ? "selected" : ""}>Browser (free)</option>
-              </select>
-              <label for="ttsLangInput">Read in</label>
-              <select id="ttsLangInput" class="settings-select">
-                <option value="hinglish" ${getTtsPrefs().lang === "hinglish" ? "selected" : ""}>Hinglish</option>
-                <option value="english" ${getTtsPrefs().lang === "english" ? "selected" : ""}>English</option>
-              </select>
               <label class="checkbox-row"><input id="ttsAutoInput" type="checkbox" ${getTtsPrefs().auto ? "checked" : ""}> Auto-read new answers</label>
               <button class="secondary-btn" type="submit">Save voice settings</button>
             </form>
@@ -9267,14 +9257,19 @@
     function geminiAllKeys() {
       return [...new Set([geminiApiKey, ...geminiTtsExtraKeys].map((k) => String(k || "").trim()).filter(Boolean))];
     }
-    const GEMINI_ANS_PAUSE_KEY = "duotrack.pdfViewer.ansKeyPause";
+    function quotaPauseMs(raw) {
+      const m = /retry in ([\d.]+)\s*s/i.exec(raw) || /"retryDelay"\s*:\s*"([\d.]+)s"/i.exec(raw);
+      if (m) return Math.min(3 * 3600e3, Math.max(5000, Math.ceil(Number(m[1]) * 1000) + 1000));
+      return /PerDay/.test(raw) && !/PerMinute/.test(raw) ? 3 * 3600e3 : 60e3;
+    }
+    const GEMINI_ANS_PAUSE_KEY = "duotrack.pdfViewer.ansKeyPause2";
     const geminiAnsCool = {};                                    /* overloaded key+model rests ~20s (memory only) */
     const ansId = (key, model) => `${key.slice(-8)}|${model}`;
     function ansPauses() { try { return JSON.parse(localStorage.getItem(GEMINI_ANS_PAUSE_KEY) || "{}") || {}; } catch (e) { return {}; } }
     function ansKeyPaused(key, model) { return (ansPauses()[ansId(key, model)] || 0) > Date.now(); }
-    function pauseAnsKey(key, model, perDay) {
+    function pauseAnsKey(key, model, ms) {
       const map = ansPauses();
-      map[ansId(key, model)] = Date.now() + (perDay ? 3 * 3600e3 : 60e3);
+      map[ansId(key, model)] = Date.now() + ms;
       try { localStorage.setItem(GEMINI_ANS_PAUSE_KEY, JSON.stringify(map)); } catch (e) { /* ignore */ }
     }
 
@@ -9370,9 +9365,9 @@
             if (response.ok) break outer;
             const detail = await readError(response);
             failure = `${response.status}: ${detail}`;
-            if (response.status === 429) { sawQuota = true; pauseAnsKey(key, model, /per\s*day|perday/i.test(detail)); continue; }
+            if (response.status === 429) { sawQuota = true; pauseAnsKey(key, model, quotaPauseMs(detail)); continue; }
             if ([500, 502, 503, 504].includes(response.status)) { geminiAnsCool[ansId(key, model)] = Date.now() + 20000; continue; }
-            if ([401, 403].includes(response.status) || (response.status === 400 && /api key|API_KEY/i.test(detail))) { pauseAnsKey(key, model, false); continue; }
+            if ([401, 403].includes(response.status) || (response.status === 400 && /api key|API_KEY/i.test(detail))) { pauseAnsKey(key, model, 5 * 60e3); continue; }
             if (response.status === 404) break;                       // this model isn't available -> next model
             throw new Error(`Gemini error (${response.status}): ${String(detail).slice(0, 220)}`);
           }
@@ -11577,7 +11572,7 @@
 
       /* ----- read answers aloud (Gemini TTS or the browser's own voices) ----- */
       const GEMINI_TTS_MODEL = "gemini-3.8-flash-tts";
-      const GEMINI_TTS_VOICE = "Kore";
+      const GEMINI_TTS_VOICE = "Kore";                                   /* female voice; delivery/emotion is decided by Gemini */
       S.tts = { engine: "gemini", lang: "hinglish", auto: false, idx: -1, state: "idle", token: 0, audio: null, cancelPlay: null };
       const refreshTtsPrefs = () => Object.assign(S.tts, getTtsPrefs());   // voice / language / auto-read live in Settings
       refreshTtsPrefs();
@@ -11664,6 +11659,22 @@
         S.tts.state = "idle"; S.tts.idx = -1;
         updateSpeakButtons();
       }
+      /* Voice keys: main key + up to 3 backups (Settings). A key that hit its limit rests for the time Google asks. */
+      const TTS_KEYPAUSE_KEY = "duotrack.pdfViewer.ttsKeyPause2";
+      const ttsKeyCool = {};                                            /* overloaded keys rest ~20s (memory only) */
+      const ttsKeyCooling = (k) => (ttsKeyCool[k.slice(-8)] || 0) > Date.now();
+      function ttsKeyList() {
+        return [...new Set([geminiApiKey, ...geminiTtsExtraKeys].map((k) => String(k || "").trim()).filter(Boolean))];
+      }
+      function readKeyPauses() {
+        try { return JSON.parse(localStorage.getItem(TTS_KEYPAUSE_KEY) || "{}") || {}; } catch (e) { return {}; }
+      }
+      function ttsKeyPaused(key) { return (readKeyPauses()[key.slice(-8)] || 0) > Date.now(); }
+      function pauseTtsKey(key, ms) {
+        const map = readKeyPauses();
+        map[key.slice(-8)] = Date.now() + ms;
+        try { localStorage.setItem(TTS_KEYPAUSE_KEY, JSON.stringify(map)); } catch (e) { /* ignore */ }
+      }
       function b64ToBytes(b64) {
         const bin = atob(b64);
         const bytes = new Uint8Array(bin.length);
@@ -11681,15 +11692,11 @@
         new Uint8Array(buf, 44).set(pcm);
         return new Blob([buf], { type: "audio/wav" });
       }
-      /* One chunk of text -> object URL of playable audio, via the Gemini TTS model. */
-      const ttsKeyCool = {};                                        /* overloaded keys rest ~20s (in memory only) */
-      const ttsKeyCooling = (k) => (ttsKeyCool[k.slice(-8)] || 0) > Date.now();
+      /* One chunk of text -> object URL of playable audio (Gemini 3.8 Flash TTS). Any failure silently tries the next key. */
       async function geminiTtsChunk(text, rounds = 4) {
         const allKeys = ttsKeyList();
-        if (!allKeys.length) throw new Error("Add a Gemini API key in Settings → PDF AI (Gemini) to use the Gemini voice, or pick Browser (free).");
-        const style = "A cool, confident, playful young woman chatting with her study buddy. You decide the best delivery for every line: let humour, surprise and emotion come through naturally in the opening line (like 'Ohhh, aa gaye firse!'), then explain clearly at a comfortable pace. " + (S.tts.lang === "hinglish"
-          ? "The text is Hinglish (Hindi written in Roman letters): pronounce Hindi words like a native Hindi speaker and read maths and science terms in English."
-          : "Speak in natural, clear English.");
+        if (!allKeys.length) throw new Error("Add a Gemini API key in Settings → PDF AI (Gemini) to use the voice.");
+        const style = "A cool, confident, playful young woman chatting with her study buddy. You decide the best delivery for every line: let humour, surprise and emotion come through naturally in the opening line (like 'Ohhh, aa gaye firse!'), then explain clearly at a comfortable pace. The text is Hinglish (Hindi written in Roman letters): pronounce Hindi words like a native Hindi speaker and read maths and science terms in English.";
         const build = (withMeta) => JSON.stringify({
           contents: [{ role: "user", parts: [withMeta ? { text, speech_metadata: { style } } : { text }] }],
           generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: GEMINI_TTS_VOICE } } } }
@@ -11698,11 +11705,10 @@
         let data = null;
         let lastErr = "";
         let withMeta = true;
-        /* Any failure (overload, quota, bad key, network) silently moves on to the next key; whole rounds repeat before giving up. */
         for (let round = 0; round < rounds && !data; round++) {
           if (round) await new Promise((r) => setTimeout(r, Math.min(1500 * round, 5000)));
           let pool = allKeys.filter((k) => !ttsKeyPaused(k));
-          if (!pool.length) break;
+          if (!pool.length) { lastErr = lastErr || "all keys are resting after their limit"; break; }
           const rested = pool.filter((k) => !ttsKeyCooling(k));
           if (rested.length) pool = rested;
           for (const key of pool) {
@@ -11719,17 +11725,13 @@
             let detail = "";
             try { detail = JSON.parse(raw)?.error?.message || ""; } catch (e) { /* ignore */ }
             lastErr = `${res.status}: ${detail}`;
-            if (res.status === 429) { pauseTtsKey(key, /per\s*day|perday/i.test(raw)); continue; }
+            if (res.status === 429) { pauseTtsKey(key, quotaPauseMs(raw)); continue; }
             if ([500, 502, 503, 504].includes(res.status)) { ttsKeyCool[key.slice(-8)] = Date.now() + 20000; continue; }
-            if ([400, 401, 403].includes(res.status)) { pauseTtsKey(key, false); continue; }
+            if ([401, 403].includes(res.status) || (res.status === 400 && /api key|API_KEY/i.test(detail))) { pauseTtsKey(key, 5 * 60e3); continue; }
             throw new Error(`Gemini voice error (${lastErr.slice(0, 200)})`);
           }
         }
-        if (!data) {
-          const e = new Error(`Gemini voice unavailable (${lastErr.slice(0, 140) || "all keys busy"})`);
-          e.quota = allKeys.every(ttsKeyPaused);
-          throw e;
-        }
+        if (!data) throw new Error(`Gemini voice unavailable (${lastErr.slice(0, 160) || "all keys busy"})`);
         const part = (data?.candidates?.[0]?.content?.parts || []).find((x) => (x.inlineData || x.inline_data)?.data);
         const inline = part && (part.inlineData || part.inline_data);
         if (!inline) throw new Error("Gemini voice returned no audio. Try again.");
@@ -11752,71 +11754,24 @@
       async function speakWithGemini(text, token) {
         const chunks = splitForTts(text, 1200);
         const jobs = [];
-        const start = (i) => { if (i < chunks.length && !jobs[i]) jobs[i] = geminiTtsChunk(chunks[i], i === 0 ? 4 : 8).then((u) => ({ u }), (e) => ({ e })); };
-        const cleanup = (from) => { for (let j = from; j < jobs.length; j++) if (jobs[j]) jobs[j].then((r) => { if (r.u) URL.revokeObjectURL(r.u); }); };
-        start(0); start(1);                                         /* stay two chunks ahead so a slow moment never cuts the voice */
+        let chain = Promise.resolve(null);
+        /* Audio for the next chunks is generated one request at a time while the current chunk plays. */
+        chunks.forEach((chunk, i) => {
+          jobs[i] = chain = chain.then(async (prev) => {
+            if (token !== S.tts.token) return { stopped: true };
+            if (prev && (prev.e || prev.stopped)) return prev;
+            return geminiTtsChunk(chunk, i === 0 ? 4 : 8).then((u) => ({ u }), (e) => ({ e }));
+          });
+        });
+        const cleanup = (from) => { for (let j = from; j < jobs.length; j++) jobs[j].then((r) => { if (r && r.u) URL.revokeObjectURL(r.u); }); };
         for (let i = 0; i < chunks.length; i++) {
           const res = await jobs[i];
-          if (token !== S.tts.token) { if (res.u) URL.revokeObjectURL(res.u); cleanup(i + 1); return; }
-          if (res.e) { res.e.started = i > 0; res.e.resumeFrom = chunks.slice(i).join(" "); cleanup(i + 1); throw res.e; }
-          start(i + 2);
+          if (token !== S.tts.token || res.stopped) { if (res.u) URL.revokeObjectURL(res.u); cleanup(i + 1); return; }
+          if (res.e) { res.e.started = i > 0; cleanup(i + 1); throw res.e; }
           S.tts.state = "playing"; updateSpeakButtons();
           await playAudioUrl(res.u);
           if (token !== S.tts.token) { cleanup(i + 1); return; }
         }
-      }
-      function getVoicesReady() {
-        return new Promise((resolve) => {
-          const synth = window.speechSynthesis;
-          const now = synth.getVoices();
-          if (now.length) return resolve(now);
-          const done = () => resolve(synth.getVoices());
-          synth.addEventListener("voiceschanged", done, { once: true });
-          setTimeout(done, 1200);
-        });
-      }
-      function pickBrowserVoice(voices) {
-        const order = S.tts.lang === "hinglish" ? ["en-IN", "hi-IN", "en-GB", "en-US", "en"] : ["en-US", "en-GB", "en-IN", "en"];
-        for (const code of order) {
-          const hit = voices.find((v) => v.lang && v.lang.replace("_", "-").toLowerCase().startsWith(code.toLowerCase()));
-          if (hit) return hit;
-        }
-        return voices[0];
-      }
-      async function speakWithBrowser(text, token) {
-        if (!("speechSynthesis" in window)) throw new Error("This browser has no built-in speech engine.");
-        const voices = await getVoicesReady();
-        if (!voices.length) throw new Error("No free browser voices found on this system. On Linux Mint install them with: sudo apt install speech-dispatcher espeak-ng — then restart the browser.");
-        const voice = pickBrowserVoice(voices);
-        S.tts.state = "playing"; updateSpeakButtons();
-        for (const chunk of splitForTts(text, 220)) {
-          if (token !== S.tts.token) return;
-          await new Promise((resolve) => {
-            const u = new SpeechSynthesisUtterance(chunk);
-            u.voice = voice; u.lang = voice.lang; u.rate = 0.95;
-            u.onend = resolve; u.onerror = resolve;
-            S.tts.cancelPlay = resolve;
-            window.speechSynthesis.speak(u);
-          });
-        }
-      }
-      /* Voice keys: main key + up to 3 backups. A key that hit its limit is skipped for a while. */
-      const TTS_KEYPAUSE_KEY = "duotrack.pdfViewer.ttsKeyPause";
-      function ttsKeyList() {
-        return [...new Set([geminiApiKey, ...geminiTtsExtraKeys].map((k) => String(k || "").trim()).filter(Boolean))];
-      }
-      function readKeyPauses() {
-        try { return JSON.parse(localStorage.getItem(TTS_KEYPAUSE_KEY) || "{}") || {}; } catch (e) { return {}; }
-      }
-      function ttsKeyPaused(key) { return (readKeyPauses()[key.slice(-8)] || 0) > Date.now(); }
-      function pauseTtsKey(key, perDay) {
-        const map = readKeyPauses();
-        map[key.slice(-8)] = Date.now() + (perDay ? 3 * 3600e3 : 90e3);   /* daily limit: ~3h, per-minute limit: 90s */
-        try { localStorage.setItem(TTS_KEYPAUSE_KEY, JSON.stringify(map)); } catch (e) { /* ignore */ }
-      }
-      function geminiTtsPaused() {
-        const keys = ttsKeyList();
-        return keys.length > 0 && keys.every(ttsKeyPaused);
       }
       function ttsNote(message, isInfo) {
         ttsMsgEl.textContent = message;
@@ -11835,19 +11790,9 @@
         const token = ++S.tts.token;
         S.tts.idx = idx; S.tts.state = "loading"; updateSpeakButtons();
         try {
-          if (S.tts.engine === "browser" || geminiTtsPaused()) {
-            await speakWithBrowser(text, token);                    /* free voice = last resort (every key exhausted before starting) */
-          } else {
-            try {
-              await speakWithGemini(text, token);
-            } catch (error) {
-              if (token !== S.tts.token) throw error;
-              if (error && error.started) throw new Error("Voice stopped — Gemini is overloaded right now. Press Listen to continue.");
-              await speakWithBrowser((error && error.resumeFrom) || text, token);   /* nothing was spoken yet, so this is the only fallback left */
-            }
-          }
+          await speakWithGemini(text, token);
         } catch (error) {
-          if (token === S.tts.token) ttsNote((error && error.message) || "Couldn't read that aloud.", false);
+          if (token === S.tts.token) ttsNote(error && error.started ? "Voice stopped — Gemini is overloaded right now. Press Listen to continue." : ((error && error.message) || "Couldn't read that aloud."), false);
         }
         if (token === S.tts.token) { S.tts.state = "idle"; S.tts.idx = -1; updateSpeakButtons(); }
       }
@@ -14389,8 +14334,7 @@
       if (event.target.id === "ttsSettingsForm") {
         event.preventDefault();
         const prefs = {
-          engine: document.getElementById("ttsEngineInput").value === "browser" ? "browser" : "gemini",
-          lang: document.getElementById("ttsLangInput").value === "english" ? "english" : "hinglish",
+          lang: "hinglish",
           auto: document.getElementById("ttsAutoInput").checked
         };
         try { localStorage.setItem(TTS_PREFS_KEY, JSON.stringify(prefs)); } catch (e) { /* private mode */ }
