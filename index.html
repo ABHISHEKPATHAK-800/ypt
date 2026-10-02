@@ -9376,7 +9376,7 @@
 
       // Any failure (quota 429, overload 503, bad key, network) silently moves to the next key, then the next model.
       const keys = geminiAllKeys();
-      const modelsToTry = [...new Set([geminiModel || GEMINI_DEFAULT_MODEL, "gemini-3.7-flash", "gemini-3.5-flash"])];
+      const modelsToTry = [...new Set([GEMINI_DEFAULT_MODEL, "gemini-3.7-flash", "gemini-3.5-flash"])];
       const requestBody = JSON.stringify({
         systemInstruction: { parts: [{ text: systemText }] },
         contents,
