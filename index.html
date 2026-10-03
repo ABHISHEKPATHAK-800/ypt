@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/mhchem.min.js"></script>
   <script src="https://www.youtube.com/iframe_api"></script>
   <style>
     :root {
@@ -1999,6 +2000,12 @@
     .pv-root .pv-ai-form { flex: none; display: flex; gap: 8px; padding: 10px 12px 12px; border-top: 1px solid var(--pv-line); }
     .pv-root .pv-ai-form input { flex: 1; min-width: 0; height: 40px; padding: 0 12px; color: #e7ebf1; background: #141b26; border: 1px solid #232d3c; border-radius: 10px; outline: none; }
     .pv-root .pv-ai-form input:focus { border-color: #7c4dff; }
+    .pv-root .pv-ai-pick { width: 40px; height: 40px; flex: none; display: grid; place-items: center; border-radius: 10px; color: #c4b5fd; background: #141b26; border: 1px solid #232d3c; cursor: pointer; }
+    .pv-root .pv-ai-pick:hover { border-color: #7c4dff; }
+    .pv-root .pv-ai-pick svg { width: 18px; height: 18px; }
+    .pv-root .pv-hist-cloudbtn { width: 100%; margin: 10px 0 4px; padding: 10px; border-radius: 10px; border: 1px dashed #3a475c; background: transparent; color: #c4b5fd; cursor: pointer; font: inherit; }
+    .res-aichats { display: block; width: 100%; margin-top: 10px; padding: 10px 12px; border-radius: 10px; border: 1px dashed currentColor; background: transparent; color: inherit; font: inherit; font-weight: 600; text-align: center; cursor: pointer; opacity: .85; }
+    .res-aichats:hover { opacity: 1; }
     .pv-root .pv-ai-send { width: 44px; height: 40px; display: grid; place-items: center; border-radius: 10px; color: #fff; background: linear-gradient(135deg, #7c4dff, #4b2fc7); flex: none; }
     .pv-root .pv-ai-send:disabled { opacity: .45; cursor: default; }
     .pv-root .pv-ai-send svg { width: 18px; height: 18px; }
@@ -9043,7 +9050,8 @@
           // That hidden copy is what made copied text look duplicated, e.g.
           // "IcmIcm" or "kg·m2kg·m2" — output:"html" turns it off so only
           // the one visible formula exists.
-          output: "html"
+          output: "html",
+          strict: "ignore"
         });
       } catch (error) {
         // Leave the raw text as-is if rendering fails.
@@ -9066,6 +9074,18 @@
     // spaced HTML: paragraphs, bullet/numbered lists, and bold/code emphasis.
     // This is what fixes "everything is one squished wall of text" replies.
     function renderAiRichText(escapedText) {
+      /* Pull every formula out first (so line splitting, list detection and the *-stripper can never break it), then put it back. */
+      const maths = [];
+      const stash = (tex) => { maths.push(tex); return `@@M${maths.length - 1}@@`; };
+      const masked = String(escapedText)
+        .replace(/\\\[[\s\S]*?\\\]/g, stash)
+        .replace(/\$\$[\s\S]*?\$\$/g, stash)
+        .replace(/\\\([\s\S]*?\\\)/g, stash)
+        .replace(/\\begin\{(aligned|align\*?|equation\*?|gather\*?|cases|array|[pbvBV]?matrix)\}[\s\S]*?\\end\{\1\}/g, (m) => stash(`\\[${m}\\]`))
+        .replace(/(^|[^\\$\w])\$([^$\n]+?)\$(?![\w$])/g, (all, pre, tex) => (/[\\^_{}=]|&lt;|&gt;/.test(tex) && !/^\s|\s$/.test(tex) ? pre + stash(`\\(${tex}\\)`) : all));
+      return renderAiRichTextCore(masked).replace(/@@M(\d+)@@/g, (m, i) => maths[Number(i)]);
+    }
+    function renderAiRichTextCore(escapedText) {
       const lines = escapedText.split(/\r?\n/);
       let html = "";
       let currentList = null;
@@ -10538,6 +10558,233 @@
     const PV_MIN_ZOOM = 5;
     const PV_MAX_ZOOM = 500;
     const PV_ZOOM_STEPS = [5, 10, 15, 25, 33, 50, 67, 75, 90, 100, 110, 125, 150, 175, 200, 250, 300, 400, 500];
+    /* ================= PDF AI chats in the cloud =================
+       Chat text -> Realtime Database. Photos + voice -> Firebase Storage.
+       Saved by chat id (NOT by PDF), so deleting a PDF never deletes its chats. */
+    const PDF_AI_STORAGE_URL = "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
+    let pdfAiStorage = null;
+    const pdfAiUserKey = () => String(currentUserId || "guest").replace(/[.#$\[\]\/]/g, "_");
+    const pdfAiChatsPath = () => `duotrack/groups/${GROUP_ID}/pdfAiChats/${pdfAiUserKey()}`;
+    const pdfAiRand = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+    function newPdfAiChatId() { return `c${pdfAiRand()}`; }
+    async function pdfAiStorageApi() {
+      if (!pdfAiStorage) {
+        const mod = await import(PDF_AI_STORAGE_URL);
+        pdfAiStorage = { mod, storage: mod.getStorage(app) };
+      }
+      return pdfAiStorage;
+    }
+    async function pdfAiUpload(path, blob) {
+      try {
+        const { mod, storage } = await pdfAiStorageApi();
+        const fileRef = mod.ref(storage, path);
+        await mod.uploadBytes(fileRef, blob, { contentType: blob.type || "application/octet-stream" });
+        return await mod.getDownloadURL(fileRef);
+      } catch (error) {
+        console.warn("Firebase Storage upload failed", error);
+        return "";
+      }
+    }
+    async function pdfAiDeleteFile(url) {
+      if (!/^https:\/\/firebasestorage\.googleapis\.com\//.test(url || "")) return;
+      try {
+        const { mod, storage } = await pdfAiStorageApi();
+        await mod.deleteObject(mod.ref(storage, url));
+      } catch (error) { /* already gone / not allowed */ }
+    }
+    function pdfAiDataUrlToBlob(dataUrl) {
+      const m = /^data:([^;,]+)[^,]*;base64,([\s\S]*)$/.exec(dataUrl || "");
+      if (!m) return null;
+      const bin = atob(m[2]);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      return new Blob([bytes], { type: m[1] });
+    }
+    const pdfAiImgCache = new Map();
+    async function pdfAiImageUrl(chatId, dataUrl) {
+      if (!/^data:/.test(dataUrl)) return dataUrl;
+      if (pdfAiImgCache.has(dataUrl)) return pdfAiImgCache.get(dataUrl);
+      const blob = pdfAiDataUrlToBlob(dataUrl);
+      let url = blob ? await pdfAiUpload(`pdfAi/${pdfAiUserKey()}/${chatId}/img-${pdfAiRand()}.jpg`, blob) : "";
+      if (!url && dataUrl.length < 220000) url = dataUrl;          /* Storage unavailable: keep the small picture inline so it is still saved */
+      if (url) pdfAiImgCache.set(dataUrl, url);
+      return url;
+    }
+    async function pdfAiUploadVoice(chatId, blobUrl) {
+      try {
+        const blob = await (await fetch(blobUrl)).blob();
+        return await pdfAiUpload(`pdfAi/${pdfAiUserKey()}/${chatId}/voice-${pdfAiRand()}.wav`, blob);
+      } catch (error) { return ""; }
+    }
+    const pdfAiSaveTimers = {};
+    function pdfAiQueueSave(chatId, getChat) {
+      clearTimeout(pdfAiSaveTimers[chatId]);
+      pdfAiSaveTimers[chatId] = setTimeout(async () => {
+        try {
+          for (const m of getChat().msgs) {                         /* upload pictures that are not in Storage yet */
+            if (m.thumbs && m.thumbs.length && !(m.cimgs && m.cimgs.length)) {
+              const urls = (await Promise.all(m.thumbs.map((t) => pdfAiImageUrl(chatId, t)))).filter(Boolean);
+              if (urls.length) m.cimgs = urls;
+            }
+          }
+          const chat = getChat();
+          const first = chat.msgs.find((m) => m.role === "user");
+          await set(ref(database, `${pdfAiChatsPath()}/${chatId}`), {
+            pdfId: String(chat.pdfId || ""),
+            pdfName: String(chat.pdfName || "PDF").slice(0, 160),
+            title: String((first && first.content) || "Chat").slice(0, 80),
+            updatedAt: Date.now(),
+            msgs: chat.msgs.map((m) => {
+              const o = { role: m.role, content: String(m.content || "").slice(0, 30000) };
+              if (m.cimgs && m.cimgs.length) o.imgs = m.cimgs.slice(0, 6);
+              if (m.audio && m.audio.urls && m.audio.urls.length) o.audio = { sig: String(m.audio.sig || ""), urls: m.audio.urls };
+              return o;
+            })
+          });
+        } catch (error) {
+          console.warn("Could not save the AI chat to the cloud", error);
+        }
+      }, 500);
+    }
+    const pdfAiArr = (x) => (Array.isArray(x) ? x : x && typeof x === "object" ? Object.values(x) : []);
+    async function pdfAiListChats() {
+      const snap = await get(ref(database, pdfAiChatsPath()));
+      const val = snap.val() || {};
+      return Object.keys(val).map((id) => {
+        const c = val[id] || {};
+        const msgs = pdfAiArr(c.msgs).filter(Boolean).map((m) => ({
+          role: m.role === "user" ? "user" : "assistant",
+          content: String(m.content || ""),
+          imgs: pdfAiArr(m.imgs).filter((u) => typeof u === "string"),
+          audio: m.audio && pdfAiArr(m.audio.urls).length ? { sig: String(m.audio.sig || ""), urls: pdfAiArr(m.audio.urls) } : null
+        }));
+        return { id, pdfId: c.pdfId || "", pdfName: c.pdfName || "PDF", title: c.title || "Chat", updatedAt: Number(c.updatedAt) || 0, msgs };
+      }).filter((c) => c.msgs.length).sort((a, b) => b.updatedAt - a.updatedAt);
+    }
+    async function pdfAiDeleteChat(chat) {
+      clearTimeout(pdfAiSaveTimers[chat.id]);
+      await remove(ref(database, `${pdfAiChatsPath()}/${chat.id}`));
+      chat.msgs.forEach((m) => { m.imgs.forEach(pdfAiDeleteFile); if (m.audio) m.audio.urls.forEach(pdfAiDeleteFile); });
+    }
+    /* Photo from paste / file picker -> JPEG data URL (max 1600px) */
+    function pvFileToDataUrl(file, maxSide = 1600) {
+      return new Promise((resolve) => {
+        const url = URL.createObjectURL(file);
+        const im = new Image();
+        im.onload = () => {
+          const k = Math.min(1, maxSide / Math.max(im.naturalWidth, im.naturalHeight, 1));
+          const w = Math.max(1, Math.round(im.naturalWidth * k));
+          const h = Math.max(1, Math.round(im.naturalHeight * k));
+          const c = document.createElement("canvas");
+          c.width = w; c.height = h;
+          const g = c.getContext("2d");
+          g.fillStyle = "#fff"; g.fillRect(0, 0, w, h);
+          g.drawImage(im, 0, 0, w, h);
+          URL.revokeObjectURL(url);
+          resolve(c.toDataURL("image/jpeg", 0.88));
+        };
+        im.onerror = () => { URL.revokeObjectURL(url); resolve(""); };
+        im.src = url;
+      });
+    }
+    function ensurePdfAiStyle() {
+      if (document.getElementById("pdfAiStyle")) return;
+      const st = document.createElement("style");
+      st.id = "pdfAiStyle";
+      st.textContent = `
+        .pac-back { position: fixed; inset: 0; z-index: 100100; background: rgba(5,8,14,.72); display: grid; place-items: center; padding: 16px; }
+        .pac-modal { width: min(680px, 100%); max-height: min(86vh, 760px); display: flex; flex-direction: column; background: #0f141c; color: #e7ebf1; border: 1px solid #232d3c; border-radius: 16px; box-shadow: 0 30px 80px rgba(0,0,0,.6); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; overflow: hidden; }
+        .pac-head { display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-bottom: 1px solid #232d3c; }
+        .pac-head h3 { flex: 1; margin: 0; font-size: 1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #e7ebf1; }
+        .pac-x { width: 34px; height: 34px; border-radius: 9px; border: 1px solid #232d3c; background: #141b26; color: #e7ebf1; cursor: pointer; font-size: 1.1rem; }
+        .pac-body { overflow: auto; padding: 12px 14px 16px; }
+        .pac-empty { padding: 28px 8px; text-align: center; color: #8a97aa; line-height: 1.6; }
+        .pac-item { display: flex; gap: 6px; margin-bottom: 8px; }
+        .pac-open { flex: 1; min-width: 0; text-align: left; padding: 10px 12px; border-radius: 10px; border: 1px solid #232d3c; background: #141b26; color: #e7ebf1; cursor: pointer; display: grid; gap: 3px; font: inherit; }
+        .pac-open b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .pac-open span { font-size: 12px; color: #8a97aa; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .pac-del { width: 36px; border-radius: 10px; border: 1px solid #232d3c; background: #141b26; color: #ff8a8a; cursor: pointer; font-size: 1.2rem; }
+        .pac-msgs { display: flex; flex-direction: column; gap: 10px; }
+        .pac-msg { max-width: 94%; padding: 9px 11px; border-radius: 13px; line-height: 1.5; font-size: 14px; overflow-wrap: anywhere; }
+        .pac-msg.mine { align-self: flex-end; background: #1d3a6b; border-bottom-right-radius: 4px; }
+        .pac-msg.bot { align-self: flex-start; background: #151d29; border: 1px solid #232d3c; border-bottom-left-radius: 4px; }
+        .pac-msg img { display: block; max-width: 100%; max-height: 220px; margin: 0 0 6px; border-radius: 8px; background: #fff; }
+        .pac-msg .ai-rich, .pac-msg .ai-rich * { color: inherit; }
+        .pac-msg .ai-rich strong { color: #fff; }
+        .pac-listen { margin-bottom: 6px; padding: 2px 10px; border-radius: 999px; border: 1px solid #2f3b50; background: transparent; color: #c4b5fd; cursor: pointer; font-size: 12px; }
+        .pac-foot { position: sticky; bottom: -16px; padding-top: 12px; text-align: center; }
+        .pac-use { padding: 10px 20px; border: 0; border-radius: 10px; background: linear-gradient(135deg, #7c4dff, #4b2fc7); color: #fff; font-weight: 700; cursor: pointer; }`;
+      document.head.appendChild(st);
+    }
+    /* Saved AI chats (cloud) - works with or without the PDF still existing. opts.onOpen(chat) adds a "Continue in this PDF" button. */
+    function openPdfAiChatsModal(opts = {}) {
+      ensurePdfAiStyle();
+      const back = document.createElement("div");
+      back.className = "pac-back";
+      back.innerHTML = `<div class="pac-modal" role="dialog" aria-modal="true" aria-label="Saved AI chats">
+        <div class="pac-head"><button type="button" class="pac-x" data-pac="back" hidden aria-label="Back">‹</button><h3 data-pac="title">Saved AI chats</h3><button type="button" class="pac-x" data-pac="close" aria-label="Close">✕</button></div>
+        <div class="pac-body" data-pac="body"></div></div>`;
+      document.body.appendChild(back);
+      const part = (n) => back.querySelector(`[data-pac="${n}"]`);
+      const body = part("body"), title = part("title"), backBtn = part("back");
+      let chats = [], cur = null, audio = null, playing = -1, token = 0;
+      const resetLabels = () => body.querySelectorAll(".pac-listen").forEach((b) => { b.textContent = "▶ Listen"; });
+      const stopAudio = () => { token++; try { if (audio) audio.pause(); } catch (e) { /* ignore */ } audio = null; playing = -1; resetLabels(); };
+      const onKey = (e) => { if (e.key === "Escape") { e.stopPropagation(); close(); } };
+      function close() { stopAudio(); document.removeEventListener("keydown", onKey, true); back.remove(); }
+      document.addEventListener("keydown", onKey, true);
+      async function showList() {
+        stopAudio(); cur = null; backBtn.hidden = true; title.textContent = "Saved AI chats";
+        body.innerHTML = `<div class="pac-empty">Loading…</div>`;
+        try { chats = await pdfAiListChats(); } catch (error) { body.innerHTML = `<div class="pac-empty">Couldn't load saved chats. Check your internet and try again.</div>`; return; }
+        if (!chats.length) { body.innerHTML = `<div class="pac-empty">No saved AI chats yet.<br>Chats from the PDF AI are saved here automatically — even after the PDF is deleted.</div>`; return; }
+        body.innerHTML = chats.map((c, i) => `<div class="pac-item"><button type="button" class="pac-open" data-i="${i}"><b>${escapeHTML(c.title)}</b><span>${escapeHTML(c.pdfName)} · ${new Date(c.updatedAt).toLocaleDateString()} · ${c.msgs.length} messages</span></button><button type="button" class="pac-del" data-i="${i}" aria-label="Delete this saved chat" title="Delete">×</button></div>`).join("");
+      }
+      function showChat(i) {
+        const c = chats[i];
+        if (!c) return;
+        stopAudio(); cur = c; backBtn.hidden = false; title.textContent = c.title;
+        body.innerHTML = `<div class="pac-msgs">${c.msgs.map((m, k) => (m.role === "user"
+          ? `<div class="pac-msg mine">${m.imgs.map((u) => `<img src="${escapeHTML(u)}" alt="Photo">`).join("")}<span>${linkifyText(escapeHTML(m.content))}</span></div>`
+          : `<div class="pac-msg bot">${m.audio ? `<button type="button" class="pac-listen" data-k="${k}">▶ Listen</button>` : ""}<div class="ai-rich">${renderAiRichText(escapeHTML(m.content))}</div></div>`)).join("")}</div>`
+          + (opts.onOpen ? `<div class="pac-foot"><button type="button" class="pac-use" data-i="${i}">Continue in this PDF</button></div>` : "");
+        renderMathIn(body);
+      }
+      function playMsg(k, btn) {
+        const wasThis = playing === k;
+        stopAudio();
+        if (wasThis || !cur || !cur.msgs[k] || !cur.msgs[k].audio) return;
+        const urls = cur.msgs[k].audio.urls.slice();
+        const my = ++token;
+        playing = k; btn.textContent = "■ Stop";
+        (async () => {
+          for (const u of urls) {
+            if (my !== token) return;
+            await new Promise((resolve) => { audio = new Audio(u); audio.onended = resolve; audio.onerror = resolve; audio.play().catch(resolve); });
+          }
+          if (my === token) { playing = -1; resetLabels(); }
+        })();
+      }
+      back.addEventListener("click", async (e) => {
+        if (e.target === back) { close(); return; }
+        const t = e.target.closest("button");
+        if (!t) return;
+        if (t.dataset.pac === "close") close();
+        else if (t.dataset.pac === "back") showList();
+        else if (t.classList.contains("pac-open")) showChat(Number(t.dataset.i));
+        else if (t.classList.contains("pac-listen")) playMsg(Number(t.dataset.k), t);
+        else if (t.classList.contains("pac-use")) { const c = chats[Number(t.dataset.i)]; close(); if (c && opts.onOpen) opts.onOpen(c); }
+        else if (t.classList.contains("pac-del")) {
+          const c = chats[Number(t.dataset.i)];
+          if (!c || !window.confirm("Delete this saved chat permanently?")) return;
+          t.disabled = true;
+          try { await pdfAiDeleteChat(c); } catch (error) { console.warn("Could not delete the saved chat", error); }
+          showList();
+        }
+      });
+      showList();
+    }
+
     const PV_PREFS_KEY = "duotrack.pdfViewer.prefs";
     const PV_COLORS = ["#e0483e", "#f5b301", "#22a06b", "#3b82f6", "#111111"];
     const PV_PATHS = {
@@ -10549,6 +10796,7 @@
       gear: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
       minus: '<path d="M5 12h14"/>',
       plus: '<path d="M12 5v14M5 12h14"/>',
+      photo: '<rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="9" cy="10" r="1.8"/><path d="M4 18l5.5-5.5 4 4 3-3L21 17"/>',
       fit: '<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>',
       rotate: '<path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/>',
       rotateL: '<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>',
@@ -10953,6 +11201,8 @@
               <button type="button" class="pv-btn pv-small" data-act="aiDetach" title="Remove all crops" aria-label="Remove all attached crops">${pvIcon("trash")}</button>
             </div>
             <form class="pv-ai-form" data-ref="aiForm">
+              <button type="button" class="pv-ai-pick" data-act="aiPick" title="Add a photo (or paste one with Ctrl+V)" aria-label="Add a photo">${pvIcon("photo")}</button>
+              <input data-ref="aiFile" type="file" accept="image/*" multiple hidden>
               <input data-ref="aiInput" type="text" maxlength="600" autocomplete="off" placeholder="Type your question…" aria-label="Your question for the AI">
               <button type="submit" class="pv-ai-send" data-ref="aiSend" aria-label="Send">${pvIcon("send")}</button>
             </form>
@@ -11544,6 +11794,7 @@
       const aiForm = ref("aiForm");
       const aiInput = ref("aiInput");
       const aiSend = ref("aiSend");
+      const aiFile = ref("aiFile");
       const aiResize = ref("aiResize");
       const AI_W_KEY = "duotrack.pdfViewer.aiWidth";
       const AI_MIN_W = 300;
@@ -11594,20 +11845,39 @@
             .filter((m) => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
             .map((m) => {
               const imgs = Array.isArray(m.imgs) ? m.imgs.filter((u) => typeof u === "string") : (typeof m.img === "string" && m.img ? [m.img] : []);
-              return { role: m.role, content: m.content, imgs, thumbs: imgs };
+              return {
+                role: m.role, content: m.content, imgs, thumbs: imgs,
+                cimgs: Array.isArray(m.cimgs) ? m.cimgs.filter((u) => typeof u === "string") : undefined,
+                audio: m.audio && Array.isArray(m.audio.urls) ? m.audio : undefined
+              };
             });
         }
       } catch (e) { S.aiChat = []; }
+      /* Every chat has its own id; the cloud copy is saved under that id (not under the PDF), so deleting the PDF never removes it. */
+      const AI_CHATID_KEY = `duotrack.pdfViewer.aiChatId:${record.id}`;
+      S.aiChatId = "";
+      try { S.aiChatId = localStorage.getItem(AI_CHATID_KEY) || ""; } catch (e) { /* private mode */ }
+      function setAiChatId(id) {
+        S.aiChatId = id || newPdfAiChatId();
+        try { localStorage.setItem(AI_CHATID_KEY, S.aiChatId); } catch (e) { /* private mode */ }
+      }
+      if (!S.aiChatId) setAiChatId();
       function saveAiChat() {
         const kept = S.aiChat.filter((m) => !m.err).slice(-60);
         const withImgs = kept.filter((m) => m.thumbs && m.thumbs.length).slice(-6);          /* only the latest 6 crops keep pictures (storage limit) */
         const keep = kept.map((m) => (m.thumbs && m.thumbs.length && !withImgs.includes(m) ? { ...m, thumbs: [] } : m))
-          .map((m) => (m.thumbs && m.thumbs.length ? { role: m.role, content: m.content, imgs: m.thumbs } : { role: m.role, content: m.content }));
+          .map((m) => ({
+            role: m.role, content: m.content,
+            ...(m.thumbs && m.thumbs.length ? { imgs: m.thumbs } : {}),
+            ...(m.cimgs && m.cimgs.length ? { cimgs: m.cimgs } : {}),
+            ...(m.audio ? { audio: m.audio } : {})
+          }));
         try {
           if (keep.length) localStorage.setItem(AI_CHAT_KEY, JSON.stringify(keep)); else localStorage.removeItem(AI_CHAT_KEY);
         } catch (e) {
-          try { localStorage.setItem(AI_CHAT_KEY, JSON.stringify(keep.map(({ role, content }) => ({ role, content })))); } catch (e2) { /* storage full */ }
+          try { localStorage.setItem(AI_CHAT_KEY, JSON.stringify(keep.map(({ role, content, cimgs, audio }) => ({ role, content, cimgs, audio })))); } catch (e2) { /* storage full */ }
         }
+        if (kept.length) pdfAiQueueSave(S.aiChatId, () => ({ pdfId: record.id, pdfName: record.name, msgs: S.aiChat.filter((m) => !m.err).slice(-60) }));
       }
       function makeThumb(url) {
         return new Promise((resolve) => {
@@ -11633,11 +11903,11 @@
         try { localStorage.setItem(AI_ARCHIVE_KEY, JSON.stringify(list.slice(0, 20))); } catch (e) { /* storage full */ }
       }
       function archiveCurrentChat() {
-        const msgs = S.aiChat.filter((m) => !m.err).map(({ role, content }) => ({ role, content }));
+        const msgs = S.aiChat.filter((m) => !m.err).map(({ role, content, cimgs, audio }) => ({ role, content, ...(cimgs && cimgs.length ? { cimgs } : {}), ...(audio ? { audio } : {}) }));
         const first = msgs.find((m) => m.role === "user");
         if (!first) return;
         const list = readArchive();
-        list.unshift({ ts: Date.now(), title: first.content.slice(0, 60), msgs: msgs.slice(-60) });
+        list.unshift({ ts: Date.now(), title: first.content.slice(0, 60), msgs: msgs.slice(-60), cid: S.aiChatId });
         writeArchive(list);
       }
       function newChat() {
@@ -11645,6 +11915,7 @@
         clearTtsCache();
         archiveCurrentChat();
         S.aiChat = []; S.aiShown = new Set(); S.aiHistView = false;
+        setAiChatId(newPdfAiChatId());
         saveAiChat();
         renderAi();
         aiInput.focus();
@@ -11658,23 +11929,36 @@
         stopSpeech();
         clearTtsCache();
         archiveCurrentChat();
-        S.aiChat = chat.msgs.map(({ role, content }) => ({ role, content }));
+        S.aiChat = chat.msgs.map((m) => ({ ...m }));
         S.aiShown = new Set(); S.aiHistView = false;
+        setAiChatId(chat.cid);
+        saveAiChat();
+        renderAi();
+      }
+      function loadCloudChat(chat) {
+        stopSpeech();
+        clearTtsCache();
+        archiveCurrentChat();
+        S.aiChat = (chat.msgs || []).map((m) => ({ role: m.role, content: m.content, imgs: [], thumbs: [], cimgs: m.imgs && m.imgs.length ? m.imgs : undefined, audio: m.audio || undefined }));
+        S.aiShown = new Set(); S.aiHistView = false;
+        setAiChatId(chat.id);
         saveAiChat();
         renderAi();
       }
       function renderHistView() {
         const list = readArchive();
-        aiMsgs.innerHTML = list.length
+        aiMsgs.innerHTML = (list.length
           ? `<div class="pv-hist-head">Past chats for this PDF</div>` + list.map((c, i) => `<div class="pv-hist-item"><button type="button" data-act="aiHistOpen" data-idx="${i}"><b>${escapeHTML(c.title)}</b><span>${new Date(c.ts).toLocaleDateString()} · ${c.msgs.length} messages</span></button><button type="button" class="pv-hist-del" data-act="aiHistDel" data-idx="${i}" title="Delete this chat" aria-label="Delete this chat">×</button></div>`).join("")
-          : `<div class="pv-ai-empty">${pvIcon("clock")}<br>No past chats yet.<br>Press <b>+</b> to start a new chat — the current one is saved here.</div>`;
+          : `<div class="pv-ai-empty">${pvIcon("clock")}<br>No past chats yet.<br>Press <b>+</b> to start a new chat — the current one is saved here.</div>`)
+          + `<button type="button" class="pv-hist-cloudbtn" data-act="aiCloud">All saved AI chats (cloud)</button>`;
       }
       function clearAiChat() {
-        if (S.aiChat.length && !window.confirm("Clear the AI chat history for this PDF?")) return;
+        if (S.aiChat.length && !window.confirm("Clear this chat from the PDF? (A saved copy stays in Saved AI chats.)")) return;
         stopSpeech();
         clearTtsCache();
         S.aiChat = [];
         S.aiShown = new Set();
+        setAiChatId(newPdfAiChatId());
         saveAiChat();
         renderAi();
       }
@@ -12038,7 +12322,7 @@
             if (entry.urls[i]) return { u: entry.urls[i] };                          /* replay: already generated -> no API request */
             if (stopNow()) return { stopped: true };
             if (prev && (prev.e || prev.stopped)) return prev;
-            return geminiTtsChunk(chunk, 150000, stopNow).then((u) => { entry.urls[i] = u; return { u }; }, (e) => (e && e.stopped ? { stopped: true } : { e }));
+            return geminiTtsChunk(chunk, 150000, stopNow).then((u) => { entry.urls[i] = u; if (entry.save) entry.save(i, u, chunks.length); return { u }; }, (e) => (e && e.stopped ? { stopped: true } : { e }));
           });
         });
         for (let i = 0; i < chunks.length; i++) {
@@ -12077,7 +12361,20 @@
           let entry = S.ttsCache.get(idx);
           if (!entry || entry.text !== text) {
             if (entry) entry.urls.forEach((u) => { if (u) URL.revokeObjectURL(u); });
-            entry = { text, urls: [] };
+            entry = { text, urls: [], cloud: [] };
+            const sig = `${text.length}:${text.slice(0, 40)}`;
+            if (msg.audio && msg.audio.sig === sig && Array.isArray(msg.audio.urls)) { entry.urls = msg.audio.urls.slice(); entry.cloud = msg.audio.urls.slice(); }   /* saved voice: replays with no new Gemini request */
+            entry.save = (i, blobUrl, total) => {
+              pdfAiUploadVoice(S.aiChatId, blobUrl).then((cloudUrl) => {
+                if (!cloudUrl) {
+                  if (!S.voiceWarned) { S.voiceWarned = true; ttsNote("Voice couldn't be saved to the cloud (check Firebase Storage rules).", true); }
+                  return;
+                }
+                entry.cloud[i] = cloudUrl;
+                const urls = entry.cloud.slice(0, total);
+                if (urls.length === total && urls.every(Boolean)) { msg.audio = { sig, urls }; saveAiChat(); }
+              });
+            };
             S.ttsCache.set(idx, entry);
           }
           await speakWithGemini(text, token, entry);
@@ -12101,7 +12398,7 @@
           return;
         }
         aiMsgs.innerHTML = S.aiChat.map((m, i) => m.role === "user"
-          ? `<div class="pv-ai-msg mine">${(m.imgs || []).map((u) => `<img class="pv-ai-crop" src="${u}" alt="Cropped question">`).join("")}<span>${linkifyText(escapeHTML(m.content))}</span></div>`
+          ? `<div class="pv-ai-msg mine">${((m.imgs && m.imgs.length) ? m.imgs : (m.cimgs || [])).map((u) => `<img class="pv-ai-crop" src="${u}" alt="Cropped question">`).join("")}<span>${linkifyText(escapeHTML(m.content))}</span></div>`
           : `<div class="pv-ai-msg bot${m.err ? " err" : ""}"><div class="pv-ai-who">${pvIcon("spark")}AI${m.err ? "" : `<button type="button" class="pv-ai-speak${S.tts.idx === i && S.tts.state !== "idle" ? " is-on" : ""}" data-act="aiSpeak" data-idx="${i}" title="Read this answer aloud">${pvIcon(S.tts.idx === i && S.tts.state !== "idle" ? "stopSq" : "speaker")}${S.tts.idx === i && S.tts.state === "loading" ? "Loading…" : S.tts.idx === i && S.tts.state === "playing" ? "Stop" : "Listen"}</button>`}</div><div class="ai-rich">${renderAiRichText(escapeHTML(m.content))}</div></div>`
         ).join("") + (S.aiBusy ? `<div class="pv-ai-msg bot"><span class="pv-dots"><i></i><i></i><i></i></span></div>` : "");
         aiMsgs.scrollTop = aiMsgs.scrollHeight;
@@ -12169,6 +12466,33 @@
         aiSend.disabled = false;
         if (!S.destroyed) { renderAi(); aiInput.focus(); }
       }
+      async function addImageFiles(files) {
+        const list = Array.from(files || []).filter((f) => f && /^image\//.test(f.type));
+        if (!list.length) return;
+        for (const f of list) {
+          const url = await pvFileToDataUrl(f);
+          if (S.destroyed) return;
+          if (url) S.aiImages.push(url);
+        }
+        S.aiImages = S.aiImages.slice(-6);
+        openAi();
+        renderAiAttach();
+        aiInput.focus();
+      }
+      aiFile.addEventListener("change", () => {
+        const picked = Array.from(aiFile.files || []);
+        aiFile.value = "";
+        addImageFiles(picked);
+      });
+      root.addEventListener("paste", (event) => {
+        const dt = event.clipboardData;
+        if (!dt) return;
+        let files = dt.items ? Array.from(dt.items).filter((it) => it.kind === "file" && /^image\//.test(it.type)).map((it) => it.getAsFile()).filter(Boolean) : [];
+        if (!files.length && dt.files) files = Array.from(dt.files).filter((f) => /^image\//.test(f.type));
+        if (!files.length) return;                      /* normal text paste keeps working */
+        event.preventDefault();
+        addImageFiles(files);
+      });
       aiForm.addEventListener("submit", (event) => {
         event.preventDefault();
         const value = aiInput.value;
@@ -12547,6 +12871,8 @@
           case "aiClear": clearAiChat(); return;
           case "aiNew": newChat(); return;
           case "aiHist": S.aiHistView = !S.aiHistView; renderAi(); return;
+          case "aiCloud": openPdfAiChatsModal({ onOpen: loadCloudChat }); return;
+          case "aiPick": aiFile.click(); return;
           case "aiHistOpen": openArchived(Number(btnEl && btnEl.dataset.idx)); return;
           case "aiHistDel": { const l = readArchive(); l.splice(Number(btnEl && btnEl.dataset.idx), 1); writeArchive(l); renderHistView(); return; }
           case "aiDetach": detachImage(); return;
@@ -12934,7 +13260,13 @@
       note.className = "res-note";
       note.textContent = "Saved on this device only. Max 30 MB per file.";
 
-      modal.append(head, fileInput, drop, pdfSec.section, imgSec.section, status, note);
+      const aiChatsBtn = document.createElement("button");
+      aiChatsBtn.type = "button";
+      aiChatsBtn.className = "res-aichats";
+      aiChatsBtn.textContent = "Saved AI chats (cloud)";
+      aiChatsBtn.addEventListener("click", () => openPdfAiChatsModal());
+
+      modal.append(head, fileInput, drop, aiChatsBtn, pdfSec.section, imgSec.section, status, note);
       backdrop.appendChild(modal);
 
       const emptyEl = (text) => {
