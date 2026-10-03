@@ -9919,15 +9919,55 @@
       return escapeHTML(user.name.slice(0, 1).toUpperCase());
     }
 
+    // Temporarily closed accounts: can log in, but see ONLY the closure popup + Contact Us. Remove an id to reopen it.
+    const TEMP_CLOSED_ACCOUNTS = ["aditya"];
+    function setTempClosure(on) {
+      let overlay = document.getElementById("acctClosedOverlay");
+      if (!on) {
+        if (overlay) overlay.remove();
+        document.body.classList.remove("acct-closed");
+        return;
+      }
+      if (!document.getElementById("acctClosedStyle")) {
+        const style = document.createElement("style");
+        style.id = "acctClosedStyle";
+        style.textContent = `
+          body.acct-closed > *:not(#acctClosedOverlay):not(#infoModal) { display: none !important; }
+          body.acct-closed #infoModal { z-index: 100000; }
+          #acctClosedOverlay { position: fixed; inset: 0; z-index: 99999; background: #f4f4f6; display: grid; place-items: center; padding: 20px; }
+          #acctClosedOverlay .acct-closed-card { width: min(520px, 100%); background: #fff; border-radius: 12px; padding: 28px 24px; box-shadow: 0 12px 40px rgba(0,0,0,.18); text-align: center; }
+          #acctClosedOverlay .acct-closed-msg { margin: 0 0 22px; color: #d90429; font-weight: 700; font-style: italic; text-decoration: underline; font-size: 1.05rem; line-height: 1.6; }
+          #acctClosedOverlay button { background: #d90429; color: #fff; border: 0; border-radius: 8px; padding: 10px 22px; font-weight: 700; font-size: 1rem; cursor: pointer; }`;
+        document.head.appendChild(style);
+      }
+      if (!overlay) {
+        overlay = document.createElement("div");
+        overlay.id = "acctClosedOverlay";
+        overlay.setAttribute("role", "alertdialog");
+        overlay.setAttribute("aria-modal", "true");
+        overlay.innerHTML = `
+          <div class="acct-closed-card">
+            <p class="acct-closed-msg">Due to not using your account for many days, your account is temporarily closed... It is an app feature pre-built before launch. To continue the app services, contact admin/moderator ..... Sorry for the inconvenience.</p>
+            <button type="button" id="acctClosedContactBtn">Contact Us</button>
+          </div>`;
+        document.body.appendChild(overlay);
+        document.getElementById("acctClosedContactBtn").addEventListener("click", () => contactLink.click());
+      }
+      document.body.classList.add("acct-closed");
+    }
+
     function render() {
       if (adminEditing) return;
       if (!currentUserId || !state.users[currentUserId]) {
+        setTempClosure(false);
         loginScreen.classList.remove("hidden");
         appScreen.classList.add("hidden");
         return;
       }
 
       const user = currentUser();
+      if (user && TEMP_CLOSED_ACCOUNTS.includes(user.id)) { setTempClosure(true); return; }
+      setTempClosure(false);
       const partner = partnerUser();
       if (!user || !partner) return;
       loginScreen.classList.add("hidden");
