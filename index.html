@@ -9919,27 +9919,44 @@
       return escapeHTML(user.name.slice(0, 1).toUpperCase());
     }
 
-    // Temporarily closed accounts: can log in, but see ONLY the closure popup + Contact Us. Remove an id to reopen it.
+    // Temporarily closed accounts: can log in, but see ONLY the closure popup + Contact Us (with Appeal).
+    // Abhishek (the reviewer) can unban from the appeal popup; that is saved in Firebase and overrides this list.
     const TEMP_CLOSED_ACCOUNTS = ["aditya"];
+    const APPEAL_REVIEWER_ID = "abhi";                 // login abhi@990
+    const CONTACT_EMAIL = "mrabhishek8900@gmail.com";
+    const accountStatusRef = ref(database, `duotrack/groups/${GROUP_ID}/accountStatus`);
+    const appealsRef = ref(database, `duotrack/groups/${GROUP_ID}/appeals`);
+    let accountStatus = {};                            // { aditya: { closed: false } } once unbanned
+    let appeals = {};                                  // { aditya: { status: pending|approved|denied, reason, at } }
+    onValue(accountStatusRef, (snapshot) => { accountStatus = snapshot.val() || {}; try { render(); } catch (error) { /* app still starting */ } });
+    onValue(appealsRef, (snapshot) => { appeals = snapshot.val() || {}; try { render(); } catch (error) { /* app still starting */ } });
+    function isAccountClosed(id) {
+      return TEMP_CLOSED_ACCOUNTS.includes(id) && !(accountStatus[id] && accountStatus[id].closed === false);
+    }
+    function ensureClosureStyle() {
+      if (document.getElementById("acctClosedStyle")) return;
+      const style = document.createElement("style");
+      style.id = "acctClosedStyle";
+      style.textContent = `
+        body.acct-closed > *:not(#acctClosedOverlay):not(#appealReviewOverlay):not(#infoModal) { display: none !important; }
+        body.acct-closed #infoModal { z-index: 100000; }
+        #acctClosedOverlay, #appealReviewOverlay { position: fixed; inset: 0; z-index: 99999; background: #f4f4f6; display: grid; place-items: center; padding: 20px; }
+        .acct-closed-card { width: min(520px, 100%); background: #fff; border-radius: 12px; padding: 28px 24px; box-shadow: 0 12px 40px rgba(0,0,0,.18); text-align: center; color: #1b1b1f; }
+        .acct-closed-msg { margin: 0 0 22px; color: #d90429; font-weight: 700; font-style: italic; text-decoration: underline; font-size: 1.05rem; line-height: 1.6; }
+        .acct-closed-card button { border: 0; border-radius: 8px; padding: 10px 22px; font-weight: 700; font-size: 1rem; cursor: pointer; margin: 4px; }
+        .acct-btn-red { background: #d90429; color: #fff; }
+        .acct-btn-green { background: #1a7f37; color: #fff; }
+        .appeal-reason { margin: 0 0 20px; padding: 10px 12px; background: #f4f4f6; border-radius: 8px; text-align: left; white-space: pre-wrap; word-break: break-word; }`;
+      document.head.appendChild(style);
+    }
     function setTempClosure(on) {
       let overlay = document.getElementById("acctClosedOverlay");
       if (!on) {
         if (overlay) overlay.remove();
-        document.body.classList.remove("acct-closed");
+        if (!document.getElementById("appealReviewOverlay")) document.body.classList.remove("acct-closed");
         return;
       }
-      if (!document.getElementById("acctClosedStyle")) {
-        const style = document.createElement("style");
-        style.id = "acctClosedStyle";
-        style.textContent = `
-          body.acct-closed > *:not(#acctClosedOverlay):not(#infoModal) { display: none !important; }
-          body.acct-closed #infoModal { z-index: 100000; }
-          #acctClosedOverlay { position: fixed; inset: 0; z-index: 99999; background: #f4f4f6; display: grid; place-items: center; padding: 20px; }
-          #acctClosedOverlay .acct-closed-card { width: min(520px, 100%); background: #fff; border-radius: 12px; padding: 28px 24px; box-shadow: 0 12px 40px rgba(0,0,0,.18); text-align: center; }
-          #acctClosedOverlay .acct-closed-msg { margin: 0 0 22px; color: #d90429; font-weight: 700; font-style: italic; text-decoration: underline; font-size: 1.05rem; line-height: 1.6; }
-          #acctClosedOverlay button { background: #d90429; color: #fff; border: 0; border-radius: 8px; padding: 10px 22px; font-weight: 700; font-size: 1rem; cursor: pointer; }`;
-        document.head.appendChild(style);
-      }
+      ensureClosureStyle();
       if (!overlay) {
         overlay = document.createElement("div");
         overlay.id = "acctClosedOverlay";
@@ -9948,11 +9965,54 @@
         overlay.innerHTML = `
           <div class="acct-closed-card">
             <p class="acct-closed-msg">Due to not using your account for many days, your account is temporarily closed... It is an app feature pre-built before launch. To continue the app services, contact admin/moderator ..... Sorry for the inconvenience.</p>
-            <button type="button" id="acctClosedContactBtn">Contact Us</button>
+            <button type="button" class="acct-btn-red" id="acctClosedContactBtn">Contact Us</button>
           </div>`;
         document.body.appendChild(overlay);
         document.getElementById("acctClosedContactBtn").addEventListener("click", () => contactLink.click());
       }
+      document.body.classList.add("acct-closed");
+    }
+    // Appeal popup for the reviewer: nothing else is visible until he picks Unban or Let it ban.
+    function setAppealReview(id) {
+      let overlay = document.getElementById("appealReviewOverlay");
+      if (!id) {
+        if (overlay) overlay.remove();
+        if (!document.getElementById("acctClosedOverlay")) document.body.classList.remove("acct-closed");
+        return;
+      }
+      ensureClosureStyle();
+      const appeal = appeals[id] || {};
+      const key = `${id}|${appeal.at || 0}`;
+      if (overlay && overlay.dataset.key === key) { document.body.classList.add("acct-closed"); return; }
+      if (overlay) overlay.remove();
+      const name = (USERS_BY_ID[id] && USERS_BY_ID[id].name) || id;
+      overlay = document.createElement("div");
+      overlay.id = "appealReviewOverlay";
+      overlay.dataset.key = key;
+      overlay.setAttribute("role", "alertdialog");
+      overlay.setAttribute("aria-modal", "true");
+      overlay.innerHTML = `
+        <div class="acct-closed-card">
+          <p class="acct-closed-msg">${escapeHTML(name)} has appealed the account closure.</p>
+          ${appeal.reason ? `<p class="appeal-reason">${escapeHTML(String(appeal.reason).slice(0, 500))}</p>` : ""}
+          <button type="button" class="acct-btn-green" data-act="unban">Unban</button>
+          <button type="button" class="acct-btn-red" data-act="keep">Let it ban</button>
+        </div>`;
+      document.body.appendChild(overlay);
+      overlay.querySelectorAll("button").forEach((btn) => btn.addEventListener("click", async () => {
+        btn.disabled = true;
+        try {
+          if (btn.dataset.act === "unban") {
+            await set(ref(database, `duotrack/groups/${GROUP_ID}/accountStatus/${id}`), { closed: false, at: Date.now() });
+            await set(ref(database, `duotrack/groups/${GROUP_ID}/appeals/${id}/status`), "approved");
+          } else {
+            await set(ref(database, `duotrack/groups/${GROUP_ID}/appeals/${id}/status`), "denied");
+          }
+        } catch (error) {
+          console.error("Could not save appeal decision", error);
+          btn.disabled = false;
+        }
+      }));
       document.body.classList.add("acct-closed");
     }
 
@@ -9960,14 +10020,20 @@
       if (adminEditing) return;
       if (!currentUserId || !state.users[currentUserId]) {
         setTempClosure(false);
+        setAppealReview(null);
         loginScreen.classList.remove("hidden");
         appScreen.classList.add("hidden");
         return;
       }
 
       const user = currentUser();
-      if (user && TEMP_CLOSED_ACCOUNTS.includes(user.id)) { setTempClosure(true); return; }
+      if (user && isAccountClosed(user.id)) { setAppealReview(null); setTempClosure(true); return; }
       setTempClosure(false);
+      if (user && user.id === APPEAL_REVIEWER_ID) {
+        const pending = Object.keys(appeals).find((id) => appeals[id] && appeals[id].status === "pending" && isAccountClosed(id));
+        if (pending) { setAppealReview(pending); return; }
+      }
+      setAppealReview(null);
       const partner = partnerUser();
       if (!user || !partner) return;
       loginScreen.classList.add("hidden");
@@ -14964,18 +15030,67 @@
       infoModal.classList.remove("hidden");
     });
 
+    function renderContactModal() {
+      const me = currentUser();
+      const closed = Boolean(me && isAccountClosed(me.id));
+      const appeal = (me && appeals[me.id]) || null;
+      let appealHtml = "";
+      if (closed) {
+        const note = appeal && appeal.status === "pending"
+          ? "Appeal sent. Waiting for Abhishek's decision."
+          : appeal && appeal.status === "denied" ? "Your last appeal was declined. You can send another." : "";
+        const waiting = Boolean(appeal && appeal.status === "pending");
+        appealHtml = `
+          <hr>
+          <p><strong>Appeal account closure</strong></p>
+          <textarea id="contactAppealReason" rows="3" maxlength="500" placeholder="Why should your account be reopened? (optional)" style="width:100%;box-sizing:border-box;" ${waiting ? "disabled" : ""}></textarea>
+          <p><button type="button" class="secondary-btn" id="contactAppealBtn" ${waiting ? "disabled" : ""}>${waiting ? "Appeal pending" : "Send appeal"}</button></p>
+          <p class="subtext" id="contactAppealNote">${note}</p>`;
+      }
+      modalBody.innerHTML = `
+        <p><strong>Contact:</strong> Abhishek</p>
+        <p><strong>Email:</strong> <a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a></p>
+        <p>
+          <a class="secondary-btn" href="mailto:${CONTACT_EMAIL}?subject=DuoTrack%20help" style="display:inline-block;text-decoration:none;">Send email</a>
+          <button type="button" class="secondary-btn" id="contactCopyMailBtn">Copy email</button>
+        </p>
+        <p>For login problems, timer sync issues, subject changes, chat/call problems, account registration, design requests, privacy questions, or Firebase setup help, contact Abhishek directly.</p>
+        ${appealHtml}
+        <p><strong>Calling note:</strong> voice/video calls use a public STUN server only (no TURN relay), so they should connect fine on normal home or office wifi, but may occasionally fail to connect on some mobile networks or strict office firewalls.</p>
+        <p><strong>Prototype note:</strong> this version is built for Abhishek and Aditya's study group. A public version should use proper account login, private database rules, and a TURN server for reliable calling.</p>
+      `;
+      const copyBtn = document.getElementById("contactCopyMailBtn");
+      copyBtn.addEventListener("click", async () => {
+        try { await navigator.clipboard.writeText(CONTACT_EMAIL); copyBtn.textContent = "Copied"; }
+        catch (error) { copyBtn.textContent = CONTACT_EMAIL; }
+      });
+      const appealBtn = document.getElementById("contactAppealBtn");
+      if (appealBtn && !appealBtn.disabled) {
+        appealBtn.addEventListener("click", async () => {
+          const reason = document.getElementById("contactAppealReason").value.trim().slice(0, 500);
+          const note = document.getElementById("contactAppealNote");
+          appealBtn.disabled = true;
+          try {
+            await set(ref(database, `duotrack/groups/${GROUP_ID}/appeals/${me.id}`), { status: "pending", reason, name: me.name, at: Date.now() });
+            appealBtn.textContent = "Appeal pending";
+            document.getElementById("contactAppealReason").disabled = true;
+            note.textContent = "Appeal sent. Waiting for Abhishek's decision.";
+          } catch (error) {
+            appealBtn.disabled = false;
+            note.textContent = "Could not send the appeal. Check your connection and try again.";
+          }
+        });
+      }
+    }
+
     contactLink.addEventListener("click", (event) => {
       event.preventDefault();
       activeModalType = "contact";
       modalTitle.textContent = "Contact Us";
-      modalBody.innerHTML = `
-        <p><strong>App owner:</strong> Abhishek</p>
-        <p>For login problems, timer sync issues, subject changes, chat/call problems, account registration, design requests, privacy questions, or Firebase setup help, contact Abhishek directly.</p>
-        <p><strong>Calling note:</strong> voice/video calls use a public STUN server only (no TURN relay), so they should connect fine on normal home or office wifi, but may occasionally fail to connect on some mobile networks or strict office firewalls.</p>
-        <p><strong>Prototype note:</strong> this version is built for Abhishek and Aditya's study group. A public version should use proper account login, private database rules, and a TURN server for reliable calling.</p>
-      `;
+      renderContactModal();
       infoModal.classList.remove("hidden");
     });
+
 
     const jeeSlides = [
       {
