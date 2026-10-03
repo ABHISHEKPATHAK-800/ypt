@@ -9931,7 +9931,9 @@
     onValue(accountStatusRef, (snapshot) => { accountStatus = snapshot.val() || {}; try { render(); } catch (error) { /* app still starting */ } });
     onValue(appealsRef, (snapshot) => { appeals = snapshot.val() || {}; try { render(); } catch (error) { /* app still starting */ } });
     function isAccountClosed(id) {
-      return TEMP_CLOSED_ACCOUNTS.includes(id) && !(accountStatus[id] && accountStatus[id].closed === false);
+      const saved = accountStatus[id];                 // set by the appeal popup or the admin portal; wins over the list
+      if (saved && typeof saved.closed === "boolean") return saved.closed;
+      return TEMP_CLOSED_ACCOUNTS.includes(id);
     }
     function ensureClosureStyle() {
       if (document.getElementById("acctClosedStyle")) return;
@@ -14029,6 +14031,14 @@
             <div class="ap-row"><button type="button" class="ap-primary" data-ap="editIcons">Open icon layout editor</button><button type="button" data-ap="resetLayout">Reset layout for everyone</button></div>
           </div>
           <div class="ap-card">
+            <h2>Account access</h2>
+            <p>Close or reopen an account. A closed account can only see the closure message and Contact Us (where it can appeal).</p>
+            ${Object.values(state.users).filter((u) => u.id !== APPEAL_REVIEWER_ID).map((u) => {
+              const closed = isAccountClosed(u.id);
+              return `<div class="ap-row"><strong>${escapeHTML(u.name)}</strong><span class="ap-note">${closed ? "closed" : "open"}</span><button type="button" class="ap-primary" data-ap="toggleBan" data-id="${escapeHTML(u.id)}" data-closed="${closed ? "1" : "0"}">${closed ? "Unban" : "Ban"}</button></div>`;
+            }).join("") || "<p>No users loaded yet.</p>"}
+          </div>
+          <div class="ap-card">
             <h2>Study time — today</h2>
             <p>Change today's study time for any user. Typing in a subject updates the total; you can also edit the total directly. Only today is changed.</p>
             ${Object.values(state.users).map(adminStudyCard).join("") || "<p>No users loaded yet.</p>"}
@@ -14151,6 +14161,17 @@
           await set(adminLayoutRef, null).catch(() => {});
           showToast("Reset", "Icon layout reset for everyone.");
         }
+      } else if (act === "toggleBan") {
+        const id = ap.dataset.id;
+        const makeClosed = ap.dataset.closed !== "1";
+        ap.disabled = true;
+        try {
+          await set(ref(database, `duotrack/groups/${GROUP_ID}/accountStatus/${id}`), { closed: makeClosed, at: Date.now() });
+          if (makeClosed) await set(ref(database, `duotrack/groups/${GROUP_ID}/appeals/${id}`), null);   // clear any old appeal
+          accountStatus = { ...accountStatus, [id]: { closed: makeClosed } };
+          showToast(makeClosed ? "Banned" : "Unbanned", `${(USERS_BY_ID[id] && USERS_BY_ID[id].name) || id}'s account is now ${makeClosed ? "closed" : "open"}.`);
+        } catch (error) { showToast("Error", "Could not change the account."); }
+        renderAdminPortal();
       } else if (act === "saveStudy") {
         ap.disabled = true;
         try { await saveAdminStudy(ap.closest(".ap-user")); } catch (error) { showToast("Error", "Could not save the study time."); }
