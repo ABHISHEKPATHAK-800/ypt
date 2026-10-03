@@ -7045,7 +7045,7 @@
     }
     let geminiApiKey = "";
     let geminiModel = GEMINI_DEFAULT_MODEL;
-    // 3 backup Gemini keys used ONLY for the read-aloud voice: when one key's limit runs out, the next one takes over.
+    // Backup Gemini keys (as many as you add in Settings): when one key's limit runs out, the next one takes over.
     let geminiTtsExtraKeys = ["", "", ""];
     let grokConversation = [];
     let grokPanelOpen = false;
@@ -7697,17 +7697,13 @@
         ${settingsSection({
           icon: "sparkle",
           title: "Backup Gemini keys (answers & voice)",
-          description: `Up to 3 extra Google/Gemini API keys. Order: main key above → backup 1 → backup 2 → backup 3. If a key fails or its limit runs out (429 / overload), the next one takes over silently, for <strong>PDF answers and the read-aloud voice</strong>. Shared between both accounts. Use keys from different Google projects — keys in the same project share one limit.`,
+          description: `Add as many extra Google/Gemini API keys as you like (press <strong>+ Add another key</strong>). Order: main key above → backup 1 → backup 2 → backup 3 → … If a key fails or its limit runs out (429 / overload), the next one takes over silently, for <strong>PDF answers and the read-aloud voice</strong>. Shared between both accounts. Use keys from different Google projects — keys in the same project share one limit.`,
           tone: "ai",
           body: `
             <form id="geminiTtsKeysForm" class="field settings-inline-form">
-              <label for="geminiTtsKey1">Backup key 1</label>
-              <input id="geminiTtsKey1" type="password" placeholder="AIza..." value="${escapeHTML(geminiTtsExtraKeys[0])}" autocomplete="off">
-              <label for="geminiTtsKey2">Backup key 2</label>
-              <input id="geminiTtsKey2" type="password" placeholder="AIza..." value="${escapeHTML(geminiTtsExtraKeys[1])}" autocomplete="off">
-              <label for="geminiTtsKey3">Backup key 3</label>
-              <input id="geminiTtsKey3" type="password" placeholder="AIza..." value="${escapeHTML(geminiTtsExtraKeys[2])}" autocomplete="off">
-              <p class="subtext">${geminiTtsExtraKeys.filter(Boolean).length} of 3 backup keys saved.</p>
+              <div id="geminiKeyRows" style="display:grid;gap:10px;">${geminiKeyRowsHtml()}</div>
+              <p class="subtext" id="geminiKeyCount">${geminiTtsExtraKeys.filter(Boolean).length} backup key${geminiTtsExtraKeys.filter(Boolean).length === 1 ? "" : "s"} saved.</p>
+              <button class="secondary-btn" type="button" id="geminiKeyAddBtn">+ Add another key</button>
               <button class="secondary-btn" type="submit">Save backup keys</button>
               <button class="secondary-btn" type="button" id="geminiKeyTestBtn">Test all keys (voice)</button>
               <button class="secondary-btn" type="button" id="geminiKeyResetBtn">Reset key limits</button>
@@ -9264,7 +9260,7 @@
 
     /* Sample test: sends one tiny voice request per key (one at a time) and reports what each key says. */
     async function testVoiceKeys(outEl) {
-      const slots = [["Main key", geminiApiKey], ["Backup key 1", geminiTtsExtraKeys[0]], ["Backup key 2", geminiTtsExtraKeys[1]], ["Backup key 3", geminiTtsExtraKeys[2]]];
+      const slots = [["Main key", geminiApiKey], ...geminiTtsExtraKeys.map((k, i) => [`Backup key ${i + 1}`, k])];
       const lines = slots.map(([name]) => `${name}: waiting…`);
       const paint = () => { outEl.textContent = lines.join("\n"); };
       const seen = {};
@@ -9300,12 +9296,42 @@
       }
     }
 
+    const MAX_BACKUP_GEMINI_KEYS = 30;
+    function geminiKeyRowHtml(value, n) {
+      return `<div class="gemini-key-row" style="display:grid;gap:4px;">
+        <label for="geminiTtsKey${n}">Backup key ${n}</label>
+        <div style="display:flex;gap:8px;">
+          <input id="geminiTtsKey${n}" class="gemini-extra-key" type="password" placeholder="AIza..." value="${escapeHTML(value || "")}" autocomplete="off" style="flex:1;min-width:0;">
+          <button type="button" class="secondary-btn gemini-key-del" aria-label="Remove backup key ${n}" title="Remove this key">✕</button>
+        </div>
+      </div>`;
+    }
+    function geminiKeyRowsHtml() {
+      const list = geminiTtsExtraKeys.slice();
+      while (list.length < 3) list.push("");                          /* always show at least 3 boxes */
+      return list.map((k, i) => geminiKeyRowHtml(k, i + 1)).join("");
+    }
+    function renumberGeminiKeyRows() {
+      const rows = Array.from(document.querySelectorAll("#geminiKeyRows .gemini-key-row"));
+      rows.forEach((row, i) => {
+        const n = i + 1;
+        const label = row.querySelector("label"), input = row.querySelector("input"), del = row.querySelector(".gemini-key-del");
+        label.textContent = `Backup key ${n}`; label.htmlFor = `geminiTtsKey${n}`; input.id = `geminiTtsKey${n}`;
+        del.setAttribute("aria-label", `Remove backup key ${n}`);
+      });
+      const filled = rows.filter((r) => r.querySelector("input").value.trim()).length;
+      const count = document.getElementById("geminiKeyCount");
+      if (count) count.textContent = `${filled} backup key${filled === 1 ? "" : "s"} entered — press Save backup keys to keep them.`;
+      const add = document.getElementById("geminiKeyAddBtn");
+      if (add) add.disabled = rows.length >= MAX_BACKUP_GEMINI_KEYS;
+    }
     async function loadGeminiTtsKeys() {
       try {
         const snapshot = await get(geminiTtsKeysRef);
         const val = snapshot.val();
         if (val && typeof val === "object") {
-          geminiTtsExtraKeys = [0, 1, 2].map((i) => (typeof val[i] === "string" ? val[i] : ""));
+          const arr = Array.isArray(val) ? val : Object.keys(val).sort((x, y) => Number(x) - Number(y)).map((k) => val[k]);
+          geminiTtsExtraKeys = arr.slice(0, MAX_BACKUP_GEMINI_KEYS).map((v) => (typeof v === "string" ? v : ""));
         }
       } catch (error) {
         console.error("Could not load backup Gemini voice keys", error);
@@ -9313,8 +9339,10 @@
     }
 
     async function saveGeminiTtsKeys(keys) {
-      geminiTtsExtraKeys = [0, 1, 2].map((i) => String(keys[i] || "").trim());
-      await set(geminiTtsKeysRef, geminiTtsExtraKeys);
+      const list = (keys || []).slice(0, MAX_BACKUP_GEMINI_KEYS).map((k) => String(k || "").trim());
+      while (list.length && !list[list.length - 1]) list.pop();
+      geminiTtsExtraKeys = list;
+      await set(geminiTtsKeysRef, list);
     }
 
     async function saveGeminiSettings(apiKey, model) {
@@ -9341,6 +9369,63 @@
       const map = ansPauses();
       map[ansId(key, model)] = Date.now() + ms;
       try { localStorage.setItem(GEMINI_ANS_PAUSE_KEY, JSON.stringify(map)); } catch (e) { /* ignore */ }
+    }
+
+    // Sends the request to the keys of one model. Order = rested keys first, rotated so each question starts on the next key.
+    // A failed key hands over to the next at once; a key that is only slow (>12 s) gets the next key started alongside it.
+    // First good answer wins and the other requests are cancelled. Resolves: Response | null (all failed) | "no-model" (404).
+    let ansRR = 0;
+    const ANS_HEDGE_MS = 12000;
+    function raceGeminiKeys(model, keys, body, readError, state) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+      const now = Date.now();
+      const pool = keys.filter((k) => !ansKeyPaused(k, model));
+      if (!pool.length) return Promise.resolve(null);
+      const rested = pool.filter((k) => (geminiAnsCool[ansId(k, model)] || 0) <= now);
+      const cooling = pool.filter((k) => !rested.includes(k));
+      const start = rested.length ? ansRR++ % rested.length : 0;
+      const order = [...rested.slice(start), ...rested.slice(0, start), ...cooling];
+      return new Promise((resolve, reject) => {
+        const ctrls = [];
+        let next = 0, pending = 0, done = false, timer = 0;
+        const stopAll = () => { clearTimeout(timer); ctrls.forEach((c) => { try { c.abort(); } catch (e) { /* ignore */ } }); };
+        const win = (value) => { if (done) return; done = true; stopAll(); resolve(value); };
+        const crash = (err) => { if (done) return; done = true; stopAll(); reject(err); };
+        const launch = () => {
+          clearTimeout(timer);
+          if (done) return;
+          if (next >= order.length) { if (!pending) win(null); return; }
+          const key = order[next++];
+          pending++;
+          const ctrl = new AbortController();
+          ctrls.push(ctrl);
+          const killer = setTimeout(() => ctrl.abort(), 90000);
+          (async () => {
+            try {
+              const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": key }, body, signal: ctrl.signal });
+              if (done) return;
+              if (res.ok) { win(res); return; }
+              const detail = await readError(res);
+              state.failure = `${res.status}: ${detail}`;
+              if (res.status === 429) { state.sawQuota = true; pauseAnsKey(key, model, quotaPauseMs(detail)); }
+              else if ([500, 502, 503, 504].includes(res.status)) geminiAnsCool[ansId(key, model)] = Date.now() + 20000;
+              else if ([401, 403].includes(res.status) || (res.status === 400 && /api key|API_KEY/i.test(detail))) pauseAnsKey(key, model, 5 * 60e3);
+              else if (res.status === 404) { win("no-model"); return; }
+              else { crash(new Error(`Gemini error (${res.status}): ${String(detail).slice(0, 220)}`)); return; }
+            } catch (error) {
+              if (done) return;
+              state.failure = error && error.name === "AbortError" ? "timed out" : "network";
+              geminiAnsCool[ansId(key, model)] = Date.now() + 20000;
+            } finally {
+              clearTimeout(killer);
+              pending--;
+            }
+            if (!done && pending === 0) launch();                     // this key failed and nothing else is running -> next key right now
+          })();
+          if (next < order.length) timer = setTimeout(launch, ANS_HEDGE_MS);   // slow key -> race the next one too
+        };
+        launch();
+      });
     }
 
     // Gemini generateContent REST call (works straight from the browser, no SDK/npm needed).
@@ -9426,41 +9511,21 @@
           return "";
         }
       };
+      // All keys share the load: every question starts on a DIFFERENT key (round-robin), a failing/limited key is
+      // skipped instantly (no waiting on keys 1-3), and if a key is merely slow the next key is raced in parallel.
+      const state = { failure: "", sawQuota: false };
       let response = null;
-      let failure = "";
-      let sawQuota = false;
-      outer:
       for (const model of modelsToTry) {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
-        for (let round = 0; round < 2; round++) {
+        for (let round = 0; round < 2 && !response; round++) {
           if (round) await new Promise((resolve) => setTimeout(resolve, 1500));
-          let pool = keys.filter((k) => !ansKeyPaused(k, model));
-          if (!pool.length) break;
-          const rested = pool.filter((k) => (geminiAnsCool[ansId(k, model)] || 0) <= Date.now());
-          if (rested.length) pool = rested;
-          for (const key of pool) {
-            try {
-              response = await fetchWithTimeout(url, 90000, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "x-goog-api-key": key },
-                body: requestBody
-              });
-            } catch (error) {
-              failure = error.name === "AbortError" ? "timed out" : "network";
-              geminiAnsCool[ansId(key, model)] = Date.now() + 20000;
-              continue;
-            }
-            if (response.ok) break outer;
-            const detail = await readError(response);
-            failure = `${response.status}: ${detail}`;
-            if (response.status === 429) { sawQuota = true; pauseAnsKey(key, model, quotaPauseMs(detail)); continue; }
-            if ([500, 502, 503, 504].includes(response.status)) { geminiAnsCool[ansId(key, model)] = Date.now() + 20000; continue; }
-            if ([401, 403].includes(response.status) || (response.status === 400 && /api key|API_KEY/i.test(detail))) { pauseAnsKey(key, model, 5 * 60e3); continue; }
-            if (response.status === 404) break;                       // this model isn't available -> next model
-            throw new Error(`Gemini error (${response.status}): ${String(detail).slice(0, 220)}`);
-          }
+          const got = await raceGeminiKeys(model, keys, requestBody, readError, state);
+          if (got === "no-model") break;                          // this model isn't available -> next model
+          if (got) { response = got; break; }
+          if (!keys.some((k) => !ansKeyPaused(k, model))) break;  // every key is resting for this model
         }
+        if (response) break;
       }
+      const failure = state.failure, sawQuota = state.sawQuota;
       if (!response || !response.ok) {
         throw new Error(sawQuota && keys.every((k) => modelsToTry.every((m) => ansKeyPaused(k, m)))
           ? "All Gemini keys have hit their limit for now. Try again a bit later."
@@ -10653,7 +10718,7 @@
             msgs: chat.msgs.map((m) => {
               const o = { role: m.role, content: String(m.content || "").slice(0, 30000) };
               if (m.cimgs && m.cimgs.length) o.imgs = m.cimgs.slice(0, 6);
-              if (m.audio && m.audio.urls && m.audio.urls.length) o.audio = { sig: String(m.audio.sig || ""), urls: m.audio.urls };
+              if (m.audio && m.audio.urls && m.audio.urls.length) o.audio = { sig: String(m.audio.sig || ""), total: Number(m.audio.total) || m.audio.urls.length, urls: m.audio.urls };
               return o;
             })
           });
@@ -10672,7 +10737,7 @@
           role: m.role === "user" ? "user" : "assistant",
           content: String(m.content || ""),
           imgs: pdfAiArr(m.imgs).filter((u) => typeof u === "string"),
-          audio: m.audio && pdfAiArr(m.audio.urls).length ? { sig: String(m.audio.sig || ""), urls: pdfAiArr(m.audio.urls) } : null
+          audio: m.audio && pdfAiArr(m.audio.urls).length ? { sig: String(m.audio.sig || ""), total: Number(m.audio.total) || pdfAiArr(m.audio.urls).length, urls: pdfAiArr(m.audio.urls) } : null
         }));
         return { id, pdfId: c.pdfId || "", pdfName: c.pdfName || "PDF", title: c.title || "Chat", updatedAt: Number(c.updatedAt) || 0, msgs };
       }).filter((c) => c.msgs.length).sort((a, b) => b.updatedAt - a.updatedAt);
@@ -10762,7 +10827,7 @@
         stopAudio(); cur = c; backBtn.hidden = false; title.textContent = c.title;
         body.innerHTML = `<div class="pac-msgs">${c.msgs.map((m, k) => (m.role === "user"
           ? `<div class="pac-msg mine">${m.imgs.map((u) => `<img src="${escapeHTML(u)}" alt="Photo">`).join("")}<span>${linkifyText(escapeHTML(m.content))}</span></div>`
-          : `<div class="pac-msg bot">${m.audio ? `<button type="button" class="pac-listen" data-k="${k}">▶ Listen</button>` : ""}<div class="ai-rich">${renderAiRichText(escapeHTML(m.content))}</div></div>`)).join("")}</div>`
+          : `<div class="pac-msg bot">${m.audio && m.audio.urls.length >= (m.audio.total || m.audio.urls.length) ? `<button type="button" class="pac-listen" data-k="${k}">▶ Listen</button>` : ""}<div class="ai-rich">${renderAiRichText(escapeHTML(m.content))}</div></div>`)).join("")}</div>`
           + (opts.onOpen ? `<div class="pac-foot"><button type="button" class="pac-use" data-i="${i}">Continue in this PDF</button></div>` : "");
         renderMathIn(body);
       }
@@ -12191,7 +12256,7 @@
         S.tts.state = "idle"; S.tts.idx = -1;
         updateSpeakButtons();
       }
-      /* Voice keys: main key + up to 3 backups (Settings). Each key has its own limit PER voice model. */
+      /* Voice keys: main key + all backup keys (Settings). Each key has its own limit PER voice model. */
       const GEMINI_TTS_MODELS = ["gemini-3.8-flash-tts", "gemini-3.8-flash-lite-tts"];   /* Flash first; Flash-Lite = extra quota pool */
       const TTS_KEYPAUSE_KEY = "duotrack.pdfViewer.ttsKeyPause3";
       const ttsKeyCool = {};                                            /* overloaded key+model rests ~20s (memory only) */
@@ -12252,7 +12317,7 @@
         let announced = false;
         while (!data && Date.now() < deadline) {
           stopped();
-          /* strict order: main key -> backup 1 -> backup 2 -> backup 3 (then the Flash-Lite model, if switched on) */
+          /* strict order: main key -> backup 1 -> backup 2 -> backup 3 -> ... (then the Flash-Lite model, if switched on) */
           let cands = [];
           const resting = [];
           models.forEach((model) => allKeys.forEach((key) => {
@@ -12388,8 +12453,9 @@
                   return;
                 }
                 entry.cloud[i] = cloudUrl;
-                const urls = entry.cloud.slice(0, total);
-                if (urls.length === total && urls.every(Boolean)) { msg.audio = { sig, urls }; saveAiChat(); }
+                let k = 0;
+                while (k < total && entry.cloud[k]) k++;                       /* finished parts, in order */
+                if (k > 0) { msg.audio = { sig, total, urls: entry.cloud.slice(0, k) }; saveAiChat(); }   /* an uncompleted voice is kept too and resumes from where it stopped */
               });
             };
             S.ttsCache.set(idx, entry);
@@ -15372,7 +15438,7 @@
 
       if (event.target.id === "geminiTtsKeysForm") {
         event.preventDefault();
-        const keys = [1, 2, 3].map((n) => document.getElementById(`geminiTtsKey${n}`).value.trim());
+        const keys = Array.from(document.querySelectorAll("#geminiKeyRows .gemini-extra-key")).map((el) => el.value.trim());
         try {
           await saveGeminiTtsKeys(keys);
           showToast("Saved", `${keys.filter(Boolean).length} backup key(s) saved — used for answers and voice, shared with both accounts.`);
@@ -16021,6 +16087,25 @@
     loadGeminiSettings();
     loadGeminiTtsKeys();
     document.addEventListener("click", (event) => {
+      if (event.target.closest("#geminiKeyAddBtn")) {
+        const rowsEl = document.getElementById("geminiKeyRows");
+        if (!rowsEl || rowsEl.children.length >= MAX_BACKUP_GEMINI_KEYS) return;
+        rowsEl.insertAdjacentHTML("beforeend", geminiKeyRowHtml("", rowsEl.children.length + 1));
+        renumberGeminiKeyRows();
+        const last = rowsEl.lastElementChild && rowsEl.lastElementChild.querySelector("input");
+        if (last) last.focus();
+        return;
+      }
+      const delBtn = event.target.closest(".gemini-key-del");
+      if (delBtn) {
+        const rowsEl = document.getElementById("geminiKeyRows");
+        const row = delBtn.closest(".gemini-key-row");
+        if (!rowsEl || !row) return;
+        if (rowsEl.children.length <= 3) row.querySelector("input").value = "";      /* keep 3 boxes; just empty it */
+        else row.remove();
+        renumberGeminiKeyRows();
+        return;
+      }
       const testBtn = event.target.closest("#geminiKeyTestBtn");
       if (testBtn) {
         const out = document.getElementById("geminiKeyTestOut");
