@@ -9935,6 +9935,14 @@
       if (saved && typeof saved.closed === "boolean") return saved.closed;
       return TEMP_CLOSED_ACCOUNTS.includes(id);
     }
+    const ACCT_SEAL_SVG = `<div class="acct-seal" aria-hidden="true"><svg viewBox="0 0 116 116">
+      <circle class="s-ticks" cx="58" cy="58" r="53"/>
+      <circle class="s-arc" cx="58" cy="58" r="53"/>
+      <circle class="s-disc" cx="58" cy="58" r="41"/>
+      <path class="s-shackle" d="M49 56 v-8 a9 9 0 0 1 18 0 v8"/>
+      <rect class="s-lock" x="43" y="55" width="30" height="23" rx="5.5"/>
+      <circle class="s-hole" cx="58" cy="64.5" r="3.2"/><rect class="s-hole" x="56.5" y="65" width="3" height="7" rx="1.2"/>
+    </svg></div>`;
     function ensureClosureStyle() {
       if (document.getElementById("acctClosedStyle")) return;
       const style = document.createElement("style");
@@ -9942,13 +9950,60 @@
       style.textContent = `
         body.acct-closed > *:not(#acctClosedOverlay):not(#appealReviewOverlay):not(#infoModal) { display: none !important; }
         body.acct-closed #infoModal { z-index: 100000; }
-        #acctClosedOverlay, #appealReviewOverlay { position: fixed; inset: 0; z-index: 99999; background: #f4f4f6; display: grid; place-items: center; padding: 20px; }
-        .acct-closed-card { width: min(520px, 100%); background: #fff; border-radius: 12px; padding: 28px 24px; box-shadow: 0 12px 40px rgba(0,0,0,.18); text-align: center; color: #1b1b1f; }
-        .acct-closed-msg { margin: 0 0 22px; color: #d90429; font-weight: 700; font-style: italic; text-decoration: underline; font-size: 1.05rem; line-height: 1.6; }
-        .acct-closed-card button { border: 0; border-radius: 8px; padding: 10px 22px; font-weight: 700; font-size: 1rem; cursor: pointer; margin: 4px; }
-        .acct-btn-red { background: #d90429; color: #fff; }
-        .acct-btn-green { background: #1a7f37; color: #fff; }
-        .appeal-reason { margin: 0 0 20px; padding: 10px 12px; background: #f4f4f6; border-radius: 8px; text-align: left; white-space: pre-wrap; word-break: break-word; }`;
+        #acctClosedOverlay, #appealReviewOverlay {
+          --acc: #ff4d5e;
+          position: fixed; inset: 0; z-index: 99999; display: grid; place-items: center; padding: 20px; overflow: auto;
+          font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+          background:
+            radial-gradient(900px 520px at 50% -12%, rgba(255, 77, 94, .22), transparent 62%),
+            radial-gradient(700px 480px at 100% 105%, rgba(70, 90, 190, .22), transparent 60%),
+            #0b0c11;
+        }
+        #appealReviewOverlay { --acc: #ffb020; background:
+            radial-gradient(900px 520px at 50% -12%, rgba(255, 176, 32, .18), transparent 62%),
+            radial-gradient(700px 480px at 100% 105%, rgba(70, 90, 190, .22), transparent 60%), #0b0c11; }
+        #acctClosedOverlay::before, #appealReviewOverlay::before {
+          content: ""; position: absolute; inset: 0; pointer-events: none;
+          background-image: linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+          background-size: 44px 44px;
+          -webkit-mask-image: radial-gradient(circle at 50% 38%, #000 15%, transparent 72%);
+          mask-image: radial-gradient(circle at 50% 38%, #000 15%, transparent 72%);
+        }
+        .acct-closed-card {
+          position: relative; box-sizing: border-box; width: min(470px, 100%); padding: 34px 26px 26px; border-radius: 22px; text-align: center; color: #f2f2f6;
+          background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+          border: 1px solid rgba(255,255,255,.12);
+          box-shadow: 0 30px 80px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.09);
+          backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+          animation: acctRise .55s cubic-bezier(.2,.8,.2,1) both;
+        }
+        .acct-seal { width: 116px; height: 116px; margin: 0 auto 22px; filter: drop-shadow(0 0 22px color-mix(in srgb, var(--acc) 45%, transparent)); }
+        .acct-seal svg { width: 100%; height: 100%; display: block; overflow: visible; }
+        .acct-seal .s-ticks { fill: none; stroke: rgba(255,255,255,.26); stroke-width: 3; stroke-dasharray: 1.5 7.2; transform-origin: 58px 58px; animation: acctSpin 60s linear infinite; }
+        .acct-seal .s-arc { fill: none; stroke: var(--acc); stroke-width: 3.5; stroke-linecap: round; stroke-dasharray: 96 400; transform: rotate(-90deg); transform-origin: 58px 58px; }
+        .acct-seal .s-disc { fill: #14151c; stroke: rgba(255,255,255,.1); }
+        .acct-seal .s-lock { fill: var(--acc); }
+        .acct-seal .s-shackle { fill: none; stroke: var(--acc); stroke-width: 4.5; stroke-linecap: round; }
+        .acct-seal .s-hole { fill: #14151c; }
+        .acct-closed-msg {
+          margin: 0 0 24px; color: #ff5c6c; font-family: Georgia, "Times New Roman", serif; font-weight: 700; font-style: italic;
+          text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 5px;
+          font-size: clamp(1.05rem, 3.7vw, 1.22rem); line-height: 1.7;
+        }
+        .acct-review-title { margin: 0 0 16px; font-size: clamp(1.1rem, 4vw, 1.3rem); font-weight: 700; line-height: 1.4; color: #fff; }
+        .appeal-reason { margin: 0 0 22px; padding: 12px 14px; border-left: 3px solid var(--acc); border-radius: 4px 10px 10px 4px; background: rgba(255,255,255,.06); text-align: left; color: #e4e4ea; white-space: pre-wrap; word-break: break-word; font-size: .95rem; line-height: 1.55; }
+        .acct-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+        .acct-closed-card button { border: 0; border-radius: 12px; padding: 12px 26px; font: inherit; font-weight: 700; font-size: 1rem; cursor: pointer; color: #fff; transition: transform .15s ease, box-shadow .15s ease, filter .15s ease; }
+        .acct-closed-card button:hover { transform: translateY(-1px); filter: brightness(1.08); }
+        .acct-closed-card button:active { transform: translateY(0); }
+        .acct-closed-card button:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+        .acct-closed-card button:disabled { opacity: .6; cursor: default; transform: none; }
+        .acct-btn-red { background: linear-gradient(135deg, #ff4d5e, #d90429); box-shadow: 0 8px 24px rgba(217, 4, 41, .38); }
+        .acct-btn-green { background: linear-gradient(135deg, #2fb457, #1a7f37); box-shadow: 0 8px 24px rgba(26, 127, 55, .38); }
+        .acct-hint { margin: 18px 0 0; font-size: .85rem; color: rgba(255,255,255,.55); line-height: 1.5; }
+        @keyframes acctRise { from { opacity: 0; transform: translateY(14px) scale(.98); } to { opacity: 1; transform: none; } }
+        @keyframes acctSpin { to { transform: rotate(360deg); } }
+        @media (prefers-reduced-motion: reduce) { .acct-closed-card, .acct-seal .s-ticks { animation: none; } }`;
       document.head.appendChild(style);
     }
     function setTempClosure(on) {
@@ -9966,8 +10021,10 @@
         overlay.setAttribute("aria-modal", "true");
         overlay.innerHTML = `
           <div class="acct-closed-card">
+            ${ACCT_SEAL_SVG}
             <p class="acct-closed-msg">Due to not using your account for many days, your account is temporarily closed... It is an app feature pre-built before launch. To continue the app services, contact admin/moderator ..... Sorry for the inconvenience.</p>
-            <button type="button" class="acct-btn-red" id="acctClosedContactBtn">Contact Us</button>
+            <div class="acct-actions"><button type="button" class="acct-btn-red" id="acctClosedContactBtn">Contact Us</button></div>
+            <p class="acct-hint">Think this is a mistake? Open Contact Us and send an appeal.</p>
           </div>`;
         document.body.appendChild(overlay);
         document.getElementById("acctClosedContactBtn").addEventListener("click", () => contactLink.click());
@@ -9995,10 +10052,13 @@
       overlay.setAttribute("aria-modal", "true");
       overlay.innerHTML = `
         <div class="acct-closed-card">
-          <p class="acct-closed-msg">${escapeHTML(name)} has appealed the account closure.</p>
+          ${ACCT_SEAL_SVG}
+          <p class="acct-review-title">${escapeHTML(name)} has appealed the account closure.</p>
           ${appeal.reason ? `<p class="appeal-reason">${escapeHTML(String(appeal.reason).slice(0, 500))}</p>` : ""}
-          <button type="button" class="acct-btn-green" data-act="unban">Unban</button>
-          <button type="button" class="acct-btn-red" data-act="keep">Let it ban</button>
+          <div class="acct-actions">
+            <button type="button" class="acct-btn-green" data-act="unban">Unban</button>
+            <button type="button" class="acct-btn-red" data-act="keep">Let it ban</button>
+          </div>
         </div>`;
       document.body.appendChild(overlay);
       overlay.querySelectorAll("button").forEach((btn) => btn.addEventListener("click", async () => {
