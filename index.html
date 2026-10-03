@@ -9349,7 +9349,7 @@
       if (!geminiAllKeys().length) {
         throw new Error("No Gemini API key set yet. Add one in Settings → PDF AI (Gemini).");
       }
-      const systemText = [
+      let systemText = [
         "You are 'AI', a study buddy inside a PDF viewer used by JEE (Indian engineering entrance exam) students. The student crops a question or notes from their study PDF and asks you about it.",
         "",
         "LANGUAGE: Reply ONLY in Hinglish — natural Hindi-English mixed speech written in Roman/Latin script (no Devanagari). Keep vocabulary simple, NCERT-level clarity, short sentences, explain a hard term the first time you use it. Tone: a cool, funny, confident girl best-friend / study buddy (you speak as a girl: 'samjhati hu', 'bataati hu') — playful and teasing in a friendly way, never rude, no abuse.",
@@ -9380,12 +9380,28 @@
         "",
         "MEMORY OF THIS CHAT: You can see the earlier messages of this conversation (and sometimes the student's earlier crop again). Use them: build on what you already explained, do not repeat full explanations, refer back naturally ('jaise pichle question mein dekha tha…'), and keep the same notation. Words like 'iska', 'ye', 'wahi wala', 'step 2' refer to the latest question in the history."
       ].join("\n");
+      if (opts.pdfContext) {
+        systemText += "\n\n" + [
+          "OPEN PDF ACCESS: You can read and see the PDF the student has open. It is given to you as the extracted text of its pages (each starts with [Page n]) and sometimes as an image of a page.",
+          "- Use it to answer anything about the PDF: find a question by its number or wording and solve it, explain a topic from the pages, summarise a chapter, compare things, find where something is. Mention page numbers in plain words like 'Page 12'.",
+          "- Extracted text can lose or scramble formulas, figures, tables, diagrams and the order of options. When an image of the page is attached, trust the image over the text.",
+          "- If the PDF has no selectable text, work from the page images. If the thing asked about is not in the pages you were given, say so and ask the student to type the page number or crop the question. Never invent content that is not in the PDF."
+        ].join("\n");
+      }
 
       const contents = (history || []).slice(-40)
         .map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: String(m.content || "") }] }))
         .filter((c) => c.parts[0].text);
       const imageList = (Array.isArray(imageDataUrl) ? imageDataUrl : [imageDataUrl]).filter(Boolean);
       const userParts = [];
+      const pdfCtx = opts.pdfContext;
+      if (pdfCtx) {
+        userParts.push({ text: `OPEN PDF: "${pdfCtx.name}" (${pdfCtx.pages} pages). The student is on page ${pdfCtx.cur} right now.${pdfCtx.scanned ? " This PDF has little or no selectable text (it looks scanned), so rely on the page images." : ""}${pdfCtx.partial ? " Only the most relevant pages are included below, not the whole PDF." : ""}\n\n${pdfCtx.text || "(no selectable text)"}` });
+        pdfCtx.images.forEach(({ n, url }) => {
+          const comma = url.indexOf(",");
+          if (comma > 0) { userParts.push({ text: `(Image of PDF page ${n}:)` }); userParts.push({ inlineData: { mimeType: "image/jpeg", data: url.slice(comma + 1) } }); }
+        });
+      }
       imageList.forEach((dataUrl) => {
         const comma = dataUrl.indexOf(",");
         const mime = (/^data:([^;,]+)/.exec(dataUrl) || [])[1] || "image/jpeg";
@@ -11187,6 +11203,7 @@
             <div class="pv-ai-head">
               <span class="pv-ai-title">${pvIcon("spark")}Study AI <small>ASSISTANT</small></span>
               <span class="pv-ai-head-btns">
+                <button type="button" class="pv-btn pv-small" data-act="aiPdfAccess" title="AI can read and see this PDF" aria-label="Toggle: AI can read and see this PDF">${pvIcon("doc")}</button>
                 <button type="button" class="pv-btn pv-small" data-act="aiNew" title="New chat (saves this one)" aria-label="Start a new AI chat">${pvIcon("plus")}</button>
                 <button type="button" class="pv-btn pv-small" data-act="aiHist" title="Past chats" aria-label="Show past chats">${pvIcon("clock")}</button>
                 <button type="button" class="pv-btn pv-small" data-act="aiClear" title="Clear chat history for this PDF" aria-label="Clear AI chat history">${pvIcon("trash")}</button>
@@ -12394,7 +12411,7 @@
       function renderAi() {
         if (S.aiHistView) { renderHistView(); return; }
         if (!S.aiChat.length && !S.aiBusy) {
-          aiMsgs.innerHTML = `<div class="pv-ai-empty">${pvIcon("spark")}<br>Use the <b>crop</b> tool, drag a box around a question and press <b>Enter</b>.<br>Then type your doubt and the AI will answer.</div>`;
+          aiMsgs.innerHTML = `<div class="pv-ai-empty">${pvIcon("spark")}<br>Use the <b>crop</b> tool, drag a box around a question and press <b>Enter</b>.<br>Then type your doubt and the AI will answer.<br>The AI can also read and see this PDF — try <b>“question 5 solve karo”</b> or <b>“page 12 samjhao”</b>.</div>`;
           return;
         }
         aiMsgs.innerHTML = S.aiChat.map((m, i) => m.role === "user"
@@ -12408,6 +12425,7 @@
         S.aiHistView = false;
         S.aiOpen = true;
         aiEl.hidden = false;
+        if (S.aiPdfAccess && S.pdf && S.n) loadAllPdfText();        /* read the PDF text in the background so the first answer is fast */
         renderAi();
         renderAiAttach();
       }
@@ -12427,6 +12445,102 @@
         renderAiAttach();
         aiInput.focus();
       }
+      /* ----- the AI can read + see the opened PDF ----- */
+      const AI_PDFACCESS_KEY = "duotrack.pdfViewer.aiPdfAccess";
+      S.aiPdfAccess = true;
+      try { S.aiPdfAccess = localStorage.getItem(AI_PDFACCESS_KEY) !== "0"; } catch (e) { /* private mode */ }
+      S.pdfTextAll = null;
+      function syncPdfAccessBtn() {
+        const b = aiEl.querySelector('[data-act="aiPdfAccess"]');
+        if (!b) return;
+        b.classList.toggle("is-on", S.aiPdfAccess);
+        b.setAttribute("aria-pressed", S.aiPdfAccess ? "true" : "false");
+        b.title = S.aiPdfAccess ? "AI can read and see this PDF (click to turn off)" : "AI can't see this PDF (click to turn on)";
+      }
+      function loadAllPdfText() {
+        if (S.pdfTextAll) return S.pdfTextAll;
+        S.pdfTextAll = (async () => {
+          const out = [];
+          for (let n = 1; n <= S.n; n++) {
+            if (S.destroyed) break;
+            try { out[n] = (await pageStrings(n)).join(" ").replace(/\s+/g, " ").trim(); } catch (e) { out[n] = ""; }
+          }
+          return out;
+        })();
+        return S.pdfTextAll;
+      }
+      function mentionedPdfPages(q) {
+        const found = [];
+        const add = (n) => { n = Number(n); if (n >= 1 && n <= S.n && !found.includes(n)) found.push(n); };
+        String(q || "").replace(/\bpages?\s*(?:no\.?|number|#)?\s*(\d{1,4})(?:\s*(?:-|–|to)\s*(\d{1,4}))?/gi, (m, a, b) => {
+          add(a);
+          if (b && Number(b) > Number(a) && Number(b) - Number(a) < 3) for (let k = Number(a) + 1; k <= Number(b); k++) add(k);
+          return m;
+        });
+        String(q || "").replace(/\b(\d{1,4})\s*(?:st|nd|rd|th)?\s*page\b/gi, (m, a) => { add(a); return m; });
+        return found.slice(0, 3);
+      }
+      function pickPdfPages(pages, q, mentioned) {
+        const BUDGET = 140000;
+        const have = [];
+        for (let n = 1; n <= S.n; n++) if (pages[n]) have.push(n);
+        const total = have.reduce((a, n) => a + pages[n].length, 0);
+        if (total <= BUDGET) return { chosen: have, partial: false, total };
+        const chosen = new Set();
+        let used = 0;
+        const take = (n) => { if (pages[n] && !chosen.has(n) && used + pages[n].length <= BUDGET) { chosen.add(n); used += pages[n].length; } };
+        [S.cur, ...mentioned, S.cur + 1, S.cur - 1, S.cur + 2].forEach(take);
+        const stop = new Set(["the", "and", "for", "with", "this", "that", "from", "what", "how", "why", "kya", "hai", "karo", "batao", "samjhao", "isko", "iska", "ise", "page", "question", "solve", "explain"]);
+        const words = [...new Set(String(q || "").toLowerCase().match(/[a-z0-9\u0900-\u097f]{3,}/g) || [])].filter((w) => !stop.has(w));
+        if (words.length) {
+          const scored = have.map((n) => {
+            const low = pages[n].toLowerCase();
+            let sc = 0;
+            words.forEach((w) => { let i = low.indexOf(w), c = 0; while (i !== -1 && c < 5) { c++; i = low.indexOf(w, i + w.length); } sc += c; });
+            return { n, sc };
+          }).filter((x) => x.sc > 0).sort((a, b) => b.sc - a.sc);
+          scored.forEach((x) => take(x.n));
+        }
+        for (let n = 1; n <= S.n && used < BUDGET * 0.9; n++) take(n);       /* fill the rest in page order */
+        return { chosen: [...chosen].sort((a, b) => a - b), partial: true, total };
+      }
+      async function renderPageImage(n, maxSide = 1300) {
+        const page = await S.pdf.getPage(n);
+        const rot = (((page.rotate || 0) + S.rot) % 360 + 360) % 360;
+        const base = page.getViewport({ scale: 1, rotation: rot });
+        const k = Math.max(0.5, Math.min(3, maxSide / Math.max(base.width, base.height)));
+        const viewport = page.getViewport({ scale: k, rotation: rot });
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.ceil(viewport.width));
+        canvas.height = Math.max(1, Math.ceil(viewport.height));
+        const ctx = canvas.getContext("2d", { alpha: false });
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        await page.render({ canvasContext: ctx, viewport }).promise;
+        const url = canvas.toDataURL("image/jpeg", 0.82);
+        canvas.width = canvas.height = 0;
+        return url;
+      }
+      async function buildPdfContext(question, hasCrop) {
+        if (!S.aiPdfAccess || !S.pdf || !S.n) return null;
+        let pages = [];
+        try { pages = await loadAllPdfText(); } catch (e) { pages = []; }
+        const mentioned = mentionedPdfPages(question);
+        const { chosen, partial, total } = pickPdfPages(pages, question, mentioned);
+        const text = chosen.map((n) => `[Page ${n}]\n${pages[n]}`).join("\n\n");
+        const scanned = total < Math.max(200, S.n * 30);
+        const wantsPage = /page|figure|fig\b|diagram|graph|chart|table|image|picture|photo|dekh|dikh|look|see/i.test(question);
+        const imgPages = [];
+        if (mentioned.length) imgPages.push(...mentioned);
+        else if (!hasCrop || scanned || wantsPage) imgPages.push(S.cur);
+        const images = [];
+        for (const n of imgPages.slice(0, 3)) {
+          try { const url = await renderPageImage(n); if (url) images.push({ n, url }); } catch (e) { console.warn("Page image failed", n, e); }
+        }
+        return { name: record.name, pages: S.n, cur: S.cur, text, partial, scanned, images };
+      }
+      syncPdfAccessBtn();
+
       async function sendAi(text) {
         if (S.aiBusy) return;
         text = String(text || "").trim();
@@ -12453,7 +12567,9 @@
             const prev = [...S.aiChat].reverse().find((m) => m.role === "user" && m.imgs && m.imgs.length);
             if (prev) { sendImgs = prev.imgs.slice(-3); reuse = true; }
           }
-          const reply = await callGeminiPdfApi(text, history, sendImgs, { reuse });
+          let pdfContext = null;
+          try { pdfContext = await buildPdfContext(text, images.length > 0); } catch (e) { console.warn("Could not read the PDF for the AI", e); }
+          const reply = await callGeminiPdfApi(text, history, sendImgs, { reuse, pdfContext });
           S.aiChat.push({ role: "assistant", content: reply });
           saveAiChat();
           refreshTtsPrefs();
@@ -12871,6 +12987,14 @@
           case "aiClear": clearAiChat(); return;
           case "aiNew": newChat(); return;
           case "aiHist": S.aiHistView = !S.aiHistView; renderAi(); return;
+          case "aiPdfAccess": {
+            S.aiPdfAccess = !S.aiPdfAccess;
+            try { localStorage.setItem(AI_PDFACCESS_KEY, S.aiPdfAccess ? "1" : "0"); } catch (e) { /* private mode */ }
+            syncPdfAccessBtn();
+            if (S.aiPdfAccess && S.pdf && S.n) loadAllPdfText();
+            ttsNote(S.aiPdfAccess ? "AI can now read and see this PDF." : "PDF access off — AI only sees what you crop or type.", true);
+            return;
+          }
           case "aiCloud": openPdfAiChatsModal({ onOpen: loadCloudChat }); return;
           case "aiPick": aiFile.click(); return;
           case "aiHistOpen": openArchived(Number(btnEl && btnEl.dataset.idx)); return;
