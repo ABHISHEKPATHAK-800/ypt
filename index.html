@@ -9388,8 +9388,8 @@
       return new Promise((resolve, reject) => {
         const ctrls = [];
         let next = 0, pending = 0, done = false, timer = 0;
-        const stopAll = (keep) => { clearTimeout(timer); ctrls.forEach((c) => { if (c === keep) return; try { c.abort(); } catch (e) { /* ignore */ } }); };
-        const win = (value, keep) => { if (done) return; done = true; stopAll(keep); resolve(value); };
+        const stopAll = () => { clearTimeout(timer); ctrls.forEach((c) => { try { c.abort(); } catch (e) { /* ignore */ } }); };
+        const win = (value) => { if (done) return; done = true; stopAll(); resolve(value); };
         const crash = (err) => { if (done) return; done = true; stopAll(); reject(err); };
         const launch = () => {
           clearTimeout(timer);
@@ -9404,7 +9404,7 @@
             try {
               const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": key }, body, signal: ctrl.signal });
               if (done) return;
-              if (res.ok) { win(res, ctrl); return; }
+              if (res.ok) { win(res); return; }
               const detail = await readError(res);
               state.failure = `${res.status}: ${detail}`;
               if (res.status === 429) { state.sawQuota = true; pauseAnsKey(key, model, quotaPauseMs(detail)); }
