@@ -6775,6 +6775,27 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script type="module">
+    /* ================================ #NOTES FOR ANY AI / DEVELOPER EDITING THIS FILE ================================
+       #NOTE-1  PROTECTED PARTS - ask Abhishek for permission BEFORE changing them. Say what you want to change and why,
+                then wait for a clear "yes". These are complicated, prebuilt and already debugged:
+                  - raceGeminiKeys()                    key racing / hedging / abort logic (looks simple, is subtle)
+                  - callGeminiPdfApi()                  request building, history clean-up, model fallback, errors
+                  - aiFriendlyError()                   error wording shown in the AI chat
+                  - sendAi(), buildPdfContext(), pickPdfPages(), loadAllPdfText()   chat flow + how the PDF is read
+                  - saveAiChat() and the localStorage / Firebase chat saving
+                  - geminiTtsChunk(), speakWithGemini(), playAudioUrl()             voice key order + same-voice rules
+                  - PDF viewer core: renderSlot(), layoutSlot(), rotate(), setZoom()
+       #NOTE-2  Do NOT "clean up", rename, reorder, merge or "optimise" them. Do NOT remove try/catch, timeouts, finally
+                blocks, or the empty "ignore" catches - they are there on purpose.
+       #NOTE-3  Do NOT change: model names (gemini-3.8-flash, gemini-3.8-flash-tts), the key ORDER (main -> backup 1 -> 2 -> 3),
+                the girl-voice style text, or how long key-switch notices stay (about 4 seconds).
+       #NOTE-4  Never abort the request that just WON inside raceGeminiKeys(). Aborting it cancels the answer while it is
+                being read and the chat shows "The user aborted a request." (this was a real bug, already fixed).
+       #NOTE-5  Small safe edits (text, colours, CSS, labels, icons) are fine without asking. If you are not sure whether
+                something counts as "complicated prebuilt" -> ASK FIRST.
+       #NOTE-6  If Abhishek approves a change to a protected part: change the minimum, tell him exactly which lines, and
+                keep the old version so he can go back.
+       ================================================================================================================ */
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
     import {
       get,
@@ -9371,9 +9392,17 @@
       try { localStorage.setItem(GEMINI_ANS_PAUSE_KEY, JSON.stringify(map)); } catch (e) { /* ignore */ }
     }
 
+    /* #NOTE_FOR_AI: PROTECTED - complicated prebuilt code. Ask Abhishek for permission before changing it (see #NOTES at top of script). */
     // Sends the request to the keys of one model. Order = rested keys first, rotated so each question starts on the next key.
     // A failed key hands over to the next at once; a key that is only slow (>12 s) gets the next key started alongside it.
     // First good answer wins and the other requests are cancelled. Resolves: Response | null (all failed) | "no-model" (404).
+    /* Turns raw browser / network errors into one clear sentence for the AI chat. */
+    function aiFriendlyError(error) {
+      const name = error && error.name, msg = String((error && error.message) || "");
+      if (name === "AbortError" || /aborted|signal is aborted/i.test(msg)) return "The request got cancelled or timed out. Please send it again.";
+      if (name === "TypeError" && /fetch|network|load failed/i.test(msg)) return "Network problem while reaching Gemini. Check your internet and try again.";
+      return msg || "Couldn't reply right now.";
+    }
     let ansRR = 0;
     const ANS_HEDGE_MS = 12000;
     function raceGeminiKeys(model, keys, body, readError, state) {
@@ -9388,8 +9417,8 @@
       return new Promise((resolve, reject) => {
         const ctrls = [];
         let next = 0, pending = 0, done = false, timer = 0;
-        const stopAll = () => { clearTimeout(timer); ctrls.forEach((c) => { try { c.abort(); } catch (e) { /* ignore */ } }); };
-        const win = (value) => { if (done) return; done = true; stopAll(); resolve(value); };
+        const stopAll = (keep) => { clearTimeout(timer); ctrls.forEach((c) => { if (c === keep) return; try { c.abort(); } catch (e) { /* ignore */ } }); };
+        const win = (value, keep) => { if (done) return; done = true; stopAll(keep); resolve(value); };
         const crash = (err) => { if (done) return; done = true; stopAll(); reject(err); };
         const launch = () => {
           clearTimeout(timer);
@@ -9404,7 +9433,7 @@
             try {
               const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": key }, body, signal: ctrl.signal });
               if (done) return;
-              if (res.ok) { win(res); return; }
+              if (res.ok) { win(res, ctrl); return; }
               const detail = await readError(res);
               state.failure = `${res.status}: ${detail}`;
               if (res.status === 429) { state.sawQuota = true; pauseAnsKey(key, model, quotaPauseMs(detail)); }
@@ -9428,12 +9457,14 @@
       });
     }
 
+    /* #NOTE_FOR_AI: PROTECTED - complicated prebuilt code. Ask Abhishek for permission before changing it (see #NOTES at top of script). */
     // Gemini generateContent REST call (works straight from the browser, no SDK/npm needed).
     // history: [{role: "user"|"assistant", content}], imageDataUrl: optional cropped question.
     async function callGeminiPdfApi(promptText, history, imageDataUrl = "", opts = {}) {
       if (!geminiAllKeys().length) {
         throw new Error("No Gemini API key set yet. Add one in Settings → PDF AI (Gemini).");
       }
+      if (typeof navigator !== "undefined" && navigator.onLine === false) throw new Error("You're offline. Connect to the internet and try again.");
       let systemText = [
         "You are 'AI', a study buddy inside a PDF viewer used by JEE (Indian engineering entrance exam) students. The student crops a question or notes from their study PDF and asks you about it.",
         "",
@@ -9474,35 +9505,59 @@
         ].join("\n");
       }
 
-      const contents = (history || []).slice(-40)
-        .map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: String(m.content || "") }] }))
-        .filter((c) => c.parts[0].text);
+      /* History clean-up: Gemini wants alternating user/model turns that start with "user". Failed questions leave
+         several "user" turns in a row (their error replies are hidden), so same-role neighbours are merged. */
+      const contents = [];
+      (history || []).slice(-40).forEach((m) => {
+        const t = String((m && m.content) || "").trim();
+        if (!t) return;
+        const role = m.role === "assistant" ? "model" : "user";
+        const last = contents[contents.length - 1];
+        if (last && last.role === role) last.parts[0].text += "\n\n" + t;
+        else contents.push({ role, parts: [{ text: t }] });
+      });
+      while (contents.length && contents[0].role !== "user") contents.shift();
       const imageList = (Array.isArray(imageDataUrl) ? imageDataUrl : [imageDataUrl]).filter(Boolean);
       const userParts = [];
       const pdfCtx = opts.pdfContext;
+      const pageImgParts = [], cropParts = [];          /* tracked so oversized requests can be slimmed down */
       if (pdfCtx) {
         userParts.push({ text: `OPEN PDF: "${pdfCtx.name}" (${pdfCtx.pages} pages). The student is on page ${pdfCtx.cur} right now.${pdfCtx.scanned ? " This PDF has little or no selectable text (it looks scanned), so rely on the page images." : ""}${pdfCtx.partial ? " Only the most relevant pages are included below, not the whole PDF." : ""}\n\n${pdfCtx.text || "(no selectable text)"}` });
-        pdfCtx.images.forEach(({ n, url }) => {
+        (pdfCtx.images || []).forEach(({ n, url }) => {
           const comma = url.indexOf(",");
-          if (comma > 0) { userParts.push({ text: `(Image of PDF page ${n}:)` }); userParts.push({ inlineData: { mimeType: "image/jpeg", data: url.slice(comma + 1) } }); }
+          if (comma > 0) { const a = { text: `(Image of PDF page ${n}:)` }, b = { inlineData: { mimeType: "image/jpeg", data: url.slice(comma + 1) } }; userParts.push(a, b); pageImgParts.push(a, b); }
         });
       }
       imageList.forEach((dataUrl) => {
         const comma = dataUrl.indexOf(",");
         const mime = (/^data:([^;,]+)/.exec(dataUrl) || [])[1] || "image/jpeg";
-        if (comma > 0) userParts.push({ inlineData: { mimeType: mime, data: dataUrl.slice(comma + 1) } });
+        if (comma > 0) { const p = { inlineData: { mimeType: mime, data: dataUrl.slice(comma + 1) } }; userParts.push(p); cropParts.push(p); }
       });
       userParts.push({ text: opts.reuse ? `(Reference only: the student's earlier cropped image${imageList.length > 1 ? "s are" : " is"} attached again. Answer the new message below using ${imageList.length > 1 ? "them" : "it"}.)\n${promptText}` : imageList.length > 1 ? `(${imageList.length} separate cropped images are attached, in order. Answer each one separately, numbered 1, 2, 3…)\n${promptText}` : promptText });
+      const prevTurn = contents[contents.length - 1];
+      if (prevTurn && prevTurn.role === "user") { userParts.unshift({ text: prevTurn.parts[0].text }); contents.pop(); }   /* never two "user" turns in a row */
       contents.push({ role: "user", parts: userParts });
 
       // Any failure (quota 429, overload 503, bad key, network) silently moves to the next key, then the next model.
       const keys = geminiAllKeys();
       const modelsToTry = [...new Set([GEMINI_DEFAULT_MODEL, "gemini-3.7-flash", "gemini-3.5-flash"])];
-      const requestBody = JSON.stringify({
+      const makeBody = () => JSON.stringify({
         systemInstruction: { parts: [{ text: systemText }] },
         contents,
         generationConfig: { maxOutputTokens: 8192 }
       });
+      let requestBody = makeBody();
+      /* Gemini rejects requests over ~20 MB. Slim down in this order: PDF page images, then older crops. */
+      const BODY_LIMIT = 18e6;
+      if (requestBody.length > BODY_LIMIT && pageImgParts.length) {
+        pageImgParts.forEach((p) => { const i = userParts.indexOf(p); if (i >= 0) userParts.splice(i, 1); });
+        requestBody = makeBody();
+      }
+      if (requestBody.length > BODY_LIMIT && cropParts.length > 1) {
+        cropParts.slice(0, -1).forEach((p) => { const i = userParts.indexOf(p); if (i >= 0) userParts.splice(i, 1); });
+        requestBody = makeBody();
+      }
+      if (requestBody.length > BODY_LIMIT) throw new Error("The pictures are too big to send. Crop a smaller area and try again.");
       const readError = async (res) => {
         try {
           const errJson = await res.json();
@@ -9527,20 +9582,35 @@
       }
       const failure = state.failure, sawQuota = state.sawQuota;
       if (!response || !response.ok) {
-        throw new Error(sawQuota && keys.every((k) => modelsToTry.every((m) => ansKeyPaused(k, m)))
-          ? "All Gemini keys have hit their limit for now. Try again a bit later."
-          : `Gemini is very busy right now, please try again in a minute. (${String(failure).slice(0, 160)})`);
+        const allResting = keys.every((k) => modelsToTry.every((mm) => ansKeyPaused(k, mm)));
+        if (allResting) {
+          const pauses = ansPauses();
+          const soonest = Math.min(...keys.flatMap((k) => modelsToTry.map((mm) => pauses[ansId(k, mm)] || 0)));
+          const mins = Math.max(1, Math.ceil((soonest - Date.now()) / 60000));
+          throw new Error(sawQuota || !failure
+            ? `All Gemini keys have hit their limit for now. Try again in about ${mins} min.`
+            : `Your Gemini key(s) were rejected (${String(failure).slice(0, 120)}). Check them in Settings → PDF AI. Retrying is paused for about ${mins} min.`);
+        }
+        throw new Error(`Gemini is very busy right now, please try again in a minute. (${String(failure).slice(0, 160)})`);
       }
-      const data = await response.json();
+      let data;
+      try {
+        /* the answer body gets its own timeout: headers can arrive and the body still stall */
+        data = await Promise.race([response.json(), new Promise((_, reject) => setTimeout(() => reject(new Error("Gemini's answer took too long to download. Please try again.")), 60000))]);
+      } catch (e) {
+        if (!opts._retried) return callGeminiPdfApi(promptText, history, imageDataUrl, { ...opts, _retried: true });
+        throw new Error(aiFriendlyError(e));
+      }
       const candidate = data?.candidates?.[0];
       const text = (candidate?.content?.parts || [])
         .filter((part) => !part.thought && typeof part.text === "string")
         .map((part) => part.text)
         .join("")
         .trim();
-      if (text) return text;
+      if (text) return candidate && candidate.finishReason === "MAX_TOKENS" ? `${text}\n\n(The answer got cut short - send "continue" for the rest.)` : text;
       const blocked = data?.promptFeedback?.blockReason;
       if (blocked) throw new Error(`Gemini blocked this request (${blocked}). Try re-cropping or rephrasing.`);
+      if (!opts._retried) return callGeminiPdfApi(promptText, history, imageDataUrl, { ...opts, _retried: true });   /* rare empty answer: one silent retry */
       throw new Error(`Gemini returned no answer${candidate?.finishReason ? ` (${candidate.finishReason})` : ""}. Try again.`);
     }
 
@@ -11400,6 +11470,7 @@
         slot.inner.style.width = "";
         slot.inner.style.height = "";
       }
+      /* #NOTE_FOR_AI: PROTECTED - complicated prebuilt code. Ask Abhishek for permission before changing it (see #NOTES at top of script). */
       async function renderSlot(slot) {
         if (S.destroyed) return;
         const token = slot.token + 1;
@@ -11519,6 +11590,7 @@
         goToPage(page);
       }
       function zoomStep(dir) { setZoom(pvNextStep(S.zoom, dir)); }
+      /* #NOTE_FOR_AI: PROTECTED - complicated prebuilt code. Ask Abhishek for permission before changing it (see #NOTES at top of script). */
       function rotate(delta) {
         clearCrop();
         S.rot = (S.rot + delta + 360) % 360;
@@ -11944,6 +12016,7 @@
         try { localStorage.setItem(AI_CHATID_KEY, S.aiChatId); } catch (e) { /* private mode */ }
       }
       if (!S.aiChatId) setAiChatId();
+      /* #NOTE_FOR_AI: PROTECTED - complicated prebuilt code. Ask Abhishek for permission before changing it (see #NOTES at top of script). */
       function saveAiChat() {
         const kept = S.aiChat.filter((m) => !m.err).slice(-60);
         const withImgs = kept.filter((m) => m.thumbs && m.thumbs.length).slice(-6);          /* only the latest 6 crops keep pictures (storage limit) */
@@ -12298,6 +12371,7 @@
         return new Blob([buf], { type: "audio/wav" });
       }
       /* One chunk of text -> object URL of playable audio (Gemini 3.8 Flash TTS). Any failure silently tries the next key. */
+      /* #NOTE_FOR_AI: PROTECTED - complicated prebuilt code. Ask Abhishek for permission before changing it (see #NOTES at top of script). */
       async function geminiTtsChunk(text, budgetMs = 150000, shouldStop = () => false) {
         const allKeys = ttsKeyList();
         if (!allKeys.length) throw new Error("Add a Gemini API key in Settings → PDF AI (Gemini) to use the voice.");
@@ -12352,7 +12426,7 @@
             try {
               res = await fetchWithTimeout(url, 60000, { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": key }, body });
             } catch (e) { lastErr = "network"; ttsKeyCool[ttsId(key, model)] = Date.now() + 20000; failed = { key, model }; continue; }
-            if (res.ok) { data = await res.json(); break; }
+            if (res.ok) { try { data = await res.json(); break; } catch (e) { lastErr = "bad response"; ttsKeyCool[ttsId(key, model)] = Date.now() + 20000; failed = { key, model }; continue; } }
             const raw = await res.text().catch(() => "");
             let detail = "";
             try { detail = JSON.parse(raw)?.error?.message || ""; } catch (e) { /* ignore */ }
@@ -12392,6 +12466,7 @@
           a.play().catch((e) => { reject(e); });
         });
       }
+      /* #NOTE_FOR_AI: PROTECTED - complicated prebuilt code. Ask Abhishek for permission before changing it (see #NOTES at top of script). */
       async function speakWithGemini(text, token, entry = { urls: [] }) {
         /* Short first part so it starts quickly; the rest in a few bigger parts. Same style + same key order for every part. */
         const head = text.length > 900 ? (splitForTts(text, 700)[0] || text) : "";
@@ -12546,6 +12621,7 @@
         String(q || "").replace(/\b(\d{1,4})\s*(?:st|nd|rd|th)?\s*page\b/gi, (m, a) => { add(a); return m; });
         return found.slice(0, 3);
       }
+      /* #NOTE_FOR_AI: PROTECTED - complicated prebuilt code. Ask Abhishek for permission before changing it (see #NOTES at top of script). */
       function pickPdfPages(pages, q, mentioned) {
         const BUDGET = 140000;
         const have = [];
@@ -12587,6 +12663,7 @@
         canvas.width = canvas.height = 0;
         return url;
       }
+      /* #NOTE_FOR_AI: PROTECTED - complicated prebuilt code. Ask Abhishek for permission before changing it (see #NOTES at top of script). */
       async function buildPdfContext(question, hasCrop) {
         if (!S.aiPdfAccess || !S.pdf || !S.n) return null;
         let pages = [];
@@ -12607,6 +12684,7 @@
       }
       syncPdfAccessBtn();
 
+      /* #NOTE_FOR_AI: PROTECTED - complicated prebuilt code. Ask Abhishek for permission before changing it (see #NOTES at top of script). */
       async function sendAi(text) {
         if (S.aiBusy) return;
         text = String(text || "").trim();
@@ -12634,19 +12712,20 @@
             if (prev) { sendImgs = prev.imgs.slice(-3); reuse = true; }
           }
           let pdfContext = null;
-          try { pdfContext = await buildPdfContext(text, images.length > 0); } catch (e) { console.warn("Could not read the PDF for the AI", e); }
+          try { pdfContext = await Promise.race([buildPdfContext(text, images.length > 0), new Promise((resolve) => setTimeout(() => resolve(null), 25000))]); } catch (e) { console.warn("Could not read the PDF for the AI", e); }
           const reply = await callGeminiPdfApi(text, history, sendImgs, { reuse, pdfContext });
           S.aiChat.push({ role: "assistant", content: reply });
           saveAiChat();
           refreshTtsPrefs();
           if (S.tts.auto && !S.destroyed) setTimeout(() => speakMessage(S.aiChat.length - 1), 0);
         } catch (error) {
-          S.aiChat.push({ role: "assistant", content: (error && error.message) || "Couldn't reply right now.", err: true });
+          S.aiChat.push({ role: "assistant", content: aiFriendlyError(error), err: true });
           if (images.length && !S.aiImages.length) { S.aiImages = images; renderAiAttach(); }   /* failed: keep the crops attached so you can retry */
+        } finally {
+          S.aiBusy = false;                                  /* always released, even if something above throws */
+          aiSend.disabled = false;
+          if (!S.destroyed) { try { renderAi(); aiInput.focus(); } catch (e) { console.warn("AI panel redraw failed", e); } }
         }
-        S.aiBusy = false;
-        aiSend.disabled = false;
-        if (!S.destroyed) { renderAi(); aiInput.focus(); }
       }
       async function addImageFiles(files) {
         const list = Array.from(files || []).filter((f) => f && /^image\//.test(f.type));
