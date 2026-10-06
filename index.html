@@ -6207,7 +6207,7 @@
 <style id="duoGateCss">
 .lg-soon { position: fixed; z-index: 3000; left: 50%; top: 24px; translate: -50% 0; padding: 12px 20px; border-radius: 999px; background: #17211c; color: #fff; font: 700 14px/1.2 var(--font-body, Inter, sans-serif); box-shadow: 0 14px 34px rgba(0,0,0,.28); animation: dgIn .3s both; }
 .lg-soon.out { opacity: 0; transition: opacity .4s; }
-.dg-overlay { position: fixed; inset: 0; z-index: 2000; display: grid; place-items: center; padding: 20px; background: rgba(10, 24, 16, .55); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.dg-overlay { position: fixed; inset: 0; z-index: 100000; display: grid; place-items: center; padding: 20px; background: rgba(10, 24, 16, .55); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
 .dg-overlay[hidden], .dg-fab[hidden] { display: none; }
 .dg-box { position: relative; width: min(560px, 100%); max-height: 92vh; overflow: auto; padding: 30px 28px; border-radius: 22px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); box-shadow: var(--shadow-lift); animation: dgIn .35s cubic-bezier(.2,.7,.2,1) both; }
 .dg-box h2 { margin: 0 0 6px; font-size: 26px; letter-spacing: -.02em; }
@@ -6270,6 +6270,47 @@
 .dg-inbox-btn svg { width: 22px; height: 22px; } .dg-inbox-btn:hover { background: var(--green-2); }
 .dg-badge { position: absolute; top: -7px; right: -7px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 999px; background: #f4c542; color: #17211c; box-shadow: 0 0 0 2px var(--panel); font-size: 11px; font-weight: 900; line-height: 20px; text-align: center; } .dg-badge[hidden] { display: none; }
 @media (max-width: 520px) { .dp h2 { font-size: 27px; } .dp-grid { grid-template-columns: repeat(2, 1fr); } }
+
+/* ---- round 5 ---- */
+.dg-rooms { display: flex; gap: 6px; padding: 8px 12px 0; }
+.dg-rooms button { flex: 1; min-height: 34px; border: 1px solid var(--line); border-radius: 999px; background: transparent; color: var(--muted); font-family: inherit; font-size: 13px; font-weight: 800; cursor: pointer; }
+.dg-rooms button.on { border-color: var(--green); background: var(--green-2); color: var(--green); }
+.dg-rooms button:disabled { opacity: .45; cursor: not-allowed; }
+.dg-quote { margin: 0 0 12px; padding: 10px 14px; border-left: 4px solid var(--green); border-radius: 10px; background: var(--green-2); }
+.dg-quote p { margin: 4px 0 0; overflow-wrap: anywhere; }
+.dg-sign { display: flex; align-items: center; gap: 14px; margin: 12px 0; }
+.dg-sign img { max-width: 180px; max-height: 72px; padding: 6px 10px; border-radius: 10px; background: #fff; }
+.dg-sign small { color: var(--muted); }
+textarea.dg-in { height: auto; padding: 10px 12px; resize: vertical; }
+.dg-box a:not(.dg-btn) { color: var(--green); font-weight: 700; }
+#loginScreen .lg-legal { display: flex; gap: 8px; margin: 14px 0 0; font-size: 12px; color: var(--muted); opacity: .7; }
+#loginScreen .lg-legal a { color: inherit; text-decoration: none; } #loginScreen .lg-legal a:hover { text-decoration: underline; opacity: 1; }
+.pp-page { position: fixed; inset: 0; z-index: 100001; overflow: auto; background: var(--paper); color: var(--ink); scroll-behavior: smooth; }
+.pp-page[hidden] { display: none; }
+.pp-bar { position: sticky; top: 0; z-index: 2; display: flex; justify-content: space-between; align-items: center; padding: 12px clamp(16px, 4vw, 48px); background: color-mix(in srgb, var(--panel) 92%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+.pp-close { min-height: 40px; padding: 0 18px; border: 0; border-radius: 10px; background: var(--green); color: #fff; font-weight: 800; font-family: inherit; cursor: pointer; }
+.pp-doc { max-width: 880px; margin: 0 auto; padding: 40px clamp(18px, 4vw, 40px) 90px; line-height: 1.7; font-size: 17px; }
+.pp-doc h1 { margin: 0 0 6px; font-size: clamp(40px, 7vw, 72px); line-height: 1.02; letter-spacing: -.03em; }
+.pp-doc h2 { margin: 0 0 10px; font-size: 28px; letter-spacing: -.01em; }
+.pp-doc section { padding: 30px 0; border-top: 1px solid var(--line); scroll-margin-top: 76px; }
+.pp-doc a { color: var(--green); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.pp-doc code { padding: 2px 7px; border-radius: 7px; background: rgba(244,197,66,.38); font-family: 'JetBrains Mono', monospace; font-size: .9em; }
+.pp-meta { color: var(--muted); font-size: 15px; } .pp-lead { font-size: 20px; color: var(--muted); max-width: 52ch; }
+.pp-toc { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; margin: 22px 0 34px; }
+.pp-toc a { padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); text-decoration: none; font-size: 15px; }
+.pp-toc a:hover { border-color: var(--green); background: var(--green-2); }
+.pp-top { display: inline-block; margin-top: 8px; font-size: 14px; }
+/* dark mode: chat was unreadable (light bubbles with light text) */
+body:is(.theme-night, .night-override) .chat-message { background: #25322b; color: var(--ink); border-color: var(--line); box-shadow: none; }
+body:is(.theme-night, .night-override) .chat-message.mine { background: #1c4a33; border-color: #2f7a52; color: #effff4; }
+body:is(.theme-night, .night-override) .chat-message.grok-message { background: linear-gradient(135deg, #2b2450, #1d1a33); border-color: #5b49b0; color: var(--ink); }
+body:is(.theme-night, .night-override) .grok-bubble { background: #25322b; color: var(--ink); border-color: var(--line); }
+body:is(.theme-night, .night-override) .chat-message strong, body:is(.theme-night, .night-override) .chat-message p, body:is(.theme-night, .night-override) .chat-message span { color: inherit; }
+body:is(.theme-night, .night-override) .chat-link { color: #8ab4ff; } body:is(.theme-night, .night-override) .chat-link:hover { color: #b5ceff; }
+body:is(.theme-night, .night-override) .chat-message-more { background: rgba(255, 255, 255, .12); color: var(--ink); }
+body:is(.theme-night, .night-override) .chat-edit-input { background: #1b2520; color: var(--ink); border-color: var(--line); }
+body:is(.theme-night, .night-override) .chat-context-menu button.danger:hover { background: rgba(229, 72, 77, .18); }
+body:is(.theme-night, .night-override) .chat-messages { background: linear-gradient(180deg, rgba(120, 215, 155, .06), transparent 38%); }
 </style>
 </head>
 <body>
@@ -6319,6 +6360,7 @@
         <button class="primary-btn login-submit-btn" type="submit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5M15 12H3"/></svg> <span class="lg-btn-text">Log in</span><span class="lg-spin" aria-hidden="true"></span></button>
       </form>
       <p class="lg-foot">Your data syncs live, so you and your partner always see the same numbers.</p>
+      <p class="lg-legal"><a href="#" data-pp="privacy">Privacy policy</a><span aria-hidden="true">/</span><a href="#" data-pp="contact">Contact us</a></p>
     </section>
     <!-- Other sign-in methods: placeholders for later. Hook each button by its data-auth value (google / x / admin). -->
     <nav class="lg-rail" aria-label="Other ways to join">
@@ -6884,6 +6926,7 @@
             <button id="closeChatBtn" class="small-btn" type="button" aria-label="Close chat">X</button>
           </div>
         </div>
+        <div id="dgRooms" class="dg-rooms"><button type="button" data-room="private" class="on">Partner chat</button><button type="button" data-room="global">Global chat</button></div>
         <div id="chatMessages" class="chat-messages" aria-live="polite"></div>
         <div id="typingIndicator" class="typing-indicator hidden">
           <span class="typing-dots"><span></span><span></span><span></span></span>
@@ -7096,8 +7139,9 @@
     const chatMessageRef = (messageId) => ref(database, `duotrack/groups/${GROUP_ID}/chat/${messageId}`);
     const typingRef = ref(database, `duotrack/groups/${GROUP_ID}/typing`);
     const accountsRef = ref(database, `duotrack/groups/${GROUP_ID}/accounts`);
-    const callRef = ref(database, `duotrack/groups/${GROUP_ID}/call`);
-    const callCandidatesRef = (side) => ref(database, `duotrack/groups/${GROUP_ID}/call/${side}Candidates`);
+    let dgCallKey = "idle", dgCallUnsub = null;
+    let callRef = ref(database, `duotrack/groups/${GROUP_ID}/call/${dgCallKey}`);
+    const callCandidatesRef = (side) => ref(database, `duotrack/groups/${GROUP_ID}/call/${dgCallKey}/${side}Candidates`);
     // Single Grok API key shared between both users — either person can set it once
     // from Settings and it works for both, since it's stored in the shared group data.
     const grokConfigRef = ref(database, `duotrack/groups/${GROUP_ID}/grokApiKey`);
@@ -7289,7 +7333,7 @@
     function dgUpdateBadge() {
       const b = document.getElementById("inboxBadge");
       if (!b) return;
-      const n = (currentUserId ? dgIncoming().length : 0) + (currentUserId === RQ_REVIEWER_ID ? dgPending.length : 0);
+      const n = (currentUserId ? dgIncoming().length : 0) + (currentUserId === RQ_REVIEWER_ID ? dgPending.length + dgReports.length : 0);
       b.textContent = n; b.hidden = n === 0;
     }
     function dgRefresh() {
@@ -7325,10 +7369,17 @@
       const me = state.users[currentUserId];
       if (!me) return;
       const rev = currentUserId === RQ_REVIEWER_ID, inc = dgIncoming(), out = dgOutgoing(), old = partnerUser();
-      if (!dgTab || (dgTab === "access" && !rev)) dgTab = rev && !inc.length && dgPending.length ? "access" : "partners";
+      if (!dgTab || ((dgTab === "access" || dgTab === "reports") && !rev)) dgTab = rev && !inc.length && dgPending.length ? "access" : "partners";
       const oldName = old && state.users[old.id] ? old.name : "";
       let body;
-      if (dgTab === "access") {
+      if (dgTab === "reports") {
+        body = dgReports.length ? dgReports.map((r) => { const u = state.users[r.reportedUserId];
+          return `<div class="dg-req"><div class="dg-reqtop"><b>${escapeHTML(r.reportedName || "User")}${u ? " " + escapeHTML(dgCodeOf(u)) : ""}</b><span>${escapeHTML(new Date(r.createdAt).toLocaleString())}</span></div>
+            <div class="dg-quote"><p>${escapeHTML(r.text || (r.hasImage ? "[photo]" : ""))}</p></div>
+            <p>Reason: <b>${escapeHTML(r.reason)}</b>${r.note ? ". " + escapeHTML(r.note) : ""}<br>Reported by ${escapeHTML(r.reporterName || "someone")}</p>
+            <div class="dg-row"><button type="button" class="dg-btn" data-dg-banreport="${escapeHTML(r.id)}">Disable chat</button><button type="button" class="dg-btn ghost" data-dg-dismiss="${escapeHTML(r.id)}">Dismiss</button></div></div>`; }).join("")
+          : '<p class="dg-sub">No open reports.</p>';
+      } else if (dgTab === "access") {
         body = dgPending.length ? dgPending.map((r) => `<div class="dg-req">
             <div class="dg-reqtop"><b>${escapeHTML(r.firstName)} ${escapeHTML(r.lastName)}</b><span>${escapeHTML(r.requestId)}</span></div>
             <p>${escapeHTML(r.grade)}, ${escapeHTML(r.exam)}. Born ${escapeHTML(r.dob)}.<br>${escapeHTML(r.email)}<br>Login ID: ${escapeHTML(r.loginId || "")}</p>
@@ -7347,7 +7398,7 @@
       const code = dgCodeOf(me);
       dgOpen("inbox", `<h2>Messages</h2>
         <p class="dg-sub">Your personal ID <code class="dg-code">${escapeHTML(code)}</code> <button type="button" class="dg-btn ghost" data-dg-copy="${escapeHTML(code)}" style="min-height:32px;padding:0 12px">Copy</button></p>
-        <div class="dg-tabs"><button type="button" data-dg-tab="partners" class="${dgTab === "partners" ? "on" : ""}">Partners${inc.length ? ` (${inc.length})` : ""}</button>${rev ? `<button type="button" data-dg-tab="access" class="${dgTab === "access" ? "on" : ""}">Access requests${dgPending.length ? ` (${dgPending.length})` : ""}</button>` : ""}</div>${body}`, true);
+        <div class="dg-tabs"><button type="button" data-dg-tab="partners" class="${dgTab === "partners" ? "on" : ""}">Partners${inc.length ? ` (${inc.length})` : ""}</button>${rev ? `<button type="button" data-dg-tab="access" class="${dgTab === "access" ? "on" : ""}">Access requests${dgPending.length ? ` (${dgPending.length})` : ""}</button>` : ""}${rev ? `<button type="button" data-dg-tab="reports" class="${dgTab === "reports" ? "on" : ""}">Reports${dgReports.length ? ` (${dgReports.length})` : ""}</button>` : ""}</div>${body}`, true);
     }
     document.getElementById("inboxBtn")?.addEventListener("click", () => { dgTab = ""; dgOpenInbox(); });
 
@@ -7428,6 +7479,13 @@
       if (can) { can.disabled = true; return void (await remove(dgReqRef(can.dataset.dgCancel))); }
       const tab = t.closest("[data-dg-tab]");
       if (tab) { dgTab = tab.dataset.dgTab; return dgOpenInbox(); }
+      const br = t.closest("[data-dg-banreport]");
+      if (br) { const r = dgReports.find((x) => x.id === br.dataset.dgBanreport); if (r) dgOpenBan(r.reportedUserId, r.id); return; }
+      const dm = t.closest("[data-dg-dismiss]");
+      if (dm) { dm.disabled = true; return void (await update(ref(database, `duotrack/groups/${GROUP_ID}/reports/${dm.dataset.dgDismiss}`), { status: "dismissed", decidedAt: Date.now() })); }
+      const ub = t.closest("[data-dg-unban]");
+      if (ub) { await set(dgBanRef(ub.dataset.dgUnban), null); dgClose(); showToast("Chat enabled", "The ban was lifted."); return; }
+      const ppGo = t.closest("[data-pp-go]");
       if (t.closest("[data-dg-later]")) { dgSkip = true; dgSkipDecl = dgDeclines(); dgClose(); }
     });
     dgEl.addEventListener("input", (e) => {
@@ -7459,13 +7517,16 @@
 
     function duoGate(user) {
       if (!user) {
-        dgSeenIn = -1; dgSkip = false;
+        dgSeenIn = -1; dgSkip = false; dgLastPair = "~"; dgBanUid = ""; dgBan = null; if (dgBanUnsub) { dgBanUnsub(); dgBanUnsub = null; }
         if (dgMode === "partner" || dgMode === "inbox") dgClose();
         dgUpdateBadge();
         return;
       }
       dgWatchPartner();
-      if (user.id === RQ_REVIEWER_ID) dgWatchRequests();
+      if (user.id === RQ_REVIEWER_ID) { dgWatchRequests(); dgWatchReports(); }
+      dgWatchBan(user.id);
+      const pk = dgPairKey();
+      if (pk !== dgLastPair) { dgLastPair = pk; dgBindCall(pk); dgApplyRoom(); }
       if (!user.personalCode && !dgCodeSaved.has(user.id)) {
         dgCodeSaved.add(user.id);
         update(userRef(user.id), { personalCode: dgCode(user) }).catch(() => dgCodeSaved.delete(user.id));
@@ -7476,6 +7537,246 @@
         if (dgEl.hidden) { dgSkip = false; dgOpenPartner(user); }
       } else if (dgMode === "partner") dgClose();
     }
+
+
+    /* ===== chat rooms, reports, bans, account delete, calls (added) ===== */
+    let dgRoom = "private", dgLegacy = new Set(), dgLastPair = "~", dgReports = [], dgRepSubbed = false, dgSeenRep = -1;
+    let dgBan = null, dgBanUid = "", dgBanUnsub = null, dgBanTimer = 0, dgBanShown = 0;
+    const dgReportsRef = ref(database, `duotrack/groups/${GROUP_ID}/reports`);
+    const dgBanRef = (uid) => ref(database, `duotrack/groups/${GROUP_ID}/chatBans/${uid}`);
+    function dgPairKey() {
+      const me = state.users[currentUserId];
+      if (!me) return "";
+      const p = partnerUser();
+      return p && state.users[p.id] ? [me.id, p.id].sort().join("__") : "";
+    }
+    function dgChatVisible(m) {
+      if (m.room === "global") return true;
+      if (m.room) return m.room === dgPairKey();
+      return dgLegacy.has(currentUserId);
+    }
+    const dgInRoom = (m) => (dgRoom === "global" ? m.room === "global" : m.room !== "global");
+    const dgRoomNow = () => (dgRoom === "global" ? "global" : dgPairKey());
+    function dgApplyRoom() {
+      if (dgRoom === "private" && !dgPairKey()) dgRoom = "global";
+      document.querySelectorAll("#dgRooms [data-room]").forEach((b) => b.classList.toggle("on", b.dataset.room === dgRoom));
+      const priv = document.querySelector('#dgRooms [data-room="private"]');
+      if (priv) priv.disabled = !dgPairKey();
+      chatInput.disabled = dgBanActive();
+      chatInput.placeholder = dgBanActive() ? "Your chat is disabled" : dgRoom === "global" ? "Message everyone" : "Message your partner";
+      chatMessagesState = rawChatMessages.filter((m) => !locallyDeletedChatIds.has(m.id) && dgChatVisible(m) && dgInRoom(m));
+      renderChat(true);
+    }
+    document.getElementById("dgRooms")?.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-room]");
+      if (b && !b.disabled) { dgRoom = b.dataset.room; dgApplyRoom(); }
+    });
+    function dgBindCall(key) {
+      if (!key || key === dgCallKey || currentCallRole) return;
+      dgCallKey = key;
+      callRef = ref(database, `duotrack/groups/${GROUP_ID}/call/${key}`);
+      listenToCalls();
+    }
+
+    const dgBanLive = (b) => !!b && (b.permanent || Number(b.until) > Date.now());
+    const dgBanActive = () => dgBanLive(dgBan);
+    function dgApplyBan() {
+      clearTimeout(dgBanTimer);
+      if (dgBan && !dgBan.permanent && dgBanLive(dgBan)) dgBanTimer = setTimeout(dgApplyBan, Math.min(2147483000, Number(dgBan.until) - Date.now() + 500));
+      dgApplyRoom();
+      if (dgBanActive() && dgBan.createdAt !== dgBanShown && dgEl.hidden) { dgBanShown = dgBan.createdAt; dgShowBan(); }
+    }
+    function dgWatchBan(uid) {
+      if (dgBanUid === uid) return;
+      if (dgBanUnsub) dgBanUnsub();
+      dgBanUid = uid;
+      dgBanUnsub = onValue(dgBanRef(uid), (snap) => { dgBan = snap.val(); dgApplyBan(); });
+    }
+    function dgSigImg() {
+      const src = document.getElementById("footerSignature")?.getAttribute("src") || "";
+      return dgAvRe.test(src) ? `<img src="${escapeHTML(src)}" alt="Admin signature">` : "";
+    }
+    function dgShowBan() {
+      if (!dgBanActive()) return;
+      dgOpen("banned", `<h2>Your chat is disabled</h2>
+        <p class="dg-sub">${dgBan.permanent ? "This is permanent." : "It turns back on on " + escapeHTML(new Date(dgBan.until).toLocaleString()) + "."}</p>
+        <div class="dg-quote"><b>Reason from the admin</b><p>${escapeHTML(dgBan.reason || "")}</p></div>
+        <div class="dg-sign">${dgSigImg()}<span><b>Abhishek</b><br><small>Admin, DuoTrack</small></span></div>
+        <p class="dg-sub">You can still use the rest of DuoTrack. If you think this is a mistake, use <a href="#" data-pp="contact">Contact us</a>.</p>`, true);
+    }
+    function dgWatchReports() {
+      if (dgRepSubbed) return;
+      dgRepSubbed = true;
+      onValue(dgReportsRef, (snap) => {
+        dgReports = Object.values(snap.val() || {}).filter((r) => r && r.id && r.status === "open").sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+        if (dgSeenRep >= 0 && dgReports.length > dgSeenRep) showToast("New report", "A chat message was reported.");
+        dgSeenRep = dgReports.length;
+        dgUpdateBadge();
+        if (dgMode === "inbox") dgOpenInbox();
+      });
+    }
+    function dgOpenReport(id) {
+      const m = rawChatMessages.find((x) => x.id === id);
+      if (!m) return;
+      const reasons = ["Harassment or bullying", "Hate or abusive language", "Spam or scam", "Inappropriate content", "Shares personal information", "Something else"];
+      dgOpen("report", `<h2>Report this message</h2><p class="dg-sub">The admin will review it. A copy of the message goes with your report.</p>
+        <div class="dg-quote"><b>${escapeHTML(m.name)}</b><p>${escapeHTML(m.text || "[photo]")}</p></div>
+        <form id="dgReportForm" data-id="${escapeHTML(id)}" class="dg-form"><label for="rpReason">Reason</label>
+          <select class="dg-in" id="rpReason" required><option value="">Select a reason</option>${reasons.map((r) => `<option>${r}</option>`).join("")}</select>
+          <label for="rpNote">Details (optional)</label><textarea class="dg-in" id="rpNote" rows="3" maxlength="300"></textarea>
+          <p id="rpErr" class="dg-err" aria-live="polite"></p><button class="dg-btn" type="submit">Send report</button></form>`, true);
+    }
+    async function dgOpenBan(uid, reportId) {
+      const u = state.users[uid] || USERS_BY_ID[uid];
+      if (!u) return;
+      let cur = null;
+      try { cur = (await get(dgBanRef(uid))).val(); } catch (error) { /* ignore */ }
+      const rep = reportId ? dgReports.find((r) => r.id === reportId) : null;
+      dgOpen("ban", `<h2>Chat ban for ${escapeHTML(u.name)}</h2>
+        ${dgBanLive(cur) ? `<p class="dg-sub">Chat is already disabled ${cur.permanent ? "permanently" : "until " + escapeHTML(new Date(cur.until).toLocaleString())}. <button type="button" class="dg-btn ghost" data-dg-unban="${escapeHTML(uid)}" style="min-height:32px;padding:0 12px">Lift ban</button></p>` : ""}
+        <form id="dgBanForm" data-uid="${escapeHTML(uid)}" data-report="${escapeHTML(reportId || "")}" class="dg-form">
+          <label for="bnDur">How long</label><select class="dg-in" id="bnDur"><option value="1">1 hour</option><option value="3">3 hours</option><option value="6">6 hours</option><option value="12">12 hours</option><option value="24" selected>24 hours</option><option value="72">3 days</option><option value="168">7 days</option><option value="0">Permanent</option></select>
+          <label for="bnReason">Reason (the user sees this, signed by you)</label><textarea class="dg-in" id="bnReason" rows="4" maxlength="400" required>${rep ? escapeHTML("Your message was reported for: " + rep.reason + ".") : ""}</textarea>
+          <div class="dg-sign">${dgSigImg()}<span><b>Abhishek</b><br><small>Admin, DuoTrack</small></span></div>
+          <p id="bnErr" class="dg-err" aria-live="polite"></p><button class="dg-btn" type="submit">Disable chat</button></form>`, true);
+    }
+    function dgDeleteAccount(uid) {
+      const u = state.users[uid] || USERS_BY_ID[uid];
+      if (!u) return;
+      if (uid === RQ_REVIEWER_ID || uid === APPEAL_REVIEWER_ID) { showToast("Not allowed", "The main admin's study account cannot be deleted here."); return; }
+      dgOpen("delete", `<h2>Delete ${escapeHTML(u.name)} permanently?</h2>
+        <p class="dg-sub">This removes the login, profile, study data, partner links, partner requests and every chat message this account wrote. It cannot be undone.</p>
+        <form id="dgDelForm" data-uid="${escapeHTML(uid)}" class="dg-form"><label for="dlConfirm">Type DELETE to confirm</label><input class="dg-in" id="dlConfirm" autocomplete="off">
+          <p id="dlErr" class="dg-err" aria-live="polite"></p><button class="dg-btn" type="submit" style="background:#c0392b">Delete permanently</button></form>`, true);
+    }
+    dgEl.addEventListener("submit", async (e) => {
+      const f = e.target, q = (id) => dgEl.querySelector("#" + id);
+      if (f.id === "dgReportForm") {
+        e.preventDefault();
+        const m = rawChatMessages.find((x) => x.id === f.dataset.id), reason = q("rpReason").value;
+        if (!m || !reason) { q("rpErr").textContent = "Please choose a reason."; return; }
+        const rid = "rp_" + Date.now().toString(36) + dgRand(3), me = state.users[currentUserId];
+        f.querySelector("button[type=submit]").disabled = true;
+        try {
+          await set(ref(database, `duotrack/groups/${GROUP_ID}/reports/${rid}`), { id: rid, messageId: m.id, room: m.room || "private", reportedUserId: m.userId, reportedName: m.name, text: String(m.text || "").slice(0, 320), hasImage: !!m.image, reporterId: currentUserId, reporterName: me ? me.name : "", reason, note: q("rpNote").value.trim().slice(0, 300), createdAt: Date.now(), status: "open" });
+          dgClose(); showToast("Report sent", "The admin will review this message.");
+        } catch (error) { q("rpErr").textContent = "Could not send the report. Try again."; f.querySelector("button[type=submit]").disabled = false; }
+      } else if (f.id === "dgBanForm") {
+        e.preventDefault();
+        const hours = Number(q("bnDur").value), reason = q("bnReason").value.trim();
+        if (!reason) { q("bnErr").textContent = "Write a reason first."; return; }
+        try {
+          await set(dgBanRef(f.dataset.uid), { userId: f.dataset.uid, permanent: hours === 0, until: hours === 0 ? 0 : Date.now() + hours * 3600000, reason, by: "Abhishek", createdAt: Date.now(), reportId: f.dataset.report || "" });
+          if (f.dataset.report) await update(ref(database, `duotrack/groups/${GROUP_ID}/reports/${f.dataset.report}`), { status: "actioned", decidedAt: Date.now() });
+          dgClose(); showToast("Chat disabled", hours === 0 ? "Disabled permanently." : `Disabled for ${hours} hour${hours === 1 ? "" : "s"}.`);
+        } catch (error) { q("bnErr").textContent = "Could not save the ban. Try again."; }
+      } else if (f.id === "dgDelForm") {
+        e.preventDefault();
+        if (q("dlConfirm").value.trim() !== "DELETE") { q("dlErr").textContent = "Type DELETE exactly to confirm."; return; }
+        const uid = f.dataset.uid, btn = f.querySelector("button[type=submit]"), base = `duotrack/groups/${GROUP_ID}`;
+        btn.disabled = true; btn.textContent = "Deleting...";
+        try {
+          const loginKey = Object.keys(USERS).find((k) => USERS[k].id === uid);
+          if (!loginKey || !(await get(ref(database, `${base}/accounts/${loginKey}`))).exists()) { q("dlErr").textContent = "This is a built-in account written into the code, so it cannot be deleted from here."; btn.disabled = false; btn.textContent = "Delete permanently"; return; }
+          const chat = (await get(chatRef)).val() || {}, wipe = {};
+          Object.entries(chat).forEach(([k, m]) => { if (m && m.userId === uid) wipe[k] = null; });
+          if (Object.keys(wipe).length) await update(chatRef, wipe);
+          const links = {};
+          Object.values(state.users).filter((x) => x.partnerId === uid).forEach((x) => { links[`${x.id}/partnerId`] = ""; links[`${x.id}/pickPartner`] = true; });
+          if (Object.keys(links).length) await update(ref(database, `${base}/users`), links);
+          const prs = (await get(dgPRRef)).val() || {}, prWipe = {};
+          Object.entries(prs).forEach(([k, r]) => { if (r && (r.from === uid || r.to === uid)) prWipe[k] = null; });
+          if (Object.keys(prWipe).length) await update(dgPRRef, prWipe);
+          await Promise.all([remove(ref(database, `${base}/accounts/${loginKey}`)), remove(ref(database, `${base}/users/${uid}`)), remove(ref(database, `${base}/accountStatus/${uid}`)), remove(ref(database, `${base}/appeals/${uid}`)), remove(dgBanRef(uid))]);
+          delete USERS[loginKey]; delete USERS_BY_ID[uid];
+          dgClose(); showToast("Account deleted", `${u_name(uid)} was removed permanently.`);
+          if (typeof renderAdminPortal === "function") renderAdminPortal();
+        } catch (error) { q("dlErr").textContent = "Could not finish deleting. Try again."; btn.disabled = false; btn.textContent = "Delete permanently"; }
+      }
+    });
+    const u_name = (uid) => (state.users[uid] && state.users[uid].name) || "The account";
+
+    const PP_UPDATED = "6 October 2026";
+    const ppLink = (u, t) => `<a href="${u}" target="_blank" rel="noopener noreferrer">${t}</a>`;
+    const ppGo = (id, t) => `<a href="#${id}" data-pp-go="${id}">${t}</a>`;
+    const PP_SECTIONS = [
+      ["pp-1", "1. About this policy", () => `<p>DuoTrack is a study tracker for small groups of students preparing for JEE and NEET. It is a prototype built and run by Abhishek, referred to below as the admin. This page explains what the app stores, where it is stored, who can see it, which other services it talks to, and what choices you have.</p>
+        <p>It describes how the app works today, based on its code, not promises about the future. Where something is not yet as protected as it should be, we say so in ${ppGo("pp-12", "Section 12")}. Questions go to ${ppGo("pp-15", "Section 15")}.</p>`],
+      ["pp-2", "2. What DuoTrack collects", () => `<p><b>2.1 Access request.</b> When you ask to join: first name, last name, date of birth, email, class (11th, 12th or Dropper), exam (JEE or NEET), the login ID you choose, and your password. The password is saved only as a salted SHA-256 hash, never as plain text. A request ID and a status (pending, approved or rejected) are added.</p>
+        <p><b>2.2 Account and profile.</b> Display name, a personal ID of four letters and four numbers, an optional profile picture, your study partner link, partner requests you send or receive, and whether your account is open or closed.</p>
+        <p><b>2.3 Study data.</b> Whether your timer is running, the chosen subject and mode, today's study seconds per subject and mode, to-do items and goals, mock-test scores, your questions-done count, the exam countdown, and the title, thumbnail and id of the music you are playing.</p>
+        <p><b>2.4 Chat.</b> Messages, images you attach, reactions, replies, edits, deletions, timestamps, which chat room a message belongs to (${ppGo("pp-5", "Section 5")}) and a short-lived typing signal.</p>
+        <p><b>2.5 Moderation.</b> Reports (who reported, who was reported, a copy of the message, the reason and an optional note) and chat bans (length and reason). See ${ppGo("pp-9", "Section 9")}.</p>
+        <p><b>2.6 Calls.</b> Only the short connection-setup messages needed to start a voice or video call. See ${ppGo("pp-8", "Section 8")}.</p>
+        <p><b>2.7 Kept only in your browser.</b> Your login memory, night mode, notification and reminder settings, the time you last read the chat, and PDFs you open in the built-in viewer.</p>
+        <p><b>Not collected:</b> your location, contacts, payment details, or recordings of your voice, camera or screen.</p>`],
+      ["pp-3", "3. Where your data is stored", () => `<p>Shared data lives in the Firebase Realtime Database run by Google, under the app's group path. The app connects with Firebase anonymous authentication. See ${ppLink("https://firebase.google.com/support/privacy", "Firebase privacy information")} and the ${ppLink("https://policies.google.com/privacy", "Google Privacy Policy")}.</p>
+        <p>Browser-only data (${ppGo("pp-2", "Section 2.7")}) stays on your device in local storage or IndexedDB and is not uploaded by DuoTrack.</p>`],
+      ["pp-4", "4. How the data is used", () => `<p>Your data is used only to run the app: syncing timers with your partner, showing progress, delivering chat, reviewing access requests, keeping chat safe, and letting you pick and keep a study partner. DuoTrack shows no ads, does not sell data, and does not build advertising profiles.</p>`],
+      ["pp-5", "5. Who can see what", () => `<p><b>Partner chat.</b> Shown in the app only to you and your confirmed study partner.</p>
+        <p><b>Global chat.</b> Visible to every DuoTrack user. Do not post anything you would not say to the whole group.</p>
+        <p><b>Study data.</b> Visible to you, your partner and the admin. Name, profile picture and personal ID are visible to other users, for example when choosing a partner.</p>
+        <p><b>Access requests and reports.</b> Visible to the admin only, in the Messages window.</p>
+        <p><b>Important limit.</b> Because the database does not yet have strict security rules, someone with technical access to it could read data the app does not show them. Read ${ppGo("pp-12", "Section 12")} before sharing anything sensitive.</p>`],
+      ["pp-6", "6. Other services DuoTrack uses", () => `<ul>
+        <li><b>Google Firebase</b> stores shared data and loads the app's database code. ${ppLink("https://firebase.google.com/support/privacy", "Privacy")}</li>
+        <li><b>Groq</b> answers AI chat messages. ${ppLink("https://groq.com/privacy-policy", "Privacy policy")}</li>
+        <li><b>Google Gemini</b> reads PDF question images and creates spoken replies. ${ppLink("https://ai.google.dev/gemini-api/terms", "Gemini API terms")}</li>
+        <li><b>YouTube</b> provides music search and playback. ${ppLink("https://www.youtube.com/t/terms", "YouTube terms")} and ${ppLink("https://policies.google.com/privacy", "Google privacy policy")}</li>
+        <li><b>DuckDuckGo</b> and <b>Wikipedia</b> supply short search snippets that help the AI answer. ${ppLink("https://duckduckgo.com/privacy", "DuckDuckGo privacy")}, ${ppLink("https://foundation.wikimedia.org/wiki/Policy:Privacy_policy", "Wikimedia privacy")}</li>
+        <li><b>Public code libraries</b> (such as KaTeX, jsPDF and pdf.js) are loaded from content delivery networks, which can see your IP address when your browser fetches them.</li>
+        <li><b>Google STUN servers</b> help calls connect. See ${ppGo("pp-8", "Section 8")}.</li></ul>
+        <p>These services have their own policies. DuoTrack does not control them.</p>`],
+      ["pp-7", "7. AI features", () => `<p>When you write <code>@grok</code> or <code>@a9</code> in chat, or use the AI panel, your message, the recent messages of the room you are in (up to 60), and search snippets are sent to Groq. When you crop a question in the PDF viewer and ask the AI, the cropped image and your text go to Google Gemini. Voice replies also use Gemini.</p>
+        <p>The API keys for these services are shared by the whole group through the app's settings. AI answers can be wrong, so check them. Do not send passwords, personal details or private photos to any AI feature.</p>`],
+      ["pp-8", "8. Voice and video calls", () => `<p>Calls are personal: only you and your study partner can start or answer one. Audio, video and screen sharing travel directly between the two devices (WebRTC) and are not recorded or stored by DuoTrack.</p>
+        <p>To start a call, short setup messages are saved temporarily in Firebase under a path used only by that pair, and removed when the call ends. Google's public STUN servers help the devices find each other and can see network addresses. Screen sharing starts only if you choose it.</p>`],
+      ["pp-9", "9. Chat moderation", () => `<p>Any user can report a message written by someone else, choosing a reason. The admin receives a copy of that message with the report. The admin may dismiss it, disable the sender's chat for a number of hours, or disable it permanently.</p>
+        <p>A person whose chat is disabled is shown the reason in writing, signed by the admin. The admin can also close an account, and delete an account permanently (${ppGo("pp-11", "Section 11")}). To appeal, use ${ppGo("pp-15", "Contact us")}.</p>`],
+      ["pp-10", "10. Students and age", () => `<p>DuoTrack is meant for students in classes 11 and 12 and droppers, and many are under 18. Date of birth is collected only so the admin can review who is joining. Parents or guardians can ask for a child's data to be removed at any time through ${ppGo("pp-15", "Section 15")}.</p>`],
+      ["pp-11", "11. Keeping and deleting data", () => `<p>Data stays until you or the admin remove it. In chat, "Delete for me" hides a message on your device and "Delete for everyone" removes it for everyone. You can edit a message for a short time after sending it.</p>
+        <p>When the admin deletes an account permanently, the login, profile, study data, partner links, partner requests and the messages written by that account are removed. Reports about messages may be kept for moderation records. Clear your browser's site data to remove browser-only data (${ppGo("pp-2", "Section 2.7")}).</p>`],
+      ["pp-12", "12. Security, and its limits", () => `<p>Passwords are stored as salted hashes, text shown in chat is escaped, and external links open safely. This is still a prototype:</p>
+        <ul><li>Login checks run in the browser, not on a server.</li><li>The database does not yet have strict per-user rules, so "private" and "admin only" are enforced by the app, not by the database.</li><li>Shared API keys are stored in the group's settings.</li></ul>
+        <p>Planned improvements are proper Firebase Authentication, strict database rules and moving the API keys behind a server. Until then, please do not store anything you consider highly sensitive in DuoTrack.</p>`],
+      ["pp-13", "13. Your choices", () => `<p>You can edit or delete your messages, turn notifications and reminders off, use night mode, skip the AI features, clear browser data, and ask for a copy or removal of your data through ${ppGo("pp-15", "Section 15")}.</p>`],
+      ["pp-14", "14. Changes to this policy", () => `<p>If the app's data practices change, this page is updated and the date at the top changes. This version was last updated on ${PP_UPDATED}.</p>`],
+      ["pp-15", "15. Contact us", () => `<p>Contact: Abhishek, admin of DuoTrack. Email: ${ppLink("mailto:" + CONTACT_EMAIL, CONTACT_EMAIL)}. Use it for privacy questions, data removal, appeals and problems. Inside the app you can also use the Contact Us link in the footer.</p>`]
+    ];
+    function ppOpen(anchor) {
+      let page = document.getElementById("ppPage");
+      if (!page) {
+        page = document.createElement("div");
+        page.id = "ppPage"; page.className = "pp-page"; page.setAttribute("role", "dialog"); page.setAttribute("aria-modal", "true"); page.setAttribute("aria-label", "Privacy Policy");
+        page.innerHTML = `<div class="pp-bar"><b>DuoTrack</b><button type="button" class="pp-close" data-pp-close>Close</button></div>
+          <article class="pp-doc"><h1>Privacy Policy</h1><p class="pp-meta">Last updated ${PP_UPDATED}</p>
+          <p class="pp-lead">This page explains, in plain words, exactly what DuoTrack stores about you and why. Tap a heading below to jump to it.</p>
+          <nav class="pp-toc" aria-label="Contents">${PP_SECTIONS.map((x) => `<a href="#${x[0]}" data-pp-go="${x[0]}">${x[1]}</a>`).join("")}</nav>
+          ${PP_SECTIONS.map((x) => `<section id="${x[0]}"><h2>${x[1]}</h2>${x[2]()}<a class="pp-top" href="#" data-pp-go="ppTop">Back to top</a></section>`).join("")}
+          <p class="pp-meta">Questions? ${ppLink("mailto:" + CONTACT_EMAIL, "Email the admin")}.</p></article>`;
+        document.body.appendChild(page);
+        page.addEventListener("click", (e) => {
+          if (e.target.closest("[data-pp-close]")) { page.hidden = true; document.body.style.overflow = ""; return; }
+          const go = e.target.closest("[data-pp-go]");
+          if (go) { e.preventDefault(); const id = go.dataset.ppGo; if (id === "ppTop") page.scrollTo({ top: 0, behavior: "smooth" }); else document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }); }
+        });
+      }
+      page.hidden = false; document.body.style.overflow = "hidden";
+      if (anchor) document.getElementById(anchor)?.scrollIntoView(); else page.scrollTo({ top: 0 });
+    }
+    function ppContactOpen() {
+      dgOpen("contact", `<h2>Contact us</h2><p class="dg-sub">Contact: Abhishek, admin of DuoTrack.</p>
+        <p class="dg-sub">Email: <a href="mailto:${escapeHTML(CONTACT_EMAIL)}">${escapeHTML(CONTACT_EMAIL)}</a></p>
+        <div class="dg-row"><a class="dg-btn" style="display:grid;place-items:center;text-decoration:none" href="mailto:${escapeHTML(CONTACT_EMAIL)}?subject=DuoTrack%20help">Send email</a><button type="button" class="dg-btn ghost" data-dg-copy="${escapeHTML(CONTACT_EMAIL)}">Copy email</button></div>
+        <p class="dg-sub" style="margin-top:14px">Use it for login problems, appeals, privacy questions and data removal. Read the <a href="#" data-pp="privacy">Privacy Policy</a> for what the app stores.</p>`, true);
+    }
+    document.addEventListener("click", (e) => {
+      const a = e.target.closest("[data-pp]");
+      if (!a) return;
+      e.preventDefault();
+      if (a.dataset.pp === "contact") ppContactOpen(); else { if (!dgEl.hidden) dgClose(); ppOpen(); }
+    });
+    document.getElementById("privacyLink")?.addEventListener("click", (e) => { e.preventDefault(); e.stopImmediatePropagation(); ppOpen(); });
 
     const SUBJECTS = ["Physics", "Chemistry", "Maths"];
     const MODES = ["Lecture", "Practice"];
@@ -8642,7 +8943,7 @@
     let rawChatMessages = [];
 
     function refreshChatMessagesState() {
-      chatMessagesState = rawChatMessages.filter((message) => !locallyDeletedChatIds.has(message.id));
+      chatMessagesState = rawChatMessages.filter((message) => !locallyDeletedChatIds.has(message.id) && dgChatVisible(message) && dgInRoom(message));
       renderChat(true);
     }
 
@@ -8670,6 +8971,7 @@
           .map(([id, message]) => ({
             id,
             userId: message.userId || "",
+            room: String(message.room || "").slice(0, 80),
             name: message.name || "User",
             isGrok: !!message.isGrok,
             text: String(message.text || "").slice(0, message.isGrok ? 4000 : 320),
@@ -8690,10 +8992,12 @@
           .filter((message) => message.text || message.image)
           .sort((a, b) => a.createdAt - b.createdAt);
 
-        const nextMessages = rawChatMessages.filter((message) => !locallyDeletedChatIds.has(message.id));
+        dgLegacy = new Set(rawChatMessages.filter((m) => !m.room && !m.isGrok).map((m) => m.userId));
+        const visible = rawChatMessages.filter((message) => !locallyDeletedChatIds.has(message.id) && dgChatVisible(message));
+        const nextMessages = visible.filter(dgInRoom);
 
         if (chatLoadedOnce && currentUserId) {
-          const incoming = nextMessages.filter((message) => message.userId !== currentUserId && message.createdAt > latestSeenChatTime);
+          const incoming = visible.filter((message) => message.userId !== currentUserId && message.createdAt > latestSeenChatTime);
           incoming.forEach(showChatNotification);
           if (incoming.length && chatPanel.classList.contains("hidden")) {
             unreadChatCount += incoming.length;
@@ -9232,7 +9536,8 @@
     }
 
     function listenToCalls() {
-      onValue(callRef, async (snapshot) => {
+      if (dgCallUnsub) dgCallUnsub();
+      dgCallUnsub = onValue(callRef, async (snapshot) => {
         const call = snapshot.val();
 
         if (!call) {
@@ -10322,6 +10627,7 @@
         const searchContext = await webSearchSnippets(question);
         const reply = await callGrokApi(`${askerName}: ${question}`, history, isSavage ? "savage" : "normal", searchContext);
         await push(chatRef, {
+          room: dgRoomNow() || "global",
           userId: "grok",
           name: "AI",
           text: reply,
@@ -10330,6 +10636,7 @@
         });
       } catch (error) {
         await push(chatRef, {
+          room: dgRoomNow() || "global",
           userId: "grok",
           name: "AI",
           text: error.message || "Couldn't reply right now — check the API key in Settings.",
@@ -15270,7 +15577,7 @@
             <p>Close or reopen an account. A closed account can only see the closure message and Contact Us (where it can appeal).</p>
             ${Object.values(state.users).filter((u) => u.id !== APPEAL_REVIEWER_ID).map((u) => {
               const closed = isAccountClosed(u.id);
-              return `<div class="ap-row"><strong>${escapeHTML(u.name)}</strong><span class="ap-note">${closed ? "closed" : "open"}</span><button type="button" class="ap-primary" data-ap="toggleBan" data-id="${escapeHTML(u.id)}" data-closed="${closed ? "1" : "0"}">${closed ? "Unban" : "Ban"}</button></div>`;
+              return `<div class="ap-row"><strong>${escapeHTML(u.name)}</strong><span class="ap-note">${closed ? "closed" : "open"}</span><button type="button" class="ap-primary" data-ap="toggleBan" data-id="${escapeHTML(u.id)}" data-closed="${closed ? "1" : "0"}">${closed ? "Unban" : "Ban"}</button><button type="button" class="ap-primary" data-ap="chatBan" data-id="${escapeHTML(u.id)}">Chat ban</button><button type="button" class="ap-primary" data-ap="deleteAccount" data-id="${escapeHTML(u.id)}" style="background:#c0392b">Delete</button></div>`;
             }).join("") || "<p>No users loaded yet.</p>"}
           </div>
           <div class="ap-card">
@@ -15407,6 +15714,8 @@
           showToast(makeClosed ? "Banned" : "Unbanned", `${(USERS_BY_ID[id] && USERS_BY_ID[id].name) || id}'s account is now ${makeClosed ? "closed" : "open"}.`);
         } catch (error) { showToast("Error", "Could not change the account."); }
         renderAdminPortal();
+      } else if (act === "chatBan") { dgOpenBan(ap.dataset.id);
+      } else if (act === "deleteAccount") { dgDeleteAccount(ap.dataset.id);
       } else if (act === "saveStudy") {
         ap.disabled = true;
         try { await saveAdminStudy(ap.closest(".ap-user")); } catch (error) { showToast("Error", "Could not save the study time."); }
@@ -15735,6 +16044,7 @@
           ${REACTION_EMOJIS.map((emoji) => `<button type="button" data-reaction="${emoji}">${emoji}</button>`).join("")}
         </div>
         <button type="button" data-action="reply">Reply</button>
+        ${!isMine && !isGrokMessage ? `<button type="button" data-action="report">Report message</button>` : ""}
         ${canEdit ? `<button type="button" data-action="edit">Edit message</button>` : ""}
         <button type="button" data-action="delete-me">Delete for me</button>
         ${canDeleteEveryone ? `<button type="button" class="danger" data-action="delete-everyone">Delete for everyone</button>` : ""}
@@ -15755,6 +16065,7 @@
           return;
         }
         const action = event.target.closest("button")?.dataset.action;
+        if (action === "report") { closeChatContextMenu(); dgOpenReport(messageId); return; }
         if (action === "delete-me") {
           deleteChatMessageForMe(messageId);
         } else if (action === "delete-everyone") {
@@ -15887,8 +16198,12 @@
       const text = chatInput.value.trim();
       const user = currentUser();
       if ((!text && !pendingChatImage) || !user) return;
+      if (dgBanActive()) { dgShowBan(); return; }
+      const room = dgRoomNow();
+      if (!room) { showToast("No partner yet", "Use the Global chat, or choose a study partner first."); return; }
       chatInput.value = "";
       const payload = {
+        room,
         userId: user.id,
         name: user.name,
         text,
