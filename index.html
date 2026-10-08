@@ -6312,6 +6312,165 @@ body:is(.theme-night, .night-override) .chat-edit-input { background: #1b2520; c
 body:is(.theme-night, .night-override) .chat-context-menu button.danger:hover { background: rgba(229, 72, 77, .18); }
 body:is(.theme-night, .night-override) .chat-messages { background: linear-gradient(180deg, rgba(120, 215, 155, .06), transparent 38%); }
 </style>
+<style id="polishTheme">
+/* =====================================================================================================================
+   POLISH LAYER (added): one consistent look for everything inside the app.
+   Only CSS. Everything uses the theme variables (--green, --green-2, --panel, --paper, --line, --ink, --muted), so it
+   follows every theme (classic, ocean, sunrise, focus, tricolor, night). Radius scale: 12 controls / 16 cards / 22 panels.
+   ===================================================================================================================== */
+body {
+  --r-ctl: 12px;
+  --r-card: 16px;
+  --r-panel: 22px;
+  --edge: color-mix(in srgb, var(--line) 78%, var(--green));
+  --ring: color-mix(in srgb, var(--green) 34%, transparent);
+  --glass: color-mix(in srgb, var(--panel) 82%, transparent);
+  --tint: color-mix(in srgb, var(--green) 6%, var(--panel));
+}
+html { scroll-behavior: smooth; }
+::selection { background: color-mix(in srgb, var(--green) 28%, transparent); }
+body :focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; border-radius: var(--r-ctl); }
+body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; scrollbar-color: color-mix(in srgb, var(--green) 40%, var(--line)) transparent; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { border-radius: 99px; border: 3px solid transparent; background: color-mix(in srgb, var(--green) 38%, var(--line)); background-clip: content-box; }
+
+/* ---------- top bar ---------- */
+body .topbar {
+  background: var(--glass);
+  -webkit-backdrop-filter: saturate(1.5) blur(18px); backdrop-filter: saturate(1.5) blur(18px);
+  border-bottom: 1px solid var(--edge);
+  box-shadow: 0 12px 30px -22px color-mix(in srgb, var(--green) 55%, transparent);
+}
+body .app-brand { gap: 10px; }
+body .app-brand .brand-mark { border-radius: 13px; box-shadow: 0 6px 16px -8px color-mix(in srgb, var(--green) 60%, transparent); }
+body .user-chip .avatar { border: 2px solid color-mix(in srgb, var(--green) 38%, var(--panel)); box-shadow: 0 6px 16px -8px color-mix(in srgb, var(--green) 55%, transparent); }
+body .greeting strong { font-size: 17px; letter-spacing: -.02em; }
+body .greeting span { color: var(--muted); }
+body .top-actions { gap: 8px; align-items: center; }
+body .top-actions .icon-btn,
+body .top-actions .ghost-btn,
+body .top-actions .sync-pill,
+body .top-actions .questions-logo-btn { height: 40px; min-height: 40px; border-radius: var(--r-ctl); }
+body .top-actions .icon-btn { width: 40px; padding: 0; }
+body .top-actions .icon-btn,
+body .top-actions .ghost-btn {
+  background: var(--panel); color: var(--ink); border: 1px solid var(--edge);
+  box-shadow: 0 1px 2px rgba(20, 40, 30, .05);
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease, color .18s ease;
+}
+body .top-actions .icon-btn { color: var(--green); }
+body .top-actions .icon-btn:hover,
+body .top-actions .ghost-btn:hover {
+  transform: translateY(-1px); border-color: var(--green); background: var(--green-2); color: var(--green);
+  box-shadow: 0 10px 20px -12px color-mix(in srgb, var(--green) 60%, transparent);
+}
+body .top-actions #logoutBtn:hover { border-color: var(--red); background: color-mix(in srgb, var(--red) 10%, var(--panel)); color: var(--red); box-shadow: 0 10px 20px -12px color-mix(in srgb, var(--red) 55%, transparent); }
+body .top-actions .ghost-btn { padding: 0 14px; font-size: 14px; font-weight: 700; }
+body .sync-pill { gap: 8px; padding: 0 13px; border-color: color-mix(in srgb, var(--green) 28%, var(--line)); background: color-mix(in srgb, var(--green) 10%, var(--panel)); }
+body .sync-pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 22%, transparent); animation: polishPulse 2.4s ease-in-out infinite; }
+@keyframes polishPulse { 50% { box-shadow: 0 0 0 6px color-mix(in srgb, currentColor 6%, transparent); } }
+body .questions-logo-btn { box-shadow: 0 10px 22px -12px rgba(214, 150, 20, .75); }
+
+/* ---------- panels and headings ---------- */
+body .layout { gap: 22px; }
+body .panel {
+  border-radius: var(--r-panel);
+  border: 1px solid var(--edge);
+  background: linear-gradient(180deg, var(--tint) 0, var(--panel) 150px);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .5) inset, 0 16px 36px -26px color-mix(in srgb, var(--green) 55%, transparent), 0 2px 6px rgba(20, 40, 30, .04);
+}
+body .panel:hover { border-color: color-mix(in srgb, var(--green) 30%, var(--line)); box-shadow: 0 1px 0 rgba(255, 255, 255, .5) inset, 0 22px 44px -26px color-mix(in srgb, var(--green) 62%, transparent), 0 2px 8px rgba(20, 40, 30, .05); }
+body .timer-panel { padding: 24px; }
+body .section-heading h2, body .panel > h2 { font-size: 19px; font-weight: 800; letter-spacing: -.02em; line-height: 1.2; margin: 6px 0 0; }
+body .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 10.5px; line-height: 1; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--green); }
+body .eyebrow::before { content: ""; width: 16px; height: 3px; border-radius: 3px; background: linear-gradient(90deg, var(--green), var(--yellow)); }
+body .panel > h2 + p { margin-top: 6px; }
+body .subtext { color: var(--muted); font-size: 14px; line-height: 1.5; }
+body .live-badge { padding: 6px 12px; border-radius: 999px; letter-spacing: .1em; box-shadow: 0 6px 14px -8px color-mix(in srgb, var(--green) 70%, transparent); }
+
+/* ---------- subject and mode cards ---------- */
+body .subject-grid, body .mode-grid { gap: 10px; }
+body .subject-option, body .mode-option {
+  --accent: var(--subject, var(--mode, var(--green)));
+  border-radius: var(--r-card);
+  border: 1px solid var(--edge);
+  border-top: 1px solid var(--edge);
+  background: var(--panel);
+  box-shadow: inset 3px 0 0 color-mix(in srgb, var(--accent) 85%, transparent), 0 1px 2px rgba(20, 40, 30, .04);
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
+}
+body .subject-option:hover, body .mode-option:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+  box-shadow: inset 3px 0 0 var(--accent), 0 14px 26px -16px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+body .subject-option.active, body .mode-option.active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 9%, var(--panel));
+  box-shadow: inset 4px 0 0 var(--accent), 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent), 0 16px 28px -18px color-mix(in srgb, var(--accent) 65%, transparent);
+}
+body .subject-option .option-icon, body .mode-option .option-icon { border-radius: 12px; }
+
+/* ---------- level pills ---------- */
+body .quick-add-tabs { gap: 8px; }
+body .quick-add-tab {
+  border-radius: var(--r-ctl); border: 1px solid color-mix(in srgb, var(--green) 20%, var(--line)); border-style: solid;
+  background: color-mix(in srgb, var(--green) 7%, var(--panel)); color: var(--green);
+  transition: transform .16s ease, background .16s ease, border-color .16s ease, box-shadow .16s ease;
+}
+body .quick-add-tab:hover { transform: translateY(-1px); border-color: var(--green); background: var(--green-2); box-shadow: 0 10px 18px -12px color-mix(in srgb, var(--green) 60%, transparent); }
+
+/* ---------- timer ---------- */
+body .timer-display { border-radius: 22px; box-shadow: 0 1px 0 rgba(255, 255, 255, .22) inset, 0 22px 40px -26px color-mix(in srgb, var(--green) 80%, black); }
+body:not(.theme-night):not(.night-override) .timer-display {
+  background:
+    radial-gradient(120% 150% at 12% -10%, color-mix(in srgb, var(--green) 58%, white) 0%, transparent 55%),
+    linear-gradient(135deg, color-mix(in srgb, var(--green) 82%, black) 0%, color-mix(in srgb, var(--green) 56%, black) 100%);
+}
+body .timer-toggle { border-radius: 18px; }
+body .timer-toggle-icon { border-radius: 14px; }
+
+/* ---------- stat tiles ---------- */
+body .stats-row { gap: 10px; }
+body .stat { border-radius: var(--r-card); border: 1px solid var(--edge); background: color-mix(in srgb, var(--green) 3.5%, var(--panel)); padding: 12px 14px; box-shadow: 0 1px 2px rgba(20, 40, 30, .03); transition: transform .18s ease, box-shadow .18s ease; }
+body .stat:hover { transform: translateY(-1px); box-shadow: 0 12px 22px -16px color-mix(in srgb, var(--green) 55%, transparent); }
+body .stat-icon { border-radius: 11px; background: color-mix(in srgb, var(--green) 14%, var(--panel)); color: var(--green); }
+
+/* ---------- buttons and fields ---------- */
+body .primary-btn, body .secondary-btn, body .danger-btn { border-radius: var(--r-ctl); }
+body .secondary-btn { border: 1px solid color-mix(in srgb, var(--green) 24%, var(--line)); }
+body .panel input:is([type="text"], [type="search"], [type="date"], [type="email"], [type="password"], [type="number"], [type="url"]),
+body .panel textarea, body .panel select {
+  border-radius: var(--r-ctl); border: 1.5px solid var(--edge); background: color-mix(in srgb, var(--paper) 55%, var(--panel));
+  transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+}
+body .panel input:is([type="text"], [type="search"], [type="date"], [type="email"], [type="password"], [type="number"], [type="url"]):focus,
+body .panel textarea:focus, body .panel select:focus { outline: none; border-color: var(--green); background: var(--panel); box-shadow: 0 0 0 4px var(--ring); }
+
+/* ---------- dialogs ---------- */
+body .modal { border-radius: 24px; border: 1px solid var(--edge); box-shadow: 0 34px 80px -20px rgba(8, 16, 12, .5); }
+body .modal-backdrop { -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+body .dg-box { border-radius: 24px; border: 1px solid var(--edge); box-shadow: 0 34px 80px -20px rgba(8, 16, 12, .5); }
+
+/* ---------- footer ---------- */
+body .footer { border-top: 1px solid var(--edge); margin-top: 8px; padding-top: 16px; padding-bottom: 28px; }
+body .footer a { text-decoration: none; font-weight: 700; color: var(--green); border-bottom: 1px solid color-mix(in srgb, var(--green) 30%, transparent); }
+body .footer a:hover { border-bottom-color: var(--green); }
+body .footer-tagline { letter-spacing: -.01em; }
+
+@media (prefers-reduced-motion: reduce) { body .sync-pill::before { animation: none; } }
+@media (max-width: 520px) {
+  body .top-actions { gap: 6px; flex-wrap: wrap; }
+  body .top-actions > * { flex: none; }
+  body .top-actions .icon-btn { width: 38px; height: 38px; min-height: 38px; }
+  body .top-actions .ghost-btn, body .top-actions .sync-pill, body .top-actions .questions-logo-btn { height: 38px; min-height: 38px; padding-left: 10px; padding-right: 10px; }
+  body .top-actions .sync-pill { font-size: 11px; gap: 6px; }
+}
+@media (max-width: 720px) {
+  body .timer-panel { padding: 18px; }
+  body .top-actions .ghost-btn { padding: 0 11px; }
+}
+</style>
 </head>
 <body>
   <div class="app-grain" aria-hidden="true"></div>
