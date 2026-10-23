@@ -6285,6 +6285,19 @@ textarea.dg-in { height: auto; padding: 10px 12px; resize: vertical; }
 .dg-box a:not(.dg-btn) { color: var(--green); font-weight: 700; }
 #loginScreen .lg-legal { display: flex; gap: 8px; margin: 14px 0 0; font-size: 12px; color: var(--muted); opacity: .7; }
 #loginScreen .lg-legal a { color: inherit; text-decoration: none; } #loginScreen .lg-legal a:hover { text-decoration: underline; opacity: 1; }
+#loginScreen .lg-legal a { padding: 6px 2px; opacity: .9; cursor: pointer; }
+#loginScreen .lg-forgot-row { display: flex; justify-content: flex-end; margin: -6px 0 14px; }
+#loginScreen .lg-forgot { min-height: 32px; padding: 6px 2px; border: 0; background: transparent; color: var(--green); font: inherit; font-size: 13.5px; font-weight: 800; cursor: pointer; }
+#loginScreen .lg-forgot:hover, #loginScreen .lg-forgot:focus-visible { background: transparent; text-decoration: underline; transform: none; }
+.rp-joke { margin: 0 0 12px; padding: 10px 12px; border-left: 4px solid #f4c542; border-radius: 4px 12px 12px 4px; background: rgba(244, 197, 66, .16); font-size: .9rem; line-height: 1.45; text-align: left; }
+.rp-more { margin-left: 4px; padding: 2px 4px; border: 0; background: transparent; color: var(--green, #246b45); font: inherit; font-size: .82rem; font-weight: 800; text-decoration: underline; cursor: pointer; }
+.rp-g { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin: 8px 0 4px; }
+.rp-g svg { width: 18px; height: 18px; flex: none; }
+.rp-gnote { margin: 4px 0 0; font-size: .82rem; font-weight: 700; color: var(--green, #246b45); }
+.rp-h { margin: 14px 0 6px; font-size: .72rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--muted, #637069); }
+.rp-status { min-height: 1.2em; margin: 10px 0 0; font-weight: 700; }
+.rp-show { display: flex; align-items: center; gap: 8px; margin: 10px 0 2px; font-size: .88rem; font-weight: 700; cursor: pointer; }
+.rp-show input { width: 18px; height: 18px; margin: 0; accent-color: var(--green, #246b45); }
 .pp-page { position: fixed; inset: 0; z-index: 100001; overflow: auto; background: var(--paper); color: var(--ink); scroll-behavior: smooth; }
 .pp-page[hidden] { display: none; }
 .pp-bar { position: sticky; top: 0; z-index: 2; display: flex; justify-content: space-between; align-items: center; padding: 12px clamp(16px, 4vw, 48px); background: color-mix(in srgb, var(--panel) 92%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
@@ -6694,6 +6707,7 @@ body .footer-tagline { letter-spacing: -.01em; }
         <div class="field"><label for="password">Password</label>
           <div class="input-with-icon"><span class="field-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span><input id="password" type="password" autocomplete="current-password" placeholder="Your password" required />
             <button id="loginReveal" class="lg-reveal" type="button" aria-pressed="false" aria-label="Show password">Show</button></div></div>
+        <div class="lg-forgot-row"><button type="button" id="lgForgot" class="lg-forgot">Forgot password?</button></div>
         <p id="lgCaps" class="lg-caps" role="status" hidden>Caps Lock is on</p>
         <p id="loginError" class="error" aria-live="polite"></p>
         <button class="primary-btn login-submit-btn" type="submit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5M15 12H3"/></svg> <span class="lg-btn-text">Log in</span><span class="lg-spin" aria-hidden="true"></span></button>
@@ -6709,6 +6723,24 @@ body .footer-tagline { letter-spacing: -.01em; }
     </nav>
     </div>
   </main>
+  <script id="loginEarly">
+/* Terms / Privacy / Contact us / Forgot password: the main app script can take a few seconds to start (it waits for Firebase).
+   Until then these links used to do nothing. This remembers the tap and the app opens it the moment it is ready. */
+(function () {
+  var st = window.__dtEarly = { ready: false, q: "" }, pill;
+  document.addEventListener("click", function (e) {
+    if (st.ready) return;
+    var a = e.target.closest && e.target.closest("[data-pp], #lgForgot");
+    if (!a) return;
+    e.preventDefault();
+    st.q = a.id === "lgForgot" ? "forgot" : a.getAttribute("data-pp");
+    if (pill) pill.remove();
+    pill = document.createElement("div"); pill.className = "lg-soon"; pill.setAttribute("role", "status");
+    pill.textContent = "Just a moment, opening it..."; document.body.appendChild(pill);
+    var mine = pill; setTimeout(function () { mine.classList.add("out"); }, 1800); setTimeout(function () { mine.remove(); }, 2300);
+  });
+})();
+</script>
   <script id="loginPolish">
 (function () {
   var ls = document.getElementById("loginScreen"), form = document.getElementById("loginForm"), err = document.getElementById("loginError"),
@@ -7772,6 +7804,7 @@ body .footer-tagline { letter-spacing: -.01em; }
     document.body.appendChild(dgEl);
     let dgMode = "", dgClosable = false, dgPending = [], dgSeen = -1, dgSubbed = false, dgPick = "", dgPR = [], dgPRLoaded = false, dgPRSub = false, dgSeenIn = -1, dgTab = "", dgSkip = false, dgSkipDecl = 0, dgNone = null;
     const dgCodeSaved = new Set();
+    var rpPending = [], rpSeen = -1;          /* forgot-password requests waiting for the admin (see "Forgot password" block) */
     const dgChars = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
     const dgRand = (n) => Array.from(crypto.getRandomValues(new Uint32Array(n)), (v) => dgChars[v % dgChars.length]).join("");
     function dgOpen(mode, html, closable) {
@@ -7868,7 +7901,7 @@ body .footer-tagline { letter-spacing: -.01em; }
     function dgUpdateBadge() {
       const b = document.getElementById("inboxBadge");
       if (!b) return;
-      const n = (currentUserId ? dgIncoming().length : 0) + (currentUserId === RQ_REVIEWER_ID ? dgPending.length + dgReports.length + gsLockedCount() + drCount() : 0);
+      const n = (currentUserId ? dgIncoming().length : 0) + (currentUserId === RQ_REVIEWER_ID ? dgPending.length + rpPending.length + dgReports.length + gsLockedCount() + drCount() : 0);
       b.textContent = n; b.hidden = n === 0;
     }
     function dgRefresh() {
@@ -7904,7 +7937,7 @@ body .footer-tagline { letter-spacing: -.01em; }
       const me = state.users[currentUserId];
       if (!me) return;
       const rev = currentUserId === RQ_REVIEWER_ID, inc = dgIncoming(), out = dgOutgoing(), old = partnerUser();
-      if (!dgTab || ((dgTab === "access" || dgTab === "reports" || dgTab === "google" || dgTab === "delete") && !rev) || (dgTab === "account" && rev)) dgTab = rev && !inc.length && dgPending.length ? "access" : "partners";
+      if (!dgTab || ((dgTab === "access" || dgTab === "reports" || dgTab === "google" || dgTab === "delete") && !rev) || (dgTab === "account" && rev)) dgTab = rev && !inc.length && (dgPending.length || rpPending.length) ? "access" : "partners";
       const oldName = old && state.users[old.id] ? old.name : "";
       let body;
       if (dgTab === "account") {
@@ -7927,6 +7960,7 @@ body .footer-tagline { letter-spacing: -.01em; }
             <div class="dg-row"><button type="button" class="dg-btn" data-dg-approve="${escapeHTML(r.requestId)}">Approve</button>
             <button type="button" class="dg-btn ghost" data-dg-reject="${escapeHTML(r.requestId)}">Reject</button></div></div>`).join("")
           : '<p class="dg-sub">No pending access requests.</p>';
+        body += rpAdminHtml();
       } else {
         const t = out && state.users[out.to], mine = me.partnerId && state.users[me.partnerId];
         body = (mine ? `<div class="dg-req dg-pr">${dgAvatar(mine)}<div class="dg-pr-body"><b>${escapeHTML(mine.name)}</b><code>${escapeHTML(dgCodeOf(mine))}</code><p>Your study partner.</p></div></div>` : "")
@@ -7939,7 +7973,7 @@ body .footer-tagline { letter-spacing: -.01em; }
       const code = dgCodeOf(me);
       dgOpen("inbox", `<h2>Messages</h2>
         <p class="dg-sub">Your personal ID <code class="dg-code">${escapeHTML(code)}</code> <button type="button" class="dg-btn ghost" data-dg-copy="${escapeHTML(code)}" style="min-height:32px;padding:0 12px">Copy</button></p>
-        <div class="dg-tabs"><button type="button" data-dg-tab="partners" class="${dgTab === "partners" ? "on" : ""}">Partners${inc.length ? ` (${inc.length})` : ""}</button>${rev ? `<button type="button" data-dg-tab="access" class="${dgTab === "access" ? "on" : ""}">Access requests${dgPending.length ? ` (${dgPending.length})` : ""}</button>` : ""}${rev ? `<button type="button" data-dg-tab="reports" class="${dgTab === "reports" ? "on" : ""}">Reports${dgReports.length ? ` (${dgReports.length})` : ""}</button>` : ""}${rev ? `<button type="button" data-dg-tab="google" class="${dgTab === "google" ? "on" : ""}">Google${gsLockedCount() ? ` (${gsLockedCount()})` : ""}</button>` : ""}${rev ? `<button type="button" data-dg-tab="delete" class="${dgTab === "delete" ? "on" : ""}">Delete requests${drCount() ? ` (${drCount()})` : ""}</button>` : `<button type="button" data-dg-tab="account" class="${dgTab === "account" ? "on" : ""}">Account</button>`}</div>${body}`, true);
+        <div class="dg-tabs"><button type="button" data-dg-tab="partners" class="${dgTab === "partners" ? "on" : ""}">Partners${inc.length ? ` (${inc.length})` : ""}</button>${rev ? `<button type="button" data-dg-tab="access" class="${dgTab === "access" ? "on" : ""}">Access requests${dgPending.length + rpPending.length ? ` (${dgPending.length + rpPending.length})` : ""}</button>` : ""}${rev ? `<button type="button" data-dg-tab="reports" class="${dgTab === "reports" ? "on" : ""}">Reports${dgReports.length ? ` (${dgReports.length})` : ""}</button>` : ""}${rev ? `<button type="button" data-dg-tab="google" class="${dgTab === "google" ? "on" : ""}">Google${gsLockedCount() ? ` (${gsLockedCount()})` : ""}</button>` : ""}${rev ? `<button type="button" data-dg-tab="delete" class="${dgTab === "delete" ? "on" : ""}">Delete requests${drCount() ? ` (${drCount()})` : ""}</button>` : `<button type="button" data-dg-tab="account" class="${dgTab === "account" ? "on" : ""}">Account</button>`}</div>${body}`, true);
     }
     document.getElementById("inboxBtn")?.addEventListener("click", () => { dgTab = ""; dgOpenInbox(); });
 
@@ -8078,7 +8112,7 @@ body .footer-tagline { letter-spacing: -.01em; }
         return;
       }
       dgWatchPartner();
-      if (user.id === RQ_REVIEWER_ID) { dgWatchRequests(); dgWatchReports(); }
+      if (user.id === RQ_REVIEWER_ID) { dgWatchRequests(); dgWatchReports(); rpWatch(); }
       dgWatchBan(user.id);
       const pk = dgPairKey();
       if (pk !== dgLastPair) { dgLastPair = pk; dgBindCall(pk); dgApplyRoom(); }
@@ -8352,6 +8386,218 @@ body .footer-tagline { letter-spacing: -.01em; }
       if (a.dataset.pp === "contact") ppContactOpen();
       else { if (!dgEl.hidden && !a.hasAttribute("data-pp-keep")) dgClose(); if (a.dataset.pp === "terms") tcOpen(); else ppOpen(); }
     });
+
+    /* =====================================================================================================================
+       FORGOT PASSWORD (added)
+       New code only. The login / password functions are untouched; this only calls pwHash() to make the hash.
+       - passwordResets/<resetId> = { resetId, loginId, email, googleVerified, passHash, status, createdAt, decidedAt }
+       - The admin approves in Messages > Access requests. Approving saves the new hash:
+           registered accounts -> accounts/<loginId>/password       built-in accounts (the USERS list above) -> passwordOverrides/<loginId>
+       - Until the admin approves, the old password keeps working.
+       ===================================================================================================================== */
+    const rpRoot = `duotrack/groups/${GROUP_ID}/passwordResets`;
+    const rpRef = (id) => ref(database, `${rpRoot}/${id}`);
+    const RP_KEEP_MS = 2 * 24 * 3600 * 1000;       // decided requests are removed after 2 days
+    const RP_JOKES = [
+      "Your brain remembers every Physics formula but dropped one password. Priorities, topper.",
+      "Passwords are like Organic Chemistry reactions: learned at night, gone by morning.",
+      "Good news: you forgot only the password. The syllabus is still pending, no change there.",
+      "Plot twist: the password was in your head all along. Sadly, it moved out.",
+      "Forgetting a password is the only chapter where the answer key is a reset button.",
+      "Your password left the same way your formulas leave during the exam: silently.",
+      "Relax. Even toppers forget things. Usually where they kept the charger."
+    ];
+    const RP_WAIT_JOKES = [
+      "While you wait: solve 5 PYQs. By the time you finish, the admin may be done too.",
+      "Good time for a chapter revision. The password can wait, the syllabus cannot.",
+      "Fun fact: this wait is shorter than a Chemistry paper.",
+      "Tip: drink water, stretch, and do not refresh every minute. The admin can feel it."
+    ];
+    let rpG = null, rpJokeAt = -1;
+    function rpPick(list) { let i; do { i = Math.floor(Math.random() * list.length); } while (i === rpJokeAt && list.length > 1); rpJokeAt = i; return list[i]; }
+
+    /* built-in accounts live in the code, so an approved new password for them is kept in the database and applied here */
+    onValue(ref(database, `duotrack/groups/${GROUP_ID}/passwordOverrides`), (snap) => {
+      Object.entries(snap.val() || {}).forEach(([k, o]) => {
+        if (USERS[k] && !USERS[k].dyn && o && String(o.hash || "").startsWith("sha256$")) USERS[k].password = o.hash;
+      });
+    }, () => { /* offline: the old password keeps working */ });
+
+    function openForgot() {
+      tcEnsureStyle();
+      rpG = null;
+      dgOpen("reset", `<h2>Forgot your password?</h2>
+        <p class="rp-joke"><span id="rpJokeText">${escapeHTML(rpPick(RP_JOKES))}</span><button type="button" class="rp-more" data-rp-joke>Another one</button></p>
+        <p class="dg-sub">Tell us who you are and choose a new password. The admin has to approve it before it works.</p>
+        <form id="rpForm" class="dg-form" autocomplete="on">
+          <label for="rpWho">Login ID or email</label>
+          <input class="dg-in" id="rpWho" name="username" type="text" maxlength="80" autocomplete="username email" autocapitalize="none" spellcheck="false" placeholder="Your login ID or email" required>
+          <button type="button" class="dg-btn ghost rp-g" data-rp-google>${GS_G}<span>Use my Google account instead</span></button>
+          <p class="rp-gnote" id="rpGNote" hidden></p>
+          <label for="rpNew">New password</label>
+          <input class="dg-in" id="rpNew" type="password" maxlength="64" autocomplete="new-password" placeholder="At least 6 characters" required>
+          <label for="rpNew2">Confirm new password</label>
+          <input class="dg-in" id="rpNew2" type="password" maxlength="64" autocomplete="new-password" placeholder="Type it again" required>
+          <label class="rp-show"><input type="checkbox" id="rpShow"><span>Show passwords</span></label>
+          <p id="rpErr" class="dg-err" aria-live="polite"></p>
+          <button class="dg-btn" type="submit">Send for approval</button>
+        </form>`, true);
+      const typed = (document.getElementById("loginId") || {}).value;
+      const who = dgEl.querySelector("#rpWho");
+      if (typed && typed.trim() && typed.trim() !== ADMIN_LOGIN_ID) { who.value = typed.trim(); dgEl.querySelector("#rpNew").focus(); } else who.focus();
+    }
+    document.getElementById("lgForgot")?.addEventListener("click", openForgot);
+
+    /* work out which account the person means (login ID first, then the email they gave when they joined) */
+    async function rpResolve(raw, g) {
+      const v = String(raw || "").trim();
+      if (!v) return { err: "Enter your login ID or email." };
+      if (v === ADMIN_LOGIN_ID) return { err: "The admin login cannot be reset here. Please use Contact us." };
+      await loadDynamicAccounts();
+      let reqs;
+      try { reqs = (await get(requestsRef)).val() || {}; }
+      catch (error) { return { err: "Could not check right now. Check your connection and try again." }; }
+      const emailOf = (r) => String(r.email || "").trim().toLowerCase();
+      const approved = Object.values(reqs).filter((r) => r && r.status === "approved" && r.loginId && USERS[r.loginId])
+        .sort((a, b) => (b.decidedAt || 0) - (a.decidedAt || 0));
+      let key = "", google = false;
+      if (g && g.uid) {
+        try {
+          const link = (await get(googleLinkRef(g.uid))).val();
+          if (link && link.userId) { key = Object.keys(USERS).find((k) => USERS[k] && USERS[k].id === link.userId) || ""; google = !!key; }
+        } catch (error) { /* fall back to the email */ }
+      }
+      if (!key && USERS[v]) key = v;
+      if (!key) {
+        const e = String((g && g.email) || v).trim().toLowerCase();
+        if (e.includes("@")) {
+          const m = approved.find((r) => emailOf(r) === e || String(r.googleEmail || "").trim().toLowerCase() === e);
+          if (m) { key = m.loginId; google = !!(g && g.uid); }
+        }
+      }
+      if (!key) return { err: "We could not find an account with that login ID or email. Check it and try again, or use Contact us." };
+      const mine = approved.find((r) => r.loginId === key);
+      const email = (mine && (mine.email || mine.googleEmail)) || (g && g.email) || (v.includes("@") && !USERS[v] ? v : "");
+      return { key, name: USERS[key].name || key, email: String(email || "").trim().toLowerCase(), google };
+    }
+
+    function rpOpenSent(id, who) {
+      dgOpen("sent", `<h2>Sent to the admin</h2>
+        <div class="dg-id">${escapeHTML(id)}</div> <button type="button" class="dg-btn ghost" data-dg-copy="${escapeHTML(id)}">Copy ID</button>
+        <p class="dg-sub">Thanks, ${escapeHTML(who.name)}. Your new password is waiting for the admin to approve it. You can check back in 1 to 2 hours, then log in with the new password. Until then your old password still works.</p>
+        <p class="rp-joke">${escapeHTML(rpPick(RP_WAIT_JOKES))}</p>
+        <p class="dg-sub">In a hurry? Use <a href="#" data-pp="contact">Contact us</a> for a faster reply, and quote the ID above.</p>
+        <div class="dg-row"><button type="button" class="dg-btn" data-rp-status="${escapeHTML(id)}">Check status</button><button type="button" class="dg-btn ghost" data-dg-close>Close</button></div>
+        <p class="dg-sub rp-status" id="rpStatusMsg" aria-live="polite"></p>`, true);
+    }
+
+    dgEl.addEventListener("submit", async (e) => {
+      if (e.target.id !== "rpForm") return;
+      e.preventDefault();
+      const q = (id) => dgEl.querySelector("#" + id);
+      const err = q("rpErr"), btn = e.target.querySelector("button[type=submit]");
+      const who = q("rpWho").value.trim(), p1 = q("rpNew").value, p2 = q("rpNew2").value;
+      if (!who) { err.textContent = "Enter your login ID or email."; return; }
+      if (p1.length < 6) { err.textContent = "Your new password needs at least 6 characters."; return; }
+      if (p1 !== p2) { err.textContent = "The two passwords do not match."; return; }
+      btn.disabled = true; btn.textContent = "Checking...";
+      const back = () => { btn.disabled = false; btn.textContent = "Send for approval"; };
+      let found;
+      try { found = await rpResolve(who, rpG); } catch (error) { found = { err: "Something went wrong. Please try again." }; }
+      if (found.err) { err.textContent = found.err; back(); return; }
+      btn.textContent = "Sending...";
+      const resetId = "PWD-" + dgRand(6);
+      try {
+        const old = Object.values((await get(ref(database, rpRoot))).val() || {}).filter((r) => r && r.resetId && r.loginId === found.key && r.status === "pending");
+        for (const r of old) await remove(rpRef(r.resetId));              // one waiting request per account: the newest wins
+        await set(rpRef(resetId), { resetId, loginId: found.key, email: found.email, googleVerified: !!found.google, passHash: await pwHash(found.key, p1), status: "pending", createdAt: Date.now() });
+      } catch (error) { err.textContent = "Could not send your request. Check your connection and try again."; back(); return; }
+      rpOpenSent(resetId, found);
+    });
+
+    dgEl.addEventListener("input", (e) => {
+      if (e.target.id !== "rpWho") return;
+      rpG = null; const n = dgEl.querySelector("#rpGNote"); if (n) n.hidden = true;     // typed over the Google email: no longer confirmed
+    });
+    dgEl.addEventListener("change", (e) => {
+      if (e.target.id !== "rpShow") return;
+      ["rpNew", "rpNew2"].forEach((id) => { const el = dgEl.querySelector("#" + id); if (el) el.type = e.target.checked ? "text" : "password"; });
+    });
+
+    dgEl.addEventListener("click", async (e) => {
+      const t = e.target;
+      const jk = t.closest("[data-rp-joke]");
+      if (jk) { const el = dgEl.querySelector("#rpJokeText"); if (el) el.textContent = rpPick(RP_JOKES); return; }
+      const gb = t.closest("[data-rp-google]");
+      if (gb) {
+        const err = dgEl.querySelector("#rpErr"); err.textContent = ""; gb.disabled = true;
+        try {
+          const g = await gsGooglePopup();
+          rpG = g;
+          dgEl.querySelector("#rpWho").value = g.email || "";
+          const n = dgEl.querySelector("#rpGNote"); n.textContent = g.email ? `Google confirmed ${g.email}.` : "Google confirmed your account."; n.hidden = false;
+        } catch (error) { err.textContent = gsErr(error); }
+        finally { gb.disabled = false; }
+        return;
+      }
+      const stb = t.closest("[data-rp-status]");
+      if (stb) {
+        const msg = dgEl.querySelector("#rpStatusMsg"); msg.textContent = "Checking...";
+        try {
+          const r = (await get(rpRef(stb.dataset.rpStatus))).val();
+          msg.textContent = !r ? "We could not find this request. It may be older than 2 days, or already cleared."
+            : r.status === "approved" ? "Approved! You can log in with your new password now."
+            : r.status === "rejected" ? "The admin did not approve this one. Use Contact us, or send a new request."
+            : "Still waiting for the admin. Please check again a little later.";
+        } catch (error) { msg.textContent = "Could not check right now. Try again in a moment."; }
+        return;
+      }
+      const ap = t.closest("[data-rp-approve]");
+      if (ap) return void (await rpApprove(ap.dataset.rpApprove, ap));
+      const rj = t.closest("[data-rp-reject]");
+      if (rj) { rj.disabled = true; return void (await update(rpRef(rj.dataset.rpReject), { status: "rejected", decidedAt: Date.now(), passHash: null })); }
+    });
+
+    /* ----- admin side ----- */
+    function rpWatch() {
+      if (window.__rpWatching) return;
+      window.__rpWatching = true;
+      onValue(ref(database, rpRoot), (snap) => {
+        const all = Object.values(snap.val() || {}).filter((r) => r && r.resetId);
+        rpPending = all.filter((r) => r.status === "pending").sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+        if (rpSeen >= 0 && rpPending.length > rpSeen) { const last = rpPending[rpPending.length - 1], u = USERS[last.loginId]; showToast("Password reset request", `${u ? u.name : last.loginId} wants a new password.`); }
+        rpSeen = rpPending.length;
+        all.filter((r) => r.status !== "pending" && Date.now() - (Number(r.decidedAt) || Date.now()) > RP_KEEP_MS).forEach((r) => { remove(rpRef(r.resetId)).catch(() => {}); });
+        try { dgUpdateBadge(); if (dgMode === "inbox") dgOpenInbox(); } catch (error) { /* ignore */ }
+      });
+    }
+    function rpAdminHtml() {
+      if (!rpPending.length) return "";
+      return `<p class="rp-h">Password resets</p>` + rpPending.map((r) => { const u = USERS[r.loginId];
+        return `<div class="dg-req"><div class="dg-reqtop"><b>${escapeHTML(u ? u.name : r.loginId)}</b><span>${escapeHTML(r.resetId)}</span></div>
+          <p>Wants a new password.<br>Login ID: ${escapeHTML(r.loginId)}${r.email ? `<br>${escapeHTML(r.email)}` : ""}<br>${r.googleVerified ? "Confirmed with Google" : "Not confirmed with Google"}<br>${escapeHTML(new Date(r.createdAt || Date.now()).toLocaleString())}</p>
+          <div class="dg-row"><button type="button" class="dg-btn" data-rp-approve="${escapeHTML(r.resetId)}">Approve</button><button type="button" class="dg-btn ghost" data-rp-reject="${escapeHTML(r.resetId)}">Reject</button></div></div>`; }).join("");
+    }
+    async function rpApprove(id, btn) {
+      const r = rpPending.find((x) => x.resetId === id);
+      if (!r) return;
+      if (!String(r.passHash || "").startsWith("sha256$")) { showToast("Cannot approve", "This request has no saved password. Ask them to send a new one."); return; }
+      btn.disabled = true; btn.textContent = "Saving...";
+      try {
+        await loadDynamicAccounts();
+        const acct = USERS[r.loginId];
+        if (!acct) throw new Error("That account no longer exists.");
+        if (acct.dyn) await set(ref(database, `duotrack/groups/${GROUP_ID}/accounts/${r.loginId}/password`), r.passHash);
+        else await set(ref(database, `duotrack/groups/${GROUP_ID}/passwordOverrides/${r.loginId}`), { hash: r.passHash, at: Date.now() });
+        acct.password = r.passHash;
+        await update(rpRef(id), { status: "approved", decidedAt: Date.now(), passHash: null });
+        showToast("Password changed", `${acct.name} can log in with the new password now.`);
+      } catch (error) {
+        btn.disabled = false; btn.textContent = "Approve";
+        showToast("Could not approve", (error && error.message) || "Try again.");
+      }
+    }
+
     document.getElementById("privacyLink")?.addEventListener("click", (e) => { e.preventDefault(); e.stopImmediatePropagation(); ppOpen(); });
 
     const SUBJECTS = ["Physics", "Chemistry", "Maths"];
@@ -22105,6 +22351,14 @@ function totpAt(keyBytes, counter) {
     scheduleCheckinReminder();
     requestNotificationPermissionOnce();
     render();
+
+    /* the app has finished starting: open whatever the person tapped on the login page in the meantime */
+    if (window.__dtEarly) {
+      const early = window.__dtEarly, queued = early.q;
+      early.ready = true; early.q = "";
+      if (queued === "forgot") openForgot();
+      else if (queued) document.querySelector(`#loginScreen [data-pp="${queued}"]`)?.click();
+    }
   </script>
 </body>
 </html>
