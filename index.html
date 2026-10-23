@@ -6471,6 +6471,186 @@ body .footer-tagline { letter-spacing: -.01em; }
   body .top-actions .ghost-btn { padding: 0 11px; }
 }
 </style>
+<style id="totpCss">
+  .todo-heading-tools { display: flex; align-items: center; gap: 10px; flex: none; }
+  .todo-totp-btn { position: relative; width: 30px; height: 30px; padding: 6px; border-radius: 50%; border: 1px solid var(--line); background: var(--panel); color: var(--muted); display: grid; place-items: center; opacity: .8; cursor: pointer; transition: transform 160ms ease, opacity 160ms ease, color 160ms ease, border-color 160ms ease, background 160ms ease; }
+  .todo-totp-btn svg { width: 16px; height: 16px; }
+  .todo-totp-btn:hover { opacity: 1; color: var(--green); border-color: var(--green); background: var(--green-2); transform: translateY(-1px); }
+  .todo-totp-btn:active { transform: scale(.92); }
+  .todo-totp-btn.has-badge::after { content: ""; position: absolute; top: -3px; right: -3px; width: 10px; height: 10px; border-radius: 50%; background: #e0483e; border: 2px solid var(--panel); }
+
+  .totp-dialog { width: min(390px, calc(100% - 24px)); }
+  .totp-dialog .mt-body { gap: 16px; }
+  .totp-view { display: grid; gap: 14px; justify-items: stretch; margin: 0; }
+  .totp-view[hidden], .totp-dialog [hidden] { display: none !important; }
+  .totp-view > .totp-qr { justify-self: center; }
+  .totp-view > .ghost-btn { justify-self: center; }
+  .totp-hint { margin: 0; font-size: 13px; font-weight: 600; color: var(--muted); line-height: 1.5; }
+  .totp-view .totp-hint { text-align: center; }
+  .totp-hint b { color: var(--ink); word-break: break-all; }
+  .totp-qr { width: 208px; height: 208px; border-radius: 16px; overflow: hidden; background: #fff; border: 1px solid var(--line); box-shadow: 0 6px 20px rgba(0,0,0,.08); }
+  .totp-qr svg { display: block; width: 100%; height: 100%; }
+  .totp-field { display: grid; gap: 7px; }
+  .totp-label { font-size: 10.5px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .totp-note { font-size: 12px; font-weight: 600; color: var(--muted); }
+  .totp-note:empty { display: none; }
+  .totp-field input, .totp-row input { width: 100%; height: 46px; padding: 0 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); color: var(--ink); font-size: 15px; font-weight: 700; transition: border-color 180ms ease, box-shadow 260ms ease; }
+  .totp-field input[readonly] { background: var(--green-2); color: var(--muted); }
+  .totp-field input::placeholder { font-size: 14px; font-weight: 600; color: color-mix(in srgb, var(--muted) 70%, transparent); }
+  .totp-field input:focus, .totp-row input:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 4px color-mix(in srgb, var(--green) 14%, transparent); }
+  .totp-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; }
+  .totp-row input.totp-code { font-size: 18px; font-weight: 800; letter-spacing: .18em; font-variant-numeric: tabular-nums; }
+  .totp-row input.totp-code::placeholder { font-size: 14px; letter-spacing: .02em; }
+  .totp-dialog .ghost-btn { padding: 0 14px; min-height: 34px; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+  .totp-dialog button:disabled { opacity: .55; cursor: progress; }
+  .totp-link { justify-self: center; background: none; border: 0; padding: 4px 6px; font-size: 13px; font-weight: 700; color: var(--green); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+  .totp-link:hover { opacity: .8; }
+  .totp-msg { margin: -4px 0 0; font-size: 13px; font-weight: 700; color: var(--green); text-align: center; }
+  .totp-msg.is-bad { color: #e0483e; }
+  .totp-msg:empty { display: none; }
+  [data-lost] { display: grid; gap: 12px; justify-items: center; }
+  [data-lost][hidden] { display: none; }
+
+  .totp-admin { display: grid; gap: 10px; padding-top: 14px; border-top: 1px solid var(--line); }
+  .totp-req { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
+  .totp-req b { display: block; font-size: 14px; }
+  .totp-req small { display: block; font-size: 12px; color: var(--muted); word-break: break-all; }
+  .totp-req-btns { display: flex; gap: 6px; flex: none; }
+  .totp-req-btns button { min-height: 32px; padding: 0 12px; font-size: 12.5px; }
+
+  .diary-page { position: fixed; inset: 0; z-index: 100050; display: flex; flex-direction: column; background: var(--paper); color: var(--ink); }
+  .diary-page[hidden] { display: none; }
+  .diary-bar { position: relative; z-index: 6; flex: none; display: flex; align-items: center; gap: 8px; padding: max(8px, env(safe-area-inset-top)) 12px 8px; border-bottom: 1px solid var(--line); background: var(--panel); }
+  .diary-back { flex: none; display: inline-flex; align-items: center; gap: 4px; height: 32px; padding: 0 12px 0 6px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font-size: 13.5px; font-weight: 700; cursor: pointer; }
+  .diary-back svg { width: 17px; height: 17px; }
+  .diary-back:hover { border-color: var(--green); color: var(--green); }
+  .diary-tools { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 4px; overflow-x: auto; scrollbar-width: none; padding: 2px; }
+  .diary-tools::-webkit-scrollbar { display: none; }
+  .dtool { flex: none; position: relative; width: 30px; height: 30px; padding: 0; display: inline-grid; place-items: center; border-radius: 8px; border: 1px solid transparent; background: transparent; color: var(--ink); font-size: 14px; cursor: pointer; transition: background 140ms ease, border-color 140ms ease, color 140ms ease; }
+  .dtool svg { width: 17px; height: 17px; }
+  .dtool:hover { background: var(--green-2); color: var(--green); }
+  .dtool:active { transform: scale(.94); }
+  .dtool.is-on { background: var(--green-2); color: var(--green); border-color: var(--green); }
+  .dtool:focus-visible, .dsel:focus-visible { outline: 2px solid var(--green); outline-offset: 1px; }
+  .dsep { flex: none; width: 1px; height: 18px; background: var(--line); margin: 0 3px; }
+  .dsel { flex: none; height: 30px; width: 70px; padding: 0 4px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font-size: 12.5px; font-weight: 700; cursor: pointer; }
+  .dsel-s { width: 66px; }
+  .dcolor-wrap { position: relative; flex: none; display: inline-flex; }
+  .dcbar { position: absolute; left: 7px; right: 7px; bottom: 4px; height: 3px; border-radius: 2px; background: #e0483e; }
+  .dpop { position: absolute; top: 36px; left: 0; z-index: 20; display: grid; grid-template-columns: repeat(4, 26px); gap: 6px; padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); box-shadow: 0 12px 30px rgba(0,0,0,.18); }
+  .dpop[hidden] { display: none; }
+  .dsw { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--panel); box-shadow: 0 0 0 1px var(--line); cursor: pointer; padding: 0; }
+  .dsw:hover { transform: scale(1.1); }
+  .dpop input[type=color] { grid-column: span 4; width: 100%; height: 28px; padding: 0; border: 1px solid var(--line); border-radius: 8px; background: none; cursor: pointer; }
+  .diary-save { flex: none; font-size: 11.5px; font-weight: 800; letter-spacing: .04em; color: var(--muted); min-width: 64px; text-align: right; }
+  .diary-save.is-ok { color: var(--green); }
+  .diary-save.is-bad { color: #e0483e; }
+  .dlist-btn { display: none; }
+
+  .diary-main { position: relative; flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: 272px minmax(0, 1fr); }
+  .diary-list { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--line); background: var(--panel); }
+  .dl-head { padding: 12px; }
+  .dl-head .secondary-btn { width: 100%; }
+  .dl-cats { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 12px 10px; }
+  .dl-chip { padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--muted); font-size: 12px; font-weight: 800; cursor: pointer; }
+  .dl-chip.is-on { background: var(--green); border-color: var(--green); color: #fff; }
+  .dl-items { flex: 1 1 auto; overflow-y: auto; padding: 0 8px 12px; display: grid; gap: 6px; align-content: start; }
+  .dl-item { text-align: left; width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid transparent; background: transparent; color: var(--ink); cursor: pointer; display: grid; gap: 3px; }
+  .dl-item:hover { background: var(--green-2); }
+  .dl-item.is-on { background: var(--green-2); border-color: var(--green); }
+  .dl-item b { font-size: 14px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dl-item span { font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dl-item small { font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--green); }
+  .dl-none { padding: 14px 12px; font-size: 13px; color: var(--muted); }
+
+  .diary-editor-wrap { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+  .de-empty { flex: 1; display: grid; place-content: center; padding: 24px; text-align: center; color: var(--muted); }
+  .de-empty-t { margin: 0 0 12px; font-size: 15px; font-weight: 700; }
+  .de { flex: 1; min-height: 0; display: flex; flex-direction: column; max-width: 820px; width: 100%; margin: 0 auto; padding: 14px 18px 10px; }
+  .de[hidden] { display: none; }
+  .de-top { display: grid; gap: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+  .de-title { width: 100%; border: 0; outline: 0; background: transparent; color: var(--ink); font-size: 24px; font-weight: 800; padding: 4px 0; }
+  .de-title::placeholder { color: color-mix(in srgb, var(--muted) 60%, transparent); }
+  .de-cats { display: flex; gap: 6px; flex-wrap: wrap; }
+  .diary-editor { flex: 1; min-height: 0; overflow-y: auto; padding: 14px 2px 40px; outline: 0; font-size: 16.5px; line-height: 1.7; word-break: break-word; }
+  .diary-editor:empty::before, .diary-editor.is-empty::before { content: attr(data-ph); color: color-mix(in srgb, var(--muted) 65%, transparent); pointer-events: none; }
+  .diary-editor ul, .diary-editor ol { margin: 4px 0; padding-left: 1.5em; }
+  .diary-editor .ck { display: flex; align-items: flex-start; gap: 9px; margin: 3px 0; }
+  .diary-editor .ckb { flex: none; position: relative; width: 18px; height: 18px; margin-top: .3em; border: 2px solid var(--muted); border-radius: 5px; background: var(--panel); cursor: pointer; user-select: none; -webkit-user-select: none; transition: background 140ms ease, border-color 140ms ease; }
+  .diary-editor .ck.done .ckb { background: var(--green); border-color: var(--green); }
+  .diary-editor .ck.done .ckb::after { content: ""; position: absolute; left: 4.5px; top: 0.5px; width: 5px; height: 10px; border: solid #fff; border-width: 0 2.5px 2.5px 0; transform: rotate(45deg); }
+  .diary-editor .ckt { flex: 1; min-width: 1ch; outline: 0; }
+  .diary-editor .ck.done .ckt { text-decoration: line-through; opacity: .55; }
+  .de-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-top: 8px; border-top: 1px solid var(--line); }
+  .de-meta { font-size: 12px; font-weight: 600; color: var(--muted); }
+  .de-del { color: #e0483e; }
+
+  .dn-overlay { position: fixed; inset: 0; z-index: 100060; display: grid; place-items: center; padding: 16px; overflow-y: auto; background: rgba(12, 18, 16, .62); backdrop-filter: blur(4px); }
+  .dn-overlay[hidden] { display: none; }
+  .dn-card { width: min(520px, 100%); max-height: calc(100dvh - 32px); overflow-y: auto; display: grid; gap: 12px; padding: 22px; border-radius: 22px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); box-shadow: 0 24px 70px rgba(0,0,0,.35); animation: dnIn 260ms cubic-bezier(.2,.8,.2,1); }
+  @keyframes dnIn { from { opacity: 0; transform: translateY(14px) scale(.98); } to { opacity: 1; transform: none; } }
+  .dn-badge { justify-self: start; padding: 4px 10px; border-radius: 999px; background: #fff1d6; color: #9a5a00; font-size: 11px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+  .dn-badge-care { background: #e4f6ec; color: #17794a; }
+  .dn-card h2 { margin: 0; font-size: 20px; line-height: 1.25; }
+  .dn-p { margin: 0; font-size: 14px; line-height: 1.55; color: var(--muted); }
+  .dn-small { font-size: 12.5px; }
+  .dn-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 9px; }
+  .dn-list li { position: relative; padding-left: 16px; font-size: 13.5px; line-height: 1.5; color: var(--muted); }
+  .dn-list li::before { content: ""; position: absolute; left: 0; top: .55em; width: 7px; height: 7px; border-radius: 2px; background: var(--green); }
+  .dn-list li b { color: var(--ink); }
+  .dn-list a, .dn-links a, .dn-p a { color: var(--green); font-weight: 800; }
+  .dn-links { margin: 0; font-size: 13px; }
+  .dn-check { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 700; cursor: pointer; }
+  .dn-check input { width: 18px; height: 18px; accent-color: var(--green); }
+  .dn-actions { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+  .di-status, .di-log { display: grid; gap: 6px; font-size: 13px; color: var(--muted); }
+  .di-row { padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; }
+  .di-row b { color: var(--ink); }
+
+  .dl-overlay { position: fixed; inset: 0; z-index: 100200; display: grid; place-items: center; padding: 16px; overflow-y: auto; background: rgba(8, 10, 14, .82); backdrop-filter: blur(6px); }
+  .dl-overlay[hidden] { display: none; }
+  .letter { width: min(560px, 100%); max-height: calc(100dvh - 32px); overflow-y: auto; padding: 30px 30px 24px; border-radius: 6px; background: #fffdf7; color: #2a2620; font-family: Georgia, 'Times New Roman', serif; box-shadow: 0 30px 80px rgba(0,0,0,.5), inset 0 0 0 1px #e8dfc8; animation: dnIn 320ms cubic-bezier(.2,.8,.2,1); }
+  .letter h2 { margin: 0 0 2px; font-size: 20px; letter-spacing: .02em; }
+  .letter .lt-meta { margin: 0 0 14px; font-size: 12.5px; color: #7a705c; border-bottom: 1px solid #e8dfc8; padding-bottom: 10px; }
+  .letter p { margin: 0 0 11px; font-size: 14.5px; line-height: 1.6; }
+  .letter ol { margin: 0 0 12px; padding-left: 20px; font-size: 14.5px; line-height: 1.6; }
+  .letter .lt-sign { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+  .letter .lt-sign img { max-height: 46px; max-width: 150px; }
+  .letter .lt-state { margin: 16px 0 12px; padding: 10px 12px; border-radius: 8px; background: #fff0d4; color: #7a4a00; font: 700 13px/1.45 system-ui, sans-serif; }
+  .letter .lt-note { font: 600 12px/1.45 system-ui, sans-serif; color: #7a705c; }
+  .letter .lt-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; font-family: system-ui, sans-serif; }
+  .letter .lt-btn { display: inline-flex; align-items: center; padding: 9px 14px; border-radius: 10px; border: 1px solid #d9cfb6; background: #fff; color: #2a2620; font: 700 13.5px system-ui, sans-serif; text-decoration: none; cursor: pointer; }
+  .letter .lt-btn.lt-main { background: #2a2620; color: #fff; border-color: #2a2620; }
+
+  #adminPortal .da-grid { display: grid; gap: 10px; }
+  #adminPortal .da-flag { border: 1px solid #25314a; border-radius: 12px; padding: 12px; background: #101725; display: grid; gap: 8px; }
+  #adminPortal .da-flag.is-care { border-color: #2c6e55; }
+  #adminPortal .da-tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; background: #3b2530; color: #ff9aa8; }
+  #adminPortal .da-tag.care { background: #1b3a2e; color: #7be0b0; }
+  #adminPortal .da-tag.st { background: #1d2840; color: #9fb4ff; }
+  #adminPortal .da-text { white-space: pre-wrap; word-break: break-word; padding: 10px; border-radius: 8px; background: #0b111c; border: 1px solid #25314a; color: #dfe6f3; font-size: 13px; max-height: 260px; overflow: auto; }
+  #adminPortal .da-text mark { background: #ffd24a; color: #1a1400; border-radius: 3px; padding: 0 2px; }
+  #adminPortal .da-full { white-space: pre-wrap; word-break: break-word; max-height: 360px; overflow: auto; padding: 10px; border: 1px solid #25314a; border-radius: 8px; background: #0b111c; color: #dfe6f3; font-size: 13px; }
+  #adminPortal .da-words { display: flex; flex-wrap: wrap; gap: 6px; }
+  #adminPortal .da-word { display: inline-flex; align-items: center; gap: 6px; padding: 3px 4px 3px 10px; border-radius: 999px; background: #3b2530; color: #ffc4cd; font-size: 12.5px; }
+  #adminPortal .da-word.care { background: #1b3a2e; color: #a7efcb; }
+  #adminPortal .da-word button { padding: 0 7px; border-radius: 999px; font-size: 13px; line-height: 1.5; }
+  #adminPortal .da-warn { color: #ffcf6a; }
+  #adminPortal select { font: inherit; padding: 7px 9px; border-radius: 8px; border: 1px solid #34425f; background: #0e1420; color: #e7ebf1; }
+  #ppPage, .pp-page { z-index: 100300; }
+  @media (max-width: 820px) {
+    .dlist-btn { display: inline-grid; }
+    .diary-main { grid-template-columns: 1fr; }
+    .diary-list { position: absolute; z-index: 5; inset: 0 auto 0 0; width: min(310px, 88%); transform: translateX(-102%); transition: transform 240ms cubic-bezier(.2,.8,.2,1); box-shadow: 12px 0 30px rgba(0,0,0,.18); }
+    .diary-page.list-open .diary-list { transform: none; }
+    .de { padding: 10px 14px 8px; }
+    .de-title { font-size: 21px; }
+    .diary-save { min-width: 0; font-size: 11px; }
+    .letter { padding: 22px 20px 18px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .diary-list, .dn-card, .letter { transition: none; animation: none; } }
+  @media (prefers-reduced-motion: reduce) { .todo-totp-btn { transition: none; } }
+</style>
 </head>
 <body>
   <div class="app-grain" aria-hidden="true"></div>
@@ -6937,12 +7117,17 @@ body .footer-tagline { letter-spacing: -.01em; }
         <section class="panel todo-panel">
           <div class="section-heading compact-heading todo-heading">
             <div><span class="eyebrow">TODAY'S PLAN</span><h2>To-do list</h2></div>
-            <div class="todo-progress" id="todoProgress" title="Tasks completed today">
-              <svg viewBox="0 0 44 44" aria-hidden="true">
-                <circle class="todo-progress-track" cx="22" cy="22" r="18"/>
-                <circle id="todoProgressFill" class="todo-progress-fill" cx="22" cy="22" r="18"/>
-              </svg>
-              <span id="todoProgressLabel" class="todo-progress-label">0/0</span>
+            <div class="todo-heading-tools">
+              <button id="totpIconBtn" class="todo-totp-btn" type="button" title="Private page" aria-label="Open private page">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4.5 6v5.5c0 4.6 3.1 8.2 7.5 9.5 4.4-1.3 7.5-4.9 7.5-9.5V6L12 3Z"/><path d="m9 12 2 2 4-4"/></svg>
+              </button>
+              <div class="todo-progress" id="todoProgress" title="Tasks completed today">
+                <svg viewBox="0 0 44 44" aria-hidden="true">
+                  <circle class="todo-progress-track" cx="22" cy="22" r="18"/>
+                  <circle id="todoProgressFill" class="todo-progress-fill" cx="22" cy="22" r="18"/>
+                </svg>
+                <span id="todoProgressLabel" class="todo-progress-label">0/0</span>
+              </div>
             </div>
           </div>
           <form id="todoForm" class="todo-form">
@@ -7019,6 +7204,178 @@ body .footer-tagline { letter-spacing: -.01em; }
         </section>
       </div>
     </dialog>
+
+    <dialog id="totpDialog" class="mt-dialog totp-dialog" aria-labelledby="totpDialogTitle">
+      <header class="mt-head">
+        <div class="mt-head-l">
+          <span class="mt-head-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4.5 6v5.5c0 4.6 3.1 8.2 7.5 9.5 4.4-1.3 7.5-4.9 7.5-9.5V6L12 3Z"/><path d="m9 12 2 2 4-4"/></svg></span>
+          <div><span class="mt-eyebrow">Google Authenticator</span><h2 id="totpDialogTitle">Private page</h2></div>
+        </div>
+        <button id="totpDialogClose" class="mt-close" type="button" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      </header>
+      <div class="mt-body">
+        <section class="totp-view" data-view="loading"><p class="totp-hint">Checking your account...</p></section>
+
+        <section class="totp-view" data-view="error" hidden>
+          <p id="totpErrText" class="totp-hint"></p>
+          <button id="totpRetryBtn" class="secondary-btn" type="button">Try again</button>
+        </section>
+
+        <form class="totp-view" id="totpLinkForm" data-view="link" autocomplete="off" hidden>
+          <p class="totp-hint">Link Google Authenticator to this account. You scan a QR code once.</p>
+          <div class="totp-field">
+            <label class="totp-label" for="totpEmail">Account email</label>
+            <input id="totpEmail" type="email" maxlength="80" autocomplete="off" placeholder="you@example.com">
+            <small id="totpEmailNote" class="totp-note"></small>
+          </div>
+          <div class="totp-field">
+            <label class="totp-label" for="totpPw">Account password</label>
+            <input id="totpPw" type="password" autocomplete="current-password" placeholder="Your DuoTrack password">
+          </div>
+          <button class="secondary-btn" type="submit">Show QR</button>
+        </form>
+
+        <form class="totp-view" id="totpScanForm" data-view="scan" autocomplete="off" hidden>
+          <p class="totp-hint">Open Google Authenticator, tap <b>+</b>, then <b>Scan a QR code</b>.</p>
+          <div id="totpQr" class="totp-qr" role="img" aria-label="QR code to link Google Authenticator"></div>
+          <p class="totp-hint">The entry in the app will read <b>DuoTrack (<span id="totpAcct"></span>)</b>. Check the email matches.</p>
+          <button id="totpCopyKeyBtn" class="ghost-btn" type="button">Can't scan? Copy setup key</button>
+          <div class="totp-field">
+            <label class="totp-label" for="totpScanCode">Code from the app</label>
+            <div class="totp-row"><input id="totpScanCode" class="totp-code" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="6-digit code" autocomplete="one-time-code"><button class="secondary-btn" type="submit">Verify</button></div>
+          </div>
+        </form>
+
+        <form class="totp-view" id="totpUnlockForm" data-view="unlock" autocomplete="off" hidden>
+          <p class="totp-hint">Enter the code from Google Authenticator for <b id="totpUnlockAcct"></b>.</p>
+          <div id="totpPwField" class="totp-field">
+            <label class="totp-label" for="totpUnlockPw">Account password</label>
+            <input id="totpUnlockPw" type="password" autocomplete="current-password" placeholder="Your DuoTrack password">
+          </div>
+          <div class="totp-field">
+            <label class="totp-label" for="totpUnlockCode">Code from the app</label>
+            <div class="totp-row"><input id="totpUnlockCode" class="totp-code" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="6-digit code" autocomplete="one-time-code"><button class="secondary-btn" type="submit">Open</button></div>
+          </div>
+          <button id="totpLostBtn" class="totp-link" type="button">Deleted it from the app? Ask the admin</button>
+        </form>
+
+        <section class="totp-view" id="totpLost" data-view="lost" hidden>
+          <div data-lost="ask">
+            <p class="totp-hint">Deleted the entry from Google Authenticator? The admin can reset it. Your data stays. You scan a new QR.</p>
+            <p id="totpDeclined" class="totp-msg is-bad" hidden>The admin declined the last request.</p>
+            <button id="totpNotifyBtn" class="secondary-btn" type="button">Notify admin</button>
+          </div>
+          <div data-lost="wait" hidden>
+            <p class="totp-hint">Request sent. Waiting for the admin to approve. This page updates by itself.</p>
+            <a id="totpMailAdmin" class="ghost-btn" href="#">Also email the admin</a>
+          </div>
+          <div data-lost="ok" hidden>
+            <p class="totp-hint"><b>Approved.</b> Scan a new QR. Your data stays.</p>
+            <button id="totpRelinkBtn" class="secondary-btn" type="button">Set up again</button>
+          </div>
+          <button id="totpLostBack" class="totp-link" type="button">Back</button>
+        </section>
+
+        <p id="totpMsg" class="totp-msg" aria-live="polite"></p>
+        <section id="totpAdmin" class="totp-admin" hidden></section>
+      </div>
+    </dialog>
+
+    <div id="diaryPage" class="diary-page" hidden role="dialog" aria-modal="true" aria-label="Private diary">
+      <header class="diary-bar">
+        <button id="diaryBack" class="diary-back" type="button" aria-label="Back to the app"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg><span>Back</span></button>
+        <button id="diaryListBtn" class="dtool dlist-btn" type="button" title="Pages" aria-label="Show pages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+        <div id="diaryTools" class="diary-tools" role="toolbar" aria-label="Formatting">
+          <button class="dtool" type="button" data-cmd="bold" title="Bold" aria-label="Bold"><b>B</b></button>
+          <button class="dtool" type="button" data-cmd="italic" title="Italic" aria-label="Italic"><i>I</i></button>
+          <button class="dtool" type="button" data-cmd="underline" title="Underline" aria-label="Underline"><u>U</u></button>
+          <span class="dsep"></span>
+          <select id="diaryFont" class="dsel" title="Font" aria-label="Font"><option value="">Font</option><option value="sans-serif">Sans</option><option value="serif">Serif</option><option value="monospace">Mono</option><option value="cursive">Hand</option></select>
+          <select id="diarySize" class="dsel dsel-s" title="Text size" aria-label="Text size"><option value="">Size</option><option value="2">Small</option><option value="3">Normal</option><option value="5">Large</option><option value="6">Huge</option></select>
+          <span class="dcolor-wrap">
+            <button id="diaryColorBtn" class="dtool" type="button" title="Text colour" aria-label="Text colour" aria-haspopup="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 17 12 4l6 13M8.5 12h7"/></svg><span id="diaryColorBar" class="dcbar"></span></button>
+            <div id="diaryColorPop" class="dpop" hidden></div>
+          </span>
+          <span class="dsep"></span>
+          <button class="dtool" type="button" data-cmd="insertUnorderedList" title="Bullet list" aria-label="Bullet list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="5" cy="7" r="1.2" fill="currentColor"/><circle cx="5" cy="12" r="1.2" fill="currentColor"/><circle cx="5" cy="17" r="1.2" fill="currentColor"/><path d="M10 7h10M10 12h10M10 17h10"/></svg></button>
+          <button class="dtool" type="button" data-cmd="insertOrderedList" title="Numbered list" aria-label="Numbered list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 7h10M10 12h10M10 17h10M4 5.5 5.5 5v4M4 14.5h2.2L4 17h2.4"/></svg></button>
+          <button id="diaryCheckBtn" class="dtool" type="button" title="Checklist (tick boxes)" aria-label="Checklist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="m8.5 12.3 2.4 2.4 4.6-5"/></svg></button>
+          <span class="dsep"></span>
+          <button class="dtool" type="button" data-cmd="undo" title="Undo" aria-label="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
+          <button class="dtool" type="button" data-cmd="redo" title="Redo" aria-label="Redo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></button>
+          <button class="dtool" type="button" data-cmd="removeFormat" title="Clear formatting" aria-label="Clear formatting"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5h14M12 5v6M9 19h6M4 4l16 16"/></svg></button>
+        </div>
+        <span id="diarySaveState" class="diary-save" aria-live="polite"></span>
+        <button id="diaryInfoBtn" class="dtool" type="button" title="Privacy notice and access log" aria-label="Privacy notice and access log"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>
+      </header>
+      <main id="diaryBody" class="diary-main">
+        <aside id="diaryList" class="diary-list" aria-label="Diary pages">
+          <div class="dl-head"><button id="diaryNew" class="secondary-btn" type="button">+ New page</button></div>
+          <div id="diaryCats" class="dl-cats" role="tablist" aria-label="Categories"></div>
+          <div id="diaryItems" class="dl-items"></div>
+        </aside>
+        <section class="diary-editor-wrap">
+          <div id="diaryEmpty" class="de-empty"><p class="de-empty-t">Loading your diary...</p></div>
+          <div id="diaryEd" class="de" hidden>
+            <div class="de-top">
+              <input id="diaryTitle" class="de-title" type="text" maxlength="120" placeholder="Title" aria-label="Page title" autocomplete="off">
+              <div id="diaryCatPick" class="de-cats" role="radiogroup" aria-label="Category"></div>
+            </div>
+            <div id="diaryEditor" class="diary-editor" contenteditable="true" spellcheck="true" role="textbox" aria-multiline="true" aria-label="Diary text" data-ph="Write here. Plans, secrets, thoughts, anything."></div>
+            <div class="de-foot"><span id="diaryMeta" class="de-meta"></span><button id="diaryDel" class="totp-link de-del" type="button">Delete page</button></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="diaryNotice" class="dn-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="dnTitle">
+      <div class="dn-card">
+        <span class="dn-badge">Please read</span>
+        <h2 id="dnTitle">Your diary is private. Here is exactly how it works.</h2>
+        <ul class="dn-list">
+          <li><b>Encrypted before it is saved.</b> Your writing is scrambled on your device with a key made from your password, so DuoTrack and the admin cannot read it in normal use.</li>
+          <li><b>It is still on Google's servers.</b> The scrambled data is stored in Google Firebase. DuoTrack does not run those servers and is not involved in how Google handles them.</li>
+          <li><b>Safety words.</b> The admin keeps a watch list of words, such as ones linked to illegal acts or self-harm. If a paragraph you write contains one, only that paragraph, not your whole diary, is sent to the admin, sealed so only the admin can open it.</li>
+          <li><b>Illegal content.</b> The admin may send you a written notice. It appears in the app and stays on your screen until the admin has verified the matter. A printed copy can be sent to your email address.</li>
+          <li><b>Whole diary, rare cases only.</b> For serious or legal reasons the admin can ask to read your whole diary and save it as a PDF. You will be told, and every access is written to a log you can see in the diary.</li>
+          <li><b>Self-harm words get care, not a legal letter.</b> You will see support options and the admin may check on you. If you are in danger, call 112. Tele-MANAS (14416) is free, 24 hours.</li>
+          <li><b>Limits.</b> This is a student project, not a lawyer, a court or an emergency service. The word check runs in the app and can miss things or be wrong.</li>
+        </ul>
+        <p class="dn-links"><a href="#" id="dnPolicy">Read Privacy Policy, section 17</a></p>
+        <label class="dn-check"><input type="checkbox" id="dnDont"><span>Don't show this again</span></label>
+        <div class="dn-actions"><button id="dnCancel" class="ghost-btn" type="button">Not now</button><button id="dnOk" class="secondary-btn" type="button">I understand, continue</button></div>
+      </div>
+    </div>
+
+    <div id="diaryCare" class="dn-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="dcTitle">
+      <div class="dn-card dn-care">
+        <span class="dn-badge dn-badge-care">You are not alone</span>
+        <h2 id="dcTitle">Some of those words sound really heavy.</h2>
+        <p class="dn-p">If you are thinking about hurting yourself, please talk to someone today. You do not have to carry it alone, and exam pressure is something many students go through.</p>
+        <ul class="dn-list dn-list-plain">
+          <li><b>Tele-MANAS</b>, free and confidential, 24 hours, many languages: <a href="tel:14416">call 14416</a> (or 1-800-891-4416).</li>
+          <li><b>In danger right now?</b> <a href="tel:112">Call 112</a>.</li>
+          <li>Tell one person you trust today: a parent, friend, teacher or sibling.</li>
+        </ul>
+        <p class="dn-p dn-small">As the diary notice said, the admin was shown that paragraph only so someone can check on you. No legal letter is sent for this.</p>
+        <div class="dn-actions"><button id="dcOk" class="secondary-btn" type="button">OK, I read this</button></div>
+      </div>
+    </div>
+
+    <div id="diaryInfo" class="dn-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="diTitle">
+      <div class="dn-card">
+        <h2 id="diTitle">Privacy and access log</h2>
+        <p class="dn-p">Your pages are encrypted on your device. The admin can only open a paragraph that matched a safety word, or your whole diary after the process in the notice. Every admin access appears below.</p>
+        <div class="totp-label">Notices</div>
+        <div id="diStatus" class="di-status"></div>
+        <div class="totp-label">Admin access log</div>
+        <div id="diLog" class="di-log"></div>
+        <p class="dn-links"><a href="#" id="diPolicy">Read Privacy Policy, section 17</a></p>
+        <div class="dn-actions"><button id="diClose" class="secondary-btn" type="button">Close</button></div>
+      </div>
+    </div>
+
+    <div id="diaryLetter" class="dl-overlay" hidden role="alertdialog" aria-modal="true" aria-labelledby="dlTitle"></div>
 
     <dialog id="musicDialog" class="music-dialog" aria-labelledby="musicDialogTitle">
       <div class="music-dialog-head">
@@ -7898,7 +8255,7 @@ body .footer-tagline { letter-spacing: -.01em; }
     });
     const u_name = (uid) => (state.users[uid] && state.users[uid].name) || "The account";
 
-    const PP_UPDATED = "7 October 2026";
+    const PP_UPDATED = "23 October 2026";
     const ppLink = (u, t) => `<a href="${u}" target="_blank" rel="noopener noreferrer">${t}</a>`;
     const ppGo = (id, t) => `<a href="#${id}" data-pp-go="${id}">${t}</a>`;
     const PP_SECTIONS = [
@@ -16844,6 +17201,3613 @@ body .footer-tagline { letter-spacing: -.01em; }
       const box = mockDialog.getBoundingClientRect();
       if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) closeMockDialog();
     });
+
+
+    /* ===== Private page: Google Authenticator (TOTP) gate in the to-do card. Added code, separate from the protected login code:
+       it only CALLS passwordMatches() and never changes login, Firebase sign-in or the Gemini/PDF parts. ===== */
+    (() => {
+      /* ---- QR encoder: qrcode-generator v2.0.4, MIT, (c) Kazuhiko Arase ---- */
+//---------------------------------------------------------------------
+//
+// QR Code Generator for JavaScript
+//
+// Copyright (c) 2009 Kazuhiko Arase
+//
+// URL: http://www.d-project.com/
+//
+// Licensed under the MIT license:
+//  http://www.opensource.org/licenses/mit-license.php
+//
+// The word 'QR Code' is registered trademark of
+// DENSO WAVE INCORPORATED
+//  http://www.denso-wave.com/qrcode/faqpatent-e.html
+//
+//---------------------------------------------------------------------
+
+var qrcode = function() {
+
+  //---------------------------------------------------------------------
+  // qrcode
+  //---------------------------------------------------------------------
+
+  /**
+   * qrcode
+   * @param typeNumber 1 to 40
+   * @param errorCorrectionLevel 'L','M','Q','H'
+   */
+  var qrcode = function(typeNumber, errorCorrectionLevel) {
+
+    var PAD0 = 0xEC;
+    var PAD1 = 0x11;
+
+    var _typeNumber = typeNumber;
+    var _errorCorrectionLevel = QRErrorCorrectionLevel[errorCorrectionLevel];
+    var _modules = null;
+    var _moduleCount = 0;
+    var _dataCache = null;
+    var _dataList = [];
+
+    var _this = {};
+
+    var makeImpl = function(test, maskPattern) {
+
+      _moduleCount = _typeNumber * 4 + 17;
+      _modules = function(moduleCount) {
+        var modules = new Array(moduleCount);
+        for (var row = 0; row < moduleCount; row += 1) {
+          modules[row] = new Array(moduleCount);
+          for (var col = 0; col < moduleCount; col += 1) {
+            modules[row][col] = null;
+          }
+        }
+        return modules;
+      }(_moduleCount);
+
+      setupPositionProbePattern(0, 0);
+      setupPositionProbePattern(_moduleCount - 7, 0);
+      setupPositionProbePattern(0, _moduleCount - 7);
+      setupPositionAdjustPattern();
+      setupTimingPattern();
+      setupTypeInfo(test, maskPattern);
+
+      if (_typeNumber >= 7) {
+        setupTypeNumber(test);
+      }
+
+      if (_dataCache == null) {
+        _dataCache = createData(_typeNumber, _errorCorrectionLevel, _dataList);
+      }
+
+      mapData(_dataCache, maskPattern);
+    };
+
+    var setupPositionProbePattern = function(row, col) {
+
+      for (var r = -1; r <= 7; r += 1) {
+
+        if (row + r <= -1 || _moduleCount <= row + r) continue;
+
+        for (var c = -1; c <= 7; c += 1) {
+
+          if (col + c <= -1 || _moduleCount <= col + c) continue;
+
+          if ( (0 <= r && r <= 6 && (c == 0 || c == 6) )
+              || (0 <= c && c <= 6 && (r == 0 || r == 6) )
+              || (2 <= r && r <= 4 && 2 <= c && c <= 4) ) {
+            _modules[row + r][col + c] = true;
+          } else {
+            _modules[row + r][col + c] = false;
+          }
+        }
+      }
+    };
+
+    var getBestMaskPattern = function() {
+
+      var minLostPoint = 0;
+      var pattern = 0;
+
+      for (var i = 0; i < 8; i += 1) {
+
+        makeImpl(true, i);
+
+        var lostPoint = QRUtil.getLostPoint(_this);
+
+        if (i == 0 || minLostPoint > lostPoint) {
+          minLostPoint = lostPoint;
+          pattern = i;
+        }
+      }
+
+      return pattern;
+    };
+
+    var setupTimingPattern = function() {
+
+      for (var r = 8; r < _moduleCount - 8; r += 1) {
+        if (_modules[r][6] != null) {
+          continue;
+        }
+        _modules[r][6] = (r % 2 == 0);
+      }
+
+      for (var c = 8; c < _moduleCount - 8; c += 1) {
+        if (_modules[6][c] != null) {
+          continue;
+        }
+        _modules[6][c] = (c % 2 == 0);
+      }
+    };
+
+    var setupPositionAdjustPattern = function() {
+
+      var pos = QRUtil.getPatternPosition(_typeNumber);
+
+      for (var i = 0; i < pos.length; i += 1) {
+
+        for (var j = 0; j < pos.length; j += 1) {
+
+          var row = pos[i];
+          var col = pos[j];
+
+          if (_modules[row][col] != null) {
+            continue;
+          }
+
+          for (var r = -2; r <= 2; r += 1) {
+
+            for (var c = -2; c <= 2; c += 1) {
+
+              if (r == -2 || r == 2 || c == -2 || c == 2
+                  || (r == 0 && c == 0) ) {
+                _modules[row + r][col + c] = true;
+              } else {
+                _modules[row + r][col + c] = false;
+              }
+            }
+          }
+        }
+      }
+    };
+
+    var setupTypeNumber = function(test) {
+
+      var bits = QRUtil.getBCHTypeNumber(_typeNumber);
+
+      for (var i = 0; i < 18; i += 1) {
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+        _modules[Math.floor(i / 3)][i % 3 + _moduleCount - 8 - 3] = mod;
+      }
+
+      for (var i = 0; i < 18; i += 1) {
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+        _modules[i % 3 + _moduleCount - 8 - 3][Math.floor(i / 3)] = mod;
+      }
+    };
+
+    var setupTypeInfo = function(test, maskPattern) {
+
+      var data = (_errorCorrectionLevel << 3) | maskPattern;
+      var bits = QRUtil.getBCHTypeInfo(data);
+
+      // vertical
+      for (var i = 0; i < 15; i += 1) {
+
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+
+        if (i < 6) {
+          _modules[i][8] = mod;
+        } else if (i < 8) {
+          _modules[i + 1][8] = mod;
+        } else {
+          _modules[_moduleCount - 15 + i][8] = mod;
+        }
+      }
+
+      // horizontal
+      for (var i = 0; i < 15; i += 1) {
+
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+
+        if (i < 8) {
+          _modules[8][_moduleCount - i - 1] = mod;
+        } else if (i < 9) {
+          _modules[8][15 - i - 1 + 1] = mod;
+        } else {
+          _modules[8][15 - i - 1] = mod;
+        }
+      }
+
+      // fixed module
+      _modules[_moduleCount - 8][8] = (!test);
+    };
+
+    var mapData = function(data, maskPattern) {
+
+      var inc = -1;
+      var row = _moduleCount - 1;
+      var bitIndex = 7;
+      var byteIndex = 0;
+      var maskFunc = QRUtil.getMaskFunction(maskPattern);
+
+      for (var col = _moduleCount - 1; col > 0; col -= 2) {
+
+        if (col == 6) col -= 1;
+
+        while (true) {
+
+          for (var c = 0; c < 2; c += 1) {
+
+            if (_modules[row][col - c] == null) {
+
+              var dark = false;
+
+              if (byteIndex < data.length) {
+                dark = ( ( (data[byteIndex] >>> bitIndex) & 1) == 1);
+              }
+
+              var mask = maskFunc(row, col - c);
+
+              if (mask) {
+                dark = !dark;
+              }
+
+              _modules[row][col - c] = dark;
+              bitIndex -= 1;
+
+              if (bitIndex == -1) {
+                byteIndex += 1;
+                bitIndex = 7;
+              }
+            }
+          }
+
+          row += inc;
+
+          if (row < 0 || _moduleCount <= row) {
+            row -= inc;
+            inc = -inc;
+            break;
+          }
+        }
+      }
+    };
+
+    var createBytes = function(buffer, rsBlocks) {
+
+      var offset = 0;
+
+      var maxDcCount = 0;
+      var maxEcCount = 0;
+
+      var dcdata = new Array(rsBlocks.length);
+      var ecdata = new Array(rsBlocks.length);
+
+      for (var r = 0; r < rsBlocks.length; r += 1) {
+
+        var dcCount = rsBlocks[r].dataCount;
+        var ecCount = rsBlocks[r].totalCount - dcCount;
+
+        maxDcCount = Math.max(maxDcCount, dcCount);
+        maxEcCount = Math.max(maxEcCount, ecCount);
+
+        dcdata[r] = new Array(dcCount);
+
+        for (var i = 0; i < dcdata[r].length; i += 1) {
+          dcdata[r][i] = 0xff & buffer.getBuffer()[i + offset];
+        }
+        offset += dcCount;
+
+        var rsPoly = QRUtil.getErrorCorrectPolynomial(ecCount);
+        var rawPoly = qrPolynomial(dcdata[r], rsPoly.getLength() - 1);
+
+        var modPoly = rawPoly.mod(rsPoly);
+        ecdata[r] = new Array(rsPoly.getLength() - 1);
+        for (var i = 0; i < ecdata[r].length; i += 1) {
+          var modIndex = i + modPoly.getLength() - ecdata[r].length;
+          ecdata[r][i] = (modIndex >= 0)? modPoly.getAt(modIndex) : 0;
+        }
+      }
+
+      var totalCodeCount = 0;
+      for (var i = 0; i < rsBlocks.length; i += 1) {
+        totalCodeCount += rsBlocks[i].totalCount;
+      }
+
+      var data = new Array(totalCodeCount);
+      var index = 0;
+
+      for (var i = 0; i < maxDcCount; i += 1) {
+        for (var r = 0; r < rsBlocks.length; r += 1) {
+          if (i < dcdata[r].length) {
+            data[index] = dcdata[r][i];
+            index += 1;
+          }
+        }
+      }
+
+      for (var i = 0; i < maxEcCount; i += 1) {
+        for (var r = 0; r < rsBlocks.length; r += 1) {
+          if (i < ecdata[r].length) {
+            data[index] = ecdata[r][i];
+            index += 1;
+          }
+        }
+      }
+
+      return data;
+    };
+
+    var createData = function(typeNumber, errorCorrectionLevel, dataList) {
+
+      var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, errorCorrectionLevel);
+
+      var buffer = qrBitBuffer();
+
+      for (var i = 0; i < dataList.length; i += 1) {
+        var data = dataList[i];
+        buffer.put(data.getMode(), 4);
+        buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
+        data.write(buffer);
+      }
+
+      // calc num max data.
+      var totalDataCount = 0;
+      for (var i = 0; i < rsBlocks.length; i += 1) {
+        totalDataCount += rsBlocks[i].dataCount;
+      }
+
+      if (buffer.getLengthInBits() > totalDataCount * 8) {
+        throw 'code length overflow. ('
+          + buffer.getLengthInBits()
+          + '>'
+          + totalDataCount * 8
+          + ')';
+      }
+
+      // end code
+      if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
+        buffer.put(0, 4);
+      }
+
+      // padding
+      while (buffer.getLengthInBits() % 8 != 0) {
+        buffer.putBit(false);
+      }
+
+      // padding
+      while (true) {
+
+        if (buffer.getLengthInBits() >= totalDataCount * 8) {
+          break;
+        }
+        buffer.put(PAD0, 8);
+
+        if (buffer.getLengthInBits() >= totalDataCount * 8) {
+          break;
+        }
+        buffer.put(PAD1, 8);
+      }
+
+      return createBytes(buffer, rsBlocks);
+    };
+
+    _this.addData = function(data, mode) {
+
+      mode = mode || 'Byte';
+
+      var newData = null;
+
+      switch(mode) {
+      case 'Numeric' :
+        newData = qrNumber(data);
+        break;
+      case 'Alphanumeric' :
+        newData = qrAlphaNum(data);
+        break;
+      case 'Byte' :
+        newData = qr8BitByte(data);
+        break;
+      case 'Kanji' :
+        newData = qrKanji(data);
+        break;
+      default :
+        throw 'mode:' + mode;
+      }
+
+      _dataList.push(newData);
+      _dataCache = null;
+    };
+
+    _this.isDark = function(row, col) {
+      if (row < 0 || _moduleCount <= row || col < 0 || _moduleCount <= col) {
+        throw row + ',' + col;
+      }
+      return _modules[row][col];
+    };
+
+    _this.getModuleCount = function() {
+      return _moduleCount;
+    };
+
+    _this.make = function() {
+      if (_typeNumber < 1) {
+        var typeNumber = 1;
+
+        for (; typeNumber < 40; typeNumber++) {
+          var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, _errorCorrectionLevel);
+          var buffer = qrBitBuffer();
+
+          for (var i = 0; i < _dataList.length; i++) {
+            var data = _dataList[i];
+            buffer.put(data.getMode(), 4);
+            buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
+            data.write(buffer);
+          }
+
+          var totalDataCount = 0;
+          for (var i = 0; i < rsBlocks.length; i++) {
+            totalDataCount += rsBlocks[i].dataCount;
+          }
+
+          if (buffer.getLengthInBits() <= totalDataCount * 8) {
+            break;
+          }
+        }
+
+        _typeNumber = typeNumber;
+      }
+
+      makeImpl(false, getBestMaskPattern() );
+    };
+
+    _this.createTableTag = function(cellSize, margin) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var qrHtml = '';
+
+      qrHtml += '<table style="';
+      qrHtml += ' border-width: 0px; border-style: none;';
+      qrHtml += ' border-collapse: collapse;';
+      qrHtml += ' padding: 0px; margin: ' + margin + 'px;';
+      qrHtml += '">';
+      qrHtml += '<tbody>';
+
+      for (var r = 0; r < _this.getModuleCount(); r += 1) {
+
+        qrHtml += '<tr>';
+
+        for (var c = 0; c < _this.getModuleCount(); c += 1) {
+          qrHtml += '<td style="';
+          qrHtml += ' border-width: 0px; border-style: none;';
+          qrHtml += ' border-collapse: collapse;';
+          qrHtml += ' padding: 0px; margin: 0px;';
+          qrHtml += ' width: ' + cellSize + 'px;';
+          qrHtml += ' height: ' + cellSize + 'px;';
+          qrHtml += ' background-color: ';
+          qrHtml += _this.isDark(r, c)? '#000000' : '#ffffff';
+          qrHtml += ';';
+          qrHtml += '"/>';
+        }
+
+        qrHtml += '</tr>';
+      }
+
+      qrHtml += '</tbody>';
+      qrHtml += '</table>';
+
+      return qrHtml;
+    };
+
+    _this.createSvgTag = function(cellSize, margin, alt, title) {
+
+      var opts = {};
+      if (typeof arguments[0] == 'object') {
+        // Called by options.
+        opts = arguments[0];
+        // overwrite cellSize and margin.
+        cellSize = opts.cellSize;
+        margin = opts.margin;
+        alt = opts.alt;
+        title = opts.title;
+      }
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      // Compose alt property surrogate
+      alt = (typeof alt === 'string') ? {text: alt} : alt || {};
+      alt.text = alt.text || null;
+      alt.id = (alt.text) ? alt.id || 'qrcode-description' : null;
+
+      // Compose title property surrogate
+      title = (typeof title === 'string') ? {text: title} : title || {};
+      title.text = title.text || null;
+      title.id = (title.text) ? title.id || 'qrcode-title' : null;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var c, mc, r, mr, qrSvg='', rect;
+
+      rect = 'l' + cellSize + ',0 0,' + cellSize +
+        ' -' + cellSize + ',0 0,-' + cellSize + 'z ';
+
+      qrSvg += '<svg version="1.1" xmlns="http://www.w3.org/2000/svg"';
+      qrSvg += !opts.scalable ? ' width="' + size + 'px" height="' + size + 'px"' : '';
+      qrSvg += ' viewBox="0 0 ' + size + ' ' + size + '" ';
+      qrSvg += ' preserveAspectRatio="xMinYMin meet"';
+      qrSvg += (title.text || alt.text) ? ' role="img" aria-labelledby="' +
+          escapeXml([title.id, alt.id].join(' ').trim() ) + '"' : '';
+      qrSvg += '>';
+      qrSvg += (title.text) ? '<title id="' + escapeXml(title.id) + '">' +
+          escapeXml(title.text) + '</title>' : '';
+      qrSvg += (alt.text) ? '<description id="' + escapeXml(alt.id) + '">' +
+          escapeXml(alt.text) + '</description>' : '';
+      qrSvg += '<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>';
+      qrSvg += '<path d="';
+
+      for (r = 0; r < _this.getModuleCount(); r += 1) {
+        mr = r * cellSize + margin;
+        for (c = 0; c < _this.getModuleCount(); c += 1) {
+          if (_this.isDark(r, c) ) {
+            mc = c*cellSize+margin;
+            qrSvg += 'M' + mc + ',' + mr + rect;
+          }
+        }
+      }
+
+      qrSvg += '" stroke="transparent" fill="black"/>';
+      qrSvg += '</svg>';
+
+      return qrSvg;
+    };
+
+    _this.createDataURL = function(cellSize, margin) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      return createDataURL(size, size, function(x, y) {
+        if (min <= x && x < max && min <= y && y < max) {
+          var c = Math.floor( (x - min) / cellSize);
+          var r = Math.floor( (y - min) / cellSize);
+          return _this.isDark(r, c)? 0 : 1;
+        } else {
+          return 1;
+        }
+      } );
+    };
+
+    _this.createImgTag = function(cellSize, margin, alt) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+
+      var img = '';
+      img += '<img';
+      img += '\u0020src="';
+      img += _this.createDataURL(cellSize, margin);
+      img += '"';
+      img += '\u0020width="';
+      img += size;
+      img += '"';
+      img += '\u0020height="';
+      img += size;
+      img += '"';
+      if (alt) {
+        img += '\u0020alt="';
+        img += escapeXml(alt);
+        img += '"';
+      }
+      img += '/>';
+
+      return img;
+    };
+
+    var escapeXml = function(s) {
+      var escaped = '';
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charAt(i);
+        switch(c) {
+        case '<': escaped += '&lt;'; break;
+        case '>': escaped += '&gt;'; break;
+        case '&': escaped += '&amp;'; break;
+        case '"': escaped += '&quot;'; break;
+        default : escaped += c; break;
+        }
+      }
+      return escaped;
+    };
+
+    var _createHalfASCII = function(margin) {
+      var cellSize = 1;
+      margin = (typeof margin == 'undefined')? cellSize * 2 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      var y, x, r1, r2, p;
+
+      var blocks = {
+        '██': '█',
+        '█ ': '▀',
+        ' █': '▄',
+        '  ': ' '
+      };
+
+      var blocksLastLineNoMargin = {
+        '██': '▀',
+        '█ ': '▀',
+        ' █': ' ',
+        '  ': ' '
+      };
+
+      var ascii = '';
+      for (y = 0; y < size; y += 2) {
+        r1 = Math.floor((y - min) / cellSize);
+        r2 = Math.floor((y + 1 - min) / cellSize);
+        for (x = 0; x < size; x += 1) {
+          p = '█';
+
+          if (min <= x && x < max && min <= y && y < max && _this.isDark(r1, Math.floor((x - min) / cellSize))) {
+            p = ' ';
+          }
+
+          if (min <= x && x < max && min <= y+1 && y+1 < max && _this.isDark(r2, Math.floor((x - min) / cellSize))) {
+            p += ' ';
+          }
+          else {
+            p += '█';
+          }
+
+          // Output 2 characters per pixel, to create full square. 1 character per pixels gives only half width of square.
+          ascii += (margin < 1 && y+1 >= max) ? blocksLastLineNoMargin[p] : blocks[p];
+        }
+
+        ascii += '\n';
+      }
+
+      if (size % 2 && margin > 0) {
+        return ascii.substring(0, ascii.length - size - 1) + Array(size+1).join('▀');
+      }
+
+      return ascii.substring(0, ascii.length-1);
+    };
+
+    _this.createASCII = function(cellSize, margin) {
+      cellSize = cellSize || 1;
+
+      if (cellSize < 2) {
+        return _createHalfASCII(margin);
+      }
+
+      cellSize -= 1;
+      margin = (typeof margin == 'undefined')? cellSize * 2 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      var y, x, r, p;
+
+      var white = Array(cellSize+1).join('██');
+      var black = Array(cellSize+1).join('  ');
+
+      var ascii = '';
+      var line = '';
+      for (y = 0; y < size; y += 1) {
+        r = Math.floor( (y - min) / cellSize);
+        line = '';
+        for (x = 0; x < size; x += 1) {
+          p = 1;
+
+          if (min <= x && x < max && min <= y && y < max && _this.isDark(r, Math.floor((x - min) / cellSize))) {
+            p = 0;
+          }
+
+          // Output 2 characters per pixel, to create full square. 1 character per pixels gives only half width of square.
+          line += p ? white : black;
+        }
+
+        for (r = 0; r < cellSize; r += 1) {
+          ascii += line + '\n';
+        }
+      }
+
+      return ascii.substring(0, ascii.length-1);
+    };
+
+    _this.renderTo2dContext = function(context, cellSize) {
+      cellSize = cellSize || 2;
+      var length = _this.getModuleCount();
+      for (var row = 0; row < length; row++) {
+        for (var col = 0; col < length; col++) {
+          context.fillStyle = _this.isDark(row, col) ? 'black' : 'white';
+          context.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
+        }
+      }
+    }
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrcode.stringToBytes
+  //---------------------------------------------------------------------
+
+  qrcode.stringToBytesFuncs = {
+    'default' : function(s) {
+      var bytes = [];
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charCodeAt(i);
+        bytes.push(c & 0xff);
+      }
+      return bytes;
+    }
+  };
+
+  qrcode.stringToBytes = qrcode.stringToBytesFuncs['default'];
+
+  //---------------------------------------------------------------------
+  // qrcode.createStringToBytes
+  //---------------------------------------------------------------------
+
+  /**
+   * @param unicodeData base64 string of byte array.
+   * [16bit Unicode],[16bit Bytes], ...
+   * @param numChars
+   */
+  qrcode.createStringToBytes = function(unicodeData, numChars) {
+
+    // create conversion map.
+
+    var unicodeMap = function() {
+
+      var bin = base64DecodeInputStream(unicodeData);
+      var read = function() {
+        var b = bin.read();
+        if (b == -1) throw 'eof';
+        return b;
+      };
+
+      var count = 0;
+      var unicodeMap = {};
+      while (true) {
+        var b0 = bin.read();
+        if (b0 == -1) break;
+        var b1 = read();
+        var b2 = read();
+        var b3 = read();
+        var k = String.fromCharCode( (b0 << 8) | b1);
+        var v = (b2 << 8) | b3;
+        unicodeMap[k] = v;
+        count += 1;
+      }
+      if (count != numChars) {
+        throw count + ' != ' + numChars;
+      }
+
+      return unicodeMap;
+    }();
+
+    var unknownChar = '?'.charCodeAt(0);
+
+    return function(s) {
+      var bytes = [];
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charCodeAt(i);
+        if (c < 128) {
+          bytes.push(c);
+        } else {
+          var b = unicodeMap[s.charAt(i)];
+          if (typeof b == 'number') {
+            if ( (b & 0xff) == b) {
+              // 1byte
+              bytes.push(b);
+            } else {
+              // 2bytes
+              bytes.push(b >>> 8);
+              bytes.push(b & 0xff);
+            }
+          } else {
+            bytes.push(unknownChar);
+          }
+        }
+      }
+      return bytes;
+    };
+  };
+
+  //---------------------------------------------------------------------
+  // QRMode
+  //---------------------------------------------------------------------
+
+  var QRMode = {
+    MODE_NUMBER :    1 << 0,
+    MODE_ALPHA_NUM : 1 << 1,
+    MODE_8BIT_BYTE : 1 << 2,
+    MODE_KANJI :     1 << 3
+  };
+
+  //---------------------------------------------------------------------
+  // QRErrorCorrectionLevel
+  //---------------------------------------------------------------------
+
+  var QRErrorCorrectionLevel = {
+    L : 1,
+    M : 0,
+    Q : 3,
+    H : 2
+  };
+
+  //---------------------------------------------------------------------
+  // QRMaskPattern
+  //---------------------------------------------------------------------
+
+  var QRMaskPattern = {
+    PATTERN000 : 0,
+    PATTERN001 : 1,
+    PATTERN010 : 2,
+    PATTERN011 : 3,
+    PATTERN100 : 4,
+    PATTERN101 : 5,
+    PATTERN110 : 6,
+    PATTERN111 : 7
+  };
+
+  //---------------------------------------------------------------------
+  // QRUtil
+  //---------------------------------------------------------------------
+
+  var QRUtil = function() {
+
+    var PATTERN_POSITION_TABLE = [
+      [],
+      [6, 18],
+      [6, 22],
+      [6, 26],
+      [6, 30],
+      [6, 34],
+      [6, 22, 38],
+      [6, 24, 42],
+      [6, 26, 46],
+      [6, 28, 50],
+      [6, 30, 54],
+      [6, 32, 58],
+      [6, 34, 62],
+      [6, 26, 46, 66],
+      [6, 26, 48, 70],
+      [6, 26, 50, 74],
+      [6, 30, 54, 78],
+      [6, 30, 56, 82],
+      [6, 30, 58, 86],
+      [6, 34, 62, 90],
+      [6, 28, 50, 72, 94],
+      [6, 26, 50, 74, 98],
+      [6, 30, 54, 78, 102],
+      [6, 28, 54, 80, 106],
+      [6, 32, 58, 84, 110],
+      [6, 30, 58, 86, 114],
+      [6, 34, 62, 90, 118],
+      [6, 26, 50, 74, 98, 122],
+      [6, 30, 54, 78, 102, 126],
+      [6, 26, 52, 78, 104, 130],
+      [6, 30, 56, 82, 108, 134],
+      [6, 34, 60, 86, 112, 138],
+      [6, 30, 58, 86, 114, 142],
+      [6, 34, 62, 90, 118, 146],
+      [6, 30, 54, 78, 102, 126, 150],
+      [6, 24, 50, 76, 102, 128, 154],
+      [6, 28, 54, 80, 106, 132, 158],
+      [6, 32, 58, 84, 110, 136, 162],
+      [6, 26, 54, 82, 110, 138, 166],
+      [6, 30, 58, 86, 114, 142, 170]
+    ];
+    var G15 = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0);
+    var G18 = (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0);
+    var G15_MASK = (1 << 14) | (1 << 12) | (1 << 10) | (1 << 4) | (1 << 1);
+
+    var _this = {};
+
+    var getBCHDigit = function(data) {
+      var digit = 0;
+      while (data != 0) {
+        digit += 1;
+        data >>>= 1;
+      }
+      return digit;
+    };
+
+    _this.getBCHTypeInfo = function(data) {
+      var d = data << 10;
+      while (getBCHDigit(d) - getBCHDigit(G15) >= 0) {
+        d ^= (G15 << (getBCHDigit(d) - getBCHDigit(G15) ) );
+      }
+      return ( (data << 10) | d) ^ G15_MASK;
+    };
+
+    _this.getBCHTypeNumber = function(data) {
+      var d = data << 12;
+      while (getBCHDigit(d) - getBCHDigit(G18) >= 0) {
+        d ^= (G18 << (getBCHDigit(d) - getBCHDigit(G18) ) );
+      }
+      return (data << 12) | d;
+    };
+
+    _this.getPatternPosition = function(typeNumber) {
+      return PATTERN_POSITION_TABLE[typeNumber - 1];
+    };
+
+    _this.getMaskFunction = function(maskPattern) {
+
+      switch (maskPattern) {
+
+      case QRMaskPattern.PATTERN000 :
+        return function(i, j) { return (i + j) % 2 == 0; };
+      case QRMaskPattern.PATTERN001 :
+        return function(i, j) { return i % 2 == 0; };
+      case QRMaskPattern.PATTERN010 :
+        return function(i, j) { return j % 3 == 0; };
+      case QRMaskPattern.PATTERN011 :
+        return function(i, j) { return (i + j) % 3 == 0; };
+      case QRMaskPattern.PATTERN100 :
+        return function(i, j) { return (Math.floor(i / 2) + Math.floor(j / 3) ) % 2 == 0; };
+      case QRMaskPattern.PATTERN101 :
+        return function(i, j) { return (i * j) % 2 + (i * j) % 3 == 0; };
+      case QRMaskPattern.PATTERN110 :
+        return function(i, j) { return ( (i * j) % 2 + (i * j) % 3) % 2 == 0; };
+      case QRMaskPattern.PATTERN111 :
+        return function(i, j) { return ( (i * j) % 3 + (i + j) % 2) % 2 == 0; };
+
+      default :
+        throw 'bad maskPattern:' + maskPattern;
+      }
+    };
+
+    _this.getErrorCorrectPolynomial = function(errorCorrectLength) {
+      var a = qrPolynomial([1], 0);
+      for (var i = 0; i < errorCorrectLength; i += 1) {
+        a = a.multiply(qrPolynomial([1, QRMath.gexp(i)], 0) );
+      }
+      return a;
+    };
+
+    _this.getLengthInBits = function(mode, type) {
+
+      if (1 <= type && type < 10) {
+
+        // 1 - 9
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 10;
+        case QRMode.MODE_ALPHA_NUM : return 9;
+        case QRMode.MODE_8BIT_BYTE : return 8;
+        case QRMode.MODE_KANJI     : return 8;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else if (type < 27) {
+
+        // 10 - 26
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 12;
+        case QRMode.MODE_ALPHA_NUM : return 11;
+        case QRMode.MODE_8BIT_BYTE : return 16;
+        case QRMode.MODE_KANJI     : return 10;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else if (type < 41) {
+
+        // 27 - 40
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 14;
+        case QRMode.MODE_ALPHA_NUM : return 13;
+        case QRMode.MODE_8BIT_BYTE : return 16;
+        case QRMode.MODE_KANJI     : return 12;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else {
+        throw 'type:' + type;
+      }
+    };
+
+    _this.getLostPoint = function(qrcode) {
+
+      var moduleCount = qrcode.getModuleCount();
+
+      var lostPoint = 0;
+
+      // LEVEL1
+
+      for (var row = 0; row < moduleCount; row += 1) {
+        for (var col = 0; col < moduleCount; col += 1) {
+
+          var sameCount = 0;
+          var dark = qrcode.isDark(row, col);
+
+          for (var r = -1; r <= 1; r += 1) {
+
+            if (row + r < 0 || moduleCount <= row + r) {
+              continue;
+            }
+
+            for (var c = -1; c <= 1; c += 1) {
+
+              if (col + c < 0 || moduleCount <= col + c) {
+                continue;
+              }
+
+              if (r == 0 && c == 0) {
+                continue;
+              }
+
+              if (dark == qrcode.isDark(row + r, col + c) ) {
+                sameCount += 1;
+              }
+            }
+          }
+
+          if (sameCount > 5) {
+            lostPoint += (3 + sameCount - 5);
+          }
+        }
+      };
+
+      // LEVEL2
+
+      for (var row = 0; row < moduleCount - 1; row += 1) {
+        for (var col = 0; col < moduleCount - 1; col += 1) {
+          var count = 0;
+          if (qrcode.isDark(row, col) ) count += 1;
+          if (qrcode.isDark(row + 1, col) ) count += 1;
+          if (qrcode.isDark(row, col + 1) ) count += 1;
+          if (qrcode.isDark(row + 1, col + 1) ) count += 1;
+          if (count == 0 || count == 4) {
+            lostPoint += 3;
+          }
+        }
+      }
+
+      // LEVEL3
+
+      for (var row = 0; row < moduleCount; row += 1) {
+        for (var col = 0; col < moduleCount - 6; col += 1) {
+          if (qrcode.isDark(row, col)
+              && !qrcode.isDark(row, col + 1)
+              &&  qrcode.isDark(row, col + 2)
+              &&  qrcode.isDark(row, col + 3)
+              &&  qrcode.isDark(row, col + 4)
+              && !qrcode.isDark(row, col + 5)
+              &&  qrcode.isDark(row, col + 6) ) {
+            lostPoint += 40;
+          }
+        }
+      }
+
+      for (var col = 0; col < moduleCount; col += 1) {
+        for (var row = 0; row < moduleCount - 6; row += 1) {
+          if (qrcode.isDark(row, col)
+              && !qrcode.isDark(row + 1, col)
+              &&  qrcode.isDark(row + 2, col)
+              &&  qrcode.isDark(row + 3, col)
+              &&  qrcode.isDark(row + 4, col)
+              && !qrcode.isDark(row + 5, col)
+              &&  qrcode.isDark(row + 6, col) ) {
+            lostPoint += 40;
+          }
+        }
+      }
+
+      // LEVEL4
+
+      var darkCount = 0;
+
+      for (var col = 0; col < moduleCount; col += 1) {
+        for (var row = 0; row < moduleCount; row += 1) {
+          if (qrcode.isDark(row, col) ) {
+            darkCount += 1;
+          }
+        }
+      }
+
+      var ratio = Math.abs(100 * darkCount / moduleCount / moduleCount - 50) / 5;
+      lostPoint += ratio * 10;
+
+      return lostPoint;
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // QRMath
+  //---------------------------------------------------------------------
+
+  var QRMath = function() {
+
+    var EXP_TABLE = new Array(256);
+    var LOG_TABLE = new Array(256);
+
+    // initialize tables
+    for (var i = 0; i < 8; i += 1) {
+      EXP_TABLE[i] = 1 << i;
+    }
+    for (var i = 8; i < 256; i += 1) {
+      EXP_TABLE[i] = EXP_TABLE[i - 4]
+        ^ EXP_TABLE[i - 5]
+        ^ EXP_TABLE[i - 6]
+        ^ EXP_TABLE[i - 8];
+    }
+    for (var i = 0; i < 255; i += 1) {
+      LOG_TABLE[EXP_TABLE[i] ] = i;
+    }
+
+    var _this = {};
+
+    _this.glog = function(n) {
+
+      if (n < 1) {
+        throw 'glog(' + n + ')';
+      }
+
+      return LOG_TABLE[n];
+    };
+
+    _this.gexp = function(n) {
+
+      while (n < 0) {
+        n += 255;
+      }
+
+      while (n >= 256) {
+        n -= 255;
+      }
+
+      return EXP_TABLE[n];
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // qrPolynomial
+  //---------------------------------------------------------------------
+
+  function qrPolynomial(num, shift) {
+
+    if (typeof num.length == 'undefined') {
+      throw num.length + '/' + shift;
+    }
+
+    var _num = function() {
+      var offset = 0;
+      while (offset < num.length && num[offset] == 0) {
+        offset += 1;
+      }
+      var _num = new Array(num.length - offset + shift);
+      for (var i = 0; i < num.length - offset; i += 1) {
+        _num[i] = num[i + offset];
+      }
+      return _num;
+    }();
+
+    var _this = {};
+
+    _this.getAt = function(index) {
+      return _num[index];
+    };
+
+    _this.getLength = function() {
+      return _num.length;
+    };
+
+    _this.multiply = function(e) {
+
+      var num = new Array(_this.getLength() + e.getLength() - 1);
+
+      for (var i = 0; i < _this.getLength(); i += 1) {
+        for (var j = 0; j < e.getLength(); j += 1) {
+          num[i + j] ^= QRMath.gexp(QRMath.glog(_this.getAt(i) ) + QRMath.glog(e.getAt(j) ) );
+        }
+      }
+
+      return qrPolynomial(num, 0);
+    };
+
+    _this.mod = function(e) {
+
+      if (_this.getLength() - e.getLength() < 0) {
+        return _this;
+      }
+
+      var ratio = QRMath.glog(_this.getAt(0) ) - QRMath.glog(e.getAt(0) );
+
+      var num = new Array(_this.getLength() );
+      for (var i = 0; i < _this.getLength(); i += 1) {
+        num[i] = _this.getAt(i);
+      }
+
+      for (var i = 0; i < e.getLength(); i += 1) {
+        num[i] ^= QRMath.gexp(QRMath.glog(e.getAt(i) ) + ratio);
+      }
+
+      // recursive call
+      return qrPolynomial(num, 0).mod(e);
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // QRRSBlock
+  //---------------------------------------------------------------------
+
+  var QRRSBlock = function() {
+
+    var RS_BLOCK_TABLE = [
+
+      // L
+      // M
+      // Q
+      // H
+
+      // 1
+      [1, 26, 19],
+      [1, 26, 16],
+      [1, 26, 13],
+      [1, 26, 9],
+
+      // 2
+      [1, 44, 34],
+      [1, 44, 28],
+      [1, 44, 22],
+      [1, 44, 16],
+
+      // 3
+      [1, 70, 55],
+      [1, 70, 44],
+      [2, 35, 17],
+      [2, 35, 13],
+
+      // 4
+      [1, 100, 80],
+      [2, 50, 32],
+      [2, 50, 24],
+      [4, 25, 9],
+
+      // 5
+      [1, 134, 108],
+      [2, 67, 43],
+      [2, 33, 15, 2, 34, 16],
+      [2, 33, 11, 2, 34, 12],
+
+      // 6
+      [2, 86, 68],
+      [4, 43, 27],
+      [4, 43, 19],
+      [4, 43, 15],
+
+      // 7
+      [2, 98, 78],
+      [4, 49, 31],
+      [2, 32, 14, 4, 33, 15],
+      [4, 39, 13, 1, 40, 14],
+
+      // 8
+      [2, 121, 97],
+      [2, 60, 38, 2, 61, 39],
+      [4, 40, 18, 2, 41, 19],
+      [4, 40, 14, 2, 41, 15],
+
+      // 9
+      [2, 146, 116],
+      [3, 58, 36, 2, 59, 37],
+      [4, 36, 16, 4, 37, 17],
+      [4, 36, 12, 4, 37, 13],
+
+      // 10
+      [2, 86, 68, 2, 87, 69],
+      [4, 69, 43, 1, 70, 44],
+      [6, 43, 19, 2, 44, 20],
+      [6, 43, 15, 2, 44, 16],
+
+      // 11
+      [4, 101, 81],
+      [1, 80, 50, 4, 81, 51],
+      [4, 50, 22, 4, 51, 23],
+      [3, 36, 12, 8, 37, 13],
+
+      // 12
+      [2, 116, 92, 2, 117, 93],
+      [6, 58, 36, 2, 59, 37],
+      [4, 46, 20, 6, 47, 21],
+      [7, 42, 14, 4, 43, 15],
+
+      // 13
+      [4, 133, 107],
+      [8, 59, 37, 1, 60, 38],
+      [8, 44, 20, 4, 45, 21],
+      [12, 33, 11, 4, 34, 12],
+
+      // 14
+      [3, 145, 115, 1, 146, 116],
+      [4, 64, 40, 5, 65, 41],
+      [11, 36, 16, 5, 37, 17],
+      [11, 36, 12, 5, 37, 13],
+
+      // 15
+      [5, 109, 87, 1, 110, 88],
+      [5, 65, 41, 5, 66, 42],
+      [5, 54, 24, 7, 55, 25],
+      [11, 36, 12, 7, 37, 13],
+
+      // 16
+      [5, 122, 98, 1, 123, 99],
+      [7, 73, 45, 3, 74, 46],
+      [15, 43, 19, 2, 44, 20],
+      [3, 45, 15, 13, 46, 16],
+
+      // 17
+      [1, 135, 107, 5, 136, 108],
+      [10, 74, 46, 1, 75, 47],
+      [1, 50, 22, 15, 51, 23],
+      [2, 42, 14, 17, 43, 15],
+
+      // 18
+      [5, 150, 120, 1, 151, 121],
+      [9, 69, 43, 4, 70, 44],
+      [17, 50, 22, 1, 51, 23],
+      [2, 42, 14, 19, 43, 15],
+
+      // 19
+      [3, 141, 113, 4, 142, 114],
+      [3, 70, 44, 11, 71, 45],
+      [17, 47, 21, 4, 48, 22],
+      [9, 39, 13, 16, 40, 14],
+
+      // 20
+      [3, 135, 107, 5, 136, 108],
+      [3, 67, 41, 13, 68, 42],
+      [15, 54, 24, 5, 55, 25],
+      [15, 43, 15, 10, 44, 16],
+
+      // 21
+      [4, 144, 116, 4, 145, 117],
+      [17, 68, 42],
+      [17, 50, 22, 6, 51, 23],
+      [19, 46, 16, 6, 47, 17],
+
+      // 22
+      [2, 139, 111, 7, 140, 112],
+      [17, 74, 46],
+      [7, 54, 24, 16, 55, 25],
+      [34, 37, 13],
+
+      // 23
+      [4, 151, 121, 5, 152, 122],
+      [4, 75, 47, 14, 76, 48],
+      [11, 54, 24, 14, 55, 25],
+      [16, 45, 15, 14, 46, 16],
+
+      // 24
+      [6, 147, 117, 4, 148, 118],
+      [6, 73, 45, 14, 74, 46],
+      [11, 54, 24, 16, 55, 25],
+      [30, 46, 16, 2, 47, 17],
+
+      // 25
+      [8, 132, 106, 4, 133, 107],
+      [8, 75, 47, 13, 76, 48],
+      [7, 54, 24, 22, 55, 25],
+      [22, 45, 15, 13, 46, 16],
+
+      // 26
+      [10, 142, 114, 2, 143, 115],
+      [19, 74, 46, 4, 75, 47],
+      [28, 50, 22, 6, 51, 23],
+      [33, 46, 16, 4, 47, 17],
+
+      // 27
+      [8, 152, 122, 4, 153, 123],
+      [22, 73, 45, 3, 74, 46],
+      [8, 53, 23, 26, 54, 24],
+      [12, 45, 15, 28, 46, 16],
+
+      // 28
+      [3, 147, 117, 10, 148, 118],
+      [3, 73, 45, 23, 74, 46],
+      [4, 54, 24, 31, 55, 25],
+      [11, 45, 15, 31, 46, 16],
+
+      // 29
+      [7, 146, 116, 7, 147, 117],
+      [21, 73, 45, 7, 74, 46],
+      [1, 53, 23, 37, 54, 24],
+      [19, 45, 15, 26, 46, 16],
+
+      // 30
+      [5, 145, 115, 10, 146, 116],
+      [19, 75, 47, 10, 76, 48],
+      [15, 54, 24, 25, 55, 25],
+      [23, 45, 15, 25, 46, 16],
+
+      // 31
+      [13, 145, 115, 3, 146, 116],
+      [2, 74, 46, 29, 75, 47],
+      [42, 54, 24, 1, 55, 25],
+      [23, 45, 15, 28, 46, 16],
+
+      // 32
+      [17, 145, 115],
+      [10, 74, 46, 23, 75, 47],
+      [10, 54, 24, 35, 55, 25],
+      [19, 45, 15, 35, 46, 16],
+
+      // 33
+      [17, 145, 115, 1, 146, 116],
+      [14, 74, 46, 21, 75, 47],
+      [29, 54, 24, 19, 55, 25],
+      [11, 45, 15, 46, 46, 16],
+
+      // 34
+      [13, 145, 115, 6, 146, 116],
+      [14, 74, 46, 23, 75, 47],
+      [44, 54, 24, 7, 55, 25],
+      [59, 46, 16, 1, 47, 17],
+
+      // 35
+      [12, 151, 121, 7, 152, 122],
+      [12, 75, 47, 26, 76, 48],
+      [39, 54, 24, 14, 55, 25],
+      [22, 45, 15, 41, 46, 16],
+
+      // 36
+      [6, 151, 121, 14, 152, 122],
+      [6, 75, 47, 34, 76, 48],
+      [46, 54, 24, 10, 55, 25],
+      [2, 45, 15, 64, 46, 16],
+
+      // 37
+      [17, 152, 122, 4, 153, 123],
+      [29, 74, 46, 14, 75, 47],
+      [49, 54, 24, 10, 55, 25],
+      [24, 45, 15, 46, 46, 16],
+
+      // 38
+      [4, 152, 122, 18, 153, 123],
+      [13, 74, 46, 32, 75, 47],
+      [48, 54, 24, 14, 55, 25],
+      [42, 45, 15, 32, 46, 16],
+
+      // 39
+      [20, 147, 117, 4, 148, 118],
+      [40, 75, 47, 7, 76, 48],
+      [43, 54, 24, 22, 55, 25],
+      [10, 45, 15, 67, 46, 16],
+
+      // 40
+      [19, 148, 118, 6, 149, 119],
+      [18, 75, 47, 31, 76, 48],
+      [34, 54, 24, 34, 55, 25],
+      [20, 45, 15, 61, 46, 16]
+    ];
+
+    var qrRSBlock = function(totalCount, dataCount) {
+      var _this = {};
+      _this.totalCount = totalCount;
+      _this.dataCount = dataCount;
+      return _this;
+    };
+
+    var _this = {};
+
+    var getRsBlockTable = function(typeNumber, errorCorrectionLevel) {
+
+      switch(errorCorrectionLevel) {
+      case QRErrorCorrectionLevel.L :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 0];
+      case QRErrorCorrectionLevel.M :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 1];
+      case QRErrorCorrectionLevel.Q :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 2];
+      case QRErrorCorrectionLevel.H :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 3];
+      default :
+        return undefined;
+      }
+    };
+
+    _this.getRSBlocks = function(typeNumber, errorCorrectionLevel) {
+
+      var rsBlock = getRsBlockTable(typeNumber, errorCorrectionLevel);
+
+      if (typeof rsBlock == 'undefined') {
+        throw 'bad rs block @ typeNumber:' + typeNumber +
+            '/errorCorrectionLevel:' + errorCorrectionLevel;
+      }
+
+      var length = rsBlock.length / 3;
+
+      var list = [];
+
+      for (var i = 0; i < length; i += 1) {
+
+        var count = rsBlock[i * 3 + 0];
+        var totalCount = rsBlock[i * 3 + 1];
+        var dataCount = rsBlock[i * 3 + 2];
+
+        for (var j = 0; j < count; j += 1) {
+          list.push(qrRSBlock(totalCount, dataCount) );
+        }
+      }
+
+      return list;
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // qrBitBuffer
+  //---------------------------------------------------------------------
+
+  var qrBitBuffer = function() {
+
+    var _buffer = [];
+    var _length = 0;
+
+    var _this = {};
+
+    _this.getBuffer = function() {
+      return _buffer;
+    };
+
+    _this.getAt = function(index) {
+      var bufIndex = Math.floor(index / 8);
+      return ( (_buffer[bufIndex] >>> (7 - index % 8) ) & 1) == 1;
+    };
+
+    _this.put = function(num, length) {
+      for (var i = 0; i < length; i += 1) {
+        _this.putBit( ( (num >>> (length - i - 1) ) & 1) == 1);
+      }
+    };
+
+    _this.getLengthInBits = function() {
+      return _length;
+    };
+
+    _this.putBit = function(bit) {
+
+      var bufIndex = Math.floor(_length / 8);
+      if (_buffer.length <= bufIndex) {
+        _buffer.push(0);
+      }
+
+      if (bit) {
+        _buffer[bufIndex] |= (0x80 >>> (_length % 8) );
+      }
+
+      _length += 1;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrNumber
+  //---------------------------------------------------------------------
+
+  var qrNumber = function(data) {
+
+    var _mode = QRMode.MODE_NUMBER;
+    var _data = data;
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _data.length;
+    };
+
+    _this.write = function(buffer) {
+
+      var data = _data;
+
+      var i = 0;
+
+      while (i + 2 < data.length) {
+        buffer.put(strToNum(data.substring(i, i + 3) ), 10);
+        i += 3;
+      }
+
+      if (i < data.length) {
+        if (data.length - i == 1) {
+          buffer.put(strToNum(data.substring(i, i + 1) ), 4);
+        } else if (data.length - i == 2) {
+          buffer.put(strToNum(data.substring(i, i + 2) ), 7);
+        }
+      }
+    };
+
+    var strToNum = function(s) {
+      var num = 0;
+      for (var i = 0; i < s.length; i += 1) {
+        num = num * 10 + chatToNum(s.charAt(i) );
+      }
+      return num;
+    };
+
+    var chatToNum = function(c) {
+      if ('0' <= c && c <= '9') {
+        return c.charCodeAt(0) - '0'.charCodeAt(0);
+      }
+      throw 'illegal char :' + c;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrAlphaNum
+  //---------------------------------------------------------------------
+
+  var qrAlphaNum = function(data) {
+
+    var _mode = QRMode.MODE_ALPHA_NUM;
+    var _data = data;
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _data.length;
+    };
+
+    _this.write = function(buffer) {
+
+      var s = _data;
+
+      var i = 0;
+
+      while (i + 1 < s.length) {
+        buffer.put(
+          getCode(s.charAt(i) ) * 45 +
+          getCode(s.charAt(i + 1) ), 11);
+        i += 2;
+      }
+
+      if (i < s.length) {
+        buffer.put(getCode(s.charAt(i) ), 6);
+      }
+    };
+
+    var getCode = function(c) {
+
+      if ('0' <= c && c <= '9') {
+        return c.charCodeAt(0) - '0'.charCodeAt(0);
+      } else if ('A' <= c && c <= 'Z') {
+        return c.charCodeAt(0) - 'A'.charCodeAt(0) + 10;
+      } else {
+        switch (c) {
+        case ' ' : return 36;
+        case '$' : return 37;
+        case '%' : return 38;
+        case '*' : return 39;
+        case '+' : return 40;
+        case '-' : return 41;
+        case '.' : return 42;
+        case '/' : return 43;
+        case ':' : return 44;
+        default :
+          throw 'illegal char :' + c;
+        }
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qr8BitByte
+  //---------------------------------------------------------------------
+
+  var qr8BitByte = function(data) {
+
+    var _mode = QRMode.MODE_8BIT_BYTE;
+    var _data = data;
+    var _bytes = qrcode.stringToBytes(data);
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _bytes.length;
+    };
+
+    _this.write = function(buffer) {
+      for (var i = 0; i < _bytes.length; i += 1) {
+        buffer.put(_bytes[i], 8);
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrKanji
+  //---------------------------------------------------------------------
+
+  var qrKanji = function(data) {
+
+    var _mode = QRMode.MODE_KANJI;
+    var _data = data;
+
+    var stringToBytes = qrcode.stringToBytesFuncs['SJIS'];
+    if (!stringToBytes) {
+      throw 'sjis not supported.';
+    }
+    !function(c, code) {
+      // self test for sjis support.
+      var test = stringToBytes(c);
+      if (test.length != 2 || ( (test[0] << 8) | test[1]) != code) {
+        throw 'sjis not supported.';
+      }
+    }('\u53cb', 0x9746);
+
+    var _bytes = stringToBytes(data);
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return ~~(_bytes.length / 2);
+    };
+
+    _this.write = function(buffer) {
+
+      var data = _bytes;
+
+      var i = 0;
+
+      while (i + 1 < data.length) {
+
+        var c = ( (0xff & data[i]) << 8) | (0xff & data[i + 1]);
+
+        if (0x8140 <= c && c <= 0x9FFC) {
+          c -= 0x8140;
+        } else if (0xE040 <= c && c <= 0xEBBF) {
+          c -= 0xC140;
+        } else {
+          throw 'illegal char at ' + (i + 1) + '/' + c;
+        }
+
+        c = ( (c >>> 8) & 0xff) * 0xC0 + (c & 0xff);
+
+        buffer.put(c, 13);
+
+        i += 2;
+      }
+
+      if (i < data.length) {
+        throw 'illegal char at ' + (i + 1);
+      }
+    };
+
+    return _this;
+  };
+
+  //=====================================================================
+  // GIF Support etc.
+  //
+
+  //---------------------------------------------------------------------
+  // byteArrayOutputStream
+  //---------------------------------------------------------------------
+
+  var byteArrayOutputStream = function() {
+
+    var _bytes = [];
+
+    var _this = {};
+
+    _this.writeByte = function(b) {
+      _bytes.push(b & 0xff);
+    };
+
+    _this.writeShort = function(i) {
+      _this.writeByte(i);
+      _this.writeByte(i >>> 8);
+    };
+
+    _this.writeBytes = function(b, off, len) {
+      off = off || 0;
+      len = len || b.length;
+      for (var i = 0; i < len; i += 1) {
+        _this.writeByte(b[i + off]);
+      }
+    };
+
+    _this.writeString = function(s) {
+      for (var i = 0; i < s.length; i += 1) {
+        _this.writeByte(s.charCodeAt(i) );
+      }
+    };
+
+    _this.toByteArray = function() {
+      return _bytes;
+    };
+
+    _this.toString = function() {
+      var s = '';
+      s += '[';
+      for (var i = 0; i < _bytes.length; i += 1) {
+        if (i > 0) {
+          s += ',';
+        }
+        s += _bytes[i];
+      }
+      s += ']';
+      return s;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // base64EncodeOutputStream
+  //---------------------------------------------------------------------
+
+  var base64EncodeOutputStream = function() {
+
+    var _buffer = 0;
+    var _buflen = 0;
+    var _length = 0;
+    var _base64 = '';
+
+    var _this = {};
+
+    var writeEncoded = function(b) {
+      _base64 += String.fromCharCode(encode(b & 0x3f) );
+    };
+
+    var encode = function(n) {
+      if (n < 0) {
+        // error.
+      } else if (n < 26) {
+        return 0x41 + n;
+      } else if (n < 52) {
+        return 0x61 + (n - 26);
+      } else if (n < 62) {
+        return 0x30 + (n - 52);
+      } else if (n == 62) {
+        return 0x2b;
+      } else if (n == 63) {
+        return 0x2f;
+      }
+      throw 'n:' + n;
+    };
+
+    _this.writeByte = function(n) {
+
+      _buffer = (_buffer << 8) | (n & 0xff);
+      _buflen += 8;
+      _length += 1;
+
+      while (_buflen >= 6) {
+        writeEncoded(_buffer >>> (_buflen - 6) );
+        _buflen -= 6;
+      }
+    };
+
+    _this.flush = function() {
+
+      if (_buflen > 0) {
+        writeEncoded(_buffer << (6 - _buflen) );
+        _buffer = 0;
+        _buflen = 0;
+      }
+
+      if (_length % 3 != 0) {
+        // padding
+        var padlen = 3 - _length % 3;
+        for (var i = 0; i < padlen; i += 1) {
+          _base64 += '=';
+        }
+      }
+    };
+
+    _this.toString = function() {
+      return _base64;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // base64DecodeInputStream
+  //---------------------------------------------------------------------
+
+  var base64DecodeInputStream = function(str) {
+
+    var _str = str;
+    var _pos = 0;
+    var _buffer = 0;
+    var _buflen = 0;
+
+    var _this = {};
+
+    _this.read = function() {
+
+      while (_buflen < 8) {
+
+        if (_pos >= _str.length) {
+          if (_buflen == 0) {
+            return -1;
+          }
+          throw 'unexpected end of file./' + _buflen;
+        }
+
+        var c = _str.charAt(_pos);
+        _pos += 1;
+
+        if (c == '=') {
+          _buflen = 0;
+          return -1;
+        } else if (c.match(/^\s$/) ) {
+          // ignore if whitespace.
+          continue;
+        }
+
+        _buffer = (_buffer << 6) | decode(c.charCodeAt(0) );
+        _buflen += 6;
+      }
+
+      var n = (_buffer >>> (_buflen - 8) ) & 0xff;
+      _buflen -= 8;
+      return n;
+    };
+
+    var decode = function(c) {
+      if (0x41 <= c && c <= 0x5a) {
+        return c - 0x41;
+      } else if (0x61 <= c && c <= 0x7a) {
+        return c - 0x61 + 26;
+      } else if (0x30 <= c && c <= 0x39) {
+        return c - 0x30 + 52;
+      } else if (c == 0x2b) {
+        return 62;
+      } else if (c == 0x2f) {
+        return 63;
+      } else {
+        throw 'c:' + c;
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // gifImage (B/W)
+  //---------------------------------------------------------------------
+
+  var gifImage = function(width, height) {
+
+    var _width = width;
+    var _height = height;
+    var _data = new Array(width * height);
+
+    var _this = {};
+
+    _this.setPixel = function(x, y, pixel) {
+      _data[y * _width + x] = pixel;
+    };
+
+    _this.write = function(out) {
+
+      //---------------------------------
+      // GIF Signature
+
+      out.writeString('GIF87a');
+
+      //---------------------------------
+      // Screen Descriptor
+
+      out.writeShort(_width);
+      out.writeShort(_height);
+
+      out.writeByte(0x80); // 2bit
+      out.writeByte(0);
+      out.writeByte(0);
+
+      //---------------------------------
+      // Global Color Map
+
+      // black
+      out.writeByte(0x00);
+      out.writeByte(0x00);
+      out.writeByte(0x00);
+
+      // white
+      out.writeByte(0xff);
+      out.writeByte(0xff);
+      out.writeByte(0xff);
+
+      //---------------------------------
+      // Image Descriptor
+
+      out.writeString(',');
+      out.writeShort(0);
+      out.writeShort(0);
+      out.writeShort(_width);
+      out.writeShort(_height);
+      out.writeByte(0);
+
+      //---------------------------------
+      // Local Color Map
+
+      //---------------------------------
+      // Raster Data
+
+      var lzwMinCodeSize = 2;
+      var raster = getLZWRaster(lzwMinCodeSize);
+
+      out.writeByte(lzwMinCodeSize);
+
+      var offset = 0;
+
+      while (raster.length - offset > 255) {
+        out.writeByte(255);
+        out.writeBytes(raster, offset, 255);
+        offset += 255;
+      }
+
+      out.writeByte(raster.length - offset);
+      out.writeBytes(raster, offset, raster.length - offset);
+      out.writeByte(0x00);
+
+      //---------------------------------
+      // GIF Terminator
+      out.writeString(';');
+    };
+
+    var bitOutputStream = function(out) {
+
+      var _out = out;
+      var _bitLength = 0;
+      var _bitBuffer = 0;
+
+      var _this = {};
+
+      _this.write = function(data, length) {
+
+        if ( (data >>> length) != 0) {
+          throw 'length over';
+        }
+
+        while (_bitLength + length >= 8) {
+          _out.writeByte(0xff & ( (data << _bitLength) | _bitBuffer) );
+          length -= (8 - _bitLength);
+          data >>>= (8 - _bitLength);
+          _bitBuffer = 0;
+          _bitLength = 0;
+        }
+
+        _bitBuffer = (data << _bitLength) | _bitBuffer;
+        _bitLength = _bitLength + length;
+      };
+
+      _this.flush = function() {
+        if (_bitLength > 0) {
+          _out.writeByte(_bitBuffer);
+        }
+      };
+
+      return _this;
+    };
+
+    var getLZWRaster = function(lzwMinCodeSize) {
+
+      var clearCode = 1 << lzwMinCodeSize;
+      var endCode = (1 << lzwMinCodeSize) + 1;
+      var bitLength = lzwMinCodeSize + 1;
+
+      // Setup LZWTable
+      var table = lzwTable();
+
+      for (var i = 0; i < clearCode; i += 1) {
+        table.add(String.fromCharCode(i) );
+      }
+      table.add(String.fromCharCode(clearCode) );
+      table.add(String.fromCharCode(endCode) );
+
+      var byteOut = byteArrayOutputStream();
+      var bitOut = bitOutputStream(byteOut);
+
+      // clear code
+      bitOut.write(clearCode, bitLength);
+
+      var dataIndex = 0;
+
+      var s = String.fromCharCode(_data[dataIndex]);
+      dataIndex += 1;
+
+      while (dataIndex < _data.length) {
+
+        var c = String.fromCharCode(_data[dataIndex]);
+        dataIndex += 1;
+
+        if (table.contains(s + c) ) {
+
+          s = s + c;
+
+        } else {
+
+          bitOut.write(table.indexOf(s), bitLength);
+
+          if (table.size() < 0xfff) {
+
+            if (table.size() == (1 << bitLength) ) {
+              bitLength += 1;
+            }
+
+            table.add(s + c);
+          }
+
+          s = c;
+        }
+      }
+
+      bitOut.write(table.indexOf(s), bitLength);
+
+      // end code
+      bitOut.write(endCode, bitLength);
+
+      bitOut.flush();
+
+      return byteOut.toByteArray();
+    };
+
+    var lzwTable = function() {
+
+      var _map = {};
+      var _size = 0;
+
+      var _this = {};
+
+      _this.add = function(key) {
+        if (_this.contains(key) ) {
+          throw 'dup key:' + key;
+        }
+        _map[key] = _size;
+        _size += 1;
+      };
+
+      _this.size = function() {
+        return _size;
+      };
+
+      _this.indexOf = function(key) {
+        return _map[key];
+      };
+
+      _this.contains = function(key) {
+        return typeof _map[key] != 'undefined';
+      };
+
+      return _this;
+    };
+
+    return _this;
+  };
+
+  var createDataURL = function(width, height, getPixel) {
+    var gif = gifImage(width, height);
+    for (var y = 0; y < height; y += 1) {
+      for (var x = 0; x < width; x += 1) {
+        gif.setPixel(x, y, getPixel(x, y) );
+      }
+    }
+
+    var b = byteArrayOutputStream();
+    gif.write(b);
+
+    var base64 = base64EncodeOutputStream();
+    var bytes = b.toByteArray();
+    for (var i = 0; i < bytes.length; i += 1) {
+      base64.writeByte(bytes[i]);
+    }
+    base64.flush();
+
+    return 'data:image/gif;base64,' + base64;
+  };
+
+  //---------------------------------------------------------------------
+  // returns qrcode function.
+
+  return qrcode;
+}();
+
+// multibyte support
+!function() {
+
+  qrcode.stringToBytesFuncs['UTF-8'] = function(s) {
+    // http://stackoverflow.com/questions/18729405/how-to-convert-utf8-string-to-byte-array
+    function toUTF8Array(str) {
+      var utf8 = [];
+      for (var i=0; i < str.length; i++) {
+        var charcode = str.charCodeAt(i);
+        if (charcode < 0x80) utf8.push(charcode);
+        else if (charcode < 0x800) {
+          utf8.push(0xc0 | (charcode >> 6),
+              0x80 | (charcode & 0x3f));
+        }
+        else if (charcode < 0xd800 || charcode >= 0xe000) {
+          utf8.push(0xe0 | (charcode >> 12),
+              0x80 | ((charcode>>6) & 0x3f),
+              0x80 | (charcode & 0x3f));
+        }
+        // surrogate pair
+        else {
+          i++;
+          // UTF-16 encodes 0x10000-0x10FFFF by
+          // subtracting 0x10000 and splitting the
+          // 20 bits of 0x0-0xFFFFF into two halves
+          charcode = 0x10000 + (((charcode & 0x3ff)<<10)
+            | (str.charCodeAt(i) & 0x3ff));
+          utf8.push(0xf0 | (charcode >>18),
+              0x80 | ((charcode>>12) & 0x3f),
+              0x80 | ((charcode>>6) & 0x3f),
+              0x80 | (charcode & 0x3f));
+        }
+      }
+      return utf8;
+    }
+    return toUTF8Array(s);
+  };
+
+}();
+
+(function (factory) {
+  if (typeof define === 'function' && define.amd) {
+      define([], factory);
+  } else if (typeof exports === 'object') {
+      /* no CommonJS in browser */
+  }
+}(function () {
+    return qrcode;
+}));
+
+/* ---- TOTP core (RFC 6238, SHA1, 6 digits, 30s) — pure JS, works offline, no deps ---- */
+const B32 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+function rol(n, s) { return (n << s) | (n >>> (32 - s)); }
+function sha1(bytes) {
+  const l = bytes.length, n = (((l + 8) >> 6) + 1) * 16, w = new Array(n).fill(0), x = new Array(80);
+  for (let i = 0; i < l; i++) w[i >> 2] |= bytes[i] << (24 - (i % 4) * 8);
+  w[l >> 2] |= 0x80 << (24 - (l % 4) * 8);
+  w[n - 1] = l * 8;
+  let h0 = 0x67452301, h1 = 0xEFCDAB89 | 0, h2 = 0x98BADCFE | 0, h3 = 0x10325476, h4 = 0xC3D2E1F0 | 0;
+  for (let i = 0; i < n; i += 16) {
+    let a = h0, b = h1, c = h2, d = h3, e = h4;
+    for (let j = 0; j < 80; j++) {
+      x[j] = j < 16 ? w[i + j] : rol(x[j - 3] ^ x[j - 8] ^ x[j - 14] ^ x[j - 16], 1);
+      let f, k;
+      if (j < 20) { f = (b & c) | (~b & d); k = 0x5A827999; }
+      else if (j < 40) { f = b ^ c ^ d; k = 0x6ED9EBA1; }
+      else if (j < 60) { f = (b & c) | (b & d) | (c & d); k = 0x8F1BBCDC; }
+      else { f = b ^ c ^ d; k = 0xCA62C1D6; }
+      const t = (rol(a, 5) + f + e + k + x[j]) | 0;
+      e = d; d = c; c = rol(b, 30); b = a; a = t;
+    }
+    h0 = (h0 + a) | 0; h1 = (h1 + b) | 0; h2 = (h2 + c) | 0; h3 = (h3 + d) | 0; h4 = (h4 + e) | 0;
+  }
+  const out = [];
+  [h0, h1, h2, h3, h4].forEach((h) => out.push((h >>> 24) & 255, (h >>> 16) & 255, (h >>> 8) & 255, h & 255));
+  return out;
+}
+function hmacSha1(key, msg) {
+  if (key.length > 64) key = sha1(key);
+  const k = key.concat(new Array(64 - key.length).fill(0));
+  return sha1(k.map((b) => b ^ 0x5c).concat(sha1(k.map((b) => b ^ 0x36).concat(msg))));
+}
+function b32decode(str) {
+  const s = String(str).toUpperCase().replace(/[\s=-]/g, "");
+  if (!s || /[^A-Z2-7]/.test(s)) return null;
+  let bits = "", out = [];
+  for (const ch of s) bits += B32.indexOf(ch).toString(2).padStart(5, "0");
+  for (let i = 0; i + 8 <= bits.length; i += 8) out.push(parseInt(bits.slice(i, i + 8), 2));
+  return out.length >= 10 ? out : null; // need at least 80 bits
+}
+function b32encode(bytes) {
+  let bits = "", out = "";
+  bytes.forEach((b) => { bits += b.toString(2).padStart(8, "0"); });
+  for (let i = 0; i < bits.length; i += 5) out += B32[parseInt(bits.slice(i, i + 5).padEnd(5, "0"), 2)];
+  return out;
+}
+function totpAt(keyBytes, counter) {
+  const msg = new Array(8).fill(0);
+  for (let i = 7, c = counter; i >= 0; i--) { msg[i] = c % 256; c = Math.floor(c / 256); }
+  const h = hmacSha1(keyBytes, msg), o = h[19] & 15;
+  const bin = ((h[o] & 0x7f) << 24) | (h[o + 1] << 16) | (h[o + 2] << 8) | h[o + 3];
+  return String(bin % 1000000).padStart(6, "0");
+}
+
+      /* ---------- setup ---------- */
+      const ISSUER = "DuoTrack";
+      const KDF_ITER = 600000;                                   // PBKDF2-SHA256 rounds
+      const BASE = `duotrack/groups/${GROUP_ID}`;
+      const recRef = (uid) => ref(database, `${BASE}/authenticator/${uid}`);
+      const resetRef = (uid) => ref(database, `${BASE}/authenticatorResets/${uid}`);
+      const resetsAllRef = ref(database, `${BASE}/authenticatorResets`);
+      const dlg = document.getElementById("totpDialog");
+      const iconBtn = document.getElementById("totpIconBtn");
+      const diary = document.getElementById("diaryPage");
+      const $ = (id) => document.getElementById(id);
+      const enc = new TextEncoder();
+      const SAFE_ID = /^[A-Za-z0-9_-]{1,64}$/;
+
+      let ctx = null;          // { uid, view, rec, reset, appEmail }
+      let pending = null;      // link in progress, memory only: { bytes, secret, key, salt, email }
+      let cache = null;        // { uid, salt, key } non-extractable key, this page session only
+      let busy = false, unsubOwn = null, msgTimer = null, prevOverflow = "";
+      let resets = {}, adminSub = false;
+
+      try { localStorage.removeItem("duotrack.totp.secret"); localStorage.removeItem("duotrack.totp.linked"); } catch (e) { /* ignore */ }   // old plain-text version
+
+      /* ---------- crypto helpers ---------- */
+      const b64 = (u8) => { let s = ""; u8.forEach((b) => { s += String.fromCharCode(b); }); return btoa(s); };
+      const unb64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+      const aadFor = (uid, email) => enc.encode("duotrack-totp|v1|" + uid + "|" + email);   // binds the secret to this user AND this email
+      async function deriveKey(pw, salt) {
+        const base = await crypto.subtle.importKey("raw", enc.encode(pw.normalize("NFC")), "PBKDF2", false, ["deriveKey"]);
+        return crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: KDF_ITER, hash: "SHA-256" }, base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+      }
+      async function seal(key, bytes, aad) {
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv, additionalData: aad }, key, new Uint8Array(bytes));
+        return { iv: b64(iv), ct: b64(new Uint8Array(ct)) };
+      }
+      async function unseal(key, rec, aad) {
+        const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(rec.iv), additionalData: aad }, key, unb64(rec.ct));
+        return Array.from(new Uint8Array(pt));
+      }
+      function matchStep(bytes, code) {
+        const now = Math.floor(Date.now() / 30000);
+        for (const s of [now, now - 1, now + 1]) if (totpAt(bytes, s) === code) return s;      // +-30s clock drift
+        return -1;
+      }
+      const validRec = (r) => !!(r && r.v === 1 && typeof r.email === "string" && typeof r.salt === "string" && typeof r.iv === "string" && typeof r.ct === "string");
+
+      /* ---------- per-device guards: wrong-try lockout + no code reuse ---------- */
+      const fkey = () => "duotrack.totp.fails." + ctx.uid;
+      const skey = () => "duotrack.totp.step." + ctx.uid;
+      function lockLeft() {
+        try { const f = JSON.parse(localStorage.getItem(fkey()) || "{}"); return Math.max(0, Math.ceil(((f.until || 0) - Date.now()) / 1000)); } catch (e) { return 0; }
+      }
+      function noteFail() {
+        try {
+          const f = JSON.parse(localStorage.getItem(fkey()) || "{}");
+          f.n = (f.n || 0) + 1;
+          if (f.n % 5 === 0) f.until = Date.now() + Math.min(60 * Math.pow(2, f.n / 5 - 1), 900) * 1000;   // 1 min, 2, 4 ... max 15
+          localStorage.setItem(fkey(), JSON.stringify(f));
+        } catch (e) { /* ignore */ }
+      }
+      function noteOk(step) {
+        try { localStorage.removeItem(fkey()); if (step) localStorage.setItem(skey(), String(step)); } catch (e) { /* ignore */ }
+      }
+      function lastStep() { try { return Number(localStorage.getItem(skey()) || 0); } catch (e) { return 0; } }
+
+      /* ---------- small UI helpers ---------- */
+      function say(text, bad) {
+        const el = $("totpMsg");
+        el.textContent = text || ""; el.classList.toggle("is-bad", !!bad);
+        clearTimeout(msgTimer);
+        if (text) msgTimer = setTimeout(() => { el.textContent = ""; }, 6000);
+      }
+      function show(view) {
+        ctx.view = view;
+        dlg.querySelectorAll(".totp-view").forEach((el) => { el.hidden = el.dataset.view !== view; });
+        const f = dlg.querySelector('.totp-view:not([hidden]) input:not([readonly])');
+        if (f) setTimeout(() => f.focus(), 60);
+      }
+      function setBusy(on, label) {
+        busy = on;
+        dlg.querySelectorAll("button").forEach((b) => { b.disabled = on; });
+        if (on && label) say(label);
+      }
+      function guardLock() {
+        const wait = lockLeft();
+        if (wait > 0) { say("Too many wrong tries. Wait " + wait + "s.", true); return true; }
+        return false;
+      }
+
+      /* ---------- account helpers ---------- */
+      async function checkPassword(pw) {                                  // uses the app's own passwordMatches(), read only
+        const loginKey = Object.keys(USERS).find((k) => USERS[k] && USERS[k].id === currentUserId);
+        const acct = loginKey && USERS[loginKey];
+        if (!acct) return false;
+        try { return await passwordMatches(acct.password, loginKey, pw); } catch (e) { return false; }
+      }
+      async function emailOnFile(uid) {                                    // "" = none on file, null = could not check
+        try {
+          const all = (await get(requestsRef)).val() || {};
+          const r = Object.values(all).filter((x) => x && x.userId === uid && x.status === "approved" && (x.email || x.googleEmail))
+            .sort((a, b) => (b.decidedAt || 0) - (a.decidedAt || 0))[0];
+          return r ? String(r.email || r.googleEmail).trim().toLowerCase() : "";
+        } catch (e) { return null; }
+      }
+      const myName = () => (state.users[ctx.uid] && state.users[ctx.uid].name) || (USERS_BY_ID[ctx.uid] && USERS_BY_ID[ctx.uid].name) || ctx.uid;
+      const uriFor = (p) => "otpauth://totp/" + encodeURIComponent(ISSUER) + ":" + encodeURIComponent(p.email) +
+        "?secret=" + p.secret + "&issuer=" + encodeURIComponent(ISSUER) + "&algorithm=SHA1&digits=6&period=30";
+      function renderQr(text) {
+        const qr = qrcode(0, "M");
+        qr.addData(text); qr.make();
+        const n = qr.getModuleCount(), q = 4;                              // 4-module quiet zone so phones scan it
+        let d = "";
+        for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (qr.isDark(r, c)) d += "M" + (c + q) + " " + (r + q) + "h1v1h-1z";
+        const size = n + q * 2;
+        $("totpQr").innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + size + " " + size + '" shape-rendering="crispEdges"><rect width="' + size + '" height="' + size + '" fill="#fff"/><path d="' + d + '" fill="#000"/></svg>';
+      }
+      async function copy(text, okMsg) {
+        try { await navigator.clipboard.writeText(text); }
+        catch (e) {
+          const t = document.createElement("textarea");
+          t.value = text; t.style.position = "fixed"; t.style.opacity = "0";
+          document.body.appendChild(t); t.select();
+          try { document.execCommand("copy"); } catch (err) { /* ignore */ }
+          t.remove();
+        }
+        say(okMsg);
+      }
+
+      /* ---------- the blank page (diary goes here later) ---------- */
+      function openDiary() {
+        diary.hidden = false;
+        prevOverflow = document.documentElement.style.overflow;
+        document.documentElement.style.overflow = "hidden";
+        $("diaryBack").focus();
+        diaryStart();
+      }
+      function closeDiary() {
+        if (diary.hidden) return;
+        diaryStop();
+        diary.hidden = true;
+        document.documentElement.style.overflow = prevOverflow;
+      }
+      $("diaryBack").addEventListener("click", closeDiary);
+      document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !diary.hidden && !document.querySelector(".dn-overlay:not([hidden]), .dl-overlay:not([hidden])") && $("diaryColorPop").hidden) closeDiary(); });
+
+      /* ---------- admin side (only the reviewer account sees this) ---------- */
+      const pendingList = () => Object.entries(resets).filter(([k, r]) => SAFE_ID.test(k) && r && r.status === "pending");
+      const isAdmin = () => currentUserId === RQ_REVIEWER_ID;
+      function paintBadge() { iconBtn.classList.toggle("has-badge", isAdmin() && pendingList().length > 0); }
+      function paintAdmin() {
+        const box = $("totpAdmin");
+        const list = isAdmin() ? pendingList().sort((a, b) => (a[1].requestedAt || 0) - (b[1].requestedAt || 0)) : [];
+        box.hidden = !list.length;
+        box.innerHTML = list.length ? '<div class="totp-label">Authenticator reset requests</div>' + list.map(([k, r]) =>
+          '<div class="totp-req"><div><b>' + escapeHTML(r.name || k) + "</b><small>" + escapeHTML(r.email || "") + '</small></div>' +
+          '<div class="totp-req-btns"><button type="button" class="secondary-btn" data-ok="' + escapeHTML(k) + '">Approve</button>' +
+          '<button type="button" class="ghost-btn" data-no="' + escapeHTML(k) + '">Reject</button></div></div>').join("") : "";
+      }
+      $("totpAdmin").addEventListener("click", async (e) => {
+        const ok = e.target.closest("[data-ok]"), no = e.target.closest("[data-no]");
+        const uid = (ok && ok.dataset.ok) || (no && no.dataset.no);
+        if (!uid || !SAFE_ID.test(uid) || !isAdmin() || !resets[uid] || resets[uid].status !== "pending") return;
+        try {
+          await update(resetRef(uid), { status: ok ? "approved" : "rejected", decidedAt: Date.now(), decidedBy: currentUserId });
+          say(ok ? "Approved. They can scan a new QR now." : "Rejected.");
+        } catch (err) { say("Couldn't save. Try again.", true); }
+      });
+      function watchResets() {
+        paintBadge();
+        if (adminSub || !isAdmin()) return;
+        adminSub = true;
+        let first = true;
+        onValue(resetsAllRef, (snap) => {
+          const before = pendingList().length;
+          resets = snap.val() || {};
+          const list = pendingList();
+          if (!first && list.length > before) showToast("Authenticator reset request", (list[list.length - 1][1].name || "Someone") + " deleted their authenticator entry.");
+          first = false;
+          paintBadge();
+          if (dlg.open) paintAdmin();
+        }, () => { adminSub = false; });
+      }
+      setInterval(watchResets, 2000);
+
+      /* ---------- user flow ---------- */
+      function renderLost() {
+        const st = ctx.reset && ctx.reset.status;
+        const which = st === "pending" ? "wait" : st === "approved" ? "ok" : "ask";
+        dlg.querySelectorAll("[data-lost]").forEach((el) => { el.hidden = el.dataset.lost !== which; });
+        $("totpDeclined").hidden = st !== "rejected";
+        let href = "#";
+        try { href = "mailto:" + CONTACT_EMAIL + "?subject=" + encodeURIComponent("DuoTrack: authenticator reset") + "&body=" + encodeURIComponent("Hi, I deleted my Google Authenticator entry. Please approve a reset for " + (ctx.rec && ctx.rec.email || ctx.appEmail || ctx.uid) + " (" + ctx.uid + ")."); } catch (e) { /* ignore */ }
+        $("totpMailAdmin").href = href;
+      }
+      function prepLink() {
+        const fixed = !!ctx.appEmail;
+        const em = $("totpEmail");
+        em.value = fixed ? ctx.appEmail : ((ctx.rec && ctx.rec.email) || "");
+        em.readOnly = fixed;
+        $("totpEmailNote").textContent = fixed ? "From your approved request." : "No email on file yet. Enter yours. The admin can see it.";
+        $("totpPw").value = "";
+        show("link");
+      }
+      function prepUnlock() {
+        $("totpUnlockAcct").textContent = ctx.rec.email;
+        const cached = !!(cache && cache.uid === ctx.uid && cache.salt === ctx.rec.salt);
+        $("totpPwField").hidden = cached;
+        $("totpUnlockPw").value = ""; $("totpUnlockCode").value = "";
+        show("unlock");
+      }
+      function subscribeOwn() {
+        if (unsubOwn) unsubOwn();
+        unsubOwn = onValue(resetRef(ctx.uid), (snap) => {
+          const prev = ctx.reset && ctx.reset.status;
+          ctx.reset = snap.val();
+          const now = ctx.reset && ctx.reset.status;
+          if (ctx.view === "lost") renderLost();
+          else if (now === "approved" && prev !== "approved") showToast("Reset approved", "Open the private page to scan a new QR.");
+        });
+      }
+      async function load() {
+        const uid = ctx.uid;
+        show("loading");
+        try {
+          const [rs, ps, email] = await Promise.all([get(recRef(uid)), get(resetRef(uid)), emailOnFile(uid)]);
+          if (!dlg.open || !ctx || ctx.uid !== uid) return;
+          if (email === null) throw new Error("email lookup failed");
+          ctx.rec = rs.val(); ctx.reset = ps.val(); ctx.appEmail = email;
+          subscribeOwn();
+          if (ctx.rec && !validRec(ctx.rec)) { renderLost(); show("lost"); say("Your setup looks damaged. Ask the admin to reset it.", true); }
+          else if (ctx.rec && ctx.reset && ctx.reset.status === "approved") { renderLost(); show("lost"); }
+          else if (ctx.rec) prepUnlock();
+          else prepLink();
+        } catch (err) {
+          $("totpErrText").textContent = "Couldn't reach the database. Check your connection and try again.";
+          show("error");
+        }
+      }
+      function openDlg() {
+        if (!currentUserId) { showToast("Log in first", "Log in to use the private page."); return; }
+        if (!(window.crypto && crypto.subtle)) { showToast("Not available", "This needs a secure (https) page."); return; }
+        ctx = { uid: currentUserId, view: "loading", rec: null, reset: null, appEmail: "" };
+        pending = null; say("");
+        paintAdmin();
+        if (typeof dlg.showModal === "function") dlg.showModal(); else dlg.setAttribute("open", "");
+        load();
+      }
+      function closeDlg() {
+        if (!dlg.open || dlg.classList.contains("is-closing")) return;
+        dlg.classList.add("is-closing");
+        setTimeout(() => { dlg.classList.remove("is-closing"); dlg.close(); }, 190);
+      }
+      function lockAll() {
+        closeDiary(); cache = null; pending = null; diaryReset();
+        if (dlg.open) dlg.close();
+        paintBadge();
+      }
+
+      async function onLink(e) {
+        e.preventDefault();
+        if (busy || guardLock()) return;
+        const email = ctx.appEmail || ($("totpEmail").value || "").trim().toLowerCase();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { say("Enter a valid email.", true); return; }
+        const pw = $("totpPw").value;
+        if (!pw) { say("Enter your account password.", true); return; }
+        setBusy(true, "Checking...");
+        try {
+          if (!(await checkPassword(pw))) { noteFail(); say("Wrong password.", true); return; }
+          const salt = crypto.getRandomValues(new Uint8Array(16));
+          const key = await deriveKey(pw, salt);
+          const bytes = Array.from(crypto.getRandomValues(new Uint8Array(20)));
+          const vault = await deriveVault(ctx.uid, pw);
+          pending = { bytes, secret: b32encode(bytes), key, salt, email, vault };
+          renderQr(uriFor(pending));
+          $("totpAcct").textContent = email;
+          $("totpPw").value = ""; $("totpScanCode").value = ""; say("");
+          show("scan");
+        } catch (err) { say("Something went wrong. Try again.", true); }
+        finally { setBusy(false); }
+      }
+
+      async function onScan(e) {
+        e.preventDefault();
+        if (busy || !pending || guardLock()) return;
+        const code = $("totpScanCode").value;
+        if (code.length !== 6) { say("Enter all 6 digits.", true); return; }
+        const step = matchStep(pending.bytes, code);
+        if (step < 0) { noteFail(); $("totpScanCode").value = ""; say("Wrong code. Check the entry for " + pending.email + " in the app.", true); return; }
+        setBusy(true, "Saving...");
+        try {
+          const uid = ctx.uid;
+          const [rs, ps] = await Promise.all([get(recRef(uid)), get(resetRef(uid))]);
+          const exists = !!rs.val(), approved = !!(ps.val() && ps.val().status === "approved");
+          if (exists && !approved) { pending = null; ctx.rec = rs.val(); ctx.reset = ps.val(); renderLost(); show("lost"); say("This account is already linked. Ask the admin for a reset.", true); return; }
+          const sealed = await seal(pending.key, pending.bytes, aadFor(uid, pending.email));
+          const saltB64 = b64(pending.salt);
+          await set(recRef(uid), { v: 1, email: pending.email, kdf: "PBKDF2-SHA256", it: KDF_ITER, salt: saltB64, iv: sealed.iv, ct: sealed.ct, at: Date.now() });
+          if (ps.val()) await update(resetRef(uid), { status: "done", doneAt: Date.now() });
+          cache = { uid, salt: saltB64, key: pending.key, vault: pending.vault };
+          noteOk(step); pending = null; say("");
+          closeDlg(); openDiary();
+          showToast("Authenticator linked", "Your codes now live only in Google Authenticator.");
+        } catch (err) { say("Couldn't save. Check your connection and try again.", true); }
+        finally { setBusy(false); }
+      }
+
+      async function onUnlock(e) {
+        e.preventDefault();
+        if (busy || guardLock()) return;
+        const code = $("totpUnlockCode").value;
+        if (code.length !== 6) { say("Enter all 6 digits.", true); return; }
+        const rec = ctx.rec;
+        let key = (cache && cache.uid === ctx.uid && cache.salt === rec.salt) ? cache.key : null;
+        let vault = key ? cache.vault : null;
+        const pw = $("totpUnlockPw").value;
+        if (!key && !pw) { say("Enter your account password.", true); return; }
+        setBusy(true, "Checking...");
+        try {
+          if (!key) {
+            if (!(await checkPassword(pw))) { noteFail(); say("Wrong password.", true); return; }
+            key = await deriveKey(pw, unb64(rec.salt));
+            vault = await deriveVault(ctx.uid, pw);
+          }
+          const appEmail = await emailOnFile(ctx.uid);
+          if (appEmail === null) { say("Couldn't check your account email. Try again.", true); return; }
+          if (appEmail && appEmail !== rec.email) { say("The email on your account no longer matches the authenticator. Ask the admin to reset.", true); return; }
+          let bytes;
+          try { bytes = await unseal(key, rec, aadFor(ctx.uid, rec.email)); }
+          catch (err) { say("Couldn't unlock. If your password changed, ask the admin to reset.", true); return; }
+          const step = matchStep(bytes, code);
+          if (step < 0) { noteFail(); $("totpUnlockCode").value = ""; say("Wrong code. Check the entry for " + rec.email + " in the app.", true); return; }
+          if (step <= lastStep()) { $("totpUnlockCode").value = ""; say("That code was already used. Wait for the next one.", true); return; }
+          cache = { uid: ctx.uid, salt: rec.salt, key, vault };
+          noteOk(step); say("");
+          $("totpUnlockPw").value = ""; $("totpUnlockCode").value = "";
+          closeDlg(); openDiary();
+        } catch (err) { say("Something went wrong. Try again.", true); }
+        finally { setBusy(false); }
+      }
+
+      async function onNotify() {
+        if (busy) return;
+        setBusy(true);
+        try {
+          await set(resetRef(ctx.uid), { uid: ctx.uid, name: myName(), email: (ctx.rec && ctx.rec.email) || ctx.appEmail || "", status: "pending", requestedAt: Date.now() });
+          ctx.reset = { status: "pending" };
+          renderLost(); say("The admin has been notified.");
+        } catch (err) { say("Couldn't send. Check your connection and try again.", true); }
+        finally { setBusy(false); }
+      }
+
+      /* ---------- wiring ---------- */
+      iconBtn.addEventListener("click", openDlg);
+      $("totpDialogClose").addEventListener("click", closeDlg);
+      dlg.addEventListener("cancel", (e) => { e.preventDefault(); closeDlg(); });
+      dlg.addEventListener("close", () => {
+        pending = null; busy = false; if (unsubOwn) { unsubOwn(); unsubOwn = null; }
+        dlg.querySelectorAll("input").forEach((i) => { if (!i.readOnly) i.value = ""; });
+        dlg.querySelectorAll("button").forEach((b) => { b.disabled = false; });
+      });
+      dlg.addEventListener("click", (e) => {
+        const b = dlg.getBoundingClientRect();
+        if (e.clientX < b.left || e.clientX > b.right || e.clientY < b.top || e.clientY > b.bottom) closeDlg();
+      });
+      dlg.querySelectorAll(".totp-code").forEach((i) => i.addEventListener("input", (e) => { e.target.value = e.target.value.replace(/\D/g, "").slice(0, 6); }));
+      $("totpLinkForm").addEventListener("submit", onLink);
+      $("totpScanForm").addEventListener("submit", onScan);
+      $("totpUnlockForm").addEventListener("submit", onUnlock);
+      $("totpCopyKeyBtn").addEventListener("click", () => { if (pending) copy(pending.secret, "Setup key copied. In the app: + > Enter a setup key."); });
+      $("totpLostBtn").addEventListener("click", () => { say(""); renderLost(); show("lost"); });
+      $("totpLostBack").addEventListener("click", () => { say(""); if (ctx.rec && validRec(ctx.rec)) prepUnlock(); else prepLink(); });
+      $("totpNotifyBtn").addEventListener("click", onNotify);
+      $("totpRelinkBtn").addEventListener("click", () => { say(""); prepLink(); });
+      $("totpRetryBtn").addEventListener("click", load);
+      logoutBtn.addEventListener("click", lockAll);
+
+
+      /* =====================================================================
+         PRIVATE DIARY
+         pages encrypted in the browser (AES-256-GCM, random data key wrapped by a
+         password-derived key) -> Firebase holds only ciphertext.
+         Safety words -> only the matching paragraph is sealed to the ADMIN public key.
+         ===================================================================== */
+      const DIARY_NOTICE_VER = 1;
+      const DIARY_ADMIN_PIN = "";            // optional: paste the admin key fingerprint (hex) shown in the admin portal to lock the key
+      const CATS = [["plans", "Plans"], ["secrets", "Secrets"], ["thoughts", "Thoughts"], ["random", "Random"]];
+      const COLORS = ["#e0483e", "#e8833a", "#c99a00", "#2f9e5e", "#2b8cd8", "#7a5af8", "#d6409f", "#6b7280"];
+      const dec = new TextDecoder();
+      const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+      const rid = (p) => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      const dRef = (path) => ref(database, `${BASE}/${path}`);
+      const metaRef = (uid) => dRef(`diary/${uid}/meta`);
+      const entriesRef = (uid) => dRef(`diary/${uid}/entries`);
+      const entryRef = (uid, id) => dRef(`diary/${uid}/entries/${id}`);
+      const consentRef = (uid) => dRef(`diary/${uid}/consent`);
+      const watchRef = dRef("diaryWatch/words");
+      const adminKeyRef = dRef("diaryAdmin");
+      const flagsRef = dRef("diaryFlags");
+      const flagRef = (id) => dRef(`diaryFlags/${id}`);
+      const lettersRef = dRef("diaryLetters");
+      const letterRef = (uid) => dRef(`diaryLetters/${uid}`);
+      const accessAllRef = dRef("diaryAccess");
+      const accessRef = (uid) => dRef(`diaryAccess/${uid}`);
+      const auditRef = (uid) => dRef(`diaryAudit/${uid}`);
+      const fmtTime = (ms) => { try { return new Date(ms).toLocaleString(undefined, { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }); } catch (e) { return ""; } };
+
+      async function sha256hex(data) {
+        const buf = await crypto.subtle.digest("SHA-256", typeof data === "string" ? enc.encode(data) : data);
+        return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+      }
+
+      /* ---------- sanitiser: the only way rich text gets into the editor ---------- */
+      const DROP_TAGS = new Set(["SCRIPT", "STYLE", "IFRAME", "OBJECT", "EMBED", "NOSCRIPT", "TEMPLATE", "SVG", "MATH", "LINK", "META"]);
+      const OK_TAGS = new Set(["B", "STRONG", "I", "EM", "U", "S", "STRIKE", "BR", "DIV", "P", "SPAN", "UL", "OL", "LI", "FONT"]);
+      const isColor = (v) => /^#[0-9a-f]{3,8}$/i.test(v) || /^rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*(,\s*[\d.]+\s*)?\)$/i.test(v);
+      const OK_PROPS = {
+        "color": isColor, "background-color": isColor,
+        "font-family": (v) => /^[A-Za-z0-9 ,'"\-]{1,120}$/.test(v),
+        "font-size": (v) => /^(xx-small|x-small|small|medium|large|x-large|xx-large|xxx-large)$/.test(v),
+        "font-weight": (v) => /^(normal|bold|[1-9]00)$/.test(v),
+        "font-style": (v) => /^(normal|italic)$/.test(v),
+        "text-decoration": (v) => /^[a-z -]{1,40}$/.test(v), "text-decoration-line": (v) => /^[a-z -]{1,40}$/.test(v)
+      };
+      const SIZE_MAP = { 1: "x-small", 2: "small", 3: "medium", 4: "large", 5: "x-large", 6: "xx-large", 7: "xxx-large" };
+      function cleanStyle(s) {
+        const out = [];
+        String(s || "").split(";").forEach((part) => {
+          const i = part.indexOf(":"); if (i < 0) return;
+          const k = part.slice(0, i).trim().toLowerCase(), v = part.slice(i + 1).trim();
+          if (OK_PROPS[k] && OK_PROPS[k](v)) out.push(k + ": " + v);
+        });
+        return out.join("; ");
+      }
+      function sanitizeNode(html) {
+        const src = new DOMParser().parseFromString("<body>" + String(html || "") + "</body>", "text/html").body;
+        const dst = document.createElement("div");
+        (function copy(from, to) {
+          from.childNodes.forEach((n) => {
+            if (n.nodeType === 3) { to.appendChild(document.createTextNode(n.nodeValue)); return; }
+            if (n.nodeType !== 1) return;
+            const tag = n.tagName;
+            if (DROP_TAGS.has(tag)) return;
+            if (!OK_TAGS.has(tag)) { copy(n, to); return; }
+            const el = document.createElement(tag === "FONT" ? "span" : tag.toLowerCase());
+            let style = cleanStyle(n.getAttribute("style"));
+            if (tag === "FONT") {
+              const c = n.getAttribute("color"), f = n.getAttribute("face"), z = n.getAttribute("size");
+              const extra = [];
+              if (c && isColor(c)) extra.push("color: " + c);
+              if (f && OK_PROPS["font-family"](f)) extra.push("font-family: " + f);
+              if (z && SIZE_MAP[z]) extra.push("font-size: " + SIZE_MAP[z]);
+              style = [style].concat(extra).filter(Boolean).join("; ");
+            }
+            if (style) el.setAttribute("style", style);
+            const cls = n.classList;
+            if (tag === "DIV" && cls.contains("ck")) { const done = n.getAttribute("data-done") === "1" || cls.contains("done"); el.className = "ck" + (done ? " done" : ""); el.setAttribute("data-done", done ? "1" : "0"); }
+            if (tag === "SPAN" && cls.contains("ckb")) { el.className = "ckb"; el.setAttribute("contenteditable", "false"); el.setAttribute("role", "checkbox"); el.setAttribute("aria-checked", n.parentNode && n.parentNode.getAttribute && n.parentNode.getAttribute("data-done") === "1" ? "true" : "false"); }
+            if (tag === "SPAN" && cls.contains("ckt")) el.className = "ckt";
+            copy(n, el);
+            to.appendChild(el);
+          });
+        })(src, dst);
+        return dst;
+      }
+      const sanitizeHTML = (html) => sanitizeNode(html).innerHTML;
+
+      /* plain text version (used for the safety check, search, admin view, PDF; never rendered as HTML) */
+      function toPlain(root) {
+        const out = []; let cur = "";
+        const flush = () => { out.push(cur); cur = ""; };
+        const BLOCK = new Set(["DIV", "P", "LI", "UL", "OL"]);
+        (function walk(n) {
+          n.childNodes.forEach((c) => {
+            if (c.nodeType === 3) { cur += c.nodeValue; return; }
+            if (c.nodeType !== 1) return;
+            const tag = c.tagName;
+            if (tag === "BR") { flush(); return; }
+            if (c.classList && c.classList.contains("ckb")) { cur += (c.parentNode.getAttribute("data-done") === "1" ? "[x] " : "[ ] "); return; }
+            const block = BLOCK.has(tag);
+            if (block && cur) flush();
+            if (tag === "LI") cur += "- ";
+            walk(c);
+            if (block && cur) flush();
+          });
+        })(root);
+        if (cur) flush();
+        return out.join("\n").replace(/\u00a0/g, " ").replace(/\u200b/g, "").replace(/\n{3,}/g, "\n\n").trim();
+      }
+
+      /* ---------- the diary key: random data key, wrapped by a key from your password ---------- */
+      async function deriveVault(uid, pw) {
+        const meta = (await get(metaRef(uid))).val();
+        const has = !!(meta && meta.vsalt);
+        const salt = has ? unb64(meta.vsalt) : crypto.getRandomValues(new Uint8Array(16));
+        return { salt, key: await deriveKey(pw, salt) };
+      }
+      const importDmk = (raw) => crypto.subtle.importKey("raw", new Uint8Array(raw), "AES-GCM", true, ["encrypt", "decrypt"]);
+      async function openVault(uid, vault) {
+        if (!vault) throw new Error("no vault");
+        const aad = enc.encode("duotrack-diary|v1|wrap|" + uid);
+        const meta = (await get(metaRef(uid))).val();
+        if (meta && meta.wrap) {
+          if (b64(vault.salt) !== meta.vsalt) throw new Error("salt changed");
+          return importDmk(await unseal(vault.key, meta.wrap, aad));      // throws if the password changed
+        }
+        const raw = Array.from(crypto.getRandomValues(new Uint8Array(32)));
+        const wrap = await seal(vault.key, raw, aad);
+        await set(metaRef(uid), { v: 1, vsalt: b64(vault.salt), it: KDF_ITER, wrap });
+        return importDmk(raw);
+      }
+      const entryAad = (uid, id) => enc.encode("duotrack-diary|v1|entry|" + uid + "|" + id);
+
+      /* ---------- seal something to the admin (hybrid: AES-GCM + RSA-OAEP) ---------- */
+      async function sealToAdmin(pub, text, aadText) {
+        const k = crypto.getRandomValues(new Uint8Array(32));
+        const key = await crypto.subtle.importKey("raw", k, "AES-GCM", false, ["encrypt"]);
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv, additionalData: enc.encode(aadText) }, key, enc.encode(text));
+        const wk = await crypto.subtle.encrypt({ name: "RSA-OAEP" }, pub, k);
+        return { iv: b64(iv), ct: b64(new Uint8Array(ct)), wk: b64(new Uint8Array(wk)) };
+      }
+      async function openFromAdmin(priv, box, aadText) {
+        const k = await crypto.subtle.decrypt({ name: "RSA-OAEP" }, priv, unb64(box.wk));
+        const key = await crypto.subtle.importKey("raw", k, "AES-GCM", false, ["decrypt"]);
+        const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(box.iv), additionalData: enc.encode(aadText) }, key, unb64(box.ct));
+        return dec.decode(pt);
+      }
+      async function loadAdminPub() {
+        try {
+          const v = (await get(dRef("diaryAdmin/pub"))).val();
+          if (!v || typeof v !== "string") return null;
+          const der = unb64(v);
+          if (DIARY_ADMIN_PIN && (await sha256hex(der)) !== DIARY_ADMIN_PIN) return null;
+          return await crypto.subtle.importKey("spki", der, { name: "RSA-OAEP", hash: "SHA-256" }, false, ["encrypt"]);
+        } catch (e) { return null; }
+      }
+
+      /* ---------- diary state ---------- */
+      let D = null, savedRange = null;
+      const ed = () => $("diaryEditor");
+      function setSaveState(text, kind) {
+        const el = $("diarySaveState");
+        el.textContent = text || ""; el.classList.toggle("is-ok", kind === "ok"); el.classList.toggle("is-bad", kind === "bad");
+      }
+      function paintEmpty(text, opts) {
+        $("diaryEd").hidden = true;
+        const box = $("diaryEmpty"); box.hidden = false; box.textContent = "";
+        const p = document.createElement("p"); p.className = "de-empty-t"; p.textContent = text; box.appendChild(p);
+        if (opts && opts.first) { const b = document.createElement("button"); b.className = "secondary-btn"; b.type = "button"; b.textContent = "Write your first page"; b.addEventListener("click", newEntry); box.appendChild(b); }
+        if (opts && opts.retry) { const b = document.createElement("button"); b.className = "secondary-btn"; b.type = "button"; b.textContent = "Try again"; b.addEventListener("click", diaryStart); box.appendChild(b); }
+      }
+      function diaryReset() { if (D && D.timer) clearTimeout(D.timer); D = null; savedRange = null; $("diaryNotice").hidden = true; $("diaryCare").hidden = true; $("diaryInfo").hidden = true; }
+      function diaryStop() {
+        const d = D; if (!d) return;
+        d.cancelled = true;
+        $("diaryNotice").hidden = true; $("diaryCare").hidden = true; $("diaryInfo").hidden = true; $("diaryColorPop").hidden = true;
+        const p = d.dmk && d.dirty ? saveNow(d) : Promise.resolve();
+        p.then(() => { if (D === d) { D = null; $("diaryEditor").textContent = ""; $("diaryItems").textContent = ""; $("diaryTitle").value = ""; } });
+      }
+
+      async function diaryStart() {
+        const uid = (cache && cache.uid) || currentUserId;
+        const d = D = { uid, dmk: null, entries: new Map(), cat: "all", curId: null, dirty: false, timer: null, saving: null, delArm: false, watch: [], pub: null, flagged: new Map(), cancelled: false, access: null, email: "", noticeResolve: null };
+        setSaveState(""); diary.classList.remove("list-open");
+        $("diaryItems").textContent = ""; $("diaryCats").textContent = "";
+        paintEmpty("Loading your diary...");
+        try {
+          const ok = await showNotice(d);
+          if (D !== d || d.cancelled) return;
+          if (!ok) { closeDiary(); return; }
+          d.dmk = await openVault(uid, cache && cache.vault);
+          await Promise.all([loadWatch(d), loadEntries(d), loadMyEmail(d)]);
+          if (D !== d || d.cancelled) return;
+          paintList(); selectBest();
+          maybeShareKey(d);
+        } catch (err) {
+          if (D === d) paintEmpty("Couldn't open your diary. If your password changed, the pages can't be opened. Otherwise check your connection.", { retry: true });
+        }
+      }
+      async function loadMyEmail(d) {
+        const e1 = await emailOnFile(d.uid);
+        if (e1) { d.email = e1; return; }
+        try { d.email = ((await get(recRef(d.uid))).val() || {}).email || ""; } catch (e) { d.email = ""; }
+      }
+      async function loadWatch(d) {
+        const [w, pub] = await Promise.all([get(watchRef), loadAdminPub()]);
+        d.watch = Object.values(w.val() || {}).filter((x) => x && typeof x.w === "string" && (x.kind === "illegal" || x.kind === "care"))
+          .map((x) => ({ w: x.w.trim().toLowerCase().slice(0, 60), kind: x.kind })).filter((x) => x.w).slice(0, 300);
+        d.pub = pub;
+      }
+      async function loadEntries(d) {
+        const all = (await get(entriesRef(d.uid))).val() || {};
+        for (const [id, rec] of Object.entries(all)) {
+          if (!SAFE_ID.test(id) || !rec || !rec.iv || !rec.ct) continue;
+          try {
+            const o = JSON.parse(dec.decode(new Uint8Array(await unseal(d.dmk, rec, entryAad(d.uid, id)))));
+            d.entries.set(id, { id, t: String(o.t || ""), c: o.c, html: sanitizeHTML(o.html), plain: String(o.plain || ""), created: o.created || rec.at || 0, updated: o.updated || rec.at || 0 });
+          } catch (e) { /* skip a page that fails to open */ }
+        }
+      }
+
+      /* ---------- list + categories ---------- */
+      const catName = (k) => (CATS.find((c) => c[0] === k) || [k, "Random"])[1];
+      function sortedEntries() {
+        return Array.from(D.entries.values()).filter((e) => D.cat === "all" || e.c === D.cat).sort((a, b) => (b.updated || Infinity) - (a.updated || Infinity));
+      }
+      function paintList() {
+        if (!D) return;
+        const cats = $("diaryCats"); cats.textContent = "";
+        [["all", "All"]].concat(CATS).forEach(([k, label]) => {
+          const b = document.createElement("button"); b.type = "button"; b.className = "dl-chip" + (D.cat === k ? " is-on" : ""); b.textContent = label; b.setAttribute("role", "tab"); b.setAttribute("aria-selected", D.cat === k ? "true" : "false");
+          b.addEventListener("click", () => { D.cat = k; paintList(); });
+          cats.appendChild(b);
+        });
+        const box = $("diaryItems"); box.textContent = "";
+        const list = sortedEntries();
+        if (!list.length) { const p = document.createElement("div"); p.className = "dl-none"; p.textContent = D.entries.size ? "Nothing in this category yet." : "No pages yet."; box.appendChild(p); }
+        list.forEach((e) => {
+          const b = document.createElement("button"); b.type = "button"; b.className = "dl-item" + (e.id === D.curId ? " is-on" : ""); b.dataset.id = e.id;
+          const t = document.createElement("b"); t.textContent = e.t.trim() || "Untitled";
+          const s = document.createElement("span"); s.textContent = (e.plain.split("\n")[0] || "").slice(0, 70) || (e.created ? "" : "New page");
+          const c = document.createElement("small"); c.textContent = catName(e.c) + (e.updated ? "  ·  " + fmtTime(e.updated) : "");
+          b.append(t, s, c);
+          b.addEventListener("click", () => selectEntry(e.id));
+          box.appendChild(b);
+        });
+      }
+      function selectBest() {
+        const list = sortedEntries();
+        if (list.length) selectEntry(list[0].id);
+        else paintEmpty(D.entries.size ? "Nothing in this category yet." : "Your diary is empty. Plans, secrets, thoughts, random text: it all goes here.", { first: true });
+      }
+      function paintCatPick(e) {
+        const box = $("diaryCatPick"); box.textContent = "";
+        CATS.forEach(([k, label]) => {
+          const b = document.createElement("button"); b.type = "button"; b.className = "dl-chip" + (e.c === k ? " is-on" : ""); b.textContent = label; b.setAttribute("role", "radio"); b.setAttribute("aria-checked", e.c === k ? "true" : "false");
+          b.addEventListener("click", () => { e.c = k; paintCatPick(e); paintList(); schedule(D); });
+          box.appendChild(b);
+        });
+      }
+      function paintMeta(e) {
+        $("diaryMeta").textContent = e.updated ? "Updated " + fmtTime(e.updated) + "  ·  encrypted" : "Not saved yet. It saves by itself as you write.";
+      }
+      async function selectEntry(id) {
+        const d = D; if (!d) return;
+        await flushCurrent(d);
+        if (D !== d) return;
+        const e = d.entries.get(id); if (!e) return;
+        d.curId = id; d.delArm = false; $("diaryDel").textContent = "Delete page";
+        $("diaryEmpty").hidden = true; $("diaryEd").hidden = false;
+        $("diaryTitle").value = e.t;
+        ed().innerHTML = e.html;
+        ed().classList.toggle("is-empty", !ed().textContent.trim() && !ed().querySelector(".ck,li"));
+        paintCatPick(e); paintMeta(e); paintList();
+        diary.classList.remove("list-open");
+        ed().scrollTop = 0;
+      }
+      async function flushCurrent(d) {
+        if (d.dirty) await saveNow(d);
+        const e = d.curId && d.entries.get(d.curId);
+        if (e && !e.created && !e.t.trim() && !e.plain.trim()) d.entries.delete(e.id);        // drop a blank, never-saved page
+      }
+      async function newEntry() {
+        const d = D; if (!d || !d.dmk) return;
+        await flushCurrent(d);
+        const id = rid("e");
+        d.entries.set(id, { id, t: "", c: d.cat === "all" ? "thoughts" : d.cat, html: "", plain: "", created: 0, updated: 0 });
+        await selectEntry(id);
+        $("diaryTitle").focus();
+      }
+
+      /* ---------- autosave (encrypted) ---------- */
+      function schedule(d) {
+        if (!d || !d.curId) return;
+        d.dirty = true; setSaveState("Typing...");
+        clearTimeout(d.timer);
+        d.timer = setTimeout(() => saveNow(d), 900);
+      }
+      function collect(d) {
+        const e = d.entries.get(d.curId); if (!e) return null;
+        e.t = $("diaryTitle").value.slice(0, 120);
+        e.html = sanitizeHTML(ed().innerHTML);
+        e.plain = toPlain(ed());
+        return e;
+      }
+      function saveNow(d) {
+        if (!d || !d.dmk) return Promise.resolve();
+        clearTimeout(d.timer);
+        const run = async () => {
+          while (d.dirty) {
+            d.dirty = false;
+            const e = collect(d); if (!e) return;
+            if (!e.t.trim() && !e.plain.trim()) { setSaveState(""); continue; }
+            if (e.html.length + e.plain.length > 300000) { setSaveState("Too long to save", "bad"); continue; }
+            const now = Date.now(); if (!e.created) e.created = now; e.updated = now;
+            setSaveState("Saving...");
+            try {
+              const body = JSON.stringify({ t: e.t, c: e.c, html: e.html, plain: e.plain, created: e.created, updated: e.updated });
+              const sealed = await seal(d.dmk, enc.encode(body), entryAad(d.uid, e.id));
+              await set(entryRef(d.uid, e.id), { v: 1, iv: sealed.iv, ct: sealed.ct, at: e.updated });
+              if (D === d && d.curId === e.id) { setSaveState("Saved, encrypted", "ok"); paintMeta(e); paintList(); }
+              scanAndFlag(d, e);
+            } catch (err) {
+              d.dirty = true; setSaveState("Offline. Will retry...", "bad");
+              if (!d.cancelled) d.timer = setTimeout(() => saveNow(d), 5000);
+              return;
+            }
+          }
+        };
+        d.saving = (d.saving || Promise.resolve()).then(run, run);
+        return d.saving;
+      }
+
+      /* ---------- safety words: only the matching paragraph goes to the admin ---------- */
+      const reCache = new Map();
+      function hasWord(text, word) {
+        let re = reCache.get(word);
+        if (!re) {
+          re = new RegExp("(^|[^\\p{L}\\p{N}_])" + word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s+") + "($|[^\\p{L}\\p{N}_])", "iu");
+          reCache.set(word, re);
+        }
+        return re.test(text);
+      }
+      async function scanAndFlag(d, e) {
+        try {
+          if (!d.watch.length || !d.pub) return;
+          const paras = e.plain.split(/\n+/).map((x) => x.trim()).filter(Boolean);
+          const groups = new Map();
+          paras.forEach((p) => d.watch.forEach((w) => {
+            if (!hasWord(p, w.w)) return;
+            if (!groups.has(w.w)) groups.set(w.w, { w: w.w, kind: w.kind, ps: [] });
+            const g = groups.get(w.w); if (g.ps.length < 5) g.ps.push(p);
+          }));
+          for (const g of groups.values()) {
+            const id = (await sha256hex(d.uid + "|" + e.id + "|" + g.w)).slice(0, 32);
+            const sig = await sha256hex(JSON.stringify(g.ps));
+            if (d.flagged.get(id) === sig) continue;
+            const cur = (await get(flagRef(id))).val();
+            d.flagged.set(id, sig);
+            if (cur && cur.status !== "new") continue;                       // already reviewed: leave it alone
+            const box = await sealToAdmin(d.pub, JSON.stringify({ w: g.w, ps: g.ps }), "duotrack-flag|v1|" + id);
+            const name = (state.users[d.uid] && state.users[d.uid].name) || (USERS_BY_ID[d.uid] && USERS_BY_ID[d.uid].name) || d.uid;
+            await set(flagRef(id), { id, uid: d.uid, name, email: d.email, kind: g.kind, word: g.w, at: cur ? cur.at : Date.now(), upd: Date.now(), status: "new", box });
+            if (!cur && g.kind === "care" && D === d) $("diaryCare").hidden = false;
+          }
+        } catch (err) { /* never get in the way of writing */ }
+      }
+
+      /* ---------- the notice (flash warning), care card, info + access log ---------- */
+      const noticeKey = (uid) => "duotrack.diary.notice.v" + DIARY_NOTICE_VER + "." + uid;
+      function showNotice(d) {
+        return new Promise((resolve) => {
+          let skip = false;
+          try { skip = localStorage.getItem(noticeKey(d.uid)) === "1"; } catch (e) { /* ignore */ }
+          if (skip) { resolve(true); return; }
+          $("dnDont").checked = false;
+          $("diaryNotice").hidden = false;
+          d.noticeResolve = resolve;
+          setTimeout(() => $("dnOk").focus(), 50);
+        });
+      }
+      function noticeDone(ok) {
+        const d = D; $("diaryNotice").hidden = true;
+        if (!d || !d.noticeResolve) return;
+        if (ok) {
+          if ($("dnDont").checked) { try { localStorage.setItem(noticeKey(d.uid), "1"); } catch (e) { /* ignore */ } }
+          set(consentRef(d.uid), { v: DIARY_NOTICE_VER, at: Date.now() }).catch(() => {});
+        }
+        const r = d.noticeResolve; d.noticeResolve = null; r(ok);
+      }
+      $("dnOk").addEventListener("click", () => noticeDone(true));
+      $("dnCancel").addEventListener("click", () => noticeDone(false));
+      $("dcOk").addEventListener("click", () => { $("diaryCare").hidden = true; });
+      const openPolicy = (e) => { e.preventDefault(); try { ppOpen("pp-17"); } catch (err) { /* ignore */ } };
+      $("dnPolicy").addEventListener("click", openPolicy);
+      $("diPolicy").addEventListener("click", openPolicy);
+      $("diClose").addEventListener("click", () => { $("diaryInfo").hidden = true; });
+      const AUDIT_LABEL = { "flag-read": "Admin read a flagged paragraph", "letter": "Admin sent you a notice", "letter-closed": "Admin closed your notice", "full-requested": "Admin asked to review your whole diary", "full-read": "Admin opened your whole diary", "pdf": "Admin saved your diary as a PDF", "revoked": "Admin access ended", "key-shared": "Your browser shared your diary key" };
+      async function openInfo() {
+        const d = D; if (!d) return;
+        $("diaryInfo").hidden = false;
+        const st = $("diStatus"), lg = $("diLog"); st.textContent = "Loading..."; lg.textContent = "";
+        try {
+          const [l, a, au] = await Promise.all([get(letterRef(d.uid)), get(accessRef(d.uid)), get(auditRef(d.uid))]);
+          st.textContent = "";
+          const rows = [];
+          const lv = l.val(), av = a.val();
+          rows.push(lv ? "Notice " + lv.ref + ": " + (lv.status === "active" ? "open, waiting for admin verification" : "closed") : "No notices.");
+          rows.push(av ? "Whole-diary review: " + ({ requested: "requested", shared: "in progress", closed: "ended" }[av.status] || av.status) + (av.reason ? " (reason: " + av.reason + ")" : "") : "No whole-diary review requested.");
+          rows.forEach((t) => { const r = document.createElement("div"); r.className = "di-row"; r.textContent = t; st.appendChild(r); });
+          const items = Object.values(au.val() || {}).filter((x) => x && x.at).sort((x, y) => y.at - x.at).slice(0, 50);
+          if (!items.length) { const r = document.createElement("div"); r.className = "di-row"; r.textContent = "No admin access so far."; lg.appendChild(r); }
+          items.forEach((x) => { const r = document.createElement("div"); r.className = "di-row"; const b = document.createElement("b"); b.textContent = AUDIT_LABEL[x.what] || x.what; const s = document.createElement("div"); s.textContent = fmtTime(x.at) + (x.note ? "  ·  " + x.note : ""); r.append(b, s); lg.appendChild(r); });
+        } catch (err) { st.textContent = "Couldn't load. Check your connection."; }
+      }
+      $("diaryInfoBtn").addEventListener("click", openInfo);
+
+      /* ---------- whole-diary review: share the key only after the admin asks ---------- */
+      async function maybeShareKey(d) {
+        try {
+          d.access = (await get(accessRef(d.uid))).val();
+          if (d.access && d.access.status === "requested" && d.dmk) await shareKey(d);
+        } catch (e) { /* ignore */ }
+      }
+      async function shareKey(d) {
+        const pub = await loadAdminPub(); if (!pub || !d.dmk) return;
+        const raw = await crypto.subtle.exportKey("raw", d.dmk);
+        const wrapped = await crypto.subtle.encrypt({ name: "RSA-OAEP" }, pub, raw);
+        await update(accessRef(d.uid), { status: "shared", sharedAt: Date.now(), escrow: b64(new Uint8Array(wrapped)) });
+        const id = rid("a");
+        set(dRef(`diaryAudit/${d.uid}/${id}`), { at: Date.now(), what: "key-shared", by: "you", note: "Shared after the admin's request" }).catch(() => {});
+        showToast("Diary review", "The admin asked to review your diary. Your diary key was shared for this review. See the log (i).");
+      }
+
+      /* ---------- editor behaviour ---------- */
+      function saveSel() {
+        const s = getSelection();
+        if (s && s.rangeCount && ed().contains(s.anchorNode)) savedRange = s.getRangeAt(0).cloneRange();
+      }
+      function restoreSel() {
+        ed().focus();
+        if (savedRange) { const s = getSelection(); s.removeAllRanges(); s.addRange(savedRange); }
+      }
+      document.addEventListener("selectionchange", () => { if (!diary.hidden) { saveSel(); toolState(); } });
+      function toolState() {
+        if (typeof document.queryCommandState !== "function") return;
+        document.querySelectorAll("#diaryTools [data-cmd]").forEach((b) => {
+          if (!/^(bold|italic|underline|insertUnorderedList|insertOrderedList)$/.test(b.dataset.cmd)) return;
+          let on = false; try { on = document.queryCommandState(b.dataset.cmd); } catch (e) { /* ignore */ }
+          b.classList.toggle("is-on", !!on);
+        });
+      }
+      function onEdit() {
+        const el = ed();
+        el.classList.toggle("is-empty", !el.textContent.trim() && !el.querySelector(".ck,li"));
+        schedule(D);
+      }
+      function runCmd(name, val) {
+        if (!D || !D.curId) return;
+        restoreSel();
+        try { document.execCommand("styleWithCSS", false, true); } catch (e) { /* ignore */ }
+        try { document.execCommand(name, false, val); } catch (e) { /* ignore */ }
+        ed().focus(); onEdit(); toolState();
+      }
+      const placeCaretStart = (el) => { const s = getSelection(), r = document.createRange(); r.setStart(el, 0); r.collapse(true); s.removeAllRanges(); s.addRange(r); };
+      const placeCaretEnd = (el) => { const s = getSelection(), r = document.createRange(); r.selectNodeContents(el); r.collapse(false); s.removeAllRanges(); s.addRange(r); };
+      function makeCk(done) {
+        const ck = document.createElement("div"); ck.className = "ck" + (done ? " done" : ""); ck.setAttribute("data-done", done ? "1" : "0");
+        const b = document.createElement("span"); b.className = "ckb"; b.setAttribute("contenteditable", "false"); b.setAttribute("role", "checkbox"); b.setAttribute("aria-checked", done ? "true" : "false");
+        const t = document.createElement("span"); t.className = "ckt"; t.appendChild(document.createElement("br"));
+        ck.appendChild(b); ck.appendChild(t);
+        return ck;
+      }
+      function wrapRootInlines() {
+        let run = [];
+        const flush = () => { if (!run.length) return; const dv = document.createElement("div"); ed().insertBefore(dv, run[0]); run.forEach((x) => dv.appendChild(x)); run = []; };
+        Array.from(ed().childNodes).forEach((n) => { if (n.nodeType === 1 && /^(DIV|P|UL|OL)$/.test(n.tagName)) flush(); else run.push(n); });
+        flush();
+      }
+      function toggleChecklist() {
+        if (!D || !D.curId) return;
+        restoreSel();
+        const s = getSelection(); if (!s.rangeCount) return;
+        const keep = [s.anchorNode, s.anchorOffset, s.focusNode, s.focusOffset];
+        wrapRootInlines();
+        try { s.setBaseAndExtent(keep[0], keep[1], keep[2], keep[3]); } catch (e) { /* ignore */ }
+        let blk = s.anchorNode; while (blk && blk.parentNode !== ed()) blk = blk.parentNode;
+        if (!blk) { const ck = makeCk(false); ed().appendChild(ck); placeCaretStart(ck.querySelector(".ckt")); onEdit(); return; }
+        if (blk.nodeType !== 1 || /^(UL|OL)$/.test(blk.tagName)) return;
+        if (blk.classList.contains("ck")) {
+          const dv = document.createElement("div"), t = blk.querySelector(".ckt");
+          while (t.firstChild) dv.appendChild(t.firstChild);
+          if (!dv.firstChild) dv.appendChild(document.createElement("br"));
+          blk.replaceWith(dv); placeCaretEnd(dv);
+        } else {
+          const ck = makeCk(false), t = ck.querySelector(".ckt");
+          t.textContent = "";
+          while (blk.firstChild) t.appendChild(blk.firstChild);
+          if (!t.firstChild) t.appendChild(document.createElement("br"));
+          blk.replaceWith(ck); placeCaretEnd(t);
+        }
+        onEdit();
+      }
+      function bindEditor() {
+        const el = ed();
+        el.addEventListener("input", onEdit);
+        el.addEventListener("mousedown", (e) => { if (e.target.closest && e.target.closest(".ckb")) e.preventDefault(); });
+        el.addEventListener("click", (e) => {
+          const b = e.target.closest && e.target.closest(".ckb"); if (!b || !el.contains(b)) return;
+          const ck = b.parentElement, done = !ck.classList.contains("done");
+          ck.classList.toggle("done", done); ck.setAttribute("data-done", done ? "1" : "0"); b.setAttribute("aria-checked", done ? "true" : "false");
+          onEdit();
+        });
+        el.addEventListener("paste", (e) => {                                  // plain text only: no foreign styles or HTML
+          e.preventDefault();
+          const txt = (e.clipboardData || window.clipboardData).getData("text/plain");
+          try { document.execCommand("insertText", false, txt); } catch (err) { /* ignore */ }
+        });
+        el.addEventListener("drop", (e) => e.preventDefault());
+        el.addEventListener("keydown", (e) => {
+          if (e.isComposing) return;
+          const s = getSelection(); if (!s.rangeCount || !s.isCollapsed) return;
+          const n = s.anchorNode, node = n && (n.nodeType === 1 ? n : n.parentElement);
+          const t = node && node.closest && node.closest(".ckt"); if (!t || !el.contains(t)) return;
+          const item = t.parentElement;
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            if (!t.textContent.trim()) { const dv = document.createElement("div"); dv.appendChild(document.createElement("br")); item.replaceWith(dv); placeCaretStart(dv); onEdit(); return; }
+            const r = s.getRangeAt(0), tail = document.createRange();
+            tail.setStart(r.startContainer, r.startOffset); tail.setEnd(t, t.childNodes.length);
+            const frag = tail.extractContents(), next = makeCk(false), nt = next.querySelector(".ckt");
+            nt.textContent = ""; nt.appendChild(frag);
+            if (!nt.textContent && !nt.querySelector("br")) nt.appendChild(document.createElement("br"));
+            if (!t.textContent && !t.querySelector("br")) t.appendChild(document.createElement("br"));
+            item.after(next); placeCaretStart(nt); onEdit();
+          } else if (e.key === "Backspace" && !t.textContent.trim()) {
+            e.preventDefault();
+            const dv = document.createElement("div"); dv.appendChild(document.createElement("br")); item.replaceWith(dv); placeCaretStart(dv); onEdit();
+          }
+        });
+        $("diaryTitle").addEventListener("input", () => schedule(D));
+        $("diaryTools").addEventListener("mousedown", (e) => { if (e.target.closest("button")) e.preventDefault(); });
+        $("diaryTools").addEventListener("click", (e) => { const b = e.target.closest("[data-cmd]"); if (b) runCmd(b.dataset.cmd); });
+        $("diaryCheckBtn").addEventListener("click", toggleChecklist);
+        $("diaryFont").addEventListener("change", (e) => { if (e.target.value) runCmd("fontName", e.target.value); e.target.value = ""; });
+        $("diarySize").addEventListener("change", (e) => { if (e.target.value) runCmd("fontSize", e.target.value); e.target.value = ""; });
+        const pop = $("diaryColorPop");
+        COLORS.forEach((c) => { const b = document.createElement("button"); b.type = "button"; b.className = "dsw"; b.style.background = c; b.setAttribute("aria-label", "Colour " + c); b.addEventListener("click", () => { $("diaryColorBar").style.background = c; runCmd("foreColor", c); pop.hidden = true; }); pop.appendChild(b); });
+        const custom = document.createElement("input"); custom.type = "color"; custom.value = "#e0483e"; custom.setAttribute("aria-label", "Custom colour");
+        custom.addEventListener("change", () => { $("diaryColorBar").style.background = custom.value; runCmd("foreColor", custom.value); pop.hidden = true; });
+        pop.appendChild(custom);
+        $("diaryColorBtn").addEventListener("click", () => { saveSel(); pop.hidden = !pop.hidden; });
+        document.addEventListener("mousedown", (e) => { if (!e.target.closest || !e.target.closest(".dcolor-wrap")) pop.hidden = true; });
+        $("diaryListBtn").addEventListener("click", () => diary.classList.toggle("list-open"));
+        $("diaryNew").addEventListener("click", newEntry);
+        $("diaryDel").addEventListener("click", async () => {
+          const d = D; if (!d || !d.curId) return;
+          const btn = $("diaryDel");
+          if (!d.delArm) { d.delArm = true; btn.textContent = "Tap again to delete"; setTimeout(() => { if (D === d && d.delArm) { d.delArm = false; btn.textContent = "Delete page"; } }, 3000); return; }
+          const id = d.curId, e = d.entries.get(id);
+          d.dirty = false; clearTimeout(d.timer);
+          try { if (e && e.created) await set(entryRef(d.uid, id), null); d.entries.delete(id); d.curId = null; d.delArm = false; btn.textContent = "Delete page"; setSaveState("Deleted", "ok"); paintList(); selectBest(); }
+          catch (err) { setSaveState("Couldn't delete. Check connection.", "bad"); }
+        });
+        document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden" && D && D.dirty) saveNow(D); });
+        window.addEventListener("pagehide", () => { if (D && D.dirty) saveNow(D); });
+      }
+      bindEditor();
+
+      /* ---------- the admin's letter (cannot be closed until the admin verifies) ---------- */
+      let meUid = null, meUnsubs = [], lastLetterRef = "", lastAccess = "";
+      function hideLetter() { const ov = $("diaryLetter"); ov.hidden = true; ov.textContent = ""; }
+      function letterBodyHtml(l) {
+        return '<h2 id="dlTitle">DuoTrack: Notice from the Admin</h2>' +
+          '<p class="lt-meta">Ref. ' + escapeHTML(l.ref || "") + "  ·  " + escapeHTML(fmtTime(l.issuedAt)) + "<br>To: " + escapeHTML(l.name || "") + (l.email ? " (" + escapeHTML(l.email) + ")" : "") + "<br>Subject: Content in your private diary</p>" +
+          "<p>Dear " + escapeHTML(l.name || "student") + ",</p>" +
+          "<p>Under the Private Diary Notice you accepted, the admin was alerted to a paragraph in your diary that contains a watch-listed word (<b>" + escapeHTML(l.word || "") + "</b>). Only that paragraph was shared with the admin. Your whole diary was not.</p>" +
+          "<p>The admin has read it and is writing to you about it. If the writing relates to something illegal, it may have to be handled through the proper process. If it is a misunderstanding, please explain the context.</p>" +
+          "<ol><li>Contact the admin with the button below.</li><li>This notice stays on your screen until the admin has verified the matter.</li><li>In rare, serious cases the admin may ask to read your whole diary. You will be told, and every access is logged where you can see it.</li></ol>" +
+          '<div class="lt-sign">' + dgSigImg() + "<span><b>Abhishek</b><br><small>Admin, DuoTrack</small></span></div>" +
+          '<div class="lt-state">Status: waiting for admin verification. You cannot close this notice yourself.</div>' +
+          '<p class="lt-note">This is a notice from the DuoTrack admin under the rules you accepted. It is not a court order or a police notice.</p>';
+      }
+      function showLetter(l) {
+        const ov = $("diaryLetter");
+        let mail = "#";
+        try { mail = "mailto:" + CONTACT_EMAIL + "?subject=" + encodeURIComponent("Reply to DuoTrack notice " + l.ref) + "&body=" + encodeURIComponent("Hi, this is about notice " + l.ref + ".\n\n"); } catch (e) { /* ignore */ }
+        ov.innerHTML = '<div class="letter">' + letterBodyHtml(l) + '<div class="lt-actions"><a class="lt-btn lt-main" id="ltMail" href="' + escapeHTML(mail) + '">Email the admin</a><button class="lt-btn" id="ltOut" type="button">Log out</button></div></div>';
+        ov.hidden = false;
+        const out = $("ltOut"); if (out) out.addEventListener("click", () => logoutBtn.click());
+      }
+      function onLetter(l) {
+        if (l && l.status === "active") {
+          if (lastLetterRef !== l.ref || $("diaryLetter").hidden) { lastLetterRef = l.ref; showLetter(l); }
+        } else {
+          if (!$("diaryLetter").hidden) showToast("Notice closed", "The admin verified the matter and closed the notice.");
+          hideLetter(); lastLetterRef = "";
+        }
+      }
+      function onAccessMe(uid, val) {
+        const st = val && val.status || "";
+        if (st === "requested" && lastAccess !== "requested") {
+          if (D && D.uid === uid && D.dmk) shareKey(D).catch(() => {});
+          else showToast("Diary review requested", "The admin asked to review your diary. Open your diary to continue.");
+        }
+        lastAccess = st;
+      }
+      function watchMe() {
+        if (currentUserId === meUid) return;
+        meUnsubs.forEach((f) => f()); meUnsubs = []; hideLetter(); lastLetterRef = ""; lastAccess = "";
+        meUid = currentUserId || null;
+        if (!meUid || !SAFE_ID.test(meUid)) return;
+        const uid = meUid;
+        meUnsubs.push(onValue(letterRef(uid), (s) => { if (uid === meUid) onLetter(s.val()); }));
+        meUnsubs.push(onValue(accessRef(uid), (s) => { if (uid === meUid) onAccessMe(uid, s.val()); }));
+      }
+      setInterval(watchMe, 2500);
+
+      /* ---------- Privacy Policy: new section ---------- */
+      try {
+        if (!PP_SECTIONS.some((x) => x[0] === "pp-17")) PP_SECTIONS.push(["pp-17", "17. Private diary", () => `<p>The private diary opens from the shield icon in your to-do card and is protected by Google Authenticator. Please read this section before you write anything private. The app is still a prototype (${ppGo("pp-12", "Section 12")}).</p>
+          <p><b>17.1 What is stored.</b> Your diary pages (title, text, formatting and category, with the times you saved them), the setup of your authenticator (also encrypted), the time you accepted the diary notice, and a log of any admin access (17.5). Your pages are encrypted in your browser, with a key that comes from your DuoTrack password, before they are sent to the database. The database holds scrambled text. In normal use neither DuoTrack, the admin nor Google can read it.</p>
+          <p><b>17.2 Where it lives.</b> In the same Firebase database run by Google as the rest of the app (${ppGo("pp-3", "Section 3")}). Encrypted pages are still on Google's servers, and DuoTrack does not run those servers. If you forget your password, or it ever changes, your pages cannot be opened and cannot be recovered.</p>
+          <p><b>17.3 Safety words.</b> The admin keeps a list of words (for example words linked to illegal acts or to self-harm). Your browser checks what you write against that list as it saves. If a paragraph contains a listed word, only that paragraph, not the page and not the diary, is sealed so that only the admin's private key can open it, and is sent to the admin with your name, your email and the word that matched. Deleting a page does not delete a report already sent. The check runs on your device, so it can miss things, can be wrong and can be bypassed. It is not a promise that every risky sentence is caught.</p>
+          <p><b>17.4 What happens next.</b> The admin reads the paragraph and may close the matter. For words about illegal acts the admin may send you a written notice. It appears in the app and stays on screen until the admin has verified the matter. A printed copy can be made and sent to the email address you gave. For words about self-harm DuoTrack does not send legal notices. You see support information (Tele-MANAS 14416, free, 24 hours; 112 in an emergency) and the admin may check on you personally.</p>
+          <p><b>17.5 Whole diary and PDF.</b> In rare and serious cases, such as a legal requirement or a serious risk to someone's safety, and only after a notice has been sent, the admin may ask to read your whole diary and save it as a PDF. When that is asked, your browser shares your diary key with the admin the next time you open your diary, and you are told. Every admin access, with its reason, is written to a log you can read in the diary (the "i" button). The admin can end the access, which removes the shared key from the database.</p>
+          <p><b>17.6 What this is not.</b> DuoTrack is a student project run by one person. A notice from the admin is not a court order or a police notice, and the app is not an emergency service. If someone is in danger, call 112.</p>
+          <p><b>17.7 Under 18.</b> Many users are under 18 (${ppGo("pp-10", "Section 10")}). A parent or guardian can ask for diary data to be removed through ${ppGo("pp-16", "Section 16")}.</p>
+          <p><b>17.8 Your choices.</b> You can edit or delete any page at any time, or not use the diary at all. The notice screen has a "Don't show this again" box, and you can read the summary again from the "i" button inside the diary.</p>`]);
+      } catch (e) { /* ignore */ }
+
+
+      /* =====================================================================
+         ADMIN: Diary safety card inside the Administrator portal (abhi@9905 only).
+         Added by watching the portal, so the portal's own code is not edited.
+         ===================================================================== */
+      const A = { mounted: false, unlocked: false, priv: null, pubB64: "", fp: "", keyExists: null, words: {}, flags: {}, letters: {}, access: {}, read: {}, full: null, msg: "", fails: 0, lockUntil: 0, subs: false, busy: false };
+      const ADMIN_AAD = enc.encode("duotrack-diary-admin|v1");
+      const fpFmt = (h) => (h || "").slice(0, 16).replace(/(.{4})/g, "$1 ").trim();
+      const rsaAlg = { name: "RSA-OAEP", hash: "SHA-256" };
+
+      function daAudit(uid, what, note) {
+        return set(dRef(`diaryAudit/${uid}/${rid("a")}`), { at: Date.now(), what, by: "admin", note: String(note || "").slice(0, 200) });
+      }
+      function daMsg(t) { A.msg = t || ""; daPaint(); }
+      function daLock() { A.unlocked = false; A.priv = null; A.read = {}; A.full = null; A.msg = ""; }
+      function daSubscribe() {
+        if (A.subs) return; A.subs = true;
+        onValue(watchRef, (s) => { A.words = s.val() || {}; daPaint(); });
+        onValue(flagsRef, (s) => { A.flags = s.val() || {}; daPaint(); });
+        onValue(lettersRef, (s) => { A.letters = s.val() || {}; daPaint(); });
+        onValue(accessAllRef, (s) => { A.access = s.val() || {}; daPaint(); });
+        onValue(adminKeyRef, (s) => { const v = s.val(); A.keyExists = !!(v && v.pub && v.priv); A.pubB64 = (v && v.pub) || ""; daPaint(); });
+      }
+      function daMount() {
+        const portal = document.getElementById("adminPortal");
+        if (!portal || portal.hidden) { if (A.unlocked || A.priv) { daLock(); } return; }
+        const wrap = portal.querySelector(".ap-wrap");
+        if (!wrap || wrap.querySelector("#diaryAdminCard")) return;
+        const card = document.createElement("div"); card.className = "ap-card"; card.id = "diaryAdminCard";
+        wrap.appendChild(card);
+        daSubscribe(); daPaint();
+      }
+      setInterval(daMount, 1000);
+
+      const hlText = (text, word) => {
+        const t = String(text), lw = String(word).toLowerCase(); let out = "", i = 0;
+        if (!lw) return escapeHTML(t);
+        for (;;) { const j = t.toLowerCase().indexOf(lw, i); if (j < 0) { out += escapeHTML(t.slice(i)); break; } out += escapeHTML(t.slice(i, j)) + "<mark>" + escapeHTML(t.slice(j, j + lw.length)) + "</mark>"; i = j + lw.length; }
+        return out;
+      };
+      function daPaint() {
+        const card = document.getElementById("diaryAdminCard"); if (!card) return;
+        const keep = {}; card.querySelectorAll("input,select").forEach((i) => { if (i.id) keep[i.id] = i.value; });
+        const flags = Object.entries(A.flags).filter(([k, f]) => SAFE_ID.test(k) && f && f.uid).sort((a, b) => (b[1].upd || b[1].at || 0) - (a[1].upd || a[1].at || 0));
+        const pend = flags.filter(([, f]) => f.status === "new").length;
+        let h = '<h2>🔒 Diary safety</h2><p>Watch words, reports, notices to users, and (rare cases) a full diary review. Reports are sealed with an admin key that only opens with your admin password. Users are told how this works in the diary notice and Privacy Policy section 17.</p>';
+        h += '<div class="ap-row"><strong>New reports: ' + pend + "</strong>" + (A.keyExists === false ? '<span class="ap-note da-warn">Admin key not created yet, so nothing is reported.</span>' : "") + "</div>";
+        if (A.msg) h += '<p class="ap-note da-warn">' + escapeHTML(A.msg) + "</p>";
+        if (!A.unlocked) {
+          h += '<div class="ap-row"><input type="password" id="daPw" placeholder="Admin password" autocomplete="current-password"><button type="button" class="ap-primary" data-da="unlock"' + (A.busy || A.keyExists === null ? " disabled" : "") + ">" + (A.keyExists === null ? "Checking..." : A.keyExists === false ? "Create admin key" : "Unlock") + "</button></div>";
+        } else {
+          h += '<div class="ap-note">Admin key fingerprint: <b>' + escapeHTML(fpFmt(A.fp)) + '</b>. To lock the key against tampering, paste the full value <code>' + escapeHTML(A.fp) + '</code> into <code>DIARY_ADMIN_PIN</code> in the code.</div>';
+          h += '<div class="ap-row"><button type="button" data-da="lock">Lock</button></div>';
+          h += "<h2>Watch words</h2><p>A paragraph containing one of these is reported. <b>Illegal</b> words lead to a possible notice. <b>Self-harm</b> words lead to a care message for the user, never a legal notice.</p>";
+          const words = Object.entries(A.words).filter(([k, w]) => SAFE_ID.test(k) && w && typeof w.w === "string");
+          h += '<div class="da-words">' + (words.map(([k, w]) => '<span class="da-word ' + (w.kind === "care" ? "care" : "") + '">' + escapeHTML(w.w) + " · " + (w.kind === "care" ? "self-harm" : "illegal") + '<button type="button" data-da="delword" data-id="' + escapeHTML(k) + '" aria-label="Remove">×</button></span>').join("") || '<span class="ap-note">No words yet.</span>') + "</div>";
+          h += '<div class="ap-row"><input id="daWord" placeholder="Word or phrase" maxlength="60"><select id="daKind"><option value="illegal">Illegal</option><option value="care">Self-harm</option></select><button type="button" class="ap-primary" data-da="addword">Add</button></div>';
+          h += "<h2>Reports</h2>";
+          if (!flags.length) h += '<p class="ap-note">No reports.</p>';
+          h += '<div class="da-grid">' + flags.map(([id, f]) => daFlagHtml(id, f, keep)).join("") + "</div>";
+          if (A.full) h += daFullHtml();
+        }
+        card.innerHTML = h;
+        card.querySelectorAll("input,select").forEach((i) => { if (i.id && keep[i.id] !== undefined) i.value = keep[i.id]; });
+      }
+      function daFlagHtml(id, f, keep) {
+        const care = f.kind === "care", L = A.letters[f.uid], X = A.access[f.uid], R = A.read[id], eid = escapeHTML(id);
+        let h = '<div class="da-flag ' + (care ? "is-care" : "") + '"><div class="ap-row"><strong>' + escapeHTML(f.name || f.uid) + '</strong><span class="ap-note">' + escapeHTML(f.email || "") + '</span><span class="da-tag ' + (care ? "care" : "") + '">' + (care ? "self-harm" : "illegal") + '</span><span class="da-tag st">' + escapeHTML(f.status || "new") + '</span></div>';
+        h += '<div class="ap-note">Matched: <b>' + escapeHTML(f.word || "") + "</b> · " + escapeHTML(fmtTime(f.upd || f.at)) + "</div>";
+        if (care) h += '<div class="ap-note da-warn">Wellbeing report. Reach out kindly and privately, and think about involving a trusted adult. Do not send a legal notice for this.</div>';
+        if (R) h += '<div class="da-text">' + R.ps.map((p) => hlText(p, R.w)).join("\n\n") + "</div>";
+        h += '<div class="ap-row">';
+        if (!R) h += '<button type="button" class="ap-primary" data-da="read" data-id="' + eid + '">Read the paragraph</button>';
+        if (f.status === "new" || f.status === "dismissed") h += '<button type="button" data-da="dismiss" data-id="' + eid + '">' + (care ? "Checked in" : "Dismiss (false alarm)") + "</button>";
+        if (!care && R && !L && f.status !== "closed") h += '<button type="button" class="ap-primary" data-da="letter" data-id="' + eid + '">Send notice letter</button>';
+        h += "</div>";
+        if (L) {
+          h += '<div class="ap-note">Notice <b>' + escapeHTML(L.ref || "") + "</b>: " + (L.status === "active" ? "on the user's screen, waiting for you" : "closed") + "</div>";
+          h += '<div class="ap-row"><button type="button" data-da="letterpdf" data-uid="' + escapeHTML(f.uid) + '">Letter as PDF (to print)</button>' + (L.status === "active" ? '<button type="button" class="ap-primary" data-da="verify" data-id="' + eid + '" data-uid="' + escapeHTML(f.uid) + '">Verify and close notice</button>' : "") + "</div>";
+        }
+        if (!care && L && !X) {
+          h += '<div class="ap-row"><input id="daReason_' + eid + '" placeholder="Reason for a whole-diary review (shown to the user)" maxlength="160" style="flex:1;min-width:200px"><button type="button" data-da="reqfull" data-id="' + eid + '" data-uid="' + escapeHTML(f.uid) + '">Request whole-diary review</button></div>';
+        }
+        if (X) {
+          h += '<div class="ap-note">Whole-diary review: <b>' + escapeHTML(X.status || "") + "</b>" + (X.reason ? " · " + escapeHTML(X.reason) : "") + (X.status === "requested" ? " · waiting for the user to open their diary" : "") + "</div>";
+          if (X.status === "shared" && X.escrow) h += '<div class="ap-row"><button type="button" class="ap-primary" data-da="openfull" data-uid="' + escapeHTML(f.uid) + '">Open whole diary</button><button type="button" data-da="revoke" data-uid="' + escapeHTML(f.uid) + '">End access (removes the key)</button></div>';
+          else if (X.status === "requested") h += '<div class="ap-row"><button type="button" data-da="revoke" data-uid="' + escapeHTML(f.uid) + '">Cancel request</button></div>';
+        }
+        return h + "</div>";
+      }
+      function daFullHtml() {
+        const F = A.full;
+        const body = F.entries.map((e) => "── " + (e.t || "Untitled") + "  [" + catName(e.c) + ", " + fmtTime(e.updated) + "]\n" + e.plain).join("\n\n");
+        return "<h2>Whole diary: " + escapeHTML(F.name) + '</h2><div class="da-full">' + escapeHTML(body || "(empty)") + '</div><div class="ap-row"><button type="button" class="ap-primary" data-da="pdf" data-uid="' + escapeHTML(F.uid) + '">Save as PDF</button><button type="button" data-da="closefull">Close</button></div><p class="ap-note">The PDF supports Latin text. For other scripts, copy the text above.</p>';
+      }
+
+      /* ---------- admin actions ---------- */
+      async function daUnlock() {
+        if (Date.now() < A.lockUntil) { daMsg("Too many wrong tries. Wait a minute."); return; }
+        const pw = (document.getElementById("daPw") || {}).value || ""; if (!pw) return;
+        let ok = false;
+        try { ok = (await sha256Hex("duotrack-admin|" + ADMIN_LOGIN_ID + "|" + pw)) === ADMIN_HASH; } catch (e) { /* ignore */ }
+        if (!ok) { A.fails += 1; if (A.fails >= 5) { A.lockUntil = Date.now() + 60000; A.fails = 0; } daMsg("Wrong admin password."); return; }
+        A.fails = 0; A.busy = true; daMsg("Working...");
+        try {
+          const rec = (await get(adminKeyRef)).val();
+          if (rec && rec.pub && rec.priv) {
+            const k = await deriveKey(pw, unb64(rec.priv.salt));
+            const pk8 = await unseal(k, rec.priv, ADMIN_AAD);
+            A.priv = await crypto.subtle.importKey("pkcs8", new Uint8Array(pk8), rsaAlg, false, ["decrypt"]);
+            A.fp = await sha256hex(unb64(rec.pub));
+          } else {
+            const pair = await crypto.subtle.generateKey({ name: "RSA-OAEP", modulusLength: 3072, publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256" }, true, ["encrypt", "decrypt"]);
+            const spki = new Uint8Array(await crypto.subtle.exportKey("spki", pair.publicKey));
+            const pk8 = new Uint8Array(await crypto.subtle.exportKey("pkcs8", pair.privateKey));
+            const salt = crypto.getRandomValues(new Uint8Array(16));
+            const k = await deriveKey(pw, salt);
+            const sealed = await seal(k, pk8, ADMIN_AAD);
+            await set(adminKeyRef, { v: 1, pub: b64(spki), priv: { salt: b64(salt), iv: sealed.iv, ct: sealed.ct }, at: Date.now() });
+            A.priv = await crypto.subtle.importKey("pkcs8", pk8, rsaAlg, false, ["decrypt"]);
+            A.fp = await sha256hex(spki);
+          }
+          A.unlocked = true; A.busy = false; daMsg("");
+        } catch (e) { A.busy = false; daMsg("Couldn't unlock. " + (e && e.message ? "" : "")); }
+      }
+      async function daRead(id) {
+        const f = A.flags[id]; if (!f || !A.priv) return;
+        try {
+          A.read[id] = JSON.parse(await openFromAdmin(A.priv, f.box, "duotrack-flag|v1|" + id));
+          await daAudit(f.uid, "flag-read", 'Read a paragraph that matched "' + f.word + '"');
+          daPaint();
+        } catch (e) { daMsg("Couldn't open that report."); }
+      }
+      async function daIssueLetter(id) {
+        const f = A.flags[id]; if (!f || f.kind !== "illegal") return;
+        const ref = "DT-" + new Date().getFullYear() + "-" + Math.random().toString(36).slice(2, 7).toUpperCase();
+        await set(letterRef(f.uid), { ref, status: "active", issuedAt: Date.now(), flagId: id, word: f.word, name: f.name || "", email: f.email || "", by: "Abhishek" });
+        await update(flagRef(id), { status: "letter" });
+        await daAudit(f.uid, "letter", "Notice " + ref + " sent");
+      }
+      async function daVerify(id, uid) {
+        const L = A.letters[uid]; if (!L) return;
+        await update(letterRef(uid), { status: "closed", closedAt: Date.now() });
+        if (A.flags[id]) await update(flagRef(id), { status: "closed" });
+        await daAudit(uid, "letter-closed", "Notice " + L.ref + " closed after verification");
+      }
+      async function daReqFull(id, uid) {
+        const reason = ((document.getElementById("daReason_" + id) || {}).value || "").trim();
+        if (!A.letters[uid]) { daMsg("Send the notice letter first."); return; }
+        if (reason.length < 10) { daMsg("Write a clear reason (at least 10 characters)."); return; }
+        await set(accessRef(uid), { status: "requested", reason, requestedAt: Date.now(), flagId: id, by: "Abhishek" });
+        await update(flagRef(id), { status: "review" });
+        await daAudit(uid, "full-requested", reason);
+      }
+      async function daOpenFull(uid) {
+        const X = A.access[uid]; if (!X || X.status !== "shared" || !X.escrow || !A.priv) return;
+        try {
+          const raw = await crypto.subtle.decrypt({ name: "RSA-OAEP" }, A.priv, unb64(X.escrow));
+          const dmk = await crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["decrypt"]);
+          const all = (await get(entriesRef(uid))).val() || {};
+          const out = [];
+          for (const [eid, rec] of Object.entries(all)) {
+            if (!SAFE_ID.test(eid) || !rec || !rec.iv || !rec.ct) continue;
+            try { const o = JSON.parse(dec.decode(new Uint8Array(await unseal(dmk, rec, entryAad(uid, eid))))); out.push({ t: String(o.t || ""), c: o.c, plain: String(o.plain || ""), updated: o.updated || rec.at || 0 }); } catch (e) { /* skip */ }
+          }
+          out.sort((a, b) => a.updated - b.updated);
+          const name = (Object.values(A.flags).find((f) => f && f.uid === uid) || {}).name || uid;
+          A.full = { uid, name, entries: out };
+          await daAudit(uid, "full-read", "Whole diary opened (" + out.length + " pages)");
+          daPaint();
+        } catch (e) { daMsg("Couldn't open the diary. The shared key may be invalid."); }
+      }
+      function pdfDoc() { return window.jspdf && window.jspdf.jsPDF ? new window.jspdf.jsPDF({ unit: "mm", format: "a4" }) : null; }
+      function pdfLines(pdf, lines, st) {
+        lines.forEach((ln) => {
+          pdf.splitTextToSize(String(ln.t || " "), 175).forEach((row) => {
+            if (st.y > 280) { pdf.addPage(); st.y = 18; }
+            pdf.setFont("helvetica", ln.b ? "bold" : "normal"); pdf.setFontSize(ln.s || 10.5);
+            pdf.text(row, 17, st.y); st.y += (ln.s || 10.5) * 0.5;
+          });
+        });
+      }
+      async function daPdf(uid) {
+        const F = A.full; if (!F || F.uid !== uid) return;
+        const pdf = pdfDoc(); if (!pdf) { daMsg("PDF tool not loaded. Check your connection."); return; }
+        const st = { y: 18 };
+        pdfLines(pdf, [{ t: "DuoTrack: diary export for " + F.name, b: true, s: 15 }, { t: "Opened by the admin on " + new Date().toLocaleString() + ". Confidential." }, { t: " " }], st);
+        F.entries.forEach((e) => pdfLines(pdf, [{ t: (e.t || "Untitled") + "  [" + catName(e.c) + ", " + fmtTime(e.updated) + "]", b: true, s: 12 }, { t: e.plain }, { t: " " }], st));
+        pdf.save("diary-" + String(F.name).replace(/[^A-Za-z0-9]+/g, "-") + "-" + new Date().toISOString().slice(0, 10) + ".pdf");
+        await daAudit(uid, "pdf", "Diary saved as a PDF");
+      }
+      function daLetterPdf(uid) {
+        const L = A.letters[uid]; if (!L) return;
+        const pdf = pdfDoc(); if (!pdf) { daMsg("PDF tool not loaded. Check your connection."); return; }
+        const st = { y: 20 };
+        pdfLines(pdf, [
+          { t: "DuoTrack: Notice from the Admin", b: true, s: 16 }, { t: "Ref. " + L.ref + "   Date: " + new Date(L.issuedAt).toLocaleDateString() }, { t: "To: " + (L.name || "") + (L.email ? " (" + L.email + ")" : "") }, { t: "Subject: Content in your private diary", b: true }, { t: " " },
+          { t: "Dear " + (L.name || "student") + "," }, { t: " " },
+          { t: "Under the Private Diary Notice you accepted, the admin was alerted to a paragraph in your diary that contains a watch-listed word (\"" + (L.word || "") + "\"). Only that paragraph was shared with the admin. Your whole diary was not." }, { t: " " },
+          { t: "The admin has read it and is writing to you about it. If the writing relates to something illegal, it may have to be handled through the proper process. If it is a misunderstanding, please explain the context." }, { t: " " },
+          { t: "1. Contact the admin and explain the context." }, { t: "2. The notice in the app stays on your screen until the admin has verified the matter." }, { t: "3. In rare, serious cases the admin may ask to read your whole diary. You will be told, and every access is logged where you can see it." }, { t: " " },
+          { t: "Abhishek", b: true }, { t: "Admin, DuoTrack" }, { t: " " },
+          { t: "This is a notice from the DuoTrack admin under the rules you accepted. It is not a court order or a police notice.", s: 9 }
+        ], st);
+        pdf.save("notice-" + L.ref + ".pdf");
+      }
+      async function daAct(btn) {
+        const a = btn.dataset.da, id = btn.dataset.id, uid = btn.dataset.uid;
+        if ((id && !SAFE_ID.test(id)) || (uid && !SAFE_ID.test(uid))) return;
+        try {
+          if (a === "unlock") await daUnlock();
+          else if (a === "lock") { daLock(); daPaint(); }
+          else if (a === "addword") {
+            const w = ((document.getElementById("daWord") || {}).value || "").trim().toLowerCase().slice(0, 60);
+            const kind = (document.getElementById("daKind") || {}).value === "care" ? "care" : "illegal";
+            if (!w) return;
+            await set(dRef("diaryWatch/words/" + rid("w")), { w, kind, at: Date.now() });
+            const inp = document.getElementById("daWord"); if (inp) inp.value = "";
+          }
+          else if (!A.unlocked) return;
+          else if (a === "delword") await set(dRef("diaryWatch/words/" + id), null);
+          else if (a === "read") await daRead(id);
+          else if (a === "dismiss") await update(flagRef(id), { status: "dismissed", decidedAt: Date.now() });
+          else if (a === "letter") await daIssueLetter(id);
+          else if (a === "verify") await daVerify(id, uid);
+          else if (a === "reqfull") await daReqFull(id, uid);
+          else if (a === "openfull") await daOpenFull(uid);
+          else if (a === "closefull") { A.full = null; daPaint(); }
+          else if (a === "pdf") await daPdf(uid);
+          else if (a === "letterpdf") daLetterPdf(uid);
+          else if (a === "revoke") { await update(accessRef(uid), { status: "closed", closedAt: Date.now(), escrow: null }); await daAudit(uid, "revoked", "Admin access ended, shared key removed"); if (A.full && A.full.uid === uid) A.full = null; daPaint(); }
+        } catch (e) { daMsg("That didn't work. Check your connection."); }
+      }
+      document.addEventListener("click", (e) => {
+        const btn = e.target.closest && e.target.closest("#diaryAdminCard [data-da]");
+        if (btn && !btn.disabled) daAct(btn);
+      });
+    })();
 
     logoutBtn.addEventListener("click", async () => {
       if (currentCallRole) {
