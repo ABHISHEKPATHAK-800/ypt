@@ -6638,6 +6638,37 @@ body .footer-tagline { letter-spacing: -.01em; }
   #adminPortal .da-warn { color: #ffcf6a; }
   #adminPortal select { font: inherit; padding: 7px 9px; border-radius: 8px; border: 1px solid #34425f; background: #0e1420; color: #e7ebf1; }
   #ppPage, .pp-page { z-index: 100300; }
+  .de-empty[hidden], .diary-main [hidden] { display: none !important; }
+  .diary-editor:focus, .diary-editor:focus-visible, .de-title:focus-visible { outline: none; box-shadow: none; }
+  .dl-search { width: 100%; margin-top: 8px; height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font-size: 13.5px; }
+  .dl-search:focus { outline: none; border-color: var(--green); }
+  .dl-h { padding: 10px 8px 2px; font-size: 10.5px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .de-row { display: flex; align-items: center; gap: 8px; }
+  .de-row .de-title { flex: 1; min-width: 0; }
+  .dpin.is-on { color: #c99a00; background: #fff6d6; border-color: #e8d28a; }
+  .dpin.is-on svg { fill: #f1c232; }
+  .de-metas { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+  .dpop { display: block; padding: 8px; width: 188px; }
+  .dmodes { display: flex; gap: 4px; margin-bottom: 8px; }
+  .dmode { flex: 1; padding: 5px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--muted); font-size: 12px; font-weight: 800; cursor: pointer; }
+  .dmode.is-on { background: var(--green); color: #fff; border-color: var(--green); }
+  .dswatches { display: grid; grid-template-columns: repeat(4, 26px); gap: 6px; justify-content: space-between; margin-bottom: 8px; }
+  .dsw-none { background: linear-gradient(135deg, transparent 46%, #e0483e 46% 54%, transparent 54%), var(--panel); }
+  .di-export { display: flex; gap: 8px; }
+  .dl-case { z-index: 100210; }
+  .letter .lt-h { font: 800 11px/1 system-ui, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: #8a5a00; margin: 0 0 6px; }
+  #adminPortal .lc-steps { display: flex; flex-wrap: wrap; gap: 4px; }
+  #adminPortal .lc-step { padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; background: #151c2b; color: #7d8aa5; border: 1px solid #25314a; }
+  #adminPortal .lc-step.done { background: #1b3a2e; color: #7be0b0; border-color: #2c6e55; }
+  #adminPortal .lc-step.now { background: #3a3220; color: #ffd37a; border-color: #8a6b1e; }
+  #adminPortal .lc-case { border: 1px solid #25314a; border-radius: 12px; padding: 12px; background: #101725; display: grid; gap: 8px; }
+  #adminPortal .lc-form { border: 1px dashed #34425f; border-radius: 12px; padding: 12px; display: grid; gap: 8px; }
+  #adminPortal .lc-form label, #adminPortal .lc-case label { font-size: 12px; color: #9fb0cc; display: grid; gap: 4px; }
+  #adminPortal .lc-form input[type=text], #adminPortal .lc-form input[type=date], #adminPortal .lc-form input[type=password], #adminPortal .lc-case input[type=text], #adminPortal .lc-case input[type=date], #adminPortal .lc-case input[type=password], #adminPortal .lc-form textarea, #adminPortal .lc-case textarea, #adminPortal .lc-form select, #adminPortal .lc-case select { font: inherit; padding: 8px 10px; border-radius: 8px; border: 1px solid #34425f; background: #0e1420; color: #e7ebf1; width: 100%; }
+  #adminPortal .lc-check { display: flex !important; grid-template-columns: none; align-items: flex-start; gap: 8px; color: #cfd8ea !important; font-size: 12.5px !important; }
+  #adminPortal .lc-check input { margin-top: 3px; }
+  #adminPortal .lc-two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  #adminPortal .lc-items { max-height: 220px; overflow: auto; display: grid; gap: 4px; }
   .lg-forgot { margin: -6px 0 10px; text-align: right; font-size: 13px; font-weight: 700; }
   .lg-forgot a { color: var(--green); text-decoration: none; padding: 6px 2px; display: inline-block; }
   .lg-forgot a:hover { text-decoration: underline; text-underline-offset: 3px; }
@@ -7328,7 +7359,7 @@ body .footer-tagline { letter-spacing: -.01em; }
       </header>
       <main id="diaryBody" class="diary-main">
         <aside id="diaryList" class="diary-list" aria-label="Diary pages">
-          <div class="dl-head"><button id="diaryNew" class="secondary-btn" type="button">+ New page</button></div>
+          <div class="dl-head"><button id="diaryNew" class="secondary-btn" type="button">+ New page</button><input id="diarySearch" class="dl-search" type="search" placeholder="Search your pages" aria-label="Search your pages" autocomplete="off"></div>
           <div id="diaryCats" class="dl-cats" role="tablist" aria-label="Categories"></div>
           <div id="diaryItems" class="dl-items"></div>
         </aside>
@@ -7336,11 +7367,11 @@ body .footer-tagline { letter-spacing: -.01em; }
           <div id="diaryEmpty" class="de-empty"><p class="de-empty-t">Loading your diary...</p></div>
           <div id="diaryEd" class="de" hidden>
             <div class="de-top">
-              <input id="diaryTitle" class="de-title" type="text" maxlength="120" placeholder="Title" aria-label="Page title" autocomplete="off">
+              <div class="de-row"><input id="diaryTitle" class="de-title" type="text" maxlength="120" placeholder="Title" aria-label="Page title" autocomplete="off"><button id="diaryPin" class="dtool dpin" type="button" aria-pressed="false" title="Pin this page to the top" aria-label="Pin this page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9L12 3Z"/></svg></button></div>
               <div id="diaryCatPick" class="de-cats" role="radiogroup" aria-label="Category"></div>
             </div>
             <div id="diaryEditor" class="diary-editor" contenteditable="true" spellcheck="true" role="textbox" aria-multiline="true" aria-label="Diary text" data-ph="Write here. Plans, secrets, thoughts, anything."></div>
-            <div class="de-foot"><span id="diaryMeta" class="de-meta"></span><button id="diaryDel" class="totp-link de-del" type="button">Delete page</button></div>
+            <div class="de-foot"><div class="de-metas"><span id="diaryMeta" class="de-meta"></span><span id="diaryWords" class="de-meta"></span></div><button id="diaryDel" class="totp-link de-del" type="button">Delete page</button></div>
           </div>
         </section>
       </main>
@@ -7355,7 +7386,7 @@ body .footer-tagline { letter-spacing: -.01em; }
           <li><b>It is still on Google's servers.</b> The scrambled data is stored in Google Firebase. DuoTrack does not run those servers and is not involved in how Google handles them.</li>
           <li><b>Safety words.</b> The admin keeps a watch list of words, such as ones linked to illegal acts or self-harm. If a paragraph you write contains one, only that paragraph, not your whole diary, is sent to the admin, sealed so only the admin can open it.</li>
           <li><b>Illegal content.</b> The admin may send you a written notice. It appears in the app and stays on your screen until the admin has verified the matter. A printed copy can be sent to your email address.</li>
-          <li><b>Whole diary, rare cases only.</b> For serious or legal reasons the admin can ask to read your whole diary and save it as a PDF. You will be told, and every access is written to a log you can see in the diary.</li>
+          <li><b>Legal disclosure, formal process only.</b> For a legal reason the admin must open a numbered case. You get a written notice first and 48 hours to respond (shorter only in a safety emergency), a parent or guardian is told if you are under 18, your diary key is shared only after the case is authorised, and every step is in a log you can see. The result is a PDF handed only to the requesting authority.</li>
           <li><b>Self-harm words get care, not a legal letter.</b> You will see support options and the admin may check on you. If you are in danger, call 112. Tele-MANAS (14416) is free, 24 hours.</li>
           <li><b>Limits.</b> This is a student project, not a lawyer, a court or an emergency service. The word check runs in the app and can miss things or be wrong.</li>
         </ul>
@@ -7388,10 +7419,15 @@ body .footer-tagline { letter-spacing: -.01em; }
         <div id="diStatus" class="di-status"></div>
         <div class="totp-label">Admin access log</div>
         <div id="diLog" class="di-log"></div>
+        <div class="totp-label">Download my diary</div>
+        <div class="di-export"><button id="diPdf" class="ghost-btn" type="button">PDF</button><button id="diTxt" class="ghost-btn" type="button">Text file</button></div>
+        <p id="diExportMsg" class="dn-p dn-small"></p>
         <p class="dn-links"><a href="#" id="diPolicy">Read Privacy Policy, section 17</a></p>
         <div class="dn-actions"><button id="diClose" class="secondary-btn" type="button">Close</button></div>
       </div>
     </div>
+
+    <div id="diaryCaseNotice" class="dl-overlay dl-case" hidden role="alertdialog" aria-modal="true" aria-labelledby="cnTitle"></div>
 
     <div id="diaryLetter" class="dl-overlay" hidden role="alertdialog" aria-modal="true" aria-labelledby="dlTitle"></div>
 
@@ -8273,7 +8309,7 @@ body .footer-tagline { letter-spacing: -.01em; }
     });
     const u_name = (uid) => (state.users[uid] && state.users[uid].name) || "The account";
 
-    const PP_UPDATED = "23 October 2026";
+    const PP_UPDATED = "25 October 2026";
     const ppLink = (u, t) => `<a href="${u}" target="_blank" rel="noopener noreferrer">${t}</a>`;
     const ppGo = (id, t) => `<a href="#${id}" data-pp-go="${id}">${t}</a>`;
     const PP_SECTIONS = [
@@ -20149,7 +20185,7 @@ function totpAt(keyBytes, counter) {
 
       async function diaryStart(skipNotice) {
         const uid = (cache && cache.uid) || currentUserId;
-        const d = D = { uid, dmk: null, entries: new Map(), cat: "all", curId: null, dirty: false, timer: null, saving: null, delArm: false, watch: [], pub: null, flagged: new Map(), cancelled: false, access: null, email: "", noticeResolve: null };
+        const d = D = { uid, dmk: null, entries: new Map(), cat: "all", curId: null, dirty: false, timer: null, saving: null, delArm: false, watch: [], q: "", pub: null, flagged: new Map(), cancelled: false, access: null, email: "", noticeResolve: null };
         setSaveState(""); diary.classList.remove("list-open");
         $("diaryItems").textContent = ""; $("diaryCats").textContent = "";
         paintEmpty("Loading your diary...");
@@ -20185,15 +20221,27 @@ function totpAt(keyBytes, counter) {
           if (!SAFE_ID.test(id) || !rec || !rec.iv || !rec.ct) continue;
           try {
             const o = JSON.parse(dec.decode(new Uint8Array(await unseal(d.dmk, rec, entryAad(d.uid, id)))));
-            d.entries.set(id, { id, t: String(o.t || ""), c: o.c, html: sanitizeHTML(o.html), plain: String(o.plain || ""), created: o.created || rec.at || 0, updated: o.updated || rec.at || 0 });
+            d.entries.set(id, { id, t: String(o.t || ""), c: o.c, html: sanitizeHTML(o.html), plain: String(o.plain || ""), created: o.created || rec.at || 0, updated: o.updated || rec.at || 0, pin: !!o.pin });
           } catch (e) { /* skip a page that fails to open */ }
         }
       }
 
       /* ---------- list + categories ---------- */
       const catName = (k) => (CATS.find((c) => c[0] === k) || [k, "Random"])[1];
+      function bucketOf(e) {
+        if (e.pin) return "Pinned";
+        const t = e.updated || Date.now(), d0 = new Date(); d0.setHours(0, 0, 0, 0);
+        const day = 86400000, z = d0.getTime();
+        if (t >= z) return "Today";
+        if (t >= z - day) return "Yesterday";
+        if (t >= z - 6 * day) return "This week";
+        return "Earlier";
+      }
       function sortedEntries() {
-        return Array.from(D.entries.values()).filter((e) => D.cat === "all" || e.c === D.cat).sort((a, b) => (b.updated || Infinity) - (a.updated || Infinity));
+        const q = (D.q || "").trim().toLowerCase();
+        return Array.from(D.entries.values())
+          .filter((e) => (D.cat === "all" || e.c === D.cat) && (!q || e.t.toLowerCase().includes(q) || e.plain.toLowerCase().includes(q)))
+          .sort((a, b) => (b.pin ? 1 : 0) - (a.pin ? 1 : 0) || (b.updated || Infinity) - (a.updated || Infinity));
       }
       function paintList() {
         if (!D) return;
@@ -20205,13 +20253,16 @@ function totpAt(keyBytes, counter) {
         });
         const box = $("diaryItems"); box.textContent = "";
         const list = sortedEntries();
-        if (!list.length) { const p = document.createElement("div"); p.className = "dl-none"; p.textContent = D.entries.size ? "Nothing in this category yet." : "No pages yet."; box.appendChild(p); }
+        if (!list.length) { const p = document.createElement("div"); p.className = "dl-none"; p.textContent = (D.q || "").trim() ? "Nothing matches your search." : D.entries.size ? "Nothing in this category yet." : "No pages yet."; box.appendChild(p); }
+        let lastBucket = "";
         list.forEach((e) => {
+          const bk = bucketOf(e);
+          if (bk !== lastBucket) { const h = document.createElement("div"); h.className = "dl-h"; h.textContent = bk; box.appendChild(h); lastBucket = bk; }
           const b = document.createElement("button"); b.type = "button"; b.className = "dl-item" + (e.id === D.curId ? " is-on" : ""); b.dataset.id = e.id;
-          const t = document.createElement("b"); t.textContent = e.t.trim() || "Untitled";
-          const s = document.createElement("span"); s.textContent = (e.plain.split("\n")[0] || "").slice(0, 70) || (e.created ? "" : "New page");
-          const c = document.createElement("small"); c.textContent = catName(e.c) + (e.updated ? "  ·  " + fmtTime(e.updated) : "");
-          b.append(t, s, c);
+          const t = document.createElement("b"); t.textContent = (e.pin ? "\u2605 " : "") + (e.t.trim() || "Untitled");
+          const sn = document.createElement("span"); sn.textContent = (e.plain.split("\n")[0] || "").slice(0, 70) || (e.created ? "" : "New page");
+          const c = document.createElement("small"); c.textContent = catName(e.c) + (e.updated ? "  \u00b7  " + fmtTime(e.updated) : "");
+          b.append(t, sn, c);
           b.addEventListener("click", () => selectEntry(e.id));
           box.appendChild(b);
         });
@@ -20230,7 +20281,14 @@ function totpAt(keyBytes, counter) {
         });
       }
       function paintMeta(e) {
-        $("diaryMeta").textContent = e.updated ? "Updated " + fmtTime(e.updated) + "  ·  encrypted" : "Not saved yet. It saves by itself as you write.";
+        $("diaryMeta").textContent = e.updated ? "Updated " + fmtTime(e.updated) + "  \u00b7  encrypted" : "Not saved yet. It saves by itself as you write.";
+      }
+      function paintWords() {
+        const n = (ed().textContent.match(/\S+/g) || []).length;
+        $("diaryWords").textContent = n + (n === 1 ? " word" : " words");
+      }
+      function paintPin(e) {
+        const b = $("diaryPin"); b.classList.toggle("is-on", !!e.pin); b.setAttribute("aria-pressed", e.pin ? "true" : "false"); b.title = e.pin ? "Unpin this page" : "Pin this page to the top";
       }
       async function selectEntry(id) {
         const d = D; if (!d) return;
@@ -20242,7 +20300,7 @@ function totpAt(keyBytes, counter) {
         $("diaryTitle").value = e.t;
         ed().innerHTML = e.html;
         ed().classList.toggle("is-empty", !ed().textContent.trim() && !ed().querySelector(".ck,li"));
-        paintCatPick(e); paintMeta(e); paintList();
+        paintCatPick(e); paintMeta(e); paintWords(); paintPin(e); paintList();
         diary.classList.remove("list-open");
         ed().scrollTop = 0;
       }
@@ -20255,7 +20313,7 @@ function totpAt(keyBytes, counter) {
         const d = D; if (!d || !d.dmk) return;
         await flushCurrent(d);
         const id = rid("e");
-        d.entries.set(id, { id, t: "", c: d.cat === "all" ? "thoughts" : d.cat, html: "", plain: "", created: 0, updated: 0 });
+        d.entries.set(id, { id, t: "", c: d.cat === "all" ? "thoughts" : d.cat, html: "", plain: "", created: 0, updated: 0, pin: false });
         await selectEntry(id);
         $("diaryTitle").focus();
       }
@@ -20286,7 +20344,7 @@ function totpAt(keyBytes, counter) {
             const now = Date.now(); if (!e.created) e.created = now; e.updated = now;
             setSaveState("Saving...");
             try {
-              const body = JSON.stringify({ t: e.t, c: e.c, html: e.html, plain: e.plain, created: e.created, updated: e.updated });
+              const body = JSON.stringify({ t: e.t, c: e.c, html: e.html, plain: e.plain, created: e.created, updated: e.updated, pin: !!e.pin });
               const sealed = await seal(d.dmk, enc.encode(body), entryAad(d.uid, e.id));
               await set(entryRef(d.uid, e.id), { v: 1, iv: sealed.iv, ct: sealed.ct, at: e.updated });
               if (D === d && d.curId === e.id) { setSaveState("Saved, encrypted", "ok"); paintMeta(e); paintList(); }
@@ -20366,18 +20424,19 @@ function totpAt(keyBytes, counter) {
       $("dnPolicy").addEventListener("click", openPolicy);
       $("diPolicy").addEventListener("click", openPolicy);
       $("diClose").addEventListener("click", () => { $("diaryInfo").hidden = true; });
-      const AUDIT_LABEL = { "flag-read": "Admin read a flagged paragraph", "letter": "Admin sent you a notice", "letter-closed": "Admin closed your notice", "full-requested": "Admin asked to review your whole diary", "full-read": "Admin opened your whole diary", "pdf": "Admin saved your diary as a PDF", "revoked": "Admin access ended", "key-shared": "Your browser shared your diary key" };
+      const AUDIT_LABEL = { "flag-read": "Admin read a flagged paragraph", "letter": "Admin sent you a notice", "letter-closed": "Admin closed your notice", "full-requested": "Admin asked to review your whole diary", "full-read": "Admin opened your whole diary", "pdf": "Admin saved your diary as a PDF", "revoked": "Admin access ended", "key-shared": "Your browser shared your diary key", "case-opened": "A legal disclosure case was opened", "case-authorized": "Admin authorised the case", "case-read": "Admin opened the pages covered by the case", "case-extracted": "Admin prepared the disclosure PDF", "case-handed": "Disclosure handed to the requesting authority", "case-closed": "The case was closed and access removed", "case-withdrawn": "The case was withdrawn" };
       async function openInfo() {
         const d = D; if (!d) return;
         $("diaryInfo").hidden = false;
         const st = $("diStatus"), lg = $("diLog"); st.textContent = "Loading..."; lg.textContent = "";
         try {
-          const [l, a, au] = await Promise.all([get(letterRef(d.uid)), get(accessRef(d.uid)), get(auditRef(d.uid))]);
+          const [l, a, au, cn] = await Promise.all([get(letterRef(d.uid)), get(accessRef(d.uid)), get(auditRef(d.uid)), get(dRef(`diaryCaseNotices/${d.uid}`))]);
           st.textContent = "";
           const rows = [];
           const lv = l.val(), av = a.val();
           rows.push(lv ? "Notice " + lv.ref + ": " + (lv.status === "active" ? "open, waiting for admin verification" : "closed") : "No notices.");
           rows.push(av ? "Whole-diary review: " + ({ requested: "requested", shared: "in progress", closed: "ended" }[av.status] || av.status) + (av.reason ? " (reason: " + av.reason + ")" : "") : "No whole-diary review requested.");
+          const cv = cn.val(); if (cv) rows.push("Legal case " + cv.caseId + ": " + (cv.status === "active" ? "open" : "closed"));
           rows.forEach((t) => { const r = document.createElement("div"); r.className = "di-row"; r.textContent = t; st.appendChild(r); });
           const items = Object.values(au.val() || {}).filter((x) => x && x.at).sort((x, y) => y.at - x.at).slice(0, 50);
           if (!items.length) { const r = document.createElement("div"); r.className = "di-row"; r.textContent = "No admin access so far."; lg.appendChild(r); }
@@ -20409,6 +20468,8 @@ function totpAt(keyBytes, counter) {
         if (s && s.rangeCount && ed().contains(s.anchorNode)) savedRange = s.getRangeAt(0).cloneRange();
       }
       function restoreSel() {
+        const live = getSelection();
+        if (live && live.rangeCount && ed().contains(live.anchorNode)) { ed().focus(); return; }     // the live cursor wins
         ed().focus();
         if (savedRange) { const s = getSelection(); s.removeAllRanges(); s.addRange(savedRange); }
       }
@@ -20424,6 +20485,7 @@ function totpAt(keyBytes, counter) {
       function onEdit() {
         const el = ed();
         el.classList.toggle("is-empty", !el.textContent.trim() && !el.querySelector(".ck,li"));
+        paintWords();
         schedule(D);
       }
       function runCmd(name, val) {
@@ -20515,15 +20577,32 @@ function totpAt(keyBytes, counter) {
         $("diaryCheckBtn").addEventListener("click", toggleChecklist);
         $("diaryFont").addEventListener("change", (e) => { if (e.target.value) runCmd("fontName", e.target.value); e.target.value = ""; });
         $("diarySize").addEventListener("change", (e) => { if (e.target.value) runCmd("fontSize", e.target.value); e.target.value = ""; });
-        const pop = $("diaryColorPop");
-        COLORS.forEach((c) => { const b = document.createElement("button"); b.type = "button"; b.className = "dsw"; b.style.background = c; b.setAttribute("aria-label", "Colour " + c); b.addEventListener("click", () => { $("diaryColorBar").style.background = c; runCmd("foreColor", c); pop.hidden = true; }); pop.appendChild(b); });
-        const custom = document.createElement("input"); custom.type = "color"; custom.value = "#e0483e"; custom.setAttribute("aria-label", "Custom colour");
-        custom.addEventListener("change", () => { $("diaryColorBar").style.background = custom.value; runCmd("foreColor", custom.value); pop.hidden = true; });
-        pop.appendChild(custom);
+        const pop = $("diaryColorPop"); let mode = "fore";
+        const HILITES = ["#ffe58a", "#ffc9c4", "#c9efd7", "#cfe6ff", "#e3d9ff", "#ffd3ec"];
+        const apply = (c) => { if (mode === "fore") $("diaryColorBar").style.background = c; runCmd(mode === "fore" ? "foreColor" : "hiliteColor", c); pop.hidden = true; };
+        function fillPop() {
+          pop.textContent = "";
+          const tabs = document.createElement("div"); tabs.className = "dmodes";
+          [["fore", "Text"], ["back", "Highlight"]].forEach(([m, l]) => { const b = document.createElement("button"); b.type = "button"; b.className = "dmode" + (mode === m ? " is-on" : ""); b.textContent = l; b.addEventListener("click", (ev) => { ev.stopPropagation(); mode = m; fillPop(); }); tabs.appendChild(b); });
+          pop.appendChild(tabs);
+          const sw = document.createElement("div"); sw.className = "dswatches";
+          (mode === "fore" ? COLORS : HILITES).forEach((c) => { const b = document.createElement("button"); b.type = "button"; b.className = "dsw"; b.style.background = c; b.setAttribute("aria-label", (mode === "fore" ? "Text colour " : "Highlight ") + c); b.addEventListener("click", () => apply(c)); sw.appendChild(b); });
+          if (mode === "back") { const n = document.createElement("button"); n.type = "button"; n.className = "dsw dsw-none"; n.title = "No highlight"; n.setAttribute("aria-label", "No highlight"); n.addEventListener("click", () => apply("transparent")); sw.appendChild(n); }
+          pop.appendChild(sw);
+          const custom = document.createElement("input"); custom.type = "color"; custom.value = mode === "fore" ? "#e0483e" : "#ffe58a"; custom.setAttribute("aria-label", "Custom colour");
+          custom.addEventListener("change", () => apply(custom.value));
+          pop.appendChild(custom);
+        }
+        fillPop();
         $("diaryColorBtn").addEventListener("click", () => { saveSel(); pop.hidden = !pop.hidden; });
         document.addEventListener("mousedown", (e) => { if (!e.target.closest || !e.target.closest(".dcolor-wrap")) pop.hidden = true; });
         $("diaryListBtn").addEventListener("click", () => diary.classList.toggle("list-open"));
         $("diaryNew").addEventListener("click", newEntry);
+        let sTimer = null;
+        $("diarySearch").addEventListener("input", (e) => { clearTimeout(sTimer); const v = e.target.value; sTimer = setTimeout(() => { if (D) { D.q = v; paintList(); } }, 150); });
+        $("diaryPin").addEventListener("click", () => { const e = D && D.entries.get(D.curId); if (!e) return; e.pin = !e.pin; paintPin(e); paintList(); if (e.created || e.t.trim() || ed().textContent.trim()) schedule(D); });
+        document.addEventListener("keydown", (e) => { if ((e.ctrlKey || e.metaKey) && String(e.key).toLowerCase() === "s" && !diary.hidden) { e.preventDefault(); if (D) saveNow(D); } });
+        window.addEventListener("beforeunload", (e) => { if (D && D.dirty) { e.preventDefault(); e.returnValue = ""; } });
         $("diaryDel").addEventListener("click", async () => {
           const d = D; if (!d || !d.curId) return;
           const btn = $("diaryDel");
@@ -20578,12 +20657,13 @@ function totpAt(keyBytes, counter) {
       }
       function watchMe() {
         if (currentUserId === meUid) return;
-        meUnsubs.forEach((f) => f()); meUnsubs = []; hideLetter(); lastLetterRef = ""; lastAccess = "";
+        meUnsubs.forEach((f) => f()); meUnsubs = []; hideLetter(); hideCaseNotice(); lastLetterRef = ""; lastAccess = "";
         meUid = currentUserId || null;
         if (!meUid || !SAFE_ID.test(meUid)) return;
         const uid = meUid;
         meUnsubs.push(onValue(letterRef(uid), (s) => { if (uid === meUid) onLetter(s.val()); }));
         meUnsubs.push(onValue(accessRef(uid), (s) => { if (uid === meUid) onAccessMe(uid, s.val()); }));
+        meUnsubs.push(onValue(dRef(`diaryCaseNotices/${uid}`), (s) => { if (uid === meUid) onCaseNotice(uid, s.val()); }));
       }
       setInterval(watchMe, 2500);
 
@@ -20594,7 +20674,7 @@ function totpAt(keyBytes, counter) {
           <p><b>17.2 Where it lives.</b> In the same Firebase database run by Google as the rest of the app (${ppGo("pp-3", "Section 3")}). Encrypted pages are still on Google's servers, and DuoTrack does not run those servers. If you forget your password, or it ever changes, your pages cannot be opened and cannot be recovered.</p>
           <p><b>17.3 Safety words.</b> The admin keeps a list of words (for example words linked to illegal acts or to self-harm). Your browser checks what you write against that list as it saves. If a paragraph contains a listed word, only that paragraph, not the page and not the diary, is sealed so that only the admin's private key can open it, and is sent to the admin with your name, your email and the word that matched. Deleting a page does not delete a report already sent. The check runs on your device, so it can miss things, can be wrong and can be bypassed. It is not a promise that every risky sentence is caught.</p>
           <p><b>17.4 What happens next.</b> The admin reads the paragraph and may close the matter. For words about illegal acts the admin may send you a written notice. It appears in the app and stays on screen until the admin has verified the matter. A printed copy can be made and sent to the email address you gave. For words about self-harm DuoTrack does not send legal notices. You see support information (Tele-MANAS 14416, free, 24 hours; 112 in an emergency) and the admin may check on you personally.</p>
-          <p><b>17.5 Whole diary and PDF.</b> In rare and serious cases, such as a legal requirement or a serious risk to someone's safety, and only after a notice has been sent, the admin may ask to read your whole diary and save it as a PDF. When that is asked, your browser shares your diary key with the admin the next time you open your diary, and you are told. Every admin access, with its reason, is written to a log you can read in the diary (the "i" button). The admin can end the access, which removes the shared key from the database.</p>
+          <p><b>17.5 Legal disclosure (the formal process).</b> The admin can look at your diary for a legal reason only by opening a numbered case, and never in secret. The case records who is asking (for example a court or the police), their reference number, the legal basis, what part of your diary is covered, and why. You are shown a written notice in the app and have 48 hours to object or give context by email. The only exception is an emergency where someone's safety is at serious risk, and you are told at the same moment. If you are under 18, a parent or guardian is informed too. Only after the admin authorises the case, and only when you next open your diary, does your own browser share your diary key with the admin. The admin then prepares a PDF of the covered pages, with a case number, a record of every step and a fingerprint (SHA-256) of the contents, and hands it only to the requesting authority. When the case closes, the shared key is deleted. Every step is written to a log you can read in the diary (the "i" button). Whole-diary reading for any other reason is not allowed.</p>
           <p><b>17.6 What this is not.</b> DuoTrack is a student project run by one person. A notice from the admin is not a court order or a police notice, and the app is not an emergency service. If someone is in danger, call 112.</p>
           <p><b>17.7 Under 18.</b> Many users are under 18 (${ppGo("pp-10", "Section 10")}). A parent or guardian can ask for diary data to be removed through ${ppGo("pp-16", "Section 16")}.</p>
           <p><b>17.8 Your choices.</b> You can edit or delete any page at any time, or not use the diary at all. The notice screen has a "Don't show this again" box, and you can read the summary again from the "i" button inside the diary.</p>`]);
@@ -20621,6 +20701,7 @@ function totpAt(keyBytes, counter) {
         onValue(flagsRef, (s) => { A.flags = s.val() || {}; daPaint(); });
         onValue(lettersRef, (s) => { A.letters = s.val() || {}; daPaint(); });
         onValue(accessAllRef, (s) => { A.access = s.val() || {}; daPaint(); });
+        lcSubscribe();
         onValue(adminKeyRef, (s) => { const v = s.val(); A.keyExists = !!(v && v.pub && v.priv); A.pubB64 = (v && v.pub) || ""; daPaint(); });
       }
       function daMount() {
@@ -20642,7 +20723,7 @@ function totpAt(keyBytes, counter) {
       };
       function daPaint() {
         const card = document.getElementById("diaryAdminCard"); if (!card) return;
-        const keep = {}; card.querySelectorAll("input,select").forEach((i) => { if (i.id) keep[i.id] = i.value; });
+        const keep = {}; card.querySelectorAll("input,select,textarea").forEach((i) => { if (i.id) keep[i.id] = { v: i.value, c: i.checked }; });
         const flags = Object.entries(A.flags).filter(([k, f]) => SAFE_ID.test(k) && f && f.uid).sort((a, b) => (b[1].upd || b[1].at || 0) - (a[1].upd || a[1].at || 0));
         const pend = flags.filter(([, f]) => f.status === "new").length;
         let h = '<h2>🔒 Diary safety</h2><p>Watch words, reports, notices to users, and (rare cases) a full diary review. Reports are sealed with an admin key that only opens with your admin password. Users are told how this works in the diary notice and Privacy Policy section 17.</p>';
@@ -20660,10 +20741,10 @@ function totpAt(keyBytes, counter) {
           h += "<h2>Reports</h2>";
           if (!flags.length) h += '<p class="ap-note">No reports.</p>';
           h += '<div class="da-grid">' + flags.map(([id, f]) => daFlagHtml(id, f, keep)).join("") + "</div>";
-          if (A.full) h += daFullHtml();
+          h += daLegalHtml();
         }
         card.innerHTML = h;
-        card.querySelectorAll("input,select").forEach((i) => { if (i.id && keep[i.id] !== undefined) i.value = keep[i.id]; });
+        card.querySelectorAll("input,select,textarea").forEach((i) => { const k = i.id && keep[i.id]; if (!k) return; if (i.type === "checkbox") i.checked = k.c; else i.value = k.v; });
       }
       function daFlagHtml(id, f, keep) {
         const care = f.kind === "care", L = A.letters[f.uid], X = A.access[f.uid], R = A.read[id], eid = escapeHTML(id);
@@ -20680,14 +20761,7 @@ function totpAt(keyBytes, counter) {
           h += '<div class="ap-note">Notice <b>' + escapeHTML(L.ref || "") + "</b>: " + (L.status === "active" ? "on the user's screen, waiting for you" : "closed") + "</div>";
           h += '<div class="ap-row"><button type="button" data-da="letterpdf" data-uid="' + escapeHTML(f.uid) + '">Letter as PDF (to print)</button>' + (L.status === "active" ? '<button type="button" class="ap-primary" data-da="verify" data-id="' + eid + '" data-uid="' + escapeHTML(f.uid) + '">Verify and close notice</button>' : "") + "</div>";
         }
-        if (!care && L && !X) {
-          h += '<div class="ap-row"><input id="daReason_' + eid + '" placeholder="Reason for a whole-diary review (shown to the user)" maxlength="160" style="flex:1;min-width:200px"><button type="button" data-da="reqfull" data-id="' + eid + '" data-uid="' + escapeHTML(f.uid) + '">Request whole-diary review</button></div>';
-        }
-        if (X) {
-          h += '<div class="ap-note">Whole-diary review: <b>' + escapeHTML(X.status || "") + "</b>" + (X.reason ? " · " + escapeHTML(X.reason) : "") + (X.status === "requested" ? " · waiting for the user to open their diary" : "") + "</div>";
-          if (X.status === "shared" && X.escrow) h += '<div class="ap-row"><button type="button" class="ap-primary" data-da="openfull" data-uid="' + escapeHTML(f.uid) + '">Open whole diary</button><button type="button" data-da="revoke" data-uid="' + escapeHTML(f.uid) + '">End access (removes the key)</button></div>';
-          else if (X.status === "requested") h += '<div class="ap-row"><button type="button" data-da="revoke" data-uid="' + escapeHTML(f.uid) + '">Cancel request</button></div>';
-        }
+        if (!care && L) h += '<div class="ap-note">Reading more than this paragraph needs a legal case (see Legal disclosure cases below).</div>';
         return h + "</div>";
       }
       function daFullHtml() {
@@ -20825,12 +20899,8 @@ function totpAt(keyBytes, counter) {
           else if (a === "dismiss") await update(flagRef(id), { status: "dismissed", decidedAt: Date.now() });
           else if (a === "letter") await daIssueLetter(id);
           else if (a === "verify") await daVerify(id, uid);
-          else if (a === "reqfull") await daReqFull(id, uid);
-          else if (a === "openfull") await daOpenFull(uid);
-          else if (a === "closefull") { A.full = null; daPaint(); }
-          else if (a === "pdf") await daPdf(uid);
           else if (a === "letterpdf") daLetterPdf(uid);
-          else if (a === "revoke") { await update(accessRef(uid), { status: "closed", closedAt: Date.now(), escrow: null }); await daAudit(uid, "revoked", "Admin access ended, shared key removed"); if (A.full && A.full.uid === uid) A.full = null; daPaint(); }
+          else if (a.indexOf("lc") === 0) await lcAct(a, id, uid, btn);
         } catch (e) { daMsg("That didn't work. Check your connection."); }
       }
       document.addEventListener("click", (e) => {
@@ -21082,6 +21152,409 @@ function totpAt(keyBytes, counter) {
         }, () => { PWS.subbed = false; });
       }
       setInterval(watchAdminPw, 2000);
+
+
+      /* =====================================================================
+         DOCUMENTS: one model, two renderers (jsPDF for Latin text, the browser's
+         print view for every other script) -> used by "download my diary" and by
+         the legal disclosure PDF.
+         ===================================================================== */
+      const LATIN_OK = /^[\t\n\r\u0020-\u007e\u00a0-\u00ff\u2018\u2019\u201c\u201d\u2013\u2014\u2026\u2022\u20ac\u2122]*$/;
+      const isoT = (ms) => (ms ? new Date(ms).toISOString() : "-");
+      const modelText = (m) => m.blocks.map((b) => [b.text, (b.lines || []).join("\n"), (b.head || []).join(" "), (b.rows || []).map((r) => r.join(" ")).join("\n")].filter(Boolean).join("\n")).join("\n");
+      const canonText = (e) => "== " + (e.t || "Untitled") + "  [" + catName(e.c) + "]\nWritten: " + isoT(e.created) + "\nLast edited: " + isoT(e.updated) + "\n\n" + e.plain;
+      function renderPdf(m) {
+        const pdf = pdfDoc(); if (!pdf) return null;
+        const L = 17, MAXW = 176; let y = 20;
+        const ensure = (h) => { if (y + h > 278) { pdf.addPage(); y = 20; } };
+        const para = (text, size, bold, gap) => {
+          pdf.setFont("helvetica", bold ? "bold" : "normal"); pdf.setFontSize(size);
+          const lh = size * 0.47;
+          String(text == null || text === "" ? " " : text).split("\n").forEach((ln) => pdf.splitTextToSize(ln || " ", MAXW).forEach((r) => { ensure(lh); pdf.text(r, L, y); y += lh; }));
+          y += gap == null ? 2 : gap;
+        };
+        m.blocks.forEach((b) => {
+          if (b.t === "h1") { pdf.setTextColor(20); para(b.text, 17, true, 3); }
+          else if (b.t === "h2") { y += 3; pdf.setTextColor(20); para(b.text, 12, true, 1.5); }
+          else if (b.t === "p") { pdf.setTextColor(50); para(b.text, 10.5, false); }
+          else if (b.t === "small") { pdf.setTextColor(110); para(b.text, 8.5, false); }
+          else if (b.t === "pre") { pdf.setTextColor(30); para(b.text, 10, false, 4); }
+          else if (b.t === "kv") {
+            b.rows.forEach(([k, v]) => {
+              const rows = pdf.splitTextToSize(String(v == null || v === "" ? "-" : v), MAXW - 50), h = Math.max(1, rows.length) * 4.8 + 1.5; ensure(h);
+              pdf.setFont("helvetica", "bold"); pdf.setFontSize(9.5); pdf.setTextColor(90); pdf.text(String(k), L, y);
+              pdf.setFont("helvetica", "normal"); pdf.setFontSize(10); pdf.setTextColor(25); rows.forEach((r, i) => pdf.text(r, L + 50, y + i * 4.8)); y += h;
+            });
+            y += 2;
+          } else if (b.t === "table") {
+            const W = [46, 36, 94];
+            const draw = (cells, bold) => {
+              pdf.setFont("helvetica", bold ? "bold" : "normal"); pdf.setFontSize(8.6);
+              const cols = cells.map((c, i) => pdf.splitTextToSize(String(c == null || c === "" ? " " : c), W[i] - 2)), n = Math.max.apply(null, cols.map((c) => c.length)), h = n * 4.1 + 2; ensure(h);
+              let x = L; cols.forEach((c, i) => { c.forEach((r, j) => pdf.text(r, x, y + j * 4.1)); x += W[i]; });
+              y += h; pdf.setDrawColor(215); pdf.line(L, y - 1.2, L + MAXW, y - 1.2);
+            };
+            pdf.setTextColor(40); draw(b.head, true); b.rows.forEach((r) => draw(r, false)); y += 2;
+          } else if (b.t === "rule") { ensure(4); pdf.setDrawColor(190); pdf.line(L, y, L + MAXW, y); y += 4; }
+          else if (b.t === "pb") { pdf.addPage(); y = 20; }
+        });
+        const n = pdf.getNumberOfPages();
+        for (let i = 1; i <= n; i++) { pdf.setPage(i); pdf.setFont("helvetica", "normal"); pdf.setFontSize(8); pdf.setTextColor(120); pdf.text(m.footer + "  |  Page " + i + " of " + n, L, 289); }
+        return pdf;
+      }
+      function htmlOf(m) {
+        const e = escapeHTML; let h = "";
+        m.blocks.forEach((b) => {
+          if (b.t === "h1") h += "<h1>" + e(b.text) + "</h1>"; else if (b.t === "h2") h += "<h2>" + e(b.text) + "</h2>";
+          else if (b.t === "p") h += "<p>" + e(b.text) + "</p>"; else if (b.t === "small") h += '<p class="s">' + e(b.text) + "</p>";
+          else if (b.t === "pre") h += "<pre>" + e(b.text) + "</pre>"; else if (b.t === "rule") h += "<hr>"; else if (b.t === "pb") h += '<div class="pb"></div>';
+          else if (b.t === "kv") h += '<table class="kv">' + b.rows.map((r) => "<tr><td>" + e(r[0]) + "</td><td>" + e(r[1] == null || r[1] === "" ? "-" : r[1]) + "</td></tr>").join("") + "</table>";
+          else if (b.t === "table") h += '<table class="log"><tr>' + b.head.map((c) => "<th>" + e(c) + "</th>").join("") + "</tr>" + b.rows.map((r) => "<tr>" + r.map((c) => "<td>" + e(c) + "</td>").join("") + "</tr>").join("") + "</table>";
+        });
+        return '<!doctype html><html><head><meta charset="utf-8"><title>' + e(m.title) + "</title><style>" +
+          "@page{size:A4;margin:18mm 16mm 22mm}body{font:12px/1.55 system-ui,'Segoe UI','Noto Sans','Noto Sans Devanagari',sans-serif;color:#1c1c1c}h1{font-size:22px;margin:0 0 8px}h2{font-size:15px;margin:18px 0 6px;break-after:avoid}p{margin:0 0 9px}.s{font-size:10.5px;color:#666}pre{white-space:pre-wrap;word-break:break-word;font:inherit;margin:0 0 12px}hr{border:0;border-top:1px solid #bbb;margin:12px 0}table{border-collapse:collapse;width:100%;margin:6px 0 10px}td,th{border-bottom:1px solid #ddd;padding:4px 6px;text-align:left;vertical-align:top}.kv td:first-child{width:32%;color:#555;font-weight:700}.pb{break-after:page}.foot{position:fixed;bottom:0;left:0;right:0;font-size:9px;color:#777;text-align:center}" +
+          "</style></head><body>" + h + '<div class="foot">' + e(m.footer) + "</div></body></html>";
+      }
+      function printModel(m) {
+        const f = document.createElement("iframe"); f.setAttribute("aria-hidden", "true"); f.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0";
+        f.srcdoc = htmlOf(m);
+        f.onload = () => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) { /* ignore */ } setTimeout(() => f.remove(), 120000); };
+        document.body.appendChild(f);
+      }
+      function emitDoc(m) {
+        if (!LATIN_OK.test(modelText(m)) || !pdfDoc()) { printModel(m); return { mode: "print", pages: 0 }; }
+        const pdf = renderPdf(m); pdf.save(m.fileName);
+        return { mode: "pdf", pages: pdf.getNumberOfPages() };
+      }
+      function downloadText(text, name) {
+        const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type: "text/plain;charset=utf-8" })); a.download = name;
+        document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+      }
+
+      /* ---------- the user's own download ---------- */
+      async function exportMine(kind) {
+        const d = D, msg = $("diExportMsg"); if (!d) return;
+        try { await saveNow(d); } catch (e) { /* ignore */ }
+        const list = Array.from(d.entries.values()).filter((e) => e.created).sort((a, b) => a.created - b.created);
+        if (!list.length) { msg.textContent = "Nothing to download yet."; return; }
+        const stamp = new Date().toISOString().slice(0, 10);
+        if (kind === "txt") { downloadText("My DuoTrack diary\nDownloaded " + new Date().toLocaleString() + "\n\n" + list.map(canonText).join("\n\n\n"), "my-diary-" + stamp + ".txt"); msg.textContent = "Saved as a text file. Only you can read it. Keep it safe."; return; }
+        const blocks = [{ t: "h1", text: "My diary" }, { t: "small", text: "Downloaded " + new Date().toLocaleString() + ". This file is not encrypted. Keep it safe." }, { t: "rule" }];
+        list.forEach((e) => blocks.push({ t: "h2", text: e.t || "Untitled" }, { t: "small", text: catName(e.c) + "  |  written " + fmtTime(e.created) + "  |  last edited " + fmtTime(e.updated) }, { t: "pre", text: e.plain }));
+        const r = emitDoc({ title: "My diary", fileName: "my-diary-" + stamp + ".pdf", footer: "My DuoTrack diary  |  Private", blocks });
+        msg.textContent = r.mode === "print" ? "Some of your text uses characters the PDF font can't draw, so the print window opened. Choose Save as PDF there." : "Saved as a PDF. This file is not encrypted. Keep it safe.";
+      }
+      $("diPdf").addEventListener("click", () => exportMine("pdf"));
+      $("diTxt").addEventListener("click", () => exportMine("txt"));
+
+      /* ---------- what the user sees: the written notice of a legal case ---------- */
+      const LC_BASIS = { "court-order": "Court order", "police-request": "Written request from the police or an investigating authority", "safety": "Emergency: serious risk to someone's safety", "user-consent": "The user's own written request", "other": "Other legal requirement" };
+      const LC_WINDOW_MS = 48 * 3600 * 1000;
+      const caseRef = (id) => dRef(`diaryCases/${id}`);
+      const casesRef = dRef("diaryCases");
+      const noticeRef = (uid) => dRef(`diaryCaseNotices/${uid}`);
+      const scopeText = (sc) => {
+        sc = sc || {}; const cats = (sc.cats || []).map(catName);
+        let t = !cats.length || cats.length === CATS.length ? "All pages" : "Pages in: " + cats.join(", ");
+        if (sc.from || sc.to) t += ", last edited" + (sc.from ? " from " + sc.from : "") + (sc.to ? " to " + sc.to : "");
+        return t;
+      };
+      let lastCaseStatus = "";
+      function hideCaseNotice() { const ov = $("diaryCaseNotice"); ov.hidden = true; ov.textContent = ""; ov.dataset.case = ""; }
+      function showCaseNotice(n, uid) {
+        const ov = $("diaryCaseNotice");
+        let mail = "#";
+        try { mail = "mailto:" + CONTACT_EMAIL + "?subject=" + encodeURIComponent("Reply to legal notice " + n.caseId) + "&body=" + encodeURIComponent("Hi, this is about case " + n.caseId + ".\n\n"); } catch (e) { /* ignore */ }
+        ov.innerHTML = '<div class="letter"><p class="lt-h">Legal notice</p><h2 id="cnTitle">Notice of a legal disclosure request</h2>' +
+          '<p class="lt-meta">Case ' + escapeHTML(n.caseId) + "  ·  " + escapeHTML(fmtTime(n.issuedAt)) + "<br>To: " + escapeHTML(n.name || "") + (n.email ? " (" + escapeHTML(n.email) + ")" : "") + "</p>" +
+          "<p>Dear " + escapeHTML(n.name || "student") + ",</p>" +
+          "<p>A request has been made to the DuoTrack admin to disclose part of your private diary. The details are:</p>" +
+          "<ol><li><b>Who is asking:</b> " + escapeHTML(n.authority || "") + " (reference " + escapeHTML(n.refNo || "") + ")</li><li><b>Basis:</b> " + escapeHTML(n.basisLabel || "") + "</li><li><b>What is covered:</b> " + escapeHTML(n.scopeText || "") + "</li></ol>" +
+          (n.emergency ? "<p><b>This is an emergency case.</b> Someone's safety may be at serious risk, so the usual 48 hour response period is skipped. You are being told at the same time as the admin begins.</p>"
+            : "<p><b>You have until " + escapeHTML(fmtTime(n.windowEndsAt)) + " to respond.</b> If you object, or you want to give context, email the admin before then. The admin has to read your reply before going further.</p>") +
+          (n.minor ? "<p>Because you are under 18, your parent or guardian is being informed as well.</p>" : "") +
+          "<p>Your diary stays locked unless the admin authorises the case. If that happens, your own app will share your diary key the next time you open your diary. You will be able to see every step in the log in your diary (the &ldquo;i&rdquo; button). A PDF of the covered pages will be handed only to the authority above. When the case closes, the shared key is deleted.</p>" +
+          '<div class="lt-sign">' + dgSigImg() + "<span><b>Abhishek</b><br><small>Admin, DuoTrack</small></span></div>" +
+          '<p class="lt-note">This is a notice from the DuoTrack admin under the rules you accepted. It is not a court order or a police notice.</p>' +
+          '<div class="lt-actions"><button class="lt-btn lt-main" id="cnAck" type="button">I have read this notice</button><a class="lt-btn" href="' + escapeHTML(mail) + '">Email the admin</a></div></div>';
+        ov.dataset.case = n.caseId; ov.hidden = false;
+        const ack = $("cnAck"); if (ack) ack.addEventListener("click", async () => { try { await update(noticeRef(uid), { ackAt: Date.now() }); } catch (e) { /* ignore */ } hideCaseNotice(); });
+      }
+      function onCaseNotice(uid, n) {
+        const ov = $("diaryCaseNotice");
+        if (n && n.status === "active") { lastCaseStatus = "active"; if (n.ackAt) hideCaseNotice(); else if (ov.hidden || ov.dataset.case !== n.caseId) showCaseNotice(n, uid); }
+        else { if (lastCaseStatus === "active" && n && n.status === "closed") showToast("Legal case closed", "Case " + n.caseId + " is closed and the admin's access was removed. See your log (i)."); lastCaseStatus = n ? n.status : ""; hideCaseNotice(); }
+      }
+
+      /* =====================================================================
+         ADMIN: legal disclosure cases. A numbered, step-by-step process: case file,
+         notice to the user, response window, guardian for under-18s, authorisation
+         with password, the user's own app shares the key, scoped extraction,
+         PDF with chain of custody + hash, hand-over record, closing.
+         ===================================================================== */
+      A.cases = {}; A.notices = {}; A.lcOpen = false; A.lcInfo = null; A.caseFull = null;
+      const LC_STEPS = ["Opened", "User notified", "Response window", "Authorised", "Key received", "Extracted", "Handed over", "Closed"];
+      function lcSubscribe() {
+        onValue(casesRef, (s) => { A.cases = s.val() || {}; daPaint(); });
+        onValue(dRef("diaryCaseNotices"), (s) => { A.notices = s.val() || {}; daPaint(); });
+      }
+      setInterval(() => { if (A.unlocked && document.getElementById("diaryAdminCard") && Object.values(A.cases).some((c) => c && c.status === "notified")) daPaint(); }, 30000);
+      const ageOf = (dob) => { const d = new Date(dob); if (isNaN(d)) return null; const n = new Date(); let a = n.getFullYear() - d.getFullYear(); const m = n.getMonth() - d.getMonth(); if (m < 0 || (m === 0 && n.getDate() < d.getDate())) a--; return a; };
+      const fmtLeft = (ms) => { const m = Math.max(0, Math.ceil(ms / 60000)); return Math.floor(m / 60) + "h " + (m % 60) + "m"; };
+      const lcV = (k) => ((document.getElementById(k) || {}).value || "").trim();
+      const lcC = (k) => !!(document.getElementById(k) || {}).checked;
+      function lcLog(id, what, note) { return set(dRef(`diaryCases/${id}/log/${rid("l")}`), { at: Date.now(), what, by: "admin", note: String(note || "").slice(0, 300) }); }
+      async function lcCheckPw(pw) {
+        if (Date.now() < A.lockUntil) { daMsg("Too many wrong tries. Wait a minute."); return false; }
+        let ok = false; try { ok = (await sha256Hex("duotrack-admin|" + ADMIN_LOGIN_ID + "|" + pw)) === ADMIN_HASH; } catch (e) { /* ignore */ }
+        if (!ok) { A.fails += 1; if (A.fails >= 5) { A.lockUntil = Date.now() + 60000; A.fails = 0; } daMsg("Wrong admin password."); return false; }
+        A.fails = 0; return true;
+      }
+      async function lcLoadInfo(uid) {
+        if (!SAFE_ID.test(uid || "")) { A.lcInfo = null; daPaint(); return; }
+        const all = (await get(requestsRef)).val() || {};
+        const r = Object.values(all).filter((x) => x && x.userId === uid && x.status === "approved").sort((a, b) => (b.decidedAt || 0) - (a.decidedAt || 0))[0] || {};
+        const age = r.dob ? ageOf(r.dob) : null;
+        A.lcInfo = { uid, email: String(r.email || r.googleEmail || "").trim().toLowerCase(), age, ageKnown: age !== null, minor: age === null ? null : age < 18 };
+        daPaint();
+      }
+      document.addEventListener("change", (e) => {
+        if (e.target && e.target.id === "lcUser") lcLoadInfo(e.target.value);
+        const sel = e.target && e.target.getAttribute && e.target.getAttribute("data-lcsel");
+        if (sel !== null && sel !== undefined && A.caseFull && A.caseFull.items[Number(sel)]) A.caseFull.items[Number(sel)].sel = e.target.checked;
+      });
+      function lcAccounts() {
+        const seen = new Set(), out = [];
+        Object.entries(USERS).forEach(([k, u]) => { if (u && SAFE_ID.test(String(u.id)) && !seen.has(u.id)) { seen.add(u.id); out.push([u.id, (u.name || u.id) + " (" + k + ")"]); } });
+        return out;
+      }
+      const LC_CHECKS = [
+        "I confirmed the request is genuine by contacting the authority through an official channel, not only by reading the document.",
+        "The request names this user and the pages I am allowed to share.",
+        "I considered less intrusive options, such as asking the user to share the specific content.",
+        "I will share only the pages the request needs, and nothing else.",
+        "I will hand the PDF only to the requesting authority and delete my own copies afterwards.",
+        "I understand the user is told about this case and that every step is logged for them to see."
+      ];
+      function daLegalHtml() {
+        let h = "<h2>Legal disclosure cases</h2><p>The only way to read more than a reported paragraph. Every case is numbered, the user is told, and each step is logged for them. Nothing is done in secret.</p>";
+        h += '<div class="ap-row"><button type="button" class="ap-primary" data-da="lcnew">' + (A.lcOpen ? "Cancel" : "Open a new case") + "</button></div>";
+        if (A.lcOpen) h += lcFormHtml();
+        const cases = Object.entries(A.cases).filter(([k, c]) => SAFE_ID.test(k) && c && c.uid).sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
+        if (!cases.length && !A.lcOpen) h += '<p class="ap-note">No cases.</p>';
+        h += '<div class="da-grid">' + cases.map(([k, c]) => lcCaseHtml(k, c)).join("") + "</div>";
+        return h;
+      }
+      function lcFormHtml() {
+        const info = A.lcInfo, showGuard = info && (info.minor === true || info.ageKnown === false);
+        let h = '<div class="lc-form"><b>1. Who and why</b>';
+        h += '<label>User<select id="lcUser"><option value="">Choose a user</option>' + lcAccounts().map(([id, l]) => '<option value="' + escapeHTML(id) + '">' + escapeHTML(l) + "</option>").join("") + "</select></label>";
+        if (info) h += '<div class="ap-note">' + (info.ageKnown ? "Age on file: " + info.age + (info.minor ? ". <b>Under 18: a parent or guardian must be informed.</b>" : ".") : "No date of birth on file for this account.") + (info.email ? " Email on file: " + escapeHTML(info.email) : " No email on file.") + "</div>";
+        if (info && !info.ageKnown) h += '<label>Is this user 18 or older? (check properly)<select id="lcAgeSel"><option value="minor">Under 18, or not sure</option><option value="adult">18 or older, I checked</option></select></label>';
+        h += '<label>Legal basis<select id="lcBasis">' + Object.entries(LC_BASIS).map(([k, l]) => '<option value="' + k + '">' + escapeHTML(l) + "</option>").join("") + "</select></label>";
+        h += '<div class="lc-two"><label>Requesting authority (name and office)<input type="text" id="lcAuthority" maxlength="120"></label><label>Reference number (order, FIR, notice)<input type="text" id="lcRefNo" maxlength="60"></label></div>';
+        h += '<div class="lc-two"><label>Date of the request<input type="date" id="lcReqDate"></label><label>Emergency only: type EMERGENCY to skip the 48 hour window<input type="text" id="lcEmerg" maxlength="12" autocomplete="off"></label></div>';
+        h += '<label>Why the diary is needed (shown to nobody but the case file; at least 40 characters)<textarea id="lcWhy" rows="3" maxlength="600"></textarea></label>';
+        h += "<b>2. Scope (the minimum needed)</b>";
+        h += '<div class="lc-two"><label>Pages last edited from<input type="date" id="lcFrom"></label><label>to<input type="date" id="lcTo"></label></div>';
+        h += '<div class="lc-two">' + CATS.map(([k, l]) => '<label class="lc-check"><input type="checkbox" id="lcCat_' + k + '" checked> ' + escapeHTML(l) + "</label>").join("") + "</div>";
+        h += "<b>3. Checks (all required)</b>" + LC_CHECKS.map((t, i) => '<label class="lc-check"><input type="checkbox" id="lcChk' + i + '"> ' + escapeHTML(t) + "</label>").join("");
+        if (showGuard) h += '<b>4. Parent or guardian</b><div class="lc-two"><label>Name<input type="text" id="lcGName" maxlength="80"></label><label>Phone or email<input type="text" id="lcGContact" maxlength="80"></label></div><label class="lc-check"><input type="checkbox" id="lcChkG"> I have informed, or will inform, this parent or guardian at the same time as the user.</label>';
+        h += '<b>' + (showGuard ? "5" : "4") + '. Sign</b><label>Type your full name to confirm everything above is true<input type="text" id="lcSign" maxlength="80"></label>';
+        h += '<div class="ap-row"><button type="button" class="ap-primary" data-da="lccreate">Open the case and notify the user</button></div></div>';
+        return h;
+      }
+      function lcMinor(info) { return info.ageKnown ? !!info.minor : lcV("lcAgeSel") !== "adult"; }
+      async function lcCreate() {
+        const uid = lcV("lcUser"); if (!SAFE_ID.test(uid)) { daMsg("Choose the user."); return; }
+        if (!A.lcInfo || A.lcInfo.uid !== uid) await lcLoadInfo(uid);
+        const info = A.lcInfo; if (!info) { daMsg("Could not load the user's details."); return; }
+        const basis = lcV("lcBasis"), authority = lcV("lcAuthority"), refNo = lcV("lcRefNo"), reqDate = lcV("lcReqDate"), why = lcV("lcWhy"), sign = lcV("lcSign");
+        const minor = lcMinor(info), emergency = basis === "safety";
+        const cats = CATS.map((c) => c[0]).filter((k) => lcC("lcCat_" + k)), from = lcV("lcFrom"), to = lcV("lcTo");
+        if (!LC_BASIS[basis]) { daMsg("Choose the legal basis."); return; }
+        if (authority.length < 3 || refNo.length < 3) { daMsg("Name the authority and give its reference number."); return; }
+        if (!reqDate || new Date(reqDate) > new Date()) { daMsg("Give the date of the request (not in the future)."); return; }
+        if (why.length < (emergency ? 80 : 40)) { daMsg("Explain why the diary is needed (at least " + (emergency ? 80 : 40) + " characters)."); return; }
+        if (!cats.length) { daMsg("Tick at least one category."); return; }
+        if (from && to && from > to) { daMsg("The 'from' date is after the 'to' date."); return; }
+        if (emergency && lcV("lcEmerg") !== "EMERGENCY") { daMsg("For an emergency, type EMERGENCY in the box."); return; }
+        if (!LC_CHECKS.every((t, i) => lcC("lcChk" + i))) { daMsg("Tick every check. If you cannot, do not continue."); return; }
+        if (minor && (lcV("lcGName").length < 2 || lcV("lcGContact").length < 5 || !lcC("lcChkG"))) { daMsg("Under 18: give the parent or guardian's name and contact, and confirm they are informed."); return; }
+        if (sign.length < 3) { daMsg("Type your full name to sign."); return; }
+        const u = Object.values(USERS).find((x) => x && x.id === uid) || {};
+        const id = "LC-" + new Date().getFullYear() + "-" + Math.random().toString(36).slice(2, 7).toUpperCase(), now = Date.now();
+        const sc = { from, to, cats };
+        const rec = { id, uid, name: u.name || uid, loginKey: Object.keys(USERS).find((k) => USERS[k] && USERS[k].id === uid) || uid, email: info.email, minor, guardian: minor ? { name: lcV("lcGName"), contact: lcV("lcGContact") } : null, basis, basisLabel: LC_BASIS[basis], authority, refNo, requestDate: reqDate, scope: sc, why, signedBy: sign, status: "notified", emergency, createdAt: now, notifiedAt: now, windowEndsAt: emergency ? now : now + LC_WINDOW_MS };
+        try {
+          await set(caseRef(id), rec);
+          await lcLog(id, "case-opened", "Basis: " + rec.basisLabel + ". Authority: " + authority + " (" + refNo + "). Signed by " + sign);
+          await set(noticeRef(uid), { caseId: id, status: "active", issuedAt: now, windowEndsAt: rec.windowEndsAt, basisLabel: rec.basisLabel, authority, refNo, scopeText: scopeText(sc), minor, emergency, name: rec.name, email: info.email });
+          await lcLog(id, "user-notified", emergency ? "Emergency: no waiting period" : "48 hour response window until " + isoT(rec.windowEndsAt));
+          await daAudit(uid, "case-opened", "Case " + id + ": " + rec.basisLabel + " (" + authority + ")");
+          A.lcOpen = false; A.lcInfo = null; daMsg("Case " + id + " opened. The user has been notified.");
+        } catch (e) { daMsg("Could not save the case. Check your connection."); }
+      }
+      function lcCaseHtml(id, c) {
+        const eid = escapeHTML(id), N = A.notices[c.uid], X = A.access[c.uid] && A.access[c.uid].caseId === id ? A.access[c.uid] : null, now = Date.now();
+        const done = [true, true, c.emergency || now >= c.windowEndsAt, !!c.authorizedAt, !!c.keyAt || !!(X && X.status === "shared"), !!c.extractedAt, !!c.handedOver, c.status === "closed"];
+        const cur = done.indexOf(false);
+        let h = '<div class="lc-case"><div class="ap-row"><strong>' + eid + "</strong><span>" + escapeHTML(c.name || c.uid) + '</span><span class="da-tag st">' + escapeHTML(c.status) + "</span>" + (c.emergency ? '<span class="da-tag">emergency</span>' : "") + (c.minor ? '<span class="da-tag">under 18</span>' : "") + "</div>";
+        h += '<div class="ap-note">' + escapeHTML(c.basisLabel || "") + " · " + escapeHTML(c.authority || "") + " · ref " + escapeHTML(c.refNo || "") + "<br>Scope: " + escapeHTML(scopeText(c.scope)) + (N ? "<br>User has read the notice: " + (N.ackAt ? "yes, " + escapeHTML(fmtTime(N.ackAt)) : "not yet") : "") + "</div>";
+        if (c.status !== "withdrawn") h += '<div class="lc-steps">' + LC_STEPS.map((s, i) => '<span class="lc-step ' + (done[i] ? "done" : i === cur ? "now" : "") + '">' + (i + 1) + ". " + s + "</span>").join("") + "</div>";
+        const field = (k, label, extra) => '<label>' + label + '<input type="text" id="' + k + "_" + eid + '" ' + (extra || "") + "></label>";
+        if (c.status === "notified") {
+          const wait = !c.emergency && now < c.windowEndsAt;
+          h += '<div class="ap-note da-warn">' + (wait ? "The user's response window ends in " + fmtLeft(c.windowEndsAt - now) + " (" + escapeHTML(isoT(c.windowEndsAt)) + "). You cannot authorise before then." : "The response window is over. Read any reply from the user before you authorise.") + "</div>";
+          h += '<label>What did the user say? (write "No response received" if nothing)<textarea id="lcResp_' + eid + '" rows="2" maxlength="400"></textarea></label>';
+          if (c.minor) h += '<label class="lc-check"><input type="checkbox" id="lcG_' + eid + '"> The parent or guardian (' + escapeHTML((c.guardian || {}).name || "") + ") has been informed.</label>";
+          h += '<div class="lc-two">' + '<label>Admin password<input type="password" id="lcPw_' + eid + '" autocomplete="off"></label>' + field("lcType", "Type " + eid + " to confirm", 'autocomplete="off"') + "</div>";
+          h += '<div class="ap-row"><button type="button" class="ap-primary" data-da="lcauth" data-id="' + eid + '"' + (wait ? " disabled" : "") + ">Authorise extraction</button></div>";
+        }
+        if (c.status === "authorized") {
+          if (X && X.status === "shared" && X.escrow) h += '<div class="ap-row"><button type="button" class="ap-primary" data-da="lcopen" data-id="' + eid + '">Open the covered pages</button></div>';
+          else h += '<div class="ap-note">Waiting for the user to open their diary. Their own app shares the key. Until then nothing can be read.</div>';
+        }
+        if (A.caseFull && A.caseFull.id === id) {
+          const F = A.caseFull;
+          h += "<b>Covered pages: " + F.items.length + " of " + F.total + " in the diary. Untick any page that is not needed.</b><div class=\"lc-items\">" + F.items.map((x, i) => '<label class="lc-check"><input type="checkbox" data-lcsel="' + i + '"' + (x.sel ? " checked" : "") + "> " + escapeHTML((x.t || "Untitled") + " [" + catName(x.c) + ", " + fmtTime(x.updated) + "]") + "</label>").join("") + "</div>";
+          h += '<div class="ap-row"><button type="button" class="ap-primary" data-da="lcpdf" data-id="' + eid + '">Generate the disclosure PDF</button><button type="button" data-da="lcclosefull" data-id="' + eid + '">Close the view</button></div>';
+        }
+        if (c.status === "extracted" || c.status === "handed-over") {
+          h += '<div class="ap-note">Prepared ' + escapeHTML(isoT(c.extractedAt)) + " · " + (c.entriesCount || 0) + " pages · SHA-256 <b>" + escapeHTML((c.pdfSha256 || "").slice(0, 20)) + "...</b></div>";
+          if (c.status === "extracted" && X && X.status === "shared" && X.escrow && !(A.caseFull && A.caseFull.id === id)) h += '<div class="ap-row"><button type="button" data-da="lcopen" data-id="' + eid + '">Open the pages again (to regenerate)</button></div>';
+        }
+        if (c.status === "extracted") {
+          h += "<b>Record the hand-over</b>" + '<div class="lc-two">' + field("lcHoTo", "Handed to (name, office)", 'maxlength="120"') + '<label>How<select id="lcHoHow_' + eid + '"><option>In person</option><option>Registered post</option><option>Official email</option><option>Court filing</option></select></label></div>';
+          h += '<div class="lc-two">' + '<label>Date<input type="date" id="lcHoDate_' + eid + '"></label>' + field("lcHoRef", "Receipt or reference", 'maxlength="80"') + "</div>";
+          h += '<div class="ap-row"><button type="button" class="ap-primary" data-da="lchand" data-id="' + eid + '">Record hand-over</button></div>';
+        }
+        if (c.status === "handed-over") {
+          h += '<div class="ap-note">Handed to ' + escapeHTML((c.handedOver || {}).to || "") + " on " + escapeHTML((c.handedOver || {}).date || "") + " (" + escapeHTML((c.handedOver || {}).how || "") + ").</div>";
+          h += '<label>Outcome notes<textarea id="lcOut_' + eid + '" rows="2" maxlength="400"></textarea></label><label class="lc-check"><input type="checkbox" id="lcDel_' + eid + '"> I have deleted my copies of the PDF and any extracted text.</label>';
+          h += '<div class="ap-row"><button type="button" class="ap-primary" data-da="lcclose" data-id="' + eid + '">Close the case and remove access</button></div>';
+        }
+        if (c.status !== "closed" && c.status !== "withdrawn") {
+          h += '<div class="lc-two">' + field("lcWr", "Withdraw the case (reason)", 'maxlength="160"') + '<div class="ap-row"><button type="button" data-da="lcwithdraw" data-id="' + eid + '">Withdraw case</button></div></div>';
+        } else h += '<div class="ap-note">' + (c.status === "closed" ? "Closed " + escapeHTML(isoT(c.closedAt)) + ". " + escapeHTML(c.outcome || "") : "Withdrawn: " + escapeHTML(c.withdrawReason || "")) + "</div>";
+        return h + "</div>";
+      }
+      async function lcRevoke(c) {
+        await update(accessRef(c.uid), { status: "closed", closedAt: Date.now(), escrow: null });
+        await update(noticeRef(c.uid), { status: "closed", closedAt: Date.now() });
+      }
+      async function lcAuthorize(id) {
+        const c = A.cases[id]; if (!c || c.status !== "notified") return;
+        if (!c.emergency && Date.now() < c.windowEndsAt) { daMsg("The user's response window is still open."); return; }
+        const resp = lcV("lcResp_" + id); if (resp.length < 3) { daMsg("Write what the user answered, or 'No response received'."); return; }
+        if (c.minor && !lcC("lcG_" + id)) { daMsg("Confirm the parent or guardian has been informed."); return; }
+        if (lcV("lcType_" + id) !== id) { daMsg("Type the case number exactly to confirm."); return; }
+        if (!(await lcCheckPw(document.getElementById("lcPw_" + id).value))) return;
+        const now = Date.now();
+        await update(caseRef(id), { status: "authorized", authorizedAt: now, userResponse: resp.slice(0, 400) });
+        await set(accessRef(c.uid), { status: "requested", reason: "Legal case " + id, caseId: id, requestedAt: now, by: "Abhishek" });
+        await lcLog(id, "authorised", "User response considered: " + resp.slice(0, 120));
+        await daAudit(c.uid, "case-authorized", "Case " + id + " authorised. Your app will share your diary key when you open your diary.");
+        daMsg("Authorised. The key is shared when the user next opens their diary.");
+      }
+      async function lcOpenDiary(id) {
+        const c = A.cases[id], X = c && A.access[c.uid];
+        if (!c || !X || X.caseId !== id || X.status !== "shared" || !X.escrow || !A.priv) { daMsg("The key has not arrived yet."); return; }
+        try {
+          const raw = await crypto.subtle.decrypt({ name: "RSA-OAEP" }, A.priv, unb64(X.escrow));
+          const dmk = await crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["decrypt"]);
+          const all = (await get(entriesRef(c.uid))).val() || {}, out = [];
+          for (const [eid, rec] of Object.entries(all)) {
+            if (!SAFE_ID.test(eid) || !rec || !rec.iv || !rec.ct) continue;
+            try { const o = JSON.parse(dec.decode(new Uint8Array(await unseal(dmk, rec, entryAad(c.uid, eid))))); out.push({ id: eid, t: String(o.t || ""), c: o.c, plain: String(o.plain || ""), created: o.created || rec.at || 0, updated: o.updated || rec.at || 0 }); } catch (e) { /* skip */ }
+          }
+          const sc = c.scope || {}, from = sc.from ? new Date(sc.from + "T00:00:00").getTime() : 0, to = sc.to ? new Date(sc.to + "T23:59:59.999").getTime() : Infinity;
+          const items = out.filter((e) => e.updated >= from && e.updated <= to && (!sc.cats || sc.cats.indexOf(e.c) >= 0)).sort((a, b) => a.created - b.created).map((e) => Object.assign({ sel: true }, e));
+          A.caseFull = { id, items, total: out.length };
+          if (!c.keyAt) await update(caseRef(id), { keyAt: Date.now() });
+          await lcLog(id, "pages-opened", items.length + " of " + out.length + " pages are inside the scope");
+          await daAudit(c.uid, "case-read", "Case " + id + ": " + items.length + " pages inside the scope were opened");
+          daPaint();
+        } catch (e) { daMsg("Couldn't open the diary. The shared key may be invalid."); }
+      }
+      function legalModel(c, items, total, hash, genAt) {
+        const log = Object.values(c.log || {}).sort((a, b) => a.at - b.at).map((l) => [isoT(l.at), l.what, l.note || ""]);
+        log.push([isoT(genAt), "pdf-generated", items.length + " pages. SHA-256 " + hash.slice(0, 20) + "..."]);
+        const blocks = [
+          { t: "small", text: "CONFIDENTIAL  |  FOR THE REQUESTING AUTHORITY ONLY" }, { t: "h1", text: "Diary disclosure" }, { t: "p", text: "Case " + c.id }, { t: "rule" },
+          { t: "kv", rows: [["Case number", c.id], ["Subject", (c.name || "") + " (login " + c.loginKey + ")"], ["Subject email", c.email || "not on file"], ["Under 18", c.minor ? "Yes (guardian informed)" : "No"], ["Legal basis", c.basisLabel], ["Requesting authority", c.authority], ["Reference number", c.refNo], ["Date of request", c.requestDate], ["Scope", scopeText(c.scope)], ["Pages in this document", items.length + " of " + total + " in the diary"], ["User notified", isoT(c.notifiedAt)], ["Authorised", isoT(c.authorizedAt)], ["Prepared by", "Abhishek, admin of DuoTrack"], ["Generated", isoT(genAt)], ["SHA-256 of the pages", hash]] },
+          { t: "p", text: "Reason recorded for the case: " + c.why },
+          { t: "small", text: "This document holds private personal data of a person who may be a minor. It is handed over only to the authority named above, for the stated purpose. Do not copy, forward or publish it." },
+          { t: "pb" }, { t: "h1", text: "Chain of custody" }, { t: "table", head: ["Time (UTC)", "Step", "Note"], rows: log },
+          { t: "h2", text: "How this record was produced" },
+          { t: "p", text: "The diary is stored encrypted in a Google Firebase database. After the case was authorised, the user's own app shared the diary key with the admin. The admin decrypted the pages in the DuoTrack admin portal and kept only the pages inside the scope of the case. Nothing was edited. The SHA-256 value above is calculated over the texts printed in the Diary pages section, exactly as printed, joined by one blank line." },
+          { t: "pb" }, { t: "h1", text: "Contents" }, { t: "pre", text: items.map((e, i) => (i + 1) + ". " + (e.t || "Untitled") + "  [" + catName(e.c) + ", edited " + isoT(e.updated) + "]").join("\n") },
+          { t: "pb" }, { t: "h1", text: "Diary pages" }
+        ];
+        items.forEach((e, i) => { blocks.push({ t: "small", text: "Page " + (i + 1) + " of " + items.length }, { t: "pre", text: canonText(e) }, { t: "rule" }); });
+        blocks.push({ t: "pb" }, { t: "h1", text: "Certificate (DRAFT)" },
+          { t: "small", text: "Draft helper only, not legal advice. A court may need the certificate in the form set out in the Schedule to Section 63(4) of the Bharatiya Sakshya Adhiniyam, 2023, which has two parts and includes a hash value. Have a lawyer prepare and check the final certificate before this record is used." },
+          { t: "p", text: "I, ______________________________ (name), ______________________________ (role), state that:" },
+          { t: "p", text: "1. The record described here is a printout of text stored by the DuoTrack web service in a Google Firebase database." },
+          { t: "p", text: "2. It is the diary of " + c.name + " (login " + c.loginKey + "), " + items.length + " pages, extracted for case " + c.id + " on " + isoT(genAt) + " through the DuoTrack admin portal, on this device: ______________________________ (device, operating system, browser)." },
+          { t: "p", text: "3. The pages were decrypted with a key shared by the user's own app after the case was authorised, and only the pages inside the scope of the case were kept. They were not altered." },
+          { t: "p", text: "4. Hash value (SHA-256): " + hash + " (calculated over the texts in the Diary pages section as printed, joined by one blank line)." },
+          { t: "p", text: "5. I am responsible for the device and the service used, and I know how this record was produced: ______________________________." },
+          { t: "p", text: "Signature: ____________________   Name: ____________________   Date: ____________   Place: ____________" },
+          { t: "p", text: "Part B (expert, if required)  Name: ____________________   Qualification: ____________________   Signature: ____________________   Date: ____________" });
+        return { title: "Diary disclosure " + c.id, fileName: "diary-disclosure-" + c.id + ".pdf", footer: "Case " + c.id + "  |  Confidential  |  SHA-256 " + hash.slice(0, 16), blocks };
+      }
+      async function lcPdf(id) {
+        const c = A.cases[id], F = A.caseFull; if (!c || !F || F.id !== id) return;
+        const items = F.items.filter((x) => x.sel);
+        if (!items.length) { daMsg("Tick at least one page."); return; }
+        const genAt = Date.now(), hash = await sha256hex(items.map(canonText).join("\n\n"));
+        const res = emitDoc(legalModel(c, items, F.total, hash, genAt));
+        const first = !c.extractedAt;
+        await update(caseRef(id), { status: c.status === "authorized" ? "extracted" : c.status, extractedAt: c.extractedAt || genAt, pdfSha256: c.pdfSha256 || hash, entriesCount: c.entriesCount || items.length, lastPdfAt: genAt, pdfMode: res.mode });
+        await lcLog(id, first ? "pdf-generated" : "pdf-regenerated", items.length + " pages, SHA-256 " + hash.slice(0, 20) + "..., " + res.mode);
+        if (first) await daAudit(c.uid, "case-extracted", "Case " + id + ": a PDF of " + items.length + " pages was prepared for " + c.authority);
+        daMsg(res.mode === "print" ? "The text has characters the PDF font can't draw, so the print window opened. Choose Save as PDF there." : "PDF downloaded.");
+        if (!first && c.pdfSha256 !== hash) daMsg("Warning: this content is different from the first PDF (the fingerprint changed).");
+      }
+      async function lcHandover(id) {
+        const c = A.cases[id]; if (!c || c.status !== "extracted") return;
+        const to = lcV("lcHoTo_" + id), date = lcV("lcHoDate_" + id), how = lcV("lcHoHow_" + id), refn = lcV("lcHoRef_" + id);
+        if (to.length < 3 || !date) { daMsg("Say who it was handed to and the date."); return; }
+        await update(caseRef(id), { status: "handed-over", handedOver: { to, how, date, ref: refn, at: Date.now() } });
+        await lcLog(id, "handed-over", to + " (" + how + ", " + date + (refn ? ", ref " + refn : "") + ")");
+        await daAudit(c.uid, "case-handed", "Case " + id + ": PDF handed to " + to);
+      }
+      async function lcClose(id) {
+        const c = A.cases[id]; if (!c || c.status !== "handed-over") return;
+        const out = lcV("lcOut_" + id); if (out.length < 3) { daMsg("Write a short outcome note."); return; }
+        if (!lcC("lcDel_" + id)) { daMsg("Confirm you deleted your copies."); return; }
+        await lcRevoke(c);
+        await update(caseRef(id), { status: "closed", closedAt: Date.now(), outcome: out, copiesDeleted: true });
+        await lcLog(id, "case-closed", "Key removed. " + out.slice(0, 120));
+        await daAudit(c.uid, "case-closed", "Case " + id + " closed. " + (c.entriesCount || 0) + " pages were disclosed to " + c.authority + ". The shared key was deleted.");
+        if (A.caseFull && A.caseFull.id === id) A.caseFull = null;
+      }
+      async function lcWithdraw(id) {
+        const c = A.cases[id]; if (!c || c.status === "closed" || c.status === "withdrawn") return;
+        const why = lcV("lcWr_" + id); if (why.length < 5) { daMsg("Write why the case is withdrawn."); return; }
+        await lcRevoke(c);
+        await update(caseRef(id), { status: "withdrawn", withdrawnAt: Date.now(), withdrawReason: why });
+        await lcLog(id, "withdrawn", why.slice(0, 160));
+        await daAudit(c.uid, "case-withdrawn", "Case " + id + " was withdrawn. No diary content was disclosed" + (c.entriesCount ? " beyond what is in the log" : "") + ".");
+        if (A.caseFull && A.caseFull.id === id) A.caseFull = null;
+      }
+      async function lcAct(a, id, uid) {
+        if (a === "lcnew") { A.lcOpen = !A.lcOpen; if (!A.lcOpen) A.lcInfo = null; daPaint(); }
+        else if (a === "lccreate") await lcCreate();
+        else if (a === "lcauth") await lcAuthorize(id);
+        else if (a === "lcopen") await lcOpenDiary(id);
+        else if (a === "lcpdf") await lcPdf(id);
+        else if (a === "lchand") await lcHandover(id);
+        else if (a === "lcclose") await lcClose(id);
+        else if (a === "lcwithdraw") await lcWithdraw(id);
+        else if (a === "lcclosefull") { A.caseFull = null; daPaint(); }
+      }
     })();
 
     logoutBtn.addEventListener("click", async () => {
