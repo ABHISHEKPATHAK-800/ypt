@@ -19631,9 +19631,20 @@ function totpAt(keyBytes, counter) {
       let pending = null;      // link in progress, memory only: { bytes, secret, key, salt, email }
       let cache = null;        // { uid, salt, key } non-extractable key, this page session only
       let busy = false, unsubOwn = null, msgTimer = null, prevOverflow = "";
-      let resets = {}, adminSub = false;
+      let resets = {}, adminSub = false, resetsRetryAt = 0;
 
       try { localStorage.removeItem("duotrack.totp.secret"); localStorage.removeItem("duotrack.totp.linked"); } catch (e) { /* ignore */ }   // old plain-text version
+
+      /* ---------- say WHY a database call failed (instead of a vague "check your connection") ---------- */
+      function explainErr(err) {
+        const code = String((err && err.code) || ""), msg = String((err && err.message) || err || ""), raw = (code + " " + msg).toLowerCase();
+        if (raw.indexOf("permission") >= 0) return "Firebase refused this (permission denied). Your database rules do not allow this path yet.";
+        if (/offline|network|unavailable|failed to fetch|timeout/.test(raw)) return "No connection to the database. Check your internet and try again.";
+        if (raw.indexOf("undefined") >= 0) return "A value was missing, so Firebase refused to save it (" + msg.slice(0, 80) + ").";
+        if (/invalid/.test(raw) && /key|path/.test(raw)) return "An ID has a character Firebase does not allow (" + msg.slice(0, 80) + ").";
+        return "Database error: " + (code || msg || "unknown").slice(0, 110);
+      }
+      const isPermErr = (err) => /permission/i.test(String((err && (err.code || err.message)) || err || ""));
 
       /* ---------- crypto helpers ---------- */
       const b64 = (u8) => { let s = ""; u8.forEach((b) => { s += String.fromCharCode(b); }); return btoa(s); };
@@ -19782,7 +19793,7 @@ function totpAt(keyBytes, counter) {
       });
       function watchResets() {
         paintBadge();
-        if (adminSub || !isAdmin()) return;
+        if (adminSub || !isAdmin() || Date.now() < resetsRetryAt) return;
         adminSub = true;
         let first = true;
         onValue(resetsAllRef, (snap) => {
@@ -19793,7 +19804,7 @@ function totpAt(keyBytes, counter) {
           first = false;
           paintBadge();
           if (dlg.open) paintAdmin();
-        }, () => { adminSub = false; });
+        }, (err) => { adminSub = false; resetsRetryAt = Date.now() + 60000; console.warn("DuoTrack: could not watch authenticator resets:", explainErr(err)); });
       }
       setInterval(watchResets, 2000);
 
@@ -19847,7 +19858,7 @@ function totpAt(keyBytes, counter) {
           else if (ctx.rec) prepUnlock();
           else prepLink();
         } catch (err) {
-          $("totpErrText").textContent = "Couldn't reach the database. Check your connection and try again.";
+          $("totpErrText").textContent = "Couldn't open this. " + explainErr(err);
           show("error");
         }
       }
@@ -19890,7 +19901,7 @@ function totpAt(keyBytes, counter) {
           $("totpAcct").textContent = email;
           $("totpPw").value = ""; $("totpScanCode").value = ""; say("");
           show("scan");
-        } catch (err) { say("Something went wrong. Try again.", true); }
+        } catch (err) { say("Something went wrong. " + explainErr(err), true); console.warn("DuoTrack link:", err); }
         finally { setBusy(false); }
       }
 
@@ -19915,7 +19926,7 @@ function totpAt(keyBytes, counter) {
           noteOk(step); pending = null; say("");
           closeDlg(); openDiary();
           showToast("Authenticator linked", "Your codes now live only in Google Authenticator.");
-        } catch (err) { say("Couldn't save. Check your connection and try again.", true); }
+        } catch (err) { say("Couldn't save. " + explainErr(err), true); console.warn("DuoTrack link save:", err); }
         finally { setBusy(false); }
       }
 
@@ -19949,7 +19960,7 @@ function totpAt(keyBytes, counter) {
           noteOk(step); say("");
           $("totpUnlockPw").value = ""; $("totpUnlockCode").value = "";
           closeDlg(); openDiary();
-        } catch (err) { say("Something went wrong. Try again.", true); }
+        } catch (err) { say("Something went wrong. " + explainErr(err), true); console.warn("DuoTrack unlock:", err); }
         finally { setBusy(false); }
       }
 
@@ -19960,7 +19971,7 @@ function totpAt(keyBytes, counter) {
           await set(resetRef(ctx.uid), { uid: ctx.uid, name: myName(), email: (ctx.rec && ctx.rec.email) || ctx.appEmail || "", status: "pending", requestedAt: Date.now() });
           ctx.reset = { status: "pending" };
           renderLost(); say("The admin has been notified.");
-        } catch (err) { say("Couldn't send. Check your connection and try again.", true); }
+        } catch (err) { say("Couldn't send. " + explainErr(err), true); }
         finally { setBusy(false); }
       }
 
@@ -20104,7 +20115,8 @@ function totpAt(keyBytes, counter) {
 
       /* ---------- the diary key: random data key, wrapped by a key from your password ---------- */
       async function deriveVault(uid, pw) {
-        const meta = (await get(metaRef(uid))).val();
+        let meta = null;
+        try { meta = (await get(metaRef(uid))).val(); } catch (e) { console.warn("DuoTrack: diary key record not readable yet:", explainErr(e)); }     // linking the authenticator must still work; the diary reports it when opened
         const has = !!(meta && meta.vsalt);
         const salt = has ? unb64(meta.vsalt) : crypto.getRandomValues(new Uint8Array(16));
         return { salt, key: await deriveKey(pw, salt) };
@@ -20201,7 +20213,7 @@ function totpAt(keyBytes, counter) {
         } catch (err) {
           if (D !== d) return;
           if (err && err.name === "OperationError") paintEmpty("Your old diary pages were locked with your old password, so they can't be opened now. You can start a fresh diary. The old pages will be erased.", { fresh: true });
-          else paintEmpty("Couldn't open your diary. Check your connection and try again.", { retry: true });
+          else paintEmpty(isPermErr(err) ? "The database refused access to your diary (permission denied). The admin needs to allow the diary path in the Firebase rules." : "Couldn't open your diary. " + explainErr(err), { retry: true });
         }
       }
       async function loadMyEmail(d) {
@@ -20350,7 +20362,9 @@ function totpAt(keyBytes, counter) {
               if (D === d && d.curId === e.id) { setSaveState("Saved, encrypted", "ok"); paintMeta(e); paintList(); }
               scanAndFlag(d, e);
             } catch (err) {
-              d.dirty = true; setSaveState("Offline. Will retry...", "bad");
+              d.dirty = true;
+              if (isPermErr(err)) { setSaveState("Not saved: database refused", "bad"); console.warn("DuoTrack diary save:", explainErr(err)); return; }      // retrying cannot fix a rules problem
+              setSaveState("Offline. Will retry...", "bad");
               if (!d.cancelled) d.timer = setTimeout(() => saveNow(d), 5000);
               return;
             }
@@ -20685,7 +20699,7 @@ function totpAt(keyBytes, counter) {
          ADMIN: Diary safety card inside the Administrator portal (abhi@9905 only).
          Added by watching the portal, so the portal's own code is not edited.
          ===================================================================== */
-      const A = { mounted: false, unlocked: false, priv: null, pubB64: "", fp: "", keyExists: null, words: {}, flags: {}, letters: {}, access: {}, read: {}, full: null, msg: "", fails: 0, lockUntil: 0, subs: false, busy: false };
+      const A = { dbErr: {}, probe: null, probing: false, mounted: false, unlocked: false, priv: null, pubB64: "", fp: "", keyExists: null, words: {}, flags: {}, letters: {}, access: {}, read: {}, full: null, msg: "", fails: 0, lockUntil: 0, subs: false, busy: false };
       const ADMIN_AAD = enc.encode("duotrack-diary-admin|v1");
       const fpFmt = (h) => (h || "").slice(0, 16).replace(/(.{4})/g, "$1 ").trim();
       const rsaAlg = { name: "RSA-OAEP", hash: "SHA-256" };
@@ -20697,12 +20711,13 @@ function totpAt(keyBytes, counter) {
       function daLock() { A.unlocked = false; A.priv = null; A.read = {}; A.full = null; A.msg = ""; }
       function daSubscribe() {
         if (A.subs) return; A.subs = true;
-        onValue(watchRef, (s) => { A.words = s.val() || {}; daPaint(); });
-        onValue(flagsRef, (s) => { A.flags = s.val() || {}; daPaint(); });
-        onValue(lettersRef, (s) => { A.letters = s.val() || {}; daPaint(); });
-        onValue(accessAllRef, (s) => { A.access = s.val() || {}; daPaint(); });
+        const bad = (name) => (err) => { A.dbErr[name] = explainErr(err); if (name === "diaryAdmin") A.keyExists = A.keyExists === null ? false : A.keyExists; console.warn("DuoTrack admin: cannot read " + name + ":", A.dbErr[name]); daPaint(); };
+        onValue(watchRef, (s) => { A.words = s.val() || {}; delete A.dbErr.diaryWatch; daPaint(); }, bad("diaryWatch"));
+        onValue(flagsRef, (s) => { A.flags = s.val() || {}; delete A.dbErr.diaryFlags; daPaint(); }, bad("diaryFlags"));
+        onValue(lettersRef, (s) => { A.letters = s.val() || {}; daPaint(); }, bad("diaryLetters"));
+        onValue(accessAllRef, (s) => { A.access = s.val() || {}; daPaint(); }, bad("diaryAccess"));
         lcSubscribe();
-        onValue(adminKeyRef, (s) => { const v = s.val(); A.keyExists = !!(v && v.pub && v.priv); A.pubB64 = (v && v.pub) || ""; daPaint(); });
+        onValue(adminKeyRef, (s) => { const v = s.val(); A.keyExists = !!(v && v.pub && v.priv); A.pubB64 = (v && v.pub) || ""; delete A.dbErr.diaryAdmin; daPaint(); }, bad("diaryAdmin"));
       }
       function daMount() {
         const portal = document.getElementById("adminPortal");
@@ -20729,6 +20744,10 @@ function totpAt(keyBytes, counter) {
         let h = '<h2>🔒 Diary safety</h2><p>Watch words, reports, notices to users, and (rare cases) a full diary review. Reports are sealed with an admin key that only opens with your admin password. Users are told how this works in the diary notice and Privacy Policy section 17.</p>';
         h += '<div class="ap-row"><strong>New reports: ' + pend + "</strong>" + (A.keyExists === false ? '<span class="ap-note da-warn">Admin key not created yet, so nothing is reported.</span>' : "") + "</div>";
         if (A.msg) h += '<p class="ap-note da-warn">' + escapeHTML(A.msg) + "</p>";
+        const errs = Object.entries(A.dbErr);
+        if (errs.length) h += '<div class="ap-note da-warn"><b>Firebase is refusing some reads:</b><br>' + errs.map(([k, v]) => escapeHTML(k) + ": " + escapeHTML(v)).join("<br>") + "</div>";
+        h += '<div class="ap-row"><button type="button" data-da="probe"' + (A.probing ? " disabled" : "") + ">" + (A.probing ? "Checking..." : "Check database access") + "</button></div>";
+        if (A.probe) h += '<div class="ap-note">' + A.probe.map((r) => (r.ok ? "OK&nbsp; " : "<b class=\"da-warn\">BLOCKED</b>&nbsp; ") + escapeHTML(r.path) + (r.ok ? "" : ": " + escapeHTML(r.msg))).join("<br>") + (A.probing ? "<br><br>Checking..." : A.probe.some((r) => !r.ok) ? '<br><br><b class="da-warn">Add every BLOCKED path to your Firebase rules (read and write for signed-in users), then reload.</b>' : "<br><br>All paths work.") + "</div>";
         if (!A.unlocked) {
           h += '<div class="ap-row"><input type="password" id="daPw" placeholder="Admin password" autocomplete="current-password"><button type="button" class="ap-primary" data-da="unlock"' + (A.busy || A.keyExists === null ? " disabled" : "") + ">" + (A.keyExists === null ? "Checking..." : A.keyExists === false ? "Create admin key" : "Unlock") + "</button></div>";
         } else {
@@ -20797,7 +20816,7 @@ function totpAt(keyBytes, counter) {
             A.fp = await sha256hex(spki);
           }
           A.unlocked = true; A.busy = false; daMsg("");
-        } catch (e) { A.busy = false; daMsg("Couldn't unlock. " + (e && e.message ? "" : "")); }
+        } catch (e) { A.busy = false; daMsg("Couldn't unlock. " + explainErr(e)); }
       }
       async function daRead(id) {
         const f = A.flags[id]; if (!f || !A.priv) return;
@@ -20805,7 +20824,7 @@ function totpAt(keyBytes, counter) {
           A.read[id] = JSON.parse(await openFromAdmin(A.priv, f.box, "duotrack-flag|v1|" + id));
           await daAudit(f.uid, "flag-read", 'Read a paragraph that matched "' + f.word + '"');
           daPaint();
-        } catch (e) { daMsg("Couldn't open that report."); }
+        } catch (e) { daMsg("Couldn't open that report. " + explainErr(e)); }
       }
       async function daIssueLetter(id) {
         const f = A.flags[id]; if (!f || f.kind !== "illegal") return;
@@ -20884,7 +20903,8 @@ function totpAt(keyBytes, counter) {
         const a = btn.dataset.da, id = btn.dataset.id, uid = btn.dataset.uid;
         if ((id && !SAFE_ID.test(id)) || (uid && !SAFE_ID.test(uid))) return;
         try {
-          if (a === "unlock") await daUnlock();
+          if (a === "probe") await daProbe();
+          else if (a === "unlock") await daUnlock();
           else if (a === "lock") { daLock(); daPaint(); }
           else if (a === "addword") {
             const w = ((document.getElementById("daWord") || {}).value || "").trim().toLowerCase().slice(0, 60);
@@ -20901,7 +20921,7 @@ function totpAt(keyBytes, counter) {
           else if (a === "verify") await daVerify(id, uid);
           else if (a === "letterpdf") daLetterPdf(uid);
           else if (a.indexOf("lc") === 0) await lcAct(a, id, uid, btn);
-        } catch (e) { daMsg("That didn't work. Check your connection."); }
+        } catch (e) { daMsg("That didn't work. " + explainErr(e)); }
       }
       document.addEventListener("click", (e) => {
         const btn = e.target.closest && e.target.closest("#diaryAdminCard [data-da]");
@@ -21055,7 +21075,7 @@ function totpAt(keyBytes, counter) {
             <p class="fp-joke" id="fpJoke">${escapeHTML(nextJoke())}</p>`, true);
           startJokes();
         } catch (x) {
-          err.textContent = "Could not send your request. Check your connection and try again.";
+          err.textContent = "Could not send your request. " + explainErr(x);
           btn.disabled = false; btn.textContent = "Send for approval";
         }
       });
@@ -21082,7 +21102,7 @@ function totpAt(keyBytes, counter) {
       watchMyReset();
 
       /* ---- admin side: a "Passwords" tab inside the reviewer's Messages inbox ---- */
-      const PWS = { items: {}, active: false, subbed: false, seen: -1, arm: "" };
+      const PWS = { items: {}, active: false, subbed: false, seen: -1, arm: "", retryAt: 0, err: "" };
       const pwPending = () => Object.entries(PWS.items).filter(([k, r]) => LOGIN_KEY_RE.test(k) && r && r.status === "pending").sort((a, b) => (a[1].createdAt || 0) - (b[1].createdAt || 0));
       function pwDot() {
         const b = document.getElementById("inboxBtn"); if (b) b.classList.toggle("has-pw", isAdmin() && pwPending().length > 0);
@@ -21127,19 +21147,21 @@ function totpAt(keyBytes, counter) {
           if (!acct || !acct.dyn || !HASH_RE.test(String(r.newHash || ""))) { showToast("Cannot approve", "This request is not valid. Ask them to send a new one."); return; }
           if (r.emailMatch === false && PWS.arm !== k) { PWS.arm = k; pwShowPanel(); showToast("Check first", "The email does not match the one on file. Tap Approve again only if you have verified them."); return; }
           ok.disabled = true; ok.textContent = "Saving...";
-          await update(ref(database, `${BASE}/accounts/${k}`), { password: r.newHash, passwordChangedAt: Date.now() });
-          await update(pwRef(k), { status: "approved", decidedAt: Date.now(), decidedBy: currentUserId, newHash: null });
-          acct.password = r.newHash; PWS.arm = "";
-          const uid = acct.id;
-          if (SAFE_ID.test(String(uid)) && (await get(recRef(uid))).exists()) {                         // old authenticator is sealed with the old password: let them link again
-            await set(resetRef(uid), { uid, name: acct.name || uid, email: ((await get(recRef(uid))).val() || {}).email || "", status: "approved", requestedAt: Date.now(), decidedAt: Date.now(), decidedBy: currentUserId, via: "password-reset" });
+          const t = Date.now(), uid = acct.id, up = {};
+          up["accounts/" + k + "/password"] = r.newHash; up["accounts/" + k + "/passwordChangedAt"] = t;
+          up["passwordResets/" + k + "/status"] = "approved"; up["passwordResets/" + k + "/decidedAt"] = t; up["passwordResets/" + k + "/decidedBy"] = currentUserId; up["passwordResets/" + k + "/newHash"] = null;
+          if (SAFE_ID.test(String(uid))) {                                                                  // old authenticator is sealed with the old password: let them link again
+            const old = (await get(recRef(uid))).val();
+            if (old) up["authenticatorResets/" + uid] = { uid, name: acct.name || uid, email: old.email || "", status: "approved", requestedAt: t, decidedAt: t, decidedBy: currentUserId, via: "password-reset" };
           }
+          await update(ref(database, BASE), up);                                                            // one atomic write: all of it happens, or none of it
+          acct.password = r.newHash; PWS.arm = "";
           showToast("Password changed", (acct.name || k) + " can log in with the new password now. Nothing is emailed, so tell them.");
-        } catch (err) { showToast("Could not save", "Check your connection and try again."); }
+        } catch (err) { showToast("Could not save", explainErr(err)); console.warn("DuoTrack password approval:", err); }
       });
       function watchAdminPw() {
         pwDot();
-        if (PWS.subbed || !isAdmin()) return;
+        if (PWS.subbed || !isAdmin() || Date.now() < PWS.retryAt) return;
         PWS.subbed = true;
         onValue(pwAllRef, (s) => {
           const before = pwPending().length;
@@ -21149,7 +21171,7 @@ function totpAt(keyBytes, counter) {
           PWS.seen = list.length;
           pwDot();
           if (!dgEl.hidden && dgEl.dataset.mode === "inbox") { pwInject(); if (PWS.active) pwShowPanel(); }
-        }, () => { PWS.subbed = false; });
+        }, (err) => { PWS.subbed = false; PWS.retryAt = Date.now() + 60000; PWS.err = explainErr(err); console.warn("DuoTrack: cannot read password requests:", PWS.err); });
       }
       setInterval(watchAdminPw, 2000);
 
@@ -21295,8 +21317,9 @@ function totpAt(keyBytes, counter) {
       A.cases = {}; A.notices = {}; A.lcOpen = false; A.lcInfo = null; A.caseFull = null;
       const LC_STEPS = ["Opened", "User notified", "Response window", "Authorised", "Key received", "Extracted", "Handed over", "Closed"];
       function lcSubscribe() {
-        onValue(casesRef, (s) => { A.cases = s.val() || {}; daPaint(); });
-        onValue(dRef("diaryCaseNotices"), (s) => { A.notices = s.val() || {}; daPaint(); });
+        const bad = (name) => (err) => { A.dbErr[name] = explainErr(err); console.warn("DuoTrack admin: cannot read " + name + ":", A.dbErr[name]); daPaint(); };
+        onValue(casesRef, (s) => { A.cases = s.val() || {}; delete A.dbErr.diaryCases; daPaint(); }, bad("diaryCases"));
+        onValue(dRef("diaryCaseNotices"), (s) => { A.notices = s.val() || {}; delete A.dbErr.diaryCaseNotices; daPaint(); }, bad("diaryCaseNotices"));
       }
       setInterval(() => { if (A.unlocked && document.getElementById("diaryAdminCard") && Object.values(A.cases).some((c) => c && c.status === "notified")) daPaint(); }, 30000);
       const ageOf = (dob) => { const d = new Date(dob); if (isNaN(d)) return null; const n = new Date(); let a = n.getFullYear() - d.getFullYear(); const m = n.getMonth() - d.getMonth(); if (m < 0 || (m === 0 && n.getDate() < d.getDate())) a--; return a; };
@@ -21393,7 +21416,7 @@ function totpAt(keyBytes, counter) {
           await lcLog(id, "user-notified", emergency ? "Emergency: no waiting period" : "48 hour response window until " + isoT(rec.windowEndsAt));
           await daAudit(uid, "case-opened", "Case " + id + ": " + rec.basisLabel + " (" + authority + ")");
           A.lcOpen = false; A.lcInfo = null; daMsg("Case " + id + " opened. The user has been notified.");
-        } catch (e) { daMsg("Could not save the case. Check your connection."); }
+        } catch (e) { daMsg("Could not save the case. " + explainErr(e)); }
       }
       function lcCaseHtml(id, c) {
         const eid = escapeHTML(id), N = A.notices[c.uid], X = A.access[c.uid] && A.access[c.uid].caseId === id ? A.access[c.uid] : null, now = Date.now();
@@ -21440,8 +21463,21 @@ function totpAt(keyBytes, counter) {
         return h + "</div>";
       }
       async function lcRevoke(c) {
-        await update(accessRef(c.uid), { status: "closed", closedAt: Date.now(), escrow: null });
-        await update(noticeRef(c.uid), { status: "closed", closedAt: Date.now() });
+        const t = Date.now(), u = c.uid, up = {};
+        up["diaryAccess/" + u + "/status"] = "closed"; up["diaryAccess/" + u + "/closedAt"] = t; up["diaryAccess/" + u + "/escrow"] = null;
+        up["diaryCaseNotices/" + u + "/status"] = "closed"; up["diaryCaseNotices/" + u + "/closedAt"] = t;
+        await update(ref(database, BASE), up);                      // one atomic write: the key is removed together with the notice closing
+      }
+      const PROBES = ["diary/zz_probe/probe", "diaryWatch/words/zz_probe", "diaryFlags/zz_probe", "diaryLetters/zz_probe", "diaryAccess/zz_probe", "diaryAudit/zz_probe/zz_probe", "diaryCases/zz_probe", "diaryCaseNotices/zz_probe", "authenticator/zz_probe", "authenticatorResets/zz_probe", "passwordResets/zz_probe"];
+      async function daProbe() {
+        A.probing = true; A.probe = []; daPaint();
+        try {
+          try { await get(dRef("diaryAdmin/pub")); A.probe.push({ path: "diaryAdmin (read)", ok: true }); } catch (e) { A.probe.push({ path: "diaryAdmin (read)", ok: false, msg: explainErr(e) }); }
+          for (const p of PROBES) {
+            try { const r = dRef(p); await set(r, { probe: true, t: Date.now() }); await get(r); await set(r, null); A.probe.push({ path: p.split("/")[0], ok: true }); }
+            catch (e) { A.probe.push({ path: p.split("/")[0], ok: false, msg: explainErr(e) }); }
+          }
+        } finally { A.probing = false; daPaint(); }
       }
       async function lcAuthorize(id) {
         const c = A.cases[id]; if (!c || c.status !== "notified") return;
