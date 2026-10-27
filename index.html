@@ -19638,7 +19638,7 @@ function totpAt(keyBytes, counter) {
       /* ---------- say WHY a database call failed (instead of a vague "check your connection") ---------- */
       function explainErr(err) {
         const code = String((err && err.code) || ""), msg = String((err && err.message) || err || ""), raw = (code + " " + msg).toLowerCase();
-        if (raw.indexOf("permission") >= 0) return "Firebase refused this (permission denied). Your database rules do not allow this path yet.";
+        if (raw.indexOf("permission") >= 0) return "Firebase refused this (permission denied). Your database rules do not allow this path yet." + (typeof firebaseAuthState !== "undefined" && firebaseAuthState !== "ok" ? " Also: Firebase sign-in is OFF, so enable Anonymous sign-in under Authentication." : "");
         if (/offline|network|unavailable|failed to fetch|timeout/.test(raw)) return "No connection to the database. Check your internet and try again.";
         if (raw.indexOf("undefined") >= 0) return "A value was missing, so Firebase refused to save it (" + msg.slice(0, 80) + ").";
         if (/invalid/.test(raw) && /key|path/.test(raw)) return "An ID has a character Firebase does not allow (" + msg.slice(0, 80) + ").";
@@ -21157,7 +21157,10 @@ function totpAt(keyBytes, counter) {
           await update(ref(database, BASE), up);                                                            // one atomic write: all of it happens, or none of it
           acct.password = r.newHash; PWS.arm = "";
           showToast("Password changed", (acct.name || k) + " can log in with the new password now. Nothing is emailed, so tell them.");
-        } catch (err) { showToast("Could not save", explainErr(err)); console.warn("DuoTrack password approval:", err); }
+        } catch (err) {
+          showToast("Could not save", isPermErr(err) ? "Firebase blocked the password change. Your rules only allow a password to change from plain text to sha256, so approving a reset needs the updated 'password' rule (see the instructions)." : explainErr(err));
+          console.warn("DuoTrack password approval:", err);
+        }
       });
       function watchAdminPw() {
         pwDot();
