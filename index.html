@@ -6581,6 +6581,66 @@ body .footer-tagline { letter-spacing: -.01em; }
   .diary-editor .ck.done .ckb::after { content: ""; position: absolute; left: 4.5px; top: 0.5px; width: 5px; height: 10px; border: solid #fff; border-width: 0 2.5px 2.5px 0; transform: rotate(45deg); }
   .diary-editor .ckt { flex: 1; min-width: 1ch; outline: 0; }
   .diary-editor .ck.done .ckt { text-decoration: line-through; opacity: .55; }
+
+  /* ---- Page no. 1 planner (only the abhi account gets this page) ---- */
+  .de.is-wide { max-width: 1320px; }
+  .pl-doc { margin: 2px 0 20px; font-size: 14px; line-height: 1.45; color: var(--ink); }
+  .pl-doc a { color: var(--blue); font-weight: 700; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+  .pl-t1 { text-align: center; font-size: 26px; font-weight: 900; letter-spacing: .01em; }
+  .pl-brand { margin-left: 14px; font-size: 13px; font-weight: 900; letter-spacing: .08em; color: var(--muted); }
+  .pl-t2 { text-align: center; font-size: 15px; margin: 2px 0 8px; }
+  .pl-dl { text-align: center; font-size: 15px; font-weight: 900; margin: 6px 0 4px; }
+  .pl-red { color: #e0231b; }
+  .pl-hint { text-align: center; font-size: 12.5px; color: var(--muted); margin: 0 0 12px; }
+  .pl-scroll { overflow-x: auto; max-width: 100%; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+  .pl-narrow { max-width: 560px; margin: 18px auto 0; }
+  .pl-tbl { width: 100%; min-width: 1060px; border-collapse: separate; border-spacing: 0; font-size: 12.5px; }
+  .pl-tbl2 { min-width: 480px; }
+  .pl-tbl th, .pl-tbl td { height: 28px; padding: 0 6px; text-align: center; vertical-align: middle; background: var(--panel); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .pl-tbl th { height: 46px; font-weight: 800; line-height: 1.2; background: color-mix(in srgb, var(--panel) 90%, var(--muted)); }
+  .pl-tbl tr > *:last-child { border-right: 0; }
+  .pl-tbl tbody tr:last-child > * { border-bottom: 0; }
+  .pl-tbl tr.pl-first > td { border-top: 2px solid color-mix(in srgb, var(--muted) 70%, var(--line)); }
+  .pl-tbl tbody tr.pl-first:first-child > td { border-top: 0; }
+  .pl-sb { width: 28px; min-width: 28px; max-width: 28px; padding: 0 !important; }
+  .pl-blkt { display: inline-block; writing-mode: vertical-rl; transform: rotate(180deg); font-size: 11px; letter-spacing: .08em; color: var(--muted); white-space: nowrap; }
+  .pl-sc { min-width: 150px; text-align: left !important; font-weight: 700; }
+  .pl-tot { font-style: italic; font-weight: 800; }
+  .pl-l { text-align: left !important; }
+  .pl-c { padding: 0 !important; }
+  .pl-adv { min-width: 52px; }
+  .pl-tbl a { white-space: nowrap; }
+  .pl-tbl th a { white-space: normal; }
+  @media (min-width: 720px) {
+    .pl-tbl th.pl-sb, .pl-tbl td.pl-sb { position: sticky; left: 0; z-index: 2; }
+    .pl-tbl th.pl-sc, .pl-tbl td.pl-sc { position: sticky; left: 28px; z-index: 2; min-width: 200px; }
+    .pl-tbl th.pl-sb, .pl-tbl th.pl-sc { z-index: 3; }
+  }
+  .pl-bx { position: relative; display: block; height: 28px; min-width: 40px; cursor: context-menu; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; transition: background 120ms ease; }
+  .pl-bx::before { content: ""; position: absolute; left: 50%; top: 50%; width: 14px; height: 14px; transform: translate(-50%, -50%); border: 1.5px solid color-mix(in srgb, var(--muted) 55%, transparent); border-radius: 4px; }
+  .pl-bx:hover { background: color-mix(in srgb, var(--green) 9%, transparent); }
+  .pl-bx[data-menu] { outline: 2px solid var(--green); outline-offset: -2px; }
+  .pl-bx[data-s]::before { display: none; }
+  .pl-bx[data-s]::after { display: grid; place-items: center; height: 100%; font-size: 16px; font-weight: 900; line-height: 1; }
+  .pl-bx[data-s="t"] { background: color-mix(in srgb, var(--green) 16%, var(--panel)); }
+  .pl-bx[data-s="t"]::after { content: "\2714"; color: var(--green); }
+  .pl-bx[data-s="x"] { background: color-mix(in srgb, var(--red) 14%, var(--panel)); }
+  .pl-bx[data-s="x"]::after { content: "\2718"; color: var(--red); }
+  .pl-sec { margin: 22px 0 6px; font-size: 14.5px; font-weight: 900; }
+  .pl-doc ol { margin: 6px 0; padding-left: 1.5em; }
+  .pl-doc li { margin: 5px 0; }
+  .pl-send { margin: 18px 0; padding: 10px 12px; text-align: center; border: 1px dashed var(--line); border-radius: 10px; }
+  .pl-q { margin: 18px 0 4px; text-align: center; font-style: italic; color: var(--muted); }
+  .pl-by { margin-top: 10px; text-align: center; font-size: 12.5px; color: var(--muted); }
+  .pl-menu { position: fixed; z-index: 100300; min-width: 150px; display: flex; flex-direction: column; gap: 2px; padding: 6px; border-radius: 12px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); box-shadow: 0 14px 36px rgba(0,0,0,.28); }
+  .pl-menu[hidden] { display: none; }
+  .pl-mi { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 12px; border: 0; border-radius: 8px; background: transparent; color: var(--ink); font-size: 14px; font-weight: 700; text-align: left; cursor: pointer; }
+  .pl-mi:hover, .pl-mi:focus-visible { background: color-mix(in srgb, var(--green) 12%, transparent); outline: 0; }
+  .pl-mic { width: 18px; text-align: center; font-size: 16px; font-weight: 900; }
+  .pl-mi-t .pl-mic { color: var(--green); }
+  .pl-mi-x .pl-mic { color: var(--red); }
+  .pl-mi-c .pl-mic { color: var(--muted); }
+  .pl-mi.is-cur { background: color-mix(in srgb, var(--muted) 14%, transparent); }
   .de-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-top: 8px; border-top: 1px solid var(--line); }
   .de-meta { font-size: 12px; font-weight: 600; color: var(--muted); }
   .de-del { color: #e0483e; }
@@ -19767,7 +19827,7 @@ function totpAt(keyBytes, counter) {
         document.documentElement.style.overflow = prevOverflow;
       }
       $("diaryBack").addEventListener("click", closeDiary);
-      document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !diary.hidden && !document.querySelector(".dn-overlay:not([hidden]), .dl-overlay:not([hidden])") && $("diaryColorPop").hidden) closeDiary(); });
+      document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !diary.hidden && !document.querySelector(".dn-overlay:not([hidden]), .dl-overlay:not([hidden])") && $("diaryColorPop").hidden && !document.querySelector(".pl-menu:not([hidden])")) closeDiary(); });
 
       /* ---------- admin side (only the reviewer account sees this) ---------- */
       const pendingList = () => Object.entries(resets).filter(([k, r]) => SAFE_ID.test(k) && r && r.status === "pending");
@@ -20037,7 +20097,7 @@ function totpAt(keyBytes, counter) {
 
       /* ---------- sanitiser: the only way rich text gets into the editor ---------- */
       const DROP_TAGS = new Set(["SCRIPT", "STYLE", "IFRAME", "OBJECT", "EMBED", "NOSCRIPT", "TEMPLATE", "SVG", "MATH", "LINK", "META"]);
-      const OK_TAGS = new Set(["B", "STRONG", "I", "EM", "U", "S", "STRIKE", "BR", "DIV", "P", "SPAN", "UL", "OL", "LI", "FONT"]);
+      const OK_TAGS = new Set(["B", "STRONG", "I", "EM", "U", "S", "STRIKE", "BR", "DIV", "P", "SPAN", "UL", "OL", "LI", "FONT", "TABLE", "THEAD", "TBODY", "TR", "TD", "TH", "A"]);
       const isColor = (v) => /^#[0-9a-f]{3,8}$/i.test(v) || /^rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*(,\s*[\d.]+\s*)?\)$/i.test(v);
       const OK_PROPS = {
         "color": isColor, "background-color": isColor,
@@ -20082,6 +20142,12 @@ function totpAt(keyBytes, counter) {
             if (tag === "DIV" && cls.contains("ck")) { const done = n.getAttribute("data-done") === "1" || cls.contains("done"); el.className = "ck" + (done ? " done" : ""); el.setAttribute("data-done", done ? "1" : "0"); }
             if (tag === "SPAN" && cls.contains("ckb")) { el.className = "ckb"; el.setAttribute("contenteditable", "false"); el.setAttribute("role", "checkbox"); el.setAttribute("aria-checked", n.parentNode && n.parentNode.getAttribute && n.parentNode.getAttribute("data-done") === "1" ? "true" : "false"); }
             if (tag === "SPAN" && cls.contains("ckt")) el.className = "ckt";
+            /* planner (Page no. 1): only pl-* classes, tick/cross state, cell spans and plain http(s) links survive */
+            const plc = Array.from(cls).filter((c) => /^pl-[a-z0-9-]{1,24}$/.test(c));
+            if (plc.length) el.className = (el.className ? el.className + " " : "") + plc.join(" ");
+            if (tag === "SPAN" && cls.contains("pl-bx")) { const st = n.getAttribute("data-s"); if (st === "t" || st === "x") el.setAttribute("data-s", st); }
+            if (tag === "TD" || tag === "TH") ["colspan", "rowspan"].forEach((an) => { const v = n.getAttribute(an); if (v && /^\d{1,2}$/.test(v) && +v >= 1) el.setAttribute(an, v); });
+            if (tag === "A") { const hr = (n.getAttribute("href") || "").trim(); if (/^https?:\/\/[^\s"'<>]{1,1800}$/i.test(hr)) { el.setAttribute("href", hr); el.setAttribute("target", "_blank"); el.setAttribute("rel", "noopener noreferrer"); } }
             copy(n, el);
             to.appendChild(el);
           });
@@ -20093,8 +20159,8 @@ function totpAt(keyBytes, counter) {
       /* plain text version (used for the safety check, search, admin view, PDF; never rendered as HTML) */
       function toPlain(root) {
         const out = []; let cur = "";
-        const flush = () => { out.push(cur); cur = ""; };
-        const BLOCK = new Set(["DIV", "P", "LI", "UL", "OL"]);
+        const flush = () => { out.push(cur.replace(/( \| )+$/, "")); cur = ""; };
+        const BLOCK = new Set(["DIV", "P", "LI", "UL", "OL", "TABLE", "TR"]);
         (function walk(n) {
           n.childNodes.forEach((c) => {
             if (c.nodeType === 3) { cur += c.nodeValue; return; }
@@ -20102,6 +20168,8 @@ function totpAt(keyBytes, counter) {
             const tag = c.tagName;
             if (tag === "BR") { flush(); return; }
             if (c.classList && c.classList.contains("ckb")) { cur += (c.parentNode.getAttribute("data-done") === "1" ? "[x] " : "[ ] "); return; }
+            if (c.classList && c.classList.contains("pl-bx")) { const st = c.getAttribute("data-s"); cur += st === "t" ? "[x]" : st === "x" ? "[\u2717]" : "[ ]"; return; }
+            if (tag === "TD" || tag === "TH") { walk(c); cur += " | "; return; }
             const block = BLOCK.has(tag);
             if (block && cur) flush();
             if (tag === "LI") cur += "- ";
@@ -20207,6 +20275,7 @@ function totpAt(keyBytes, counter) {
           if (!ok) { closeDiary(); return; }
           d.dmk = await openVault(uid, cache && cache.vault);
           await Promise.all([loadWatch(d), loadEntries(d), loadMyEmail(d)]);
+          await seedPage1(d);
           if (D !== d || d.cancelled) return;
           paintList(); selectBest();
           maybeShareKey(d);
@@ -20241,7 +20310,7 @@ function totpAt(keyBytes, counter) {
       /* ---------- list + categories ---------- */
       const catName = (k) => (CATS.find((c) => c[0] === k) || [k, "Random"])[1];
       function bucketOf(e) {
-        if (e.pin) return "Pinned";
+        if (e.pin || e.id === P1_ID) return "Pinned";
         const t = e.updated || Date.now(), d0 = new Date(); d0.setHours(0, 0, 0, 0);
         const day = 86400000, z = d0.getTime();
         if (t >= z) return "Today";
@@ -20253,7 +20322,7 @@ function totpAt(keyBytes, counter) {
         const q = (D.q || "").trim().toLowerCase();
         return Array.from(D.entries.values())
           .filter((e) => (D.cat === "all" || e.c === D.cat) && (!q || e.t.toLowerCase().includes(q) || e.plain.toLowerCase().includes(q)))
-          .sort((a, b) => (b.pin ? 1 : 0) - (a.pin ? 1 : 0) || (b.updated || Infinity) - (a.updated || Infinity));
+          .sort((a, b) => (b.id === P1_ID ? 1 : 0) - (a.id === P1_ID ? 1 : 0) || (b.pin ? 1 : 0) - (a.pin ? 1 : 0) || (b.updated || Infinity) - (a.updated || Infinity));
       }
       function paintList() {
         if (!D) return;
@@ -20311,6 +20380,7 @@ function totpAt(keyBytes, counter) {
         $("diaryEmpty").hidden = true; $("diaryEd").hidden = false;
         $("diaryTitle").value = e.t;
         ed().innerHTML = e.html;
+        decoratePlanner(); $("diaryEd").classList.toggle("is-wide", id === P1_ID); $("diaryDel").hidden = id === P1_ID;
         ed().classList.toggle("is-empty", !ed().textContent.trim() && !ed().querySelector(".ck,li"));
         paintCatPick(e); paintMeta(e); paintWords(); paintPin(e); paintList();
         diary.classList.remove("list-open");
@@ -20548,11 +20618,161 @@ function totpAt(keyBytes, counter) {
         }
         onEdit();
       }
+      /* =====================================================================
+         PAGE NO. 1  (JEE Main 2026 Physics planner). Exists ONLY for the abhi
+         account (login abhi@990). It is a normal encrypted diary page, so the
+         tick / cross state is saved as part of the page by the usual autosave.
+         ===================================================================== */
+      const P1_ID = "page1";
+      const P1_OWNER = "abhi";                                   // the account behind the login abhi@990
+      const P1_TITLE = "Page no. 1: JEE Main 2026 Physics Planner";
+      const P1 = {"hdr": ["https://www.youtube.com/watch?v=i5FAg5Nmito&t=1s", "https://youtu.be/o60h6_9HM3s", "https://youtu.be/wkoTtlQ7T-I", "https://youtu.be/UI8Sb7dgSGo", "https://www.youtube.com/watch?v=_pEArEJQdcw&list=PLjvx7xqdpePIhuRDZnZA49oCEALDv48b_&index=3&t=30s", "https://www.youtube.com/watch?v=TDD2Ww5sV5A&list=PLjvx7xqdpePIhuRDZnZA49oCEALDv48b_&index=2&t=1s", "https://www.youtube.com/watch?v=ZL_IUY4RUiA", "https://youtube.com/playlist?list=PLjvx7xqdpePJCP49_Ama1H83s_9LzFkR6&si=7i8DpUZeiDvUZUqp", "https://youtube.com/playlist?list=PLjvx7xqdpePJD6xrZkipYKAgTioEVsjKu&si=Pefui6Dt_l4pooeG"], "rows": [["Kinematics", 49, "https://youtube.com/playlist?list=PLjvx7xqdpePLItW_yyRSUfrzSqA5ezpqL&si=M7sCC2WS-8_cFD_d", ""], ["Gravitation", 49, "https://youtube.com/playlist?list=PLjvx7xqdpePJBciKC3lFr_d00mDQceq8s&si=TPHYVhssDVbWYwoB", ""], ["Electrostatics", 68, "https://youtube.com/playlist?list=PLjvx7xqdpePL-IQ8QCmk5BpycShF0RaKO&si=DsF1rEOILh8xKhME", "https://youtube.com/playlist?list=PLjvx7xqdpePIR965G0P1qxLB3db5ZXOjU&si=WcJAK_uPa1Mu78Yb"], ["Capacitor", 49, "https://youtube.com/playlist?list=PLjvx7xqdpePJyUSPmJSQK_M7W-Z-qN9iW&si=LsvamzuNUZj4KvTP", ""], ["EM Waves", 42, "https://youtube.com/playlist?list=PLjvx7xqdpePJ3lHx7uc5dSi-JqmJweDSZ&si=4hqNZxLp5MO5vczd", ""], ["Units Dimensions Errors & Vectors", 53, "https://youtube.com/playlist?list=PLjvx7xqdpePJ2frgR0Q6FwVllpWUxUo_Y&si=ch9iTIon1W7wKz6D", "https://youtube.com/playlist?list=PLjvx7xqdpePIDou2YZ98ffW2EINM3ps6J&si=BMI29CMvKlcIGS5c"], ["KTG & Thermodynamics", 54, "https://youtube.com/playlist?list=PLjvx7xqdpePL4PBaaFvkMbALzJP3DPFQM&si=ySex1vEl3iVu1fL9", "https://youtube.com/playlist?list=PLjvx7xqdpePIU0qCZxQzuqxXOKcVEViTp&si=glgRuDzza0oWuFRh"], ["Current Electricity", 65, "https://youtube.com/playlist?list=PLjvx7xqdpePJJNDrvHyZEdwu2uGohWaCU&si=7Lakr_Qz1aEXKPF3", ""], ["Moving Charges & MEC", 71, "https://youtube.com/playlist?list=PLjvx7xqdpePL2mwAZqflTLYlAbvdLA8J4&si=PcfTMssmMk0FC8I6", "https://youtube.com/playlist?list=PLjvx7xqdpePIVm9NaFfSEDvnAjO0bPYZx&si=_-gd9K6U7ggquog-"], ["Modern Physics", 113, "https://youtube.com/playlist?list=PLjvx7xqdpePL4vTqUUyIbtg5FubHYGNFr&si=ZksCHpdUKuFHd4MR", "https://youtube.com/playlist?list=PLjvx7xqdpePI8dkU9MJJdMYMiO4PzE3vw&si=mWYR4pF_IyUjFlcH"], ["Laws of Motion", 36, "https://youtube.com/playlist?list=PLjvx7xqdpePIZbs8Yf8Pi34ek7MMmj9rb&si=KMkC3nFd3loMNVjq", ""], ["WEP & Circular Motion", 44, "https://youtube.com/playlist?list=PLjvx7xqdpePIfZAomhvUbS0q8QF69SzQu&si=G5cd8ZIDeRIB7hKl", ""], ["Solids", 27, "https://youtube.com/playlist?list=PLjvx7xqdpePL5iNvM26ZGPhVQJyHKBokr&si=pPCNambJTFna_6aX", ""], ["Electromagnetic Induction", 54, "https://youtube.com/playlist?list=PLjvx7xqdpePKLweoAM4zkoZs02Ss6YKMR&si=tyZzvyAGd6fiIfEL", ""], ["Alternating Current", 47, "https://youtube.com/playlist?list=PLjvx7xqdpePLqHPbozt5lLpkHvhrzecop&si=8tQOW8UJrkt4rU62", ""], ["Ray Optics", 72, "https://youtube.com/playlist?list=PLjvx7xqdpePKE_6kKSGES5qJtCz-kd_5d&si=qicPZ_DWskBPS4FS", "https://www.youtube.com/playlist?list=PLjvx7xqdpePJXRSUGGq8EPyVrLrlbULll"], ["Semiconductors", 57, "https://youtube.com/playlist?list=PLjvx7xqdpePLhZB09b59Df7ivOAwMiRuf&si=1Mx8MVUDlaUwAzHw", ""], ["COM & Collision", 31, "https://youtube.com/playlist?list=PLjvx7xqdpePJVQvIDMa9inrxGWyi-Vnr2&si=jKrsAufHfBDXWIh1", ""], ["Rotational Motion", 49, "https://youtube.com/playlist?list=PLjvx7xqdpePLNEB-VLtUhBnF5LZmoYapS&si=E1iSACISglRGQA0d", "https://youtube.com/playlist?list=PLjvx7xqdpePKde4SA51PGHIUBe7OMvcXi&si=zvziyR-JduGHLWK5"], ["Thermal Properties & Heat Transfer", 25, "https://youtube.com/playlist?list=PLjvx7xqdpePJZ1hTpE-y-BKiwtdJFXLKF&si=x08AqgzVc1Znajyb", ""], ["SHM", 40, "https://youtube.com/playlist?list=PLjvx7xqdpePKJBO8-qr0Im7QmJ86vZ_Rm&si=h97TLon2Ux4jekxD", ""], ["Wave Motion", 34, "https://youtube.com/playlist?list=PLjvx7xqdpePIBAIo5trSIhWP7viOOI5oD&si=xEPh7fLKOuD6cai4", ""], ["Wave Optics", 50, "https://youtube.com/playlist?list=PLjvx7xqdpePJ3lHx7uc5dSi-JqmJweDSZ&si=4hqNZxLp5MO5vczd", ""], ["Fluid Mechanics", 45, "https://youtube.com/playlist?list=PLjvx7xqdpePL2VCkyQT1KsQ1lPt7qs8fj&si=5ONjfCeGd4ECVKPo", ""]], "blocks": [5, 5, 7, 7], "bot": ["https://youtu.be/tWIQa3qUbPs", "https://youtu.be/WPOo4TH3L6E", "https://www.youtube.com/live/oyL9yCpHxEU?si=qm5xTbN7CvkvEGK8", "https://youtube.com/live/tzI8crdu6RI"], "dl": "https://drive.google.com/drive/folders/1I2TsfXwPIqA5t7JHV7JKeoJ50nGIA4IK?usp=drive_link"};
+      const P1_HEAD_LABELS = ["TOP 200Q JEE 2023", "TOP 200Q JEE 2024", "TOP 200Q JEE 2022", "TOP 200Q JEE 2025", "TOP 200Q JEE 2021", "TOP 100Q JEE 2020", "141Q THEORETICAL", "RBS 1.0", "Sure Shot Series"];
+      const P1_BOT = ["100 Repeated Graphical Questions", "30 Experiment Questions", "Formulae Marathon \u2013 Class 11th", "Formulae Marathon \u2013 Class 12th"];
+      const p1e = (t) => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+      const p1a = (url, label) => url ? '<a href="' + p1e(url) + '">' + p1e(label) + "</a>" : p1e(label);
+      const p1box = () => '<td class="pl-c"><span class="pl-bx"></span></td>';
+      function buildPage1Html() {
+        let h = '<div class="pl-doc">';
+        h += '<div class="pl-t1">JEE MAIN 2026<span class="pl-brand">EDUNITI</span></div>';
+        h += '<div class="pl-t2">12 ULTIMATE CHALLENGES \u2013 99 TO 100 PERCENTILE IN PHYSICS</div>';
+        h += '<div class="pl-dl"><span class="pl-red">Top 1241 PYQs + 500 More Ques in PHYSICS \u2013 </span>' + p1a(P1.dl, "CLICK TO DOWNLOAD") + "</div>";
+        h += '<div class="pl-hint">Right-click any box (long-press on a phone) to mark it \u2714 or \u2718. Every change saves by itself.</div>';
+        h += '<div class="pl-scroll"><table class="pl-tbl"><thead><tr><th class="pl-sb"></th><th class="pl-sc">Chapters</th>';
+        for (let i = 0; i < 7; i++) h += "<th>" + p1a(P1.hdr[i], P1_HEAD_LABELS[i]) + "</th>";
+        h += "<th>TOTAL QUES</th><th>" + p1a(P1.hdr[7], P1_HEAD_LABELS[7]) + "</th><th>" + p1a(P1.hdr[8], P1_HEAD_LABELS[8]) + '</th><th colspan="2">JEE ADV PYQS (2021-2024)</th><th>REV 1</th><th>REV 2</th></tr></thead><tbody>';
+        let r = 0;
+        P1.blocks.forEach((n, bi) => {
+          for (let k = 0; k < n; k++, r++) {
+            const [name, total, url, adv] = P1.rows[r];
+            h += "<tr" + (k === 0 ? ' class="pl-first"' : "") + ">";
+            if (k === 0) h += '<td class="pl-sb" rowspan="' + n + '"><span class="pl-blkt">Block ' + (bi + 1) + "</span></td>";
+            h += '<td class="pl-sc">' + p1a(url, name) + "</td>";
+            for (let i = 0; i < 7; i++) h += p1box();
+            h += '<td class="pl-tot">' + total + "</td>" + p1box() + p1box();
+            h += '<td class="pl-adv">' + (adv ? p1a(adv, "Click") : "") + "</td>" + p1box() + p1box() + p1box() + "</tr>";
+          }
+        });
+        h += "</tbody></table></div>";
+        h += '<div class="pl-scroll pl-narrow"><table class="pl-tbl pl-tbl2"><thead><tr><th>S.No.</th><th class="pl-l">CONTENT</th><th>LINKS</th><th>DONE</th><th>REV 1</th><th>REV 2</th></tr></thead><tbody>';
+        P1_BOT.forEach((label, i) => { h += "<tr><td><b>" + (i + 1) + '</b></td><td class="pl-l">' + p1e(label) + "</td><td>" + p1a(P1.bot[i], "Click") + "</td>" + p1box() + p1box() + p1box() + "</tr>"; });
+        h += "</tbody></table></div>";
+        h += '<div class="pl-sec">A. FOLLOWING QUESTIONS IN TOP PYQS PDF ARE REMOVED FROM JEE MAIN 2026 SYLLABUS</div>';
+        h += "<ol><li>JEE Main 2022 Top 200 PYQs - 70, 77, 80, 87, 108, 115, 116, 122, 130, 168, 172, 174, 177, 179 to 185, 199</li><li>JEE Main 2023 Top 200 PYQs - 67, 70, 77, 80, 101, 137, 177, 180 &amp; 189</li></ol>";
+        h += '<div class="pl-sec">B. Selected theoretical questions of JEE Main 2024 &amp; 2025 are included in Top 200 PYQs of JEE Main 2024 &amp; 2025 itself. Theoretical questions of JEE Main 2020 to JEE Main 2023 are compiled in 141 Theoretical Questions video</div>';
+        h += '<div class="pl-send"><b>WHERE TO SEND UPDATES OR TASK COMPLETION?</b><br>Send it to Eduniti Team in Chat Section of Eduniti App<br>(Install Eduniti App from playstore)</div>';
+        h += '<div class="pl-sec">INSTRUCTIONS</div><ol>';
+        [
+          "If question solving is not good, then refer 2020-2022 complete question solving sessions in learning mode and then continue with thus challenge",
+          "Complete Top 1241 PYQs first (chapter wise, you can choose any chapter as per you or follow our sequence), then do other challenges like RBS, Sureshot, ADV PYQs etc",
+          "Must take print of above planner and put up on the wall, keep putting tick mark as you do it",
+          "If possible take print of all Top PYQs PDF and use it, first fill your answer in blank answer key and then cross check. Refer video solution to clear doubts immediately",
+          "Use formulae marathon very frequently 20 days before actual exam or even before any mock tests you take",
+          "While doing it for the first time keep taking note of question numbers which you would redo in 1st and 2nd Revision",
+          "DEADLINE for 1241 Top PYQs is 15 Days, RBS & Sureshot is 5 Days, JEE Adv PYQs is 5 Days and Graph/Experiment one is 2 Days. So a total of 22 Days. Then Rev 1 and Rev 2 of 5 Days Each."
+        ].forEach((t) => { h += "<li>" + p1e(t) + "</li>"; });
+        h += "</ol>";
+        h += '<div class="pl-q">Thousands or even lacs of you might start it but less than 5% actually complete it with 2 revisions, hope you fall in that 5%</div>';
+        h += '<div class="pl-by">Prepared by - Mohit Goenka | Founder of Eduniti | IIT KGP Alumnus</div>';
+        h += "</div><div><b>My notes</b></div><div><br></div>";
+        return h;
+      }
+      /* first time the abhi diary opens, create the page (encrypted, like every page) */
+      async function seedPage1(d) {
+        if (d.uid !== P1_OWNER || d.entries.has(P1_ID)) return;
+        const html = sanitizeHTML(buildPage1Html());
+        const holder = document.createElement("div"); holder.innerHTML = html;
+        const now = Date.now();
+        const e = { id: P1_ID, t: P1_TITLE, c: "plans", html, plain: toPlain(holder), created: now, updated: now, pin: true };
+        d.entries.set(P1_ID, e);
+        try {
+          const body = JSON.stringify({ t: e.t, c: e.c, html: e.html, plain: e.plain, created: e.created, updated: e.updated, pin: true });
+          const sealed = await seal(d.dmk, enc.encode(body), entryAad(d.uid, e.id));
+          await set(entryRef(d.uid, e.id), { v: 1, iv: sealed.iv, ct: sealed.ct, at: e.updated });
+        } catch (err) { console.warn("DuoTrack: page 1 not saved yet, it will save with the first change:", explainErr(err)); }
+      }
+      function paintBox(b) {
+        const st = b.getAttribute("data-s");
+        b.setAttribute("role", "checkbox"); b.setAttribute("aria-checked", st === "t" ? "true" : "false");
+        b.setAttribute("aria-label", st === "t" ? "Ticked" : st === "x" ? "Crossed" : "Empty");
+      }
+      function decoratePlanner() {
+        ed().querySelectorAll(".pl-doc").forEach((x) => x.setAttribute("contenteditable", "false"));      // the table cannot be typed into by accident
+        ed().querySelectorAll(".pl-bx").forEach(paintBox);
+      }
+      function setBox(b, st) {
+        if (st) b.setAttribute("data-s", st); else b.removeAttribute("data-s");
+        paintBox(b); onEdit();                                                                              // onEdit -> autosave (encrypted)
+      }
+      let plMenu = null, plTarget = null;
+      function hidePlMenu() {
+        if (plTarget) plTarget.removeAttribute("data-menu");
+        plTarget = null;
+        if (plMenu) plMenu.hidden = true;
+      }
+      function ensurePlMenu() {
+        if (plMenu) return plMenu;
+        const m = document.createElement("div"); m.id = "plMenu"; m.className = "pl-menu"; m.hidden = true; m.setAttribute("role", "menu");
+        [["t", "\u2714", "Tick"], ["x", "\u2718", "Cross"], ["", "\u21BA", "Clear"]].forEach(([st, ic, label]) => {
+          const bt = document.createElement("button"); bt.type = "button"; bt.className = "pl-mi pl-mi-" + (st || "c"); bt.setAttribute("role", "menuitem");
+          const i = document.createElement("span"); i.className = "pl-mic"; i.textContent = ic;
+          bt.append(i, document.createTextNode(label));
+          bt.addEventListener("click", () => { const b = plTarget; hidePlMenu(); if (b && ed().contains(b)) setBox(b, st); });
+          m.appendChild(bt);
+        });
+        m.addEventListener("contextmenu", (e) => e.preventDefault());
+        document.body.appendChild(m);
+        document.addEventListener("pointerdown", (e) => { if (plMenu && !plMenu.hidden && !plMenu.contains(e.target)) hidePlMenu(); }, true);
+        document.addEventListener("scroll", hidePlMenu, true);
+        window.addEventListener("resize", hidePlMenu);
+        return (plMenu = m);
+      }
+      function openBoxMenu(b, x, y) {
+        const m = ensurePlMenu();
+        if (plTarget) plTarget.removeAttribute("data-menu");
+        plTarget = b; b.setAttribute("data-menu", "1"); m.hidden = false;
+        const w = m.offsetWidth, h = m.offsetHeight;
+        m.style.left = Math.max(8, Math.min(x, innerWidth - w - 8)) + "px";
+        m.style.top = Math.max(8, Math.min(y, innerHeight - h - 8)) + "px";
+        const cur = b.getAttribute("data-s") || "";
+        m.querySelectorAll(".pl-mi").forEach((bt) => bt.classList.toggle("is-cur", !!cur && bt.classList.contains("pl-mi-" + cur)));
+        const first = m.querySelector(".pl-mi"); if (first) first.focus({ preventScroll: true });
+      }
+      function bindPlanner(el) {
+        el.addEventListener("contextmenu", (e) => {
+          const b = e.target.closest && e.target.closest(".pl-bx"); if (!b || !el.contains(b)) return;
+          e.preventDefault(); openBoxMenu(b, e.clientX, e.clientY);
+        });
+        let lp = null, pos = [0, 0];                                                       // long-press, for phones that send no right-click
+        el.addEventListener("touchstart", (e) => {
+          const b = e.target.closest && e.target.closest(".pl-bx"); if (!b || !e.touches.length) return;
+          const t = e.touches[0]; pos = [t.clientX, t.clientY]; clearTimeout(lp);
+          lp = setTimeout(() => { lp = null; openBoxMenu(b, pos[0], pos[1]); }, 520);
+        }, { passive: true });
+        el.addEventListener("touchmove", (e) => { if (!lp || !e.touches.length) return; const t = e.touches[0]; if (Math.hypot(t.clientX - pos[0], t.clientY - pos[1]) > 10) { clearTimeout(lp); lp = null; } }, { passive: true });
+        ["touchend", "touchcancel"].forEach((n) => el.addEventListener(n, () => { clearTimeout(lp); lp = null; }));
+        /* the planner is locked: typing, cut or Backspace can never delete it (My notes below it stays editable) */
+        el.addEventListener("beforeinput", (e) => {
+          const doc = el.querySelector(".pl-doc"); if (!doc) return;
+          const s = getSelection(); if (!s.rangeCount) return;
+          const r = s.getRangeAt(0);
+          if (!r.collapsed) { if (r.intersectsNode(doc)) e.preventDefault(); return; }
+          if (e.inputType === "deleteContentBackward") {
+            let blk = r.startContainer; while (blk && blk.parentNode !== el) blk = blk.parentNode;
+            if (!blk || blk.previousElementSibling !== doc) return;
+            const t = document.createRange(); t.selectNodeContents(blk); t.setEnd(r.startContainer, r.startOffset);
+            if (!t.toString()) e.preventDefault();
+          }
+        });
+      }
+
       function bindEditor() {
         const el = ed();
         el.addEventListener("input", onEdit);
         el.addEventListener("mousedown", (e) => { if (e.target.closest && e.target.closest(".ckb")) e.preventDefault(); });
         el.addEventListener("click", (e) => {
+          const lk = e.target.closest && e.target.closest("a[href]");
+          if (lk && el.contains(lk)) { e.preventDefault(); const hr = lk.getAttribute("href") || ""; if (/^https?:\/\//i.test(hr)) window.open(hr, "_blank", "noopener,noreferrer"); return; }
           const b = e.target.closest && e.target.closest(".ckb"); if (!b || !el.contains(b)) return;
           const ck = b.parentElement, done = !ck.classList.contains("done");
           ck.classList.toggle("done", done); ck.setAttribute("data-done", done ? "1" : "0"); b.setAttribute("aria-checked", done ? "true" : "false");
@@ -20564,6 +20784,7 @@ function totpAt(keyBytes, counter) {
           try { document.execCommand("insertText", false, txt); } catch (err) { /* ignore */ }
         });
         el.addEventListener("drop", (e) => e.preventDefault());
+        bindPlanner(el);
         el.addEventListener("keydown", (e) => {
           if (e.isComposing) return;
           const s = getSelection(); if (!s.rangeCount || !s.isCollapsed) return;
