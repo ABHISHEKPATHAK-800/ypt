@@ -6763,6 +6763,52 @@ body .footer-tagline { letter-spacing: -.01em; }
   @media (prefers-reduced-motion: reduce) { .diary-list, .dn-card, .letter { transition: none; animation: none; } }
   @media (prefers-reduced-motion: reduce) { .todo-totp-btn { transition: none; } }
 </style>
+  <style id="ksStyle">
+    /* ===== Keyboard shortcuts (ks) ===== */
+    .ks-key { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; height: 28px; padding: 0 9px; border: 1px solid var(--line); border-bottom-width: 3px; border-radius: 8px; background: var(--panel); color: var(--ink); font: 700 13px/1 var(--font-body); letter-spacing: 0; white-space: nowrap; transition: background 160ms ease, color 160ms ease, border-color 160ms ease, transform 120ms ease; }
+    .ks-key.hit { background: var(--green); border-color: var(--green); color: var(--panel); transform: translateY(2px); border-bottom-width: 1px; }
+    .ks-key.miss { animation: ksShake 320ms ease; border-color: var(--red); }
+    @keyframes ksShake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+
+    .ks-spot { outline: 3px solid var(--green); outline-offset: 5px; border-radius: var(--radius-md); animation: ksPulse 1.6s ease-in-out infinite; }
+    @keyframes ksPulse { 0%, 100% { outline-color: var(--green); } 50% { outline-color: color-mix(in srgb, var(--green) 22%, transparent); } }
+
+    .ks-tour { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); width: min(440px, calc(100vw - 24px)); z-index: 100400; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow-lift); padding: 16px 18px 14px; animation: ksRise 260ms ease both; }
+    @keyframes ksRise { from { opacity: 0; transform: translate(-50%, 14px); } to { opacity: 1; transform: translate(-50%, 0); } }
+    .ks-tour[hidden], .ks-backdrop[hidden], .ks-hud[hidden] { display: none; }
+    .ks-tour-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+    .ks-tour-tag { font-size: 12px; color: var(--muted); }
+    .ks-dots { display: flex; gap: 5px; }
+    .ks-dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
+    .ks-dots i.on { background: var(--green); }
+    .ks-tour h3 { margin: 0 0 4px; font-size: 18px; line-height: 1.25; }
+    .ks-tour p { margin: 0; font-size: 14px; color: var(--muted); line-height: 1.45; }
+    .ks-keys { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 14px 0 6px; }
+    .ks-keys .ks-or { font-size: 12px; color: var(--muted); }
+    .ks-fb { min-height: 20px; margin-top: 6px; font-size: 13px; font-weight: 600; color: var(--green); }
+    .ks-fb.bad { color: var(--red); }
+    .ks-tour-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; }
+    .ks-tour-actions .ghost-btn, .ks-tour-actions .secondary-btn { min-height: 38px; }
+
+    .ks-hud { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%); z-index: 100390; display: flex; align-items: center; gap: 10px; padding: 8px 14px 8px 8px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 999px; box-shadow: var(--shadow-soft); font-size: 14px; font-weight: 600; pointer-events: none; animation: ksHud 1.5s ease both; }
+    @keyframes ksHud { 0% { opacity: 0; transform: translate(-50%, 8px); } 12%, 80% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, 0); } }
+
+    .ks-backdrop { position: fixed; inset: 0; z-index: 100350; display: grid; place-items: center; padding: 16px; background: rgba(12, 18, 16, .55); backdrop-filter: blur(4px); }
+    .ks-sheet { width: min(620px, 100%); max-height: min(86vh, 720px); overflow-y: auto; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow-lift); padding: 20px 22px 18px; }
+    .ks-sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
+    .ks-sheet-head h2 { margin: 0; font-size: 20px; }
+    .ks-sheet-sub { margin: 0 0 14px; font-size: 13px; color: var(--muted); }
+    .ks-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 28px; }
+    .ks-group h4 { margin: 12px 0 6px; font-size: 13px; font-weight: 700; color: var(--green); }
+    .ks-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 5px 0; border-bottom: 1px solid color-mix(in srgb, var(--line) 60%, transparent); font-size: 14px; }
+    .ks-row .ks-caps { display: flex; gap: 5px; flex: none; }
+    .ks-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--line); }
+    .ks-switch { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; }
+    .ks-switch input { width: 18px; height: 18px; accent-color: var(--green); }
+    @media (max-width: 560px) { .ks-grid { grid-template-columns: 1fr; } .ks-sheet { padding: 16px; } }
+    @media (prefers-reduced-motion: reduce) { .ks-spot, .ks-tour, .ks-hud, .ks-key.miss { animation: none; } }
+    @media (hover: none) and (pointer: coarse) { #shortcutsBtn { display: none; } }
+  </style>
 </head>
 <body>
   <div class="app-grain" aria-hidden="true"></div>
@@ -6920,6 +6966,9 @@ body .footer-tagline { letter-spacing: -.01em; }
           </button>
           <button id="fullscreenBtn" class="icon-btn mock-circle-btn" type="button" title="Full screen" aria-label="Full screen">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+          </button>
+          <button id="shortcutsBtn" class="icon-btn mock-circle-btn" type="button" title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6.5 10h.01M10 10h.01M13.5 10h.01M17 10h.01M7.5 14h9"/></svg>
           </button>
           <button id="mockIconBtn" class="icon-btn mock-circle-btn" type="button" title="Mock test progress" aria-label="Mock test progress">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>
@@ -23107,6 +23156,331 @@ function totpAt(keyBytes, counter) {
     scheduleCheckinReminder();
     requestNotificationPermissionOnce();
     render();
+
+    /* ===== Keyboard shortcuts + first-time practice run ===== */
+    (function ksInit() {
+      "use strict";
+      const OFF_KEY = "duotrackShortcutsOff";
+      const SEEN_PREFIX = "duotrackShortcutsIntro:";
+      const appEl = document.getElementById("appScreen");
+      const $ = (sel) => document.querySelector(sel);
+      const lsGet = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+      const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* ignore */ } };
+      const uid = () => { try { return currentUserId || "guest"; } catch (e) { return "guest"; } };
+      const seen = () => lsGet(SEEN_PREFIX + uid()) === "1";
+      const markSeen = () => lsSet(SEEN_PREFIX + uid(), "1");
+      const enabled = () => lsGet(OFF_KEY) !== "1";
+      const reduceMotion = () => !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+      const noKeyboard = () => !!(window.matchMedia && matchMedia("(pointer: coarse)").matches && !matchMedia("(any-pointer: fine)").matches);
+      const shown = (el) => !!el && el.getClientRects().length > 0 && getComputedStyle(el).visibility !== "hidden";
+      const capLabel = (k) => (k === "space" ? "Space" : k === "esc" ? "Esc" : k.length === 1 ? k.toUpperCase() : k);
+
+      /* ---------- what each key does ---------- */
+      const NA = "Not available right now";
+      const press = (sel) => { const el = $(sel); if (!el || el.disabled) return false; el.click(); return true; };
+      const focusBox = (sel, msg) => {
+        const el = $(sel);
+        if (!el || !shown(el)) return NA;
+        el.scrollIntoView({ block: "center", behavior: reduceMotion() ? "auto" : "smooth" });
+        el.focus({ preventScroll: true });
+        return msg;
+      };
+      const subject = (name) => () => (press('.subject-option[data-subject="' + name + '"]') ? "Subject: " + name : NA);
+      const mode = (name) => () => (press('.mode-option[data-mode="' + name + '"]') ? "Mode: " + name : NA);
+      const btn = (sel, msg) => () => (press(sel) ? msg : NA);
+
+      const ACT = {
+        space: () => {
+          if (!press("#timerToggleBtn")) return NA;
+          setTimeout(() => {
+            const b = document.getElementById("timerStateBadge");
+            hud(["space"], "Timer: " + ((b && b.textContent.trim()) || "toggled"));
+          }, 90);
+          return null;
+        },
+        "1": subject("Physics"),
+        "2": subject("Chemistry"),
+        "3": subject("Maths"),
+        l: mode("Lecture"),
+        p: mode("Practice"),
+        m: () => (press("#timerModeToggleBtn") ? "Stopwatch / countdown switched" : "Stop the timer first"),
+        t: () => focusBox("#todoInput", "To-do: type your task"),
+        "/": () => focusBox("#musicSearchInput", "Music: search a song"),
+        q: btn("#questionsLogoBtn", "Questions done"),
+        k: btn("#mockIconBtn", "Mock tests"),
+        s: btn("#appSettingsBtn", "Settings"),
+        c: btn("#chatToggle", "Study chat"),
+        a: btn("#grokToggle", "AI assistant"),
+        n: btn("#nightModeBtn", "Night mode"),
+        f: btn("#fullscreenBtn", "Full screen"),
+        "?": () => { openSheet(); return null; }
+      };
+
+      /* ---------- small helpers ---------- */
+      function keyId(e) {
+        if (e.code === "Space" || e.key === " ") return "space";
+        if (e.key === "?") return "?";
+        if (e.key === "Escape") return "esc";
+        const k = (e.key || "").toLowerCase();
+        return k.length === 1 ? k : "";
+      }
+      function typing(t) {
+        if (!t || t.nodeType !== 1) return false;
+        const tag = t.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return true;
+        return !!t.isContentEditable || !!(t.closest && t.closest('[contenteditable=""],[contenteditable="true"]'));
+      }
+      const BLOCKERS = '[role="dialog"][aria-modal="true"], dialog[open], .pv-root, .gs-back, .dn-overlay, .dg-overlay, #acctClosedOverlay, #appealReviewOverlay, #callOverlay, #diaryPage, .modal-backdrop';
+      function blocked() {
+        if (!appEl || !shown(appEl)) return true;
+        const list = document.querySelectorAll(BLOCKERS);
+        for (let i = 0; i < list.length; i++) {
+          const el = list[i];
+          if (el.closest("#ksSheet, #ksTour")) continue;
+          if (shown(el)) return true;
+        }
+        return false;
+      }
+      function swallowSpaceKeyup() {
+        const h = (ev) => {
+          if (ev.code === "Space" || ev.key === " ") { ev.preventDefault(); ev.stopPropagation(); window.removeEventListener("keyup", h, true); }
+        };
+        window.addEventListener("keyup", h, true);
+      }
+      function keycap(k) {
+        const s = document.createElement("span");
+        s.className = "ks-key"; s.textContent = capLabel(k); s.dataset.k = k;
+        return s;
+      }
+
+      /* ---------- small on-screen confirmation ---------- */
+      let hudEl = null, hudTimer = 0;
+      function hud(caps, text) {
+        if (hudEl) hudEl.remove();
+        clearTimeout(hudTimer);
+        hudEl = document.createElement("div");
+        hudEl.className = "ks-hud"; hudEl.setAttribute("role", "status");
+        caps.forEach((k) => hudEl.appendChild(keycap(k)));
+        const t = document.createElement("span"); t.textContent = text; hudEl.appendChild(t);
+        document.body.appendChild(hudEl);
+        hudTimer = setTimeout(() => { if (hudEl) { hudEl.remove(); hudEl = null; } }, 1500);
+      }
+
+      /* ---------- cheat sheet ---------- */
+      const GROUPS = [
+        ["Timer", [["Start or pause", ["space"]], ["Physics, Chemistry, Maths", ["1", "2", "3"]], ["Lecture or Practice mode", ["l", "p"]], ["Stopwatch or countdown", ["m"]]]],
+        ["Go to", [["To-do box", ["t"]], ["Music search", ["/"]], ["Questions done", ["q"]], ["Mock tests", ["k"]], ["Settings", ["s"]]]],
+        ["Panels", [["Study chat", ["c"]], ["AI assistant", ["a"]]]],
+        ["View and help", [["Night mode", ["n"]], ["Full screen", ["f"]], ["This list", ["?"]], ["Close this or skip the tour", ["esc"]]]]
+      ];
+      let sheet = null, sheetOpen = false, sheetReturn = null;
+      function buildSheet() {
+        sheet = document.createElement("div");
+        sheet.id = "ksSheet"; sheet.className = "ks-backdrop"; sheet.hidden = true;
+        sheet.setAttribute("role", "dialog"); sheet.setAttribute("aria-modal", "true"); sheet.setAttribute("aria-labelledby", "ksSheetTitle");
+        const panel = document.createElement("div"); panel.className = "ks-sheet";
+        const head = document.createElement("div"); head.className = "ks-sheet-head";
+        const h2 = document.createElement("h2"); h2.id = "ksSheetTitle"; h2.textContent = "Keyboard shortcuts";
+        const x = document.createElement("button"); x.type = "button"; x.className = "small-btn"; x.setAttribute("aria-label", "Close"); x.textContent = "X"; x.dataset.ks = "close";
+        head.appendChild(h2); head.appendChild(x);
+        const sub = document.createElement("p"); sub.className = "ks-sheet-sub"; sub.textContent = "Shortcuts pause while you are typing in a box.";
+        const grid = document.createElement("div"); grid.className = "ks-grid";
+        GROUPS.forEach((g) => {
+          const col = document.createElement("div"); col.className = "ks-group";
+          const h4 = document.createElement("h4"); h4.textContent = g[0]; col.appendChild(h4);
+          g[1].forEach((r) => {
+            const row = document.createElement("div"); row.className = "ks-row";
+            const lab = document.createElement("span"); lab.textContent = r[0];
+            const caps = document.createElement("span"); caps.className = "ks-caps";
+            r[1].forEach((k) => caps.appendChild(keycap(k)));
+            row.appendChild(lab); row.appendChild(caps); col.appendChild(row);
+          });
+          grid.appendChild(col);
+        });
+        const foot = document.createElement("div"); foot.className = "ks-foot";
+        const sw = document.createElement("label"); sw.className = "ks-switch";
+        const cb = document.createElement("input"); cb.type = "checkbox"; cb.id = "ksEnabled";
+        const sp = document.createElement("span"); sp.textContent = "Shortcuts on";
+        sw.appendChild(cb); sw.appendChild(sp);
+        const replay = document.createElement("button"); replay.type = "button"; replay.className = "ghost-btn"; replay.textContent = "Replay the practice run"; replay.dataset.ks = "replay";
+        foot.appendChild(sw); foot.appendChild(replay);
+        panel.appendChild(head); panel.appendChild(sub); panel.appendChild(grid); panel.appendChild(foot);
+        sheet.appendChild(panel);
+        document.body.appendChild(sheet);
+        sheet.addEventListener("click", (ev) => {
+          if (ev.target === sheet) return closeSheet();
+          const b = ev.target.closest("[data-ks]");
+          if (!b) return;
+          if (b.dataset.ks === "close") closeSheet();
+          else if (b.dataset.ks === "replay") { closeSheet(); startTour(true); }
+        });
+        cb.addEventListener("change", () => lsSet(OFF_KEY, cb.checked ? "0" : "1"));
+      }
+      function openSheet() {
+        if (sheetOpen) return;
+        if (tour) endTour(true);
+        if (!sheet) buildSheet();
+        sheet.querySelector("#ksEnabled").checked = enabled();
+        sheetReturn = document.activeElement;
+        sheet.hidden = false; sheetOpen = true;
+        const first = sheet.querySelector('[data-ks="close"]'); if (first) first.focus();
+      }
+      function closeSheet() {
+        if (!sheetOpen) return;
+        sheet.hidden = true; sheetOpen = false;
+        if (sheetReturn && sheetReturn.focus && document.contains(sheetReturn) && sheetReturn !== document.body) sheetReturn.focus();
+        sheetReturn = null;
+      }
+      function trapTab(e) {
+        const f = Array.prototype.slice.call(sheet.querySelectorAll("button, input")).filter((el) => !el.disabled);
+        if (!f.length) return;
+        const first = f[0], last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+
+      /* ---------- first-time practice run ---------- */
+      const STEPS = [
+        { keys: ["space"], title: "Start or pause the timer", hint: "Press Space.", target: "#timerToggleBtn", ok: () => "Yes. That is start and pause." },
+        { keys: ["1", "2", "3"], title: "Switch subject", hint: "Press 1, 2 or 3 for Physics, Chemistry or Maths.", target: "#subjectGrid", ok: (k) => "Yes. " + ({ "1": "Physics", "2": "Chemistry", "3": "Maths" })[k] + "." },
+        { keys: ["l", "p"], title: "Lecture or Practice", hint: "Press L for Lecture mode or P for Practice mode.", target: "#modeGrid", ok: (k) => (k === "l" ? "Yes. Lecture mode." : "Yes. Practice mode.") },
+        { keys: ["t"], title: "Jump to your to-do list", hint: "Press T. The cursor lands in the task box.", target: "#todoInput", ok: () => "Yes. Then just type and press Enter." },
+        { keys: ["?"], title: "See every shortcut", hint: "Press ? (Shift and /). It works any time.", target: "#shortcutsBtn", real: true, ok: () => "Opening the full list." }
+      ];
+      let tour = null, card = null;
+
+      function clearSpot() { document.querySelectorAll(".ks-spot").forEach((el) => el.classList.remove("ks-spot")); }
+      function spot(sel) {
+        clearSpot();
+        const el = $(sel);
+        if (!el || !shown(el)) return;
+        el.classList.add("ks-spot");
+        el.scrollIntoView({ block: "center", behavior: reduceMotion() ? "auto" : "smooth" });
+      }
+      function el(tag, cls, text) { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+      function actionBtn(cls, label, act) { const b = el("button", cls, label); b.type = "button"; b.dataset.ks = act; return b; }
+
+      function renderTour() {
+        card.textContent = "";
+        const top = el("div", "ks-tour-top");
+        if (tour.i < 0) {
+          top.appendChild(el("span", "ks-tour-tag", "Quick tour, about 20 seconds"));
+          card.appendChild(top);
+          card.appendChild(el("h3", "", "Keyboard shortcuts"));
+          card.appendChild(el("p", "", "Run the timer without touching the mouse. Try 5 keys in a practice run. Nothing really starts."));
+          const act = el("div", "ks-tour-actions");
+          act.appendChild(actionBtn("ghost-btn", "Not now", "skip"));
+          act.appendChild(actionBtn("secondary-btn", "Start", "start"));
+          card.appendChild(act);
+          return;
+        }
+        const s = STEPS[tour.i];
+        top.appendChild(el("span", "ks-tour-tag", "Practice run. Nothing really starts."));
+        const dots = el("span", "ks-dots"); dots.setAttribute("aria-label", "Step " + (tour.i + 1) + " of " + STEPS.length);
+        STEPS.forEach((_, n) => dots.appendChild(el("i", n <= tour.i ? "on" : "")));
+        top.appendChild(dots);
+        card.appendChild(top);
+        card.appendChild(el("h3", "", s.title));
+        card.appendChild(el("p", "", s.hint));
+        const keys = el("div", "ks-keys");
+        s.keys.forEach((k, n) => { if (n) keys.appendChild(el("span", "ks-or", "or")); keys.appendChild(keycap(k)); });
+        card.appendChild(keys);
+        const fb = el("div", "ks-fb"); fb.id = "ksFb"; card.appendChild(fb);
+        const act = el("div", "ks-tour-actions");
+        act.appendChild(actionBtn("ghost-btn", "Skip tour", "skip"));
+        act.appendChild(actionBtn("secondary-btn", tour.i === STEPS.length - 1 ? "Finish" : "Skip step", "next"));
+        card.appendChild(act);
+      }
+      function goStep(n) {
+        tour.i = n; tour.locked = false;
+        renderTour();
+        if (n >= 0) {
+          const a = document.activeElement;
+          if (a && a !== document.body && typing(a) && !a.closest("#ksTour")) a.blur();
+          spot(STEPS[n].target);
+        }
+      }
+      function startTour(direct) {
+        if (tour) return;
+        if (!card) {
+          card = document.createElement("div");
+          card.id = "ksTour"; card.className = "ks-tour"; card.setAttribute("role", "region"); card.setAttribute("aria-label", "Keyboard shortcuts practice run");
+          document.body.appendChild(card);
+          card.addEventListener("click", (ev) => {
+            const b = ev.target.closest("[data-ks]");
+            if (!b || !tour) return;
+            const a = b.dataset.ks;
+            if (a === "start") goStep(0);
+            else if (a === "skip") { endTour(true); hud(["?"], "Press ? any time for shortcuts"); }
+            else if (a === "next") { if (tour.i >= STEPS.length - 1) { endTour(true); hud(["?"], "Press ? any time for shortcuts"); } else goStep(tour.i + 1); }
+          });
+        }
+        tour = { i: -1, locked: false };
+        card.hidden = false;
+        if (direct) goStep(0); else renderTour();
+      }
+      function endTour(done) {
+        clearSpot();
+        if (card) card.hidden = true;
+        tour = null;
+        if (done) markSeen();
+      }
+      function tourKey(id) {
+        if (tour.locked) return;
+        const s = STEPS[tour.i];
+        const fb = card.querySelector("#ksFb");
+        if (s.keys.indexOf(id) !== -1) {
+          tour.locked = true;
+          const cap = card.querySelector('.ks-key[data-k="' + id + '"]'); if (cap) cap.classList.add("hit");
+          if (fb) { fb.className = "ks-fb"; fb.textContent = s.ok(id); }
+          if (s.real) { setTimeout(() => { if (tour) { endTour(true); openSheet(); } }, 450); return; }
+          const at = tour.i;
+          setTimeout(() => { if (tour && tour.i === at) goStep(at + 1); }, 850);
+        } else {
+          card.querySelectorAll(".ks-keys .ks-key").forEach((c) => { c.classList.remove("miss"); void c.offsetWidth; c.classList.add("miss"); });
+          if (fb) { fb.className = "ks-fb bad"; fb.textContent = "That is another shortcut. " + s.hint; }
+        }
+      }
+
+      /* ---------- the key handler ---------- */
+      function onKey(e) {
+        if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return;
+        const id = keyId(e);
+        if (!id) { if (sheetOpen && e.key === "Tab") trapTab(e); return; }
+        if (sheetOpen) { if (id === "esc") { e.preventDefault(); e.stopPropagation(); closeSheet(); } return; }
+        const t = e.target;
+        if (t && t.closest && t.closest("#ksTour")) return;           /* buttons inside the tour card keep normal behaviour */
+        if (typing(t) || blocked()) return;
+        if (id === "esc") { if (tour) { e.preventDefault(); e.stopPropagation(); endTour(true); hud(["?"], "Press ? any time for shortcuts"); } return; }
+        const run = ACT[id];
+        if (!run) return;
+        if (!enabled() && id !== "?") return;
+        if (id === "space" && t && t !== document.body && t !== document.documentElement && t.closest && t.closest('button, a[href], summary, [role="button"], [role="tab"], [role="switch"], [tabindex]')) {
+          if (t.blur) t.blur();                                       /* stop Space from also pressing the focused button */
+          swallowSpaceKeyup();
+        }
+        e.preventDefault(); e.stopPropagation();
+        if (e.repeat) return;
+        if (tour && tour.i >= 0) { tourKey(id); return; }
+        const msg = run(id);
+        if (msg) hud(msg === NA || msg === "Stop the timer first" ? [] : [id], msg);
+      }
+      window.addEventListener("keydown", onKey, true);
+
+      const topBtn = document.getElementById("shortcutsBtn");
+      if (topBtn) topBtn.addEventListener("click", openSheet);
+
+      /* ---------- offer the practice run once per user ---------- */
+      let appSince = 0;
+      setInterval(() => {
+        const vis = !!appEl && shown(appEl);
+        if (!vis) { appSince = 0; if (tour) endTour(false); return; }
+        if (!appSince) appSince = Date.now();
+        if (tour || sheetOpen || seen() || !enabled() || noKeyboard()) return;
+        if (Date.now() - appSince < 3500 || blocked()) return;
+        startTour(false);
+      }, 2000);
+    })();
   </script>
 </body>
 </html>
