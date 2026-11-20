@@ -7082,6 +7082,415 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
 @media (prefers-reduced-motion: reduce) { :is(.cs-option, .live-option) { transition: none; } }
 
   </style>
+
+  <style id="minorFlowCss">
+    .mn-feat-off { display: none !important; }
+    .dg-btn.is-minor-blocked,
+    .dg-btn.is-minor-blocked:hover {
+      background: #9aa39e !important;
+      color: #eef2ef !important;
+      border-color: #9aa39e !important;
+      opacity: .58 !important;
+      cursor: not-allowed !important;
+      filter: grayscale(1) !important;
+      box-shadow: none !important;
+      transform: none !important;
+      pointer-events: none !important;
+    }
+    .mn-inline-note {
+      margin: 6px 0 4px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(245, 158, 11, .11);
+      border: 1px solid rgba(245, 158, 11, .35);
+      color: var(--ink, #17211c);
+      font-size: .83rem;
+      line-height: 1.45;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    body.night-override .mn-inline-note {
+      background: rgba(245, 158, 11, .14);
+      color: #fde68a;
+    }
+    .mn-inline-note button {
+      flex: none;
+      padding: 6px 11px;
+      border-radius: 9px;
+      border: 1px solid rgba(245, 158, 11, .5);
+      background: rgba(245, 158, 11, .18);
+      color: inherit;
+      font: 700 .78rem Inter, system-ui, sans-serif;
+      cursor: pointer;
+    }
+
+    /* Cinematic Minor Overlays */
+    @keyframes mnFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes mnCardRise {
+      0% { opacity: 0; transform: translateY(28px) scale(.94); filter: blur(6px); }
+      100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+    }
+    @keyframes mnAuraShift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+    @keyframes mnPulseRing {
+      0% { transform: scale(.92); opacity: .7; }
+      70% { transform: scale(1.22); opacity: 0; }
+      100% { transform: scale(1.22); opacity: 0; }
+    }
+    .mn-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 100020;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      overflow-y: auto;
+      background:
+        radial-gradient(640px 420px at 15% 10%, rgba(16, 185, 129, .24), transparent 62%),
+        radial-gradient(640px 420px at 85% 14%, rgba(245, 158, 11, .22), transparent 60%),
+        radial-gradient(720px 460px at 50% 96%, rgba(99, 102, 241, .22), transparent 64%),
+        rgba(6, 11, 14, .84);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      animation: mnFadeIn .32s cubic-bezier(.22, 1, .36, 1) both;
+    }
+    .mn-overlay[hidden] { display: none !important; }
+    .mn-card {
+      position: relative;
+      width: min(470px, 100%);
+      padding: 28px 24px 24px;
+      border-radius: 24px;
+      background: linear-gradient(165deg, rgba(18, 27, 25, .96), rgba(11, 17, 20, .98));
+      border: 1px solid rgba(255, 255, 255, .13);
+      color: #f3f7f4;
+      box-shadow: 0 28px 80px rgba(0, 0, 0, .62), 0 0 0 1px rgba(255, 255, 255, .04) inset;
+      overflow: hidden;
+      animation: mnCardRise .48s cubic-bezier(.16, 1, .3, 1) both;
+      text-align: center;
+    }
+    .mn-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 4px;
+      background: linear-gradient(90deg, #10b981, #f59e0b, #6366f1, #10b981);
+      background-size: 240% 100%;
+      animation: mnAuraShift 5s ease infinite;
+    }
+    .mn-close {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, .14);
+      background: rgba(255, 255, 255, .06);
+      color: #d6e2db;
+      font-size: 1.1rem;
+      line-height: 1;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      transition: background .15s ease, transform .15s ease;
+    }
+    .mn-close:hover { background: rgba(255, 255, 255, .14); transform: scale(1.06); }
+    .mn-emblem {
+      position: relative;
+      width: 66px;
+      height: 66px;
+      margin: 4px auto 16px;
+      border-radius: 20px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, rgba(16, 185, 129, .24), rgba(245, 158, 11, .22));
+      border: 1px solid rgba(255, 255, 255, .18);
+      box-shadow: 0 12px 30px rgba(16, 185, 129, .25);
+    }
+    .mn-emblem::after {
+      content: "";
+      position: absolute;
+      inset: -4px;
+      border-radius: 24px;
+      border: 1.5px solid rgba(245, 158, 11, .45);
+      animation: mnPulseRing 2.6s ease-out infinite;
+      pointer-events: none;
+    }
+    .mn-emblem svg { width: 32px; height: 32px; color: #fcd34d; }
+    .mn-emblem.is-welcome svg { color: #6ee7b7; }
+    .mn-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 11px;
+      border-radius: 999px;
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      background: rgba(245, 158, 11, .16);
+      color: #fcd34d;
+      border: 1px solid rgba(245, 158, 11, .32);
+      margin-bottom: 10px;
+    }
+    .mn-eyebrow.is-welcome {
+      background: rgba(16, 185, 129, .16);
+      color: #6ee7b7;
+      border-color: rgba(16, 185, 129, .34);
+    }
+    .mn-card h2 {
+      margin: 0 0 10px;
+      font-size: 1.42rem;
+      line-height: 1.22;
+      font-weight: 800;
+      letter-spacing: -.015em;
+      color: #ffffff;
+    }
+    .mn-lead {
+      margin: 0 0 14px;
+      font-size: .92rem;
+      line-height: 1.58;
+      color: rgba(235, 244, 239, .86);
+    }
+    .mn-gift-banner {
+      margin: 0 0 16px;
+      padding: 11px 14px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(245, 158, 11, .14), rgba(16, 185, 129, .14));
+      border: 1px solid rgba(252, 211, 77, .28);
+      font-size: .85rem;
+      line-height: 1.48;
+      color: #fef3c7;
+      text-align: left;
+    }
+    .mn-mail-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 14px;
+      margin: 0 0 14px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, .06);
+      border: 1px solid rgba(255, 255, 255, .14);
+      text-align: left;
+    }
+    .mn-mail-box small {
+      display: block;
+      font-size: .68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .09em;
+      color: #9fb3a8;
+    }
+    .mn-mail-box strong {
+      font-size: .96rem;
+      color: #ffffff;
+      word-break: break-all;
+    }
+    .mn-steps {
+      margin: 0 0 18px;
+      padding: 12px 14px 12px 30px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, .04);
+      border: 1px solid rgba(255, 255, 255, .09);
+      text-align: left;
+      font-size: .84rem;
+      line-height: 1.52;
+      color: rgba(235, 244, 239, .84);
+    }
+    .mn-steps li + li { margin-top: 6px; }
+    .mn-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    @media (max-width: 420px) { .mn-actions { grid-template-columns: 1fr; } }
+    .mn-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 46px;
+      padding: 0 16px;
+      border-radius: 13px;
+      border: 1px solid rgba(255, 255, 255, .16);
+      background: rgba(255, 255, 255, .08);
+      color: #ffffff;
+      font: 700 .9rem Inter, system-ui, sans-serif;
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+    }
+    .mn-btn:hover:not(:disabled) { transform: translateY(-1px); background: rgba(255, 255, 255, .14); }
+    .mn-btn.primary {
+      border-color: transparent;
+      background: linear-gradient(135deg, #10b981, #059669);
+      box-shadow: 0 10px 26px rgba(16, 185, 129, .36);
+    }
+    .mn-btn.primary:hover:not(:disabled) { box-shadow: 0 14px 32px rgba(16, 185, 129, .48); }
+    .mn-btn.gold {
+      border-color: transparent;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #14120c;
+      box-shadow: 0 10px 26px rgba(245, 158, 11, .34);
+    }
+    .mn-btn.full { width: 100%; }
+    .mn-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* Minor Password Setup Form inside Cinematic Popup */
+    .mn-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      margin: 0 0 16px;
+    }
+    .mn-chip {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: .75rem;
+      font-weight: 600;
+      background: rgba(239, 68, 68, .15);
+      border: 1px solid rgba(248, 113, 113, .32);
+      color: #fecaca;
+    }
+    .mn-form { text-align: left; display: grid; gap: 11px; }
+    .mn-field label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: .78rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+      color: #c6d6cd;
+    }
+    .mn-pw-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .mn-pw-wrap input {
+      width: 100%;
+      box-sizing: border-box;
+      min-height: 46px;
+      padding: 10px 46px 10px 14px;
+      border-radius: 13px;
+      border: 1px solid rgba(255, 255, 255, .18);
+      background: rgba(255, 255, 255, .07);
+      color: #ffffff;
+      font: 600 .95rem Inter, system-ui, sans-serif;
+      outline: none;
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    .mn-pw-wrap input:focus {
+      border-color: #34d399;
+      box-shadow: 0 0 0 3px rgba(52, 211, 153, .22);
+    }
+    .mn-eye {
+      position: absolute;
+      right: 8px;
+      width: 34px;
+      height: 34px;
+      border: 0;
+      border-radius: 9px;
+      background: transparent;
+      color: #b7c9bf;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      transition: color .15s ease, background .15s ease;
+    }
+    .mn-eye:hover { color: #ffffff; background: rgba(255, 255, 255, .1); }
+    .mn-eye svg { width: 19px; height: 19px; }
+    .mn-err {
+      margin: 0;
+      min-height: 1.1em;
+      font-size: .83rem;
+      font-weight: 600;
+      color: #fca5a5;
+      text-align: center;
+    }
+
+    /* Admin Portal Minor Accounts Card */
+    .mn-admin-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 10px;
+      margin: 10px 0 12px;
+    }
+    .mn-admin-grid label {
+      display: grid;
+      gap: 4px;
+      font-size: .82rem;
+      font-weight: 600;
+    }
+    .mn-admin-grid input, .mn-admin-grid select {
+      padding: 8px 10px;
+      border-radius: 9px;
+      border: 1px solid var(--line, #cbd5e1);
+      background: var(--panel, #fff);
+      color: var(--ink, #17211c);
+      font: inherit;
+    }
+    .mn-feat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
+      gap: 8px;
+      margin: 8px 0 14px;
+    }
+    .mn-feat-opt {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--line, #d1dbd4);
+      background: var(--paper, #f8fbf8);
+      font-size: .82rem;
+      cursor: pointer;
+    }
+    .mn-feat-opt input { width: 16px; height: 16px; accent-color: #c0392b; flex: none; }
+    .mn-admin-item {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid var(--line, #d1dbd4);
+      background: var(--paper, #f8fbf8);
+    }
+    .mn-admin-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .mn-badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: .74rem;
+      font-weight: 700;
+      background: rgba(245, 158, 11, .16);
+      color: #92400e;
+    }
+    .mn-badge.is-ready { background: rgba(16, 185, 129, .15); color: #065f46; }
+    .mn-admin-notice {
+      margin: 6px 0 10px;
+      padding: 9px 12px;
+      border-radius: 10px;
+      font-size: .82rem;
+      background: rgba(36, 107, 69, .09);
+      border: 1px dashed rgba(36, 107, 69, .35);
+    }
+  </style>
 </head>
 <body>
 <noscript><p style="padding:16px;font:16px/1.5 system-ui,sans-serif">DuoTrack is a free study timer for JEE and NEET students with a live study partner, mock test tracker, exam countdown and AI doubt solver. Please turn on JavaScript to use the app.</p></noscript>
@@ -8468,16 +8877,48 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
     // 1-on-1 comparison view still assume exactly one other person — with 3+ accounts
     // it will just show whichever other account it finds first. Chat itself is shared
     // by everyone already, so that part works fine with more people.
+    function applyAccountRecord(loginId, account) {
+      if (!account || !account.id) return;
+      const existing = USERS[loginId];
+      if (existing && !existing.dyn) return;
+      USERS[loginId] = {
+        password: String(account.password || ""),
+        id: account.id,
+        name: account.name || account.id,
+        loginId,
+        dyn: true,
+        createdAt: Number(account.createdAt) || 0,
+        isMinor: Boolean(account.isMinor),
+        needsPasswordSetup: Boolean(account.needsPasswordSetup),
+        dob: String(account.dob || ""),
+        disabledFeatures: account.disabledFeatures && typeof account.disabledFeatures === "object" ? { ...account.disabledFeatures } : {},
+        createdByAdmin: Boolean(account.createdByAdmin),
+        birthdayUnlockedAt: Number(account.birthdayUnlockedAt) || 0
+      };
+      USERS_BY_ID[account.id] = USERS[loginId];
+    }
+
+    let accountsLiveSubbed = false;
+    function watchDynamicAccounts() {
+      if (accountsLiveSubbed) return;
+      accountsLiveSubbed = true;
+      try {
+        onValue(accountsRef, (snapshot) => {
+          const accounts = snapshot.val() || {};
+          Object.entries(accounts).forEach(([loginId, account]) => applyAccountRecord(loginId, account));
+          if (typeof applyMinorFeatureRestrictions === "function" && currentUserId) {
+            applyMinorFeatureRestrictions();
+          }
+        });
+      } catch (e) { /* ignore */ }
+    }
+
     async function loadDynamicAccounts() {
+      watchDynamicAccounts();
       try {
         const snapshot = await get(accountsRef);
         const accounts = snapshot.val() || {};
-        Object.entries(accounts).forEach(([loginId, account]) => {
-          if (!USERS[loginId] && account && account.id) {
-            USERS[loginId] = { password: String(account.password || ""), id: account.id, name: account.name || account.id, dyn: true, createdAt: Number(account.createdAt) || 0 };
-            USERS_BY_ID[account.id] = USERS[loginId];
-          }
-        });
+        Object.entries(accounts).forEach(([loginId, account]) => applyAccountRecord(loginId, account));
       } catch (error) {
         console.error("Could not load registered accounts", error);
       }
@@ -8525,41 +8966,357 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
     function dgClose() { dgEl.hidden = true; dgEl.innerHTML = ""; dgMode = ""; }
     document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !dgEl.hidden && dgClosable) dgClose(); });
 
-    /* Age gate: under 13 blocked, 13-17 need a parent/guardian, admin verifies before approving. */
+    /* ===== Minor Safe-Access System: features, cinematic popups, 18th birthday gift ===== */
+    const MINOR_FEATURES = [
+      { key: "globalChat", label: "Global Chat Room", defaultOff: true },
+      { key: "partnerChat", label: "Partner / Study Chat", defaultOff: false },
+      { key: "calls", label: "Voice & Video Calls", defaultOff: true },
+      { key: "aiChat", label: "Study AI & Chat AI (@grok/@a9)", defaultOff: false },
+      { key: "pdfAi", label: "PDF Viewer AI & Magic Crop", defaultOff: false },
+      { key: "music", label: "Study Music (YouTube)", defaultOff: false },
+      { key: "diary", label: "Private Diary", defaultOff: true },
+      { key: "partnerPicker", label: "Study Partner & Picker", defaultOff: false },
+      { key: "mockTests", label: "Mock Test Tracker", defaultOff: false },
+      { key: "coffee", label: "Buy Me a Coffee", defaultOff: true },
+      { key: "ambient", label: "Study Ambient Sounds", defaultOff: false },
+      { key: "whyJee", label: "Why JEE Story Mode", defaultOff: false }
+    ];
+    const MINOR_EYE_OPEN = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.8-7 10-7 10 7 10 7-3.8 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`;
+    const MINOR_EYE_OFF = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c6.2 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3.8 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>`;
+
     function dgAge(s) { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ""); if (!m) return null; const b = new Date(+m[1], +m[2] - 1, +m[3]), n = new Date(); if (isNaN(b) || b > n) return null; let a = n.getFullYear() - b.getFullYear(); const md = n.getMonth() - b.getMonth(); if (md < 0 || (md === 0 && n.getDate() < b.getDate())) a--; return a; }
-    function dgAgeBlocked() { try { return sessionStorage.getItem("dtAgeBlock") === "1"; } catch (e) { return false; } }
+
+    function currentAccountRecord() {
+      if (!currentUserId) return null;
+      return USERS_BY_ID[currentUserId] || null;
+    }
+
+    let birthdayGiftChecking = false;
+    async function checkMinorBirthdayUnlock() {
+      const acc = currentAccountRecord();
+      if (!acc || !acc.isMinor || !acc.dob || birthdayGiftChecking) return;
+      const age = dgAge(acc.dob);
+      if (age !== null && age >= 18) {
+        birthdayGiftChecking = true;
+        const loginKey = acc.loginId || Object.keys(USERS).find((k) => USERS[k] && USERS[k].id === acc.id);
+        acc.isMinor = false;
+        acc.disabledFeatures = {};
+        acc.birthdayUnlockedAt = Date.now();
+        if (loginKey) {
+          try {
+            await update(ref(database, `duotrack/groups/${GROUP_ID}/accounts/${loginKey}`), {
+              isMinor: false,
+              disabledFeatures: {},
+              birthdayUnlockedAt: acc.birthdayUnlockedAt
+            });
+          } catch (e) { /* best-effort */ }
+        }
+        applyMinorFeatureRestrictions();
+        openBirthdayGiftPopup(acc.name);
+        birthdayGiftChecking = false;
+      }
+    }
+
+    function isFeatureDisabled(featKey) {
+      const acc = currentAccountRecord();
+      if (!acc || !acc.isMinor) return false;
+      if (acc.dob) {
+        const age = dgAge(acc.dob);
+        if (age !== null && age >= 18) return false;
+      }
+      return Boolean(acc.disabledFeatures && acc.disabledFeatures[featKey]);
+    }
+
+    function applyMinorFeatureRestrictions() {
+      const toggleOff = (selectorOrEl, off) => {
+        const els = typeof selectorOrEl === "string" ? document.querySelectorAll(selectorOrEl) : (selectorOrEl ? [selectorOrEl] : []);
+        els.forEach((el) => el.classList.toggle("mn-feat-off", Boolean(off)));
+      };
+      const globalOff = isFeatureDisabled("globalChat");
+      const partnerChatOff = isFeatureDisabled("partnerChat");
+      toggleOff('#dgRooms [data-room="global"]', globalOff);
+      toggleOff('#dgRooms [data-room="private"]', partnerChatOff);
+      toggleOff("#chatWidget", globalOff && partnerChatOff);
+      toggleOff("#voiceCallBtn, #videoCallBtn", isFeatureDisabled("calls"));
+      toggleOff("#grokWidget", isFeatureDisabled("aiChat"));
+      toggleOff('[data-act="toolCrop"], [data-act="aiOpen"]', isFeatureDisabled("pdfAi"));
+      toggleOff("#musicPanel", isFeatureDisabled("music"));
+      toggleOff("#totpIconBtn", isFeatureDisabled("diary"));
+      toggleOff("#partnerCard, .partner-panel", isFeatureDisabled("partnerPicker"));
+      toggleOff("#mockIconBtn", isFeatureDisabled("mockTests"));
+      toggleOff("#coffeeFoot", isFeatureDisabled("coffee"));
+      toggleOff("#ambBtn", isFeatureDisabled("ambient"));
+      toggleOff("#whyJeeBtn", isFeatureDisabled("whyJee"));
+      if (typeof dgApplyRoom === "function" && currentUserId) dgApplyRoom();
+    }
+
+    function ensureMinorOverlay(id) {
+      let el = document.getElementById(id);
+      if (!el) {
+        el = document.createElement("div");
+        el.id = id;
+        el.className = "mn-overlay";
+        el.hidden = true;
+        el.setAttribute("role", "dialog");
+        el.setAttribute("aria-modal", "true");
+        document.body.appendChild(el);
+      }
+      return el;
+    }
+
+    function openMinorBlockedPopup(prefillName, prefillUser) {
+      const el = ensureMinorOverlay("mnBlockedOverlay");
+      const mail = typeof CONTACT_EMAIL === "string" ? CONTACT_EMAIL : "mrabhishek8900@gmail.com";
+      const desired = prefillUser ? prefillUser.trim() : "";
+      const nameStr = prefillName ? prefillName.trim() : "";
+      const subj = encodeURIComponent("DuoTrack Legally Bounded Minor Access Request");
+      const body = encodeURIComponent(
+        `Hi Abhishek,\n\nI am under 18 and would like to request legally bounded minor access to DuoTrack.\n` +
+        (nameStr ? `My Name: ${nameStr}\n` : `My Name: \n`) +
+        (desired ? `Desired Login Username: ${desired}\n` : `Desired Login Username: \n`) +
+        `Date of Birth: \n\nPlease help me get started safely.\nThank you!`
+      );
+      const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(mail)}&su=${subj}&body=${body}`;
+      const mailtoUrl = `mailto:${mail}?subject=${subj}&body=${body}`;
+      el.innerHTML = `
+        <div class="mn-card">
+          <button type="button" class="mn-close" data-mn-close="mnBlockedOverlay" aria-label="Close">&times;</button>
+          <div class="mn-emblem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/>
+              <path d="M12 8v4"/><path d="M12 16h.01"/>
+            </svg>
+          </div>
+          <span class="mn-eyebrow">Under-18 Safety Gate</span>
+          <h2>Legally Bounded Access Required</h2>
+          <p class="mn-lead">Direct self-registration is locked for users under 18. If you still want to proceed, contact the admin via Gmail so he can grant you <b>legally bounded access</b> to continue safely.</p>
+          <div class="mn-mail-box">
+            <div>
+              <small>Admin Gmail</small>
+              <strong>${escapeHTML(mail)}</strong>
+            </div>
+            <button type="button" class="mn-btn" style="min-height:36px;padding:0 12px;font-size:.8rem" data-mn-copy="${escapeHTML(mail)}">Copy</button>
+          </div>
+          <ol class="mn-steps">
+            <li>Email <b>${escapeHTML(mail)}</b> asking for legally bounded minor access.</li>
+            <li>Include the <b>new username (login ID)</b> you want so the admin can process and create your safe minor account.</li>
+            <li>Once created, just type that login ID on the login screen — you will set your own private password there.</li>
+          </ol>
+          <div class="mn-actions">
+            <a class="mn-btn gold" href="${gmailUrl}" target="_blank" rel="noopener noreferrer">Open Gmail</a>
+            <a class="mn-btn" href="${mailtoUrl}">Mail App</a>
+          </div>
+        </div>`;
+      el.hidden = false;
+    }
+
+    function openBirthdayGiftPopup(name) {
+      const el = ensureMinorOverlay("mnBirthdayOverlay");
+      el.innerHTML = `
+        <div class="mn-card">
+          <button type="button" class="mn-close" data-mn-close="mnBirthdayOverlay" aria-label="Close">&times;</button>
+          <div class="mn-emblem is-welcome">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/>
+              <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7Z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7Z"/>
+            </svg>
+          </div>
+          <span class="mn-eyebrow is-welcome">18th Birthday Gift Unlocked</span>
+          <h2>Happy 18th, ${escapeHTML(name || "Friend")}!</h2>
+          <p class="mn-lead">As promised, turning 18 unlocks every DuoTrack feature for your account automatically. Enjoy full access to all study tools, chat, and more!</p>
+          <button type="button" class="mn-btn primary full" data-mn-close="mnBirthdayOverlay">Explore All Features</button>
+        </div>`;
+      el.hidden = false;
+    }
+
+    let mnSetupActiveKey = "";
+    function openMinorPasswordSetupPopup(loginKey, account) {
+      if (!account || !account.needsPasswordSetup) return;
+      mnSetupActiveKey = loginKey;
+      const el = ensureMinorOverlay("mnSetupOverlay");
+      const offLabels = MINOR_FEATURES.filter((f) => account.disabledFeatures && account.disabledFeatures[f.key]).map((f) => f.label);
+      el.innerHTML = `
+        <div class="mn-card">
+          <button type="button" class="mn-close" data-mn-close="mnSetupOverlay" aria-label="Close">&times;</button>
+          <div class="mn-emblem is-welcome">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/>
+              <path d="m9 12 2 2 4-4"/>
+            </svg>
+          </div>
+          <span class="mn-eyebrow is-welcome">Safe Minor Account Ready</span>
+          <h2>Welcome, ${escapeHTML(account.name || loginKey)}</h2>
+          <p class="mn-lead">We know you are a minor and you reached us via email, so we created a fresh login ID (<b>${escapeHTML(loginKey)}</b>) with fewer features just to keep you safe.</p>
+          <div class="mn-gift-banner">🎁 <b>Birthday Gift Promise:</b> Don't worry — once you turn 18, we'll automatically give you access to all features as a birthday gift!</div>
+          ${offLabels.length ? `<div class="mn-chips">${offLabels.map((lbl) => `<span class="mn-chip">Off: ${escapeHTML(lbl)}</span>`).join("")}</div>` : ""}
+          <form id="mnSetupForm" class="mn-form" autocomplete="off">
+            <div class="mn-field">
+              <label for="mnNewPw">Create your new password</label>
+              <div class="mn-pw-wrap">
+                <input id="mnNewPw" type="password" minlength="6" maxlength="64" autocomplete="new-password" placeholder="At least 6 characters" required>
+                <button type="button" class="mn-eye" data-mn-eye="mnNewPw" aria-label="Show password">${MINOR_EYE_OPEN}</button>
+              </div>
+            </div>
+            <div class="mn-field">
+              <label for="mnConfirmPw">Confirm your password</label>
+              <div class="mn-pw-wrap">
+                <input id="mnConfirmPw" type="password" minlength="6" maxlength="64" autocomplete="new-password" placeholder="Re-enter your password" required>
+                <button type="button" class="mn-eye" data-mn-eye="mnConfirmPw" aria-label="Show password">${MINOR_EYE_OPEN}</button>
+              </div>
+            </div>
+            <p id="mnSetupErr" class="mn-err" aria-live="polite"></p>
+            <button type="submit" id="mnSetupBtn" class="mn-btn primary full">Create Password &amp; Enter DuoTrack</button>
+          </form>
+        </div>`;
+      el.hidden = false;
+      setTimeout(() => el.querySelector("#mnNewPw")?.focus(), 80);
+    }
+
+    document.addEventListener("click", (e) => {
+      const closeBtn = e.target.closest("[data-mn-close]");
+      if (closeBtn) {
+        const target = document.getElementById(closeBtn.dataset.mnClose);
+        if (target) target.hidden = true;
+        return;
+      }
+      if (e.target.classList && e.target.classList.contains("mn-overlay") && e.target.id !== "mnSetupOverlay") {
+        e.target.hidden = true;
+        return;
+      }
+      const copyBtn = e.target.closest("[data-mn-copy]");
+      if (copyBtn) {
+        const val = copyBtn.dataset.mnCopy;
+        navigator.clipboard?.writeText(val).then(() => {
+          const old = copyBtn.textContent;
+          copyBtn.textContent = "Copied!";
+          setTimeout(() => { copyBtn.textContent = old; }, 1400);
+        }).catch(() => {});
+        return;
+      }
+      const eyeBtn = e.target.closest("[data-mn-eye]");
+      if (eyeBtn) {
+        const inp = document.getElementById(eyeBtn.dataset.mnEye);
+        if (!inp) return;
+        const showing = inp.type === "text";
+        inp.type = showing ? "password" : "text";
+        eyeBtn.innerHTML = showing ? MINOR_EYE_OPEN : MINOR_EYE_OFF;
+        eyeBtn.setAttribute("aria-label", showing ? "Show password" : "Hide password");
+        return;
+      }
+      if (e.target.closest("#rqMinorReopen")) {
+        const fn = dgEl.querySelector("#rqFirst")?.value || "";
+        const un = dgEl.querySelector("#rqUser")?.value || "";
+        openMinorBlockedPopup(fn, un);
+      }
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        ["mnBlockedOverlay", "mnBirthdayOverlay", "mnSetupOverlay"].forEach((id) => {
+          const el = document.getElementById(id);
+          if (el && !el.hidden) el.hidden = true;
+        });
+      }
+    });
+
+    document.addEventListener("submit", async (e) => {
+      if (e.target.id !== "mnSetupForm") return;
+      e.preventDefault();
+      const pw1 = document.getElementById("mnNewPw")?.value || "";
+      const pw2 = document.getElementById("mnConfirmPw")?.value || "";
+      const err = document.getElementById("mnSetupErr");
+      const btn = document.getElementById("mnSetupBtn");
+      if (pw1.length < 6) { err.textContent = "Password must be at least 6 characters."; return; }
+      if (pw1 !== pw2) { err.textContent = "Passwords do not match. Check both fields."; return; }
+      const loginKey = mnSetupActiveKey;
+      const account = USERS[loginKey];
+      if (!account) { err.textContent = "Account not found. Please reload and try again."; return; }
+      err.textContent = "";
+      btn.disabled = true;
+      btn.textContent = "Securing your account...";
+      try {
+        const hashed = await pwHash(loginKey, pw1);
+        await update(ref(database, `duotrack/groups/${GROUP_ID}/accounts/${loginKey}`), {
+          password: hashed,
+          needsPasswordSetup: false,
+          passwordSetAt: Date.now()
+        });
+        account.password = hashed;
+        account.needsPasswordSetup = false;
+        const ov = document.getElementById("mnSetupOverlay");
+        if (ov) ov.hidden = true;
+        currentUserId = account.id;
+        localStorage.setItem(SESSION_KEY, currentUserId);
+        sessionStorage.setItem(SESSION_KEY, currentUserId);
+        loginForm.reset();
+        loginError.textContent = "";
+        loadLocallyDeletedChat();
+        refreshChatMessagesState();
+        render();
+        showToast("Welcome to DuoTrack!", "Your private password is set.");
+      } catch (error) {
+        err.textContent = "Could not save your password. Check your connection and try again.";
+        btn.disabled = false;
+        btn.textContent = "Create Password & Enter DuoTrack";
+      }
+    });
+
     function openRequestForm(pre) {
-      if (dgAgeBlocked()) { dgOpen("request", `<h2>Request access</h2><p class="dg-sub">Sorry, DuoTrack is only for people aged 13 or older.</p>`, true); return; }
       const gp = pre && pre.googleUid ? pre : null;       // set when the person came through Google sign-in
       dgReqGoogle = gp;
       tcEnsureStyle();
       const today = new Date().toISOString().slice(0, 10);
       dgOpen("request", `<h2>Request access</h2>
-        <p class="dg-sub">Fill this in and the admin will review it. You can't log in until it is approved.</p>
+        <p class="dg-sub">Fill this in and the admin will review it. You can't log in until it is approved. (Self-signup is for ages 18+.)</p>
         ${gp ? `<div class="dg-gbanner">${GS_G}<span>Signed in with Google as <b>${escapeHTML(gp.email)}</b>. Fill in the rest and the admin reviews it like any other request. You can still log in with your ID and password too.</span></div>` : ""}
         <form id="dgReqForm" class="dg-form">
           <div class="dg-grid"><div><label for="rqFirst">First name</label><input class="dg-in" id="rqFirst" maxlength="30" autocomplete="given-name" value="${gp ? escapeHTML(gp.first) : ''}" required></div>
           <div><label for="rqLast">Last name</label><input class="dg-in" id="rqLast" maxlength="30" autocomplete="family-name" value="${gp ? escapeHTML(gp.last) : ''}" required></div></div>
           <label for="rqDob">Date of birth</label><input class="dg-in" id="rqDob" type="date" min="1990-01-01" max="${today}" required>
+          <div id="rqMinorNote" class="mn-inline-note" hidden>
+            <span>Under 18 detected — contact <b>mrabhishek8900@gmail.com</b> for legally bounded access.</span>
+            <button type="button" id="rqMinorReopen">View details</button>
+          </div>
           <label for="rqMail">Email ID</label><input class="dg-in" id="rqMail" type="email" maxlength="80" autocomplete="email" ${gp ? `value="${escapeHTML(gp.email)}" readonly` : ''} required>
           <label for="rqUser">Choose your login ID</label><input class="dg-in" id="rqUser" maxlength="20" autocomplete="username" placeholder="Lowercase letters, numbers, @ _ -" required>
           <label for="rqPass">Create a password</label><input class="dg-in" id="rqPass" type="password" maxlength="64" autocomplete="new-password" placeholder="At least 6 characters" required>
           <div class="dg-grid"><div><label for="rqClass">Class</label><select class="dg-in" id="rqClass" required><option value="">Select</option><option>11th</option><option>12th</option><option>Dropper</option></select></div>
           <div><label for="rqExam">Preparing for</label><select class="dg-in" id="rqExam" required><option value="">Select</option><option>JEE</option><option>NEET</option></select></div></div>
-          <div id="rqGuard" hidden>
-            <p class="dg-sub">You are under 18, so a parent or guardian must agree. The admin will contact them before approving your account.</p>
-            <label for="rqGName">Parent or guardian's name</label><input class="dg-in" id="rqGName" maxlength="60" autocomplete="off">
-            <label for="rqGContact">Their email or phone number</label><input class="dg-in" id="rqGContact" maxlength="80" autocomplete="off">
-            <label class="dg-check"><input type="checkbox" id="rqGOk"><span>My parent or guardian knows I am asking to join and agrees that DuoTrack may store my details as described in the Privacy Policy.</span></label>
-          </div>
           <label class="dg-check"><input type="checkbox" id="rqTerms"><span>I have read and agree to the <a href="#" data-pp="terms" data-pp-keep>Terms and Conditions</a> and the <a href="#" data-pp="privacy" data-pp-keep>Privacy Policy</a>.</span></label>
           <p id="rqErr" class="dg-err" aria-live="polite"></p>
-          <button class="dg-btn" type="submit">Send request</button>
+          <button class="dg-btn" id="rqSubmitBtn" type="submit">Send request</button>
         </form>`, true);
       dgEl.querySelector(gp ? "#rqDob" : "#rqFirst").focus();
     }
-    const dgGuardToggle = (e) => { if (!e.target || e.target.id !== "rqDob") return; const a = dgAge(e.target.value), g = dgEl.querySelector("#rqGuard"); if (g) g.hidden = !(a !== null && a >= 13 && a < 18); };
-    dgEl.addEventListener("input", dgGuardToggle); dgEl.addEventListener("change", dgGuardToggle);
+    let lastMinorPopupDob = "";
+    const dgMinorDobCheck = (e) => {
+      if (!e.target || e.target.id !== "rqDob") return;
+      const val = e.target.value;
+      const age = dgAge(val);
+      const isMinorDob = age !== null && age < 18;
+      const btn = dgEl.querySelector("#rqSubmitBtn") || dgEl.querySelector("#dgReqForm button[type=submit]");
+      const note = dgEl.querySelector("#rqMinorNote");
+      const err = dgEl.querySelector("#rqErr");
+      if (btn) {
+        btn.disabled = isMinorDob;
+        btn.classList.toggle("is-minor-blocked", isMinorDob);
+        btn.textContent = isMinorDob ? "Proceed unavailable (Under 18)" : "Send request";
+      }
+      if (note) note.hidden = !isMinorDob;
+      if (isMinorDob) {
+        if (err) err.textContent = "";
+        if (lastMinorPopupDob !== val) {
+          lastMinorPopupDob = val;
+          const fn = dgEl.querySelector("#rqFirst")?.value || "";
+          const un = dgEl.querySelector("#rqUser")?.value || "";
+          openMinorBlockedPopup(fn, un);
+        }
+      } else {
+        lastMinorPopupDob = "";
+      }
+    };
+    dgEl.addEventListener("input", dgMinorDobCheck);
+    dgEl.addEventListener("change", dgMinorDobCheck);
     document.querySelector('[data-auth="admin"]')?.addEventListener("click", () => openRequestForm());
 
     dgEl.addEventListener("submit", async (e) => {
@@ -8570,16 +9327,17 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
       if (dgReqGoogle) { rec.googleUid = dgReqGoogle.googleUid; rec.googleEmail = dgReqGoogle.email; }
       const password = dgEl.querySelector("#rqPass").value;
       const err = dgEl.querySelector("#rqErr"), btn = e.target.querySelector("button[type=submit]");
+      const ageYrs = dgAge(rec.dob);
+      if (ageYrs !== null && ageYrs < 18) {
+        btn.disabled = true;
+        btn.classList.add("is-minor-blocked");
+        btn.textContent = "Proceed unavailable (Under 18)";
+        openMinorBlockedPopup(rec.firstName, rec.loginId);
+        return;
+      }
       if (Object.values(rec).some((x) => !x) || !password) { err.textContent = "Please fill in every field."; return; }
       if (!dgEl.querySelector("#rqTerms").checked) { err.textContent = "Please tick the box to accept the Terms and Privacy Policy."; return; }
-      const ageYrs = dgAge(rec.dob);
       if (ageYrs === null) { err.textContent = "Please enter a valid date of birth."; return; }
-      if (ageYrs < 13) { try { sessionStorage.setItem("dtAgeBlock", "1"); } catch (x) { /* ignore */ } err.textContent = "Sorry, DuoTrack is only for people aged 13 or older."; return; }
-      if (ageYrs < 18) {
-        const gn = v("rqGName"), gc = v("rqGContact");
-        if (!gn || !gc || !dgEl.querySelector("#rqGOk").checked) { err.textContent = "Please add your parent or guardian's details and tick their consent box."; return; }
-        rec.minor = true; rec.guardianName = gn; rec.guardianContact = gc; rec.guardianConsentClaimedAt = Date.now(); rec.guardianVerified = false;
-      }
       rec.termsAcceptedAt = Date.now(); rec.termsV = TC_VERSION;
       if (!/^[a-z0-9@_-]{4,20}$/.test(rec.loginId)) { err.textContent = "Login ID: 4 to 20 characters, using lowercase letters, numbers, @ _ or -."; return; }
       if (password.length < 6) { err.textContent = "Your password needs at least 6 characters."; return; }
@@ -8852,7 +9610,7 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
         update(userRef(user.id), { personalCode: dgCode(user) }).catch(() => dgCodeSaved.delete(user.id));
       }
       dgUpdateBadge();
-      const need = user.pickPartner && !user.partnerId && dgPRLoaded && !dgOutgoing();
+      const need = !isFeatureDisabled("partnerPicker") && user.pickPartner && !user.partnerId && dgPRLoaded && !dgOutgoing();
       if (need && (!dgSkip || dgDeclines() > dgSkipDecl)) {
         if (dgEl.hidden) { dgSkip = false; dgOpenPartner(user); }
       } else if (dgMode === "partner") dgClose();
@@ -8878,11 +9636,17 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
     const dgInRoom = (m) => (dgRoom === "global" ? m.room === "global" : m.room !== "global");
     const dgRoomNow = () => (dgRoom === "global" ? "global" : dgPairKey());
     function dgApplyRoom() {
-      if (dgRoom === "private" && !dgPairKey()) dgRoom = "global";
+      const globalOff = isFeatureDisabled("globalChat");
+      const partnerOff = isFeatureDisabled("partnerChat");
+      if (dgRoom === "global" && globalOff && !partnerOff) dgRoom = "private";
+      if (dgRoom === "private" && (partnerOff || !dgPairKey()) && !globalOff) dgRoom = "global";
       document.querySelectorAll("#dgRooms [data-room]").forEach((b) => b.classList.toggle("on", b.dataset.room === dgRoom));
       const priv = document.querySelector('#dgRooms [data-room="private"]');
-      if (priv) priv.disabled = !dgPairKey();
-      chatInput.disabled = dgBanActive();
+      if (priv) priv.disabled = partnerOff || !dgPairKey();
+      const glob = document.querySelector('#dgRooms [data-room="global"]');
+      if (glob) glob.disabled = globalOff;
+      const roomBlocked = (dgRoom === "global" && globalOff) || (dgRoom === "private" && (partnerOff || !dgPairKey()));
+      chatInput.disabled = dgBanActive() || roomBlocked;
       chatInput.placeholder = dgBanActive() ? "Your chat is disabled" : dgRoom === "global" ? "Message everyone" : "Message your partner";
       chatMessagesState = rawChatMessages.filter((m) => !locallyDeletedChatIds.has(m.id) && dgChatVisible(m) && dgInRoom(m));
       renderChat(true);
@@ -9020,13 +9784,13 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
     });
     const u_name = (uid) => (state.users[uid] && state.users[uid].name) || "The account";
 
-    const PP_UPDATED = "1 November 2026";
+    const PP_UPDATED = "20 November 2026";
     const ppLink = (u, t) => `<a href="${u}" target="_blank" rel="noopener noreferrer">${t}</a>`;
     const ppGo = (id, t) => `<a href="#${id}" data-pp-go="${id}">${t}</a>`;
     const PP_SECTIONS = [
       ["pp-1", "1. About this policy", () => `<p>DuoTrack is a study tracker for small groups of students preparing for JEE and NEET. It is a prototype built and run by Abhishek, referred to below as the admin. This page explains what the app stores, where it is stored, who can see it, which other services it talks to, and what choices you have.</p>
         <p>It describes how the app works today, based on its code, not promises about the future. Where something is not yet as protected as it should be, we say so in ${ppGo("pp-12", "Section 12")}. Questions go to ${ppGo("pp-16", "Section 16")}.</p>`],
-      ["pp-2", "2. What DuoTrack collects", () => `<p><b>2.1 Access request.</b> When you ask to join: first name, last name, date of birth, email, class (11th, 12th or Dropper), exam (JEE or NEET), the login ID you choose, and your password. The password is saved only as a salted SHA-256 hash, never as plain text. A request ID and a status (pending, approved or rejected) are added.</p>
+      ["pp-2", "2. What DuoTrack collects", () => `<p><b>2.1 Access request &amp; minor accounts.</b> Self-service access requests are for users aged 18 and older and collect: first name, last name, date of birth, email, class (11th, 12th or Dropper), exam (JEE or NEET), the login ID you choose, and your password. For users under 18, self-registration is blocked; when legally bounded minor access is requested via Gmail (${ppLink("mailto:" + CONTACT_EMAIL, CONTACT_EMAIL)}), the admin creates a safe minor login ID with your chosen username, date of birth, and a list of disabled safety features — the admin never creates or sees your password, which you set privately on first login. Every password is saved only as a salted SHA-256 hash, never as plain text.</p>
         <p><b>2.2 Account and profile.</b> Display name, a personal ID of four letters and four numbers, an optional profile picture, your study partner link, partner requests you send or receive, and whether your account is open or closed.</p>
         <p><b>2.3 Study data.</b> Whether your timer is running, the chosen subject and mode, today's study seconds per subject and mode, to-do items and goals, mock-test scores, your questions-done count, the exam countdown, and the title, thumbnail and id of the music you are playing.</p>
         <p><b>2.4 Chat.</b> Messages, images you attach, reactions, replies, edits, deletions, timestamps, which chat room a message belongs to (${ppGo("pp-5", "Section 5")}) and a short-lived typing signal.</p>
@@ -9061,8 +9825,9 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
         <p>To start a call, short setup messages are saved temporarily in Firebase under a path used only by that pair, and removed when the call ends. Google's public STUN servers help the devices find each other and can see network addresses. When a direct link is not possible, a free public relay server (Open Relay by Metered) may carry the call traffic, which is encrypted in transit, and can see network addresses. Screen sharing starts only if you choose it.</p>`],
       ["pp-9", "9. Chat moderation", () => `<p>Any user can report a message written by someone else, choosing a reason. The admin receives a copy of that message with the report. The admin may dismiss it, disable the sender's chat for a number of hours, or disable it permanently.</p>
         <p>A person whose chat is disabled is shown the reason in writing, signed by the admin. The admin can also close an account, and delete an account permanently (${ppGo("pp-11", "Section 11")}). To appeal, use ${ppGo("pp-16", "Contact us")}.</p>`],
-      ["pp-10", "10. Students and age", () => `<p>DuoTrack is meant for students in classes 11 and 12 and droppers, and many are under 18. You must be at least 13 to ask for an account; a request from someone younger is not saved. If you are under 18, you must give a parent or guardian's name and contact, and the admin contacts them before approving your account. Date of birth is collected only to check age and to review who is joining.</p>
-        <p>DuoTrack does not track or profile students for behaviour or advertising, and shows no ads. Parents or guardians can ask for a child's data to be viewed, corrected or removed at any time through ${ppGo("pp-16", "Section 16")}.</p>`],
+      ["pp-10", "10. Students and age", () => `<p>DuoTrack is meant for students in classes 11 and 12 and droppers. Direct self-registration is restricted to users aged 18 or older. If a date of birth under 18 is entered during access request, submission is disabled and the student is shown instructions to contact the admin via Gmail (${ppLink("mailto:" + CONTACT_EMAIL, CONTACT_EMAIL)}) for legally bounded minor access along with their preferred username.</p>
+        <p>For approved minor accounts, the admin creates the login ID and turns off selected features (such as Global Chat, calls, or diary) to keep the student safe. The admin cannot create or set the minor's password — the minor creates their own private password when they first type their login ID. Date of birth is used only to verify age and to automatically unlock all features as a birthday gift once the user turns 18.</p>
+        <p>DuoTrack does not track or profile students for behaviour or advertising, and shows no ads. Parents or guardians can ask for a minor's data to be viewed, corrected, restricted or removed at any time through ${ppGo("pp-16", "Section 16")}.</p>`],
       ["pp-11", "11. Keeping and deleting data", () => `<p>Data stays until you or the admin remove it. In chat, "Delete for me" hides a message on your device and "Delete for everyone" removes it for everyone. You can edit a message for a short time after sending it.</p>
         <p>Rejected access requests are deleted two days after the admin's decision. The clean-up runs when the admin next opens the app or the admin portal, so it can take a little longer than two days.</p>
         <p>To delete your account and data, open Messages and use the Account tab. The request goes to the admin, nothing is deleted until the admin approves it, and a declined request is removed after two days.</p>
@@ -10864,6 +11629,7 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
     }
 
     async function startCall(type) {
+      if (isFeatureDisabled("calls")) { showToast("Feature locked", "Voice and video calls are disabled on your minor safe account until you turn 18."); return; }
       if (currentCallRole) return;
       const partner = partnerUser();
       if (!partner) {
@@ -12036,6 +12802,7 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
     // message in the shared Study Chat and posts the AI's reply back into
     // that same chat thread so both people see it.
     async function maybeReplyAsGrokInChat(rawText, askerName, messageId) {
+      if (isFeatureDisabled("aiChat")) return;
       const trimmed = rawText.trim();
       const isSavage = /^@a9\b/i.test(trimmed);
       const isNormal = /^@grok\b/i.test(trimmed);
@@ -12706,6 +13473,8 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
       if (!user || !partner) return;
       loginScreen.classList.add("hidden");
       appScreen.classList.remove("hidden");
+      checkMinorBirthdayUnlock();
+      applyMinorFeatureRestrictions();
       maybeShowWelcomePopupOnLoad();
 
       topAvatar.innerHTML = avatarMarkup(user);
@@ -16591,6 +17360,7 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
     }
 
     function openPartnerModal() {
+      if (isFeatureDisabled("partnerPicker")) { showToast("Feature locked", "Study partner view is disabled on your minor safe account until you turn 18."); return; }
       activeModalType = "partner";
       modalTitle.textContent = "Study Partner";
       renderPartnerModalContent();
@@ -17101,6 +17871,119 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
       appScreen.classList.add("hidden");
     }
 
+    function minorAdminCardHtml() {
+      const today = new Date().toISOString().slice(0, 10);
+      const minorAccounts = Object.entries(USERS)
+        .filter(([, a]) => a && a.dyn && (a.isMinor || a.createdByAdmin))
+        .sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
+      return `
+        <div class="ap-card" id="mnAdminCard">
+          <h2>🛡️ Minor accounts (Legally Bounded Safe Access)</h2>
+          <p>Create a safe minor login ID using the username the student requested via Gmail, and choose which features to turn off until they turn 18.</p>
+          <div class="mn-admin-notice"><b>Password policy:</b> Admin cannot create or set a minor's password. Once you share the login ID via Gmail, the minor types it on the login screen and creates their own password in the cinematic welcome popup.</div>
+          <div class="mn-admin-grid">
+            <label>Minor's full name<input type="text" id="mnAdminName" maxlength="40" placeholder="e.g. Aarav Sharma"></label>
+            <label>Pre-decided login ID (from Gmail)<input type="text" id="mnAdminLogin" maxlength="20" placeholder="e.g. aarav@study"></label>
+            <label>Date of birth (under 18)<input type="date" id="mnAdminDob" min="2005-01-01" max="${today}"></label>
+            <label>Class<select id="mnAdminClass"><option>11th</option><option>12th</option><option>Dropper</option></select></label>
+            <label>Exam<select id="mnAdminExam"><option>JEE</option><option>NEET</option></select></label>
+          </div>
+          <div style="font-size:.82rem;font-weight:700;margin-top:6px;">Turn OFF these features for this minor account:</div>
+          <div class="mn-feat-grid" id="mnCreateFeats">
+            ${MINOR_FEATURES.map((f) => `<label class="mn-feat-opt"><input type="checkbox" value="${escapeHTML(f.key)}" ${f.defaultOff ? "checked" : ""}><span>${escapeHTML(f.label)}</span></label>`).join("")}
+          </div>
+          <div class="ap-row">
+            <button type="button" class="ap-primary" data-ap="mnCreate">Create minor login ID</button>
+            <span class="ap-note" id="mnCreateMsg"></span>
+          </div>
+          ${minorAccounts.length ? `<div style="margin-top:16px;font-size:.86rem;font-weight:700;">Existing minor accounts (${minorAccounts.length})</div>` : ""}
+          ${minorAccounts.map(([loginKey, acc]) => {
+            const age = acc.dob ? dgAge(acc.dob) : null;
+            const statusText = acc.needsPasswordSetup ? "⏳ Waiting for minor to set password" : "✅ Password set by minor";
+            return `
+              <div class="mn-admin-item" data-mn-login="${escapeHTML(loginKey)}">
+                <div class="mn-admin-head">
+                  <div><strong>${escapeHTML(acc.name)}</strong> <span class="ap-note">(${escapeHTML(loginKey)}${acc.dob ? ` · DOB ${escapeHTML(acc.dob)}${age !== null ? `, age ${age}` : ""}` : ""})</span></div>
+                  <span class="mn-badge ${acc.needsPasswordSetup ? "" : "is-ready"}">${statusText}</span>
+                </div>
+                <div class="mn-feat-grid">
+                  ${MINOR_FEATURES.map((f) => `<label class="mn-feat-opt"><input type="checkbox" data-mn-f="${escapeHTML(f.key)}" ${(acc.disabledFeatures && acc.disabledFeatures[f.key]) ? "checked" : ""}><span>Off: ${escapeHTML(f.label)}</span></label>`).join("")}
+                </div>
+                <div class="ap-row">
+                  <button type="button" class="ap-primary" data-ap="mnSaveFeat" data-login="${escapeHTML(loginKey)}">Save disabled features</button>
+                  <button type="button" data-ap="mnCopyInvite" data-login="${escapeHTML(loginKey)}" data-name="${escapeHTML(acc.name)}">Copy Gmail reply</button>
+                </div>
+              </div>`;
+          }).join("")}
+        </div>`;
+    }
+
+    async function adminCreateMinorAccount(btn) {
+      const name = (document.getElementById("mnAdminName")?.value || "").trim();
+      const loginId = (document.getElementById("mnAdminLogin")?.value || "").trim().toLowerCase();
+      const dob = (document.getElementById("mnAdminDob")?.value || "").trim();
+      const grade = document.getElementById("mnAdminClass")?.value || "11th";
+      const exam = document.getElementById("mnAdminExam")?.value || "JEE";
+      const msg = document.getElementById("mnCreateMsg");
+      if (!name || !loginId || !dob) { if (msg) msg.textContent = "Fill in name, login ID, and DOB."; return; }
+      if (!/^[a-z0-9@_-]{4,20}$/.test(loginId)) { if (msg) msg.textContent = "Login ID: 4–20 chars (lowercase letters, numbers, @ _ -)."; return; }
+      const age = dgAge(dob);
+      if (age === null || age >= 18) { if (msg) msg.textContent = "DOB must be valid and under 18 for a minor account."; return; }
+      if (USERS[loginId] || loginId === ADMIN_LOGIN_ID) { if (msg) msg.textContent = "That login ID is already taken."; return; }
+      const disabledFeatures = {};
+      document.querySelectorAll('#mnCreateFeats input[type="checkbox"]:checked').forEach((cb) => {
+        disabledFeatures[cb.value] = true;
+      });
+      let id = slugifyId(name) || slugifyId(loginId) || `minor${Date.now()}`;
+      if (USERS_BY_ID[id]) id = `${id}${Date.now().toString().slice(-4)}`;
+      btn.disabled = true;
+      if (msg) msg.textContent = "Creating minor account...";
+      try {
+        const account = {
+          password: "",
+          needsPasswordSetup: true,
+          isMinor: true,
+          createdByAdmin: true,
+          dob,
+          grade,
+          exam,
+          disabledFeatures,
+          id,
+          name,
+          createdAt: Date.now()
+        };
+        await set(ref(database, `duotrack/groups/${GROUP_ID}/accounts/${loginId}`), account);
+        const userState = defaultUserState({ id, name });
+        userState.pickPartner = !disabledFeatures.partnerPicker;
+        await set(userRef(id), userState);
+        applyAccountRecord(loginId, account);
+        showToast("Minor ID created", `${name} (${loginId}) can now set their password on first login.`);
+        renderAdminPortal();
+      } catch (error) {
+        if (msg) msg.textContent = "Could not create minor account. Check connection.";
+        btn.disabled = false;
+      }
+    }
+
+    async function adminSaveMinorFeatures(btn) {
+      const loginKey = btn.dataset.login;
+      const item = btn.closest(".mn-admin-item");
+      if (!loginKey || !item) return;
+      const disabledFeatures = {};
+      item.querySelectorAll('input[data-mn-f]:checked').forEach((cb) => {
+        disabledFeatures[cb.dataset.mnF] = true;
+      });
+      btn.disabled = true;
+      try {
+        await update(ref(database, `duotrack/groups/${GROUP_ID}/accounts/${loginKey}`), { disabledFeatures });
+        if (USERS[loginKey]) USERS[loginKey].disabledFeatures = disabledFeatures;
+        showToast("Saved", `Updated disabled features for ${loginKey}.`);
+      } catch (error) {
+        showToast("Error", "Could not save feature settings.");
+      }
+      btn.disabled = false;
+    }
+
     const adminMinutes = (seconds) => Math.round((Number(seconds) || 0) / 60);
     function adminStudyCard(user) {
       const elapsed = user.running && user.startedAt ? Math.max(0, Math.floor((Date.now() - user.startedAt) / 1000)) : 0;
@@ -17135,6 +18018,7 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
               return `<div class="ap-row"><strong>${escapeHTML(u.name)}</strong><span class="ap-note">${closed ? "closed" : "open"}</span><button type="button" class="ap-primary" data-ap="toggleBan" data-id="${escapeHTML(u.id)}" data-closed="${closed ? "1" : "0"}">${closed ? "Unban" : "Ban"}</button><button type="button" class="ap-primary" data-ap="chatBan" data-id="${escapeHTML(u.id)}">Chat ban</button><button type="button" class="ap-primary" data-ap="deleteAccount" data-id="${escapeHTML(u.id)}" style="background:#c0392b">Delete</button></div>`;
             }).join("") || "<p>No users loaded yet.</p>"}
           </div>
+          ${minorAdminCardHtml()}
           ${gsAdminCardHtml()}
           <div class="ap-card">
             <h2>Study time — today</h2>
@@ -17272,6 +18156,11 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
         renderAdminPortal();
       } else if (act === "chatBan") { dgOpenBan(ap.dataset.id);
       } else if (act === "deleteAccount") { dgDeleteAccount(ap.dataset.id);
+      } else if (act === "mnCreate") { await adminCreateMinorAccount(ap);
+      } else if (act === "mnSaveFeat") { await adminSaveMinorFeatures(ap);
+      } else if (act === "mnCopyInvite") {
+        const reply = `Hi ${ap.dataset.name || "there"},\n\nYour legally bounded DuoTrack minor account is ready!\nYour Login ID: ${ap.dataset.login}\n\nOpen DuoTrack and type your Login ID on the login screen — a welcome popup will appear so you can create your own private password safely.\n\n— Abhishek (DuoTrack Admin)`;
+        navigator.clipboard?.writeText(reply).then(() => showToast("Copied", "Gmail reply copied to clipboard.")).catch(() => showToast("Copy failed", "Could not copy to clipboard."));
       } else if (act === "gsSave") { await gsAdminSave(ap);
       } else if (act === "gsAllow") { ap.disabled = true; await gsAllowUser(ap.dataset.id); renderAdminPortal();
       } else if (act === "saveStudy") {
@@ -17718,13 +18607,13 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
        TERMS AND CONDITIONS (added) + CONTACT US CARD (improved)
        - termsAccepted/<userId> = { v, at }   the version of the terms the person ticked. A new version asks again.
        ===================================================================================================================== */
-    const TC_VERSION = "2026-11-01d";
-    const TC_UPDATED = "1 November 2026";
+    const TC_VERSION = "2026-11-20";
+    const TC_UPDATED = "20 November 2026";
     const termsRef = ref(database, `duotrack/groups/${GROUP_ID}/termsAccepted`);
     var tcAccepted = {}, tcLoaded = false, tcBusy = false;
     const TC_SECTIONS = [
       ["tc-1", "1. About these terms", () => `<p>DuoTrack is a free study tracker for small groups of students preparing for JEE and NEET. It is a prototype built and run by Abhishek, called the admin below. By signing in or asking for an account you agree to these terms. If you do not agree, please do not use DuoTrack.</p><p>These terms work together with the <a href="#" data-pp="privacy">Privacy Policy</a>.</p>`],
-      ["tc-2", "2. Who can use DuoTrack", () => `<p>DuoTrack is meant for students in classes 11 and 12 and droppers. Accounts are approved by the admin. You must be 13 or older. If you are under 18, a parent or guardian must agree, and the admin may contact them before approving your account. Give true details when you ask for an account, and use one account per person.</p>`],
+      ["tc-2", "2. Who can use DuoTrack", () => `<p>DuoTrack is meant for students in classes 11 and 12 and droppers. Self-service access requests are open only to users aged 18 or older and are approved by the admin. If you are under 18, self-registration is blocked; you must email the admin at ${ppLink("mailto:" + CONTACT_EMAIL, CONTACT_EMAIL)} to request legally bounded minor access with your desired username. Approved minor accounts are created by the admin with selected safety features turned off (automatically unlocked when you turn 18), and you create your own private password on first login. Give true details and use one account per person.</p>`],
       ["tc-3", "3. Your account", () => `<p>Keep your login ID and password private and do not use anyone else's account. You are responsible for what happens under your account.</p><p>You can link a Google account to make signing in easier. Accounts without a linked Google account get a countdown (7 days to start with). When it ends, the account is paused until the admin allows it. Your ID and password keep working as a way to sign in.</p><p>The admin can pause, close or delete an account that breaks these terms, has been unused for a long time, or may be at risk.</p>`],
       ["tc-4", "4. Chat, calls and community rules", () => `<p>Be respectful. Do not harass, bully, threaten or shame anyone. Do not post hateful, sexual, violent or illegal content. Do not share other people's private details, photos or messages without their permission. No spam, scams or links meant to trick people.</p><p>Any user can report a message. The admin may dismiss the report, disable a person's chat for a time, close their account or delete it.</p><p>Calls are for you and your study partner only. Do not record or share a call without the other person's permission.</p>`],
       ["tc-5", "5. Your content", () => `<p>You keep ownership of what you write or upload, such as messages, photos and to-do items. By adding it, you allow DuoTrack to store it and show it to the people described in the <a href="#" data-pp="privacy">Privacy Policy</a>. Only add content you are allowed to share.</p><p>Study material and PDFs you open belong to their owners. The app shows them only on your device.</p>`],
@@ -17900,7 +18789,7 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
             <label class="tc-row"><input type="checkbox" class="tc-in"><span>I have read and agree to the <a href="#" data-pp="terms">Terms and Conditions</a>.</span></label>
             <label class="tc-row"><input type="checkbox" class="tc-in"><span>I have read the <a href="#" data-pp="privacy">Privacy Policy</a> and understand what DuoTrack stores.</span></label>
             <label class="tc-row"><input type="checkbox" class="tc-in"><span>I understand this is a prototype whose database is not fully protected yet, so I will not store anything highly sensitive here.</span></label>
-            <label class="tc-row"><input type="checkbox" class="tc-in"><span>I am 18 or older, or a parent or guardian knows that I use DuoTrack.</span></label>
+            <label class="tc-row"><input type="checkbox" class="tc-in"><span>I am 18 or older, or I am using an admin-approved, legally bounded minor account with my parent or guardian's knowledge.</span></label>
           </div>
           <p class="tc-count" id="tcCount" aria-live="polite">0 of 4 ticked</p>
           <button type="button" class="tc-go" id="tcGo" data-tc="accept" disabled>Agree and continue</button>
@@ -18133,6 +19022,32 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
       catch (error) { showToast("Error", "Could not reject the request."); }
     }
 
+    let mnIdTimer = 0, mnLastPromptedId = "";
+    function checkMinorFirstLoginTrigger(rawVal, forceOpen) {
+      const key = String(rawVal || "").trim();
+      const low = key.toLowerCase();
+      const resolvedKey = USERS[key] ? key : (USERS[low] ? low : "");
+      if (!resolvedKey) return false;
+      const acc = USERS[resolvedKey];
+      if (!acc || !acc.needsPasswordSetup) return false;
+      if (forceOpen || mnLastPromptedId !== resolvedKey) {
+        mnLastPromptedId = resolvedKey;
+        loginError.textContent = "";
+        openMinorPasswordSetupPopup(resolvedKey, acc);
+      }
+      return true;
+    }
+    loginId.addEventListener("input", () => {
+      clearTimeout(mnIdTimer);
+      const val = loginId.value.trim();
+      if (!val) { mnLastPromptedId = ""; return; }
+      mnIdTimer = setTimeout(() => { checkMinorFirstLoginTrigger(val, false); }, 260);
+    });
+    loginId.addEventListener("blur", () => {
+      const val = loginId.value.trim();
+      if (val) checkMinorFirstLoginTrigger(val, false);
+    });
+
     let loginFails = 0, loginLockUntil = 0;
     loginForm.addEventListener("submit", async (event) => {
       event.preventDefault();
@@ -18141,8 +19056,16 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
         loginError.textContent = `Too many wrong attempts. Try again in ${Math.ceil((loginLockUntil - Date.now()) / 1000)}s.`;
         return;
       }
-      const loginKey = loginId.value.trim();
+      const rawLoginKey = loginId.value.trim();
+      if (!USERS[rawLoginKey] && !USERS[rawLoginKey.toLowerCase()]) {
+        await loadDynamicAccounts();
+      }
+      const loginKey = USERS[rawLoginKey] ? rawLoginKey : (USERS[rawLoginKey.toLowerCase()] ? rawLoginKey.toLowerCase() : rawLoginKey);
       const account = USERS[loginKey];
+      if (account && account.needsPasswordSetup) {
+        checkMinorFirstLoginTrigger(loginKey, true);
+        return;
+      }
       let okPw = false;
       try { okPw = !!account && await passwordMatches(account.password, loginKey, password.value); }
       catch (e) { loginError.textContent = "Login needs a secure page (https:// or file://)."; return; }
@@ -18184,6 +19107,7 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
     const mockIconBtn = document.getElementById("mockIconBtn");
     const mockDialog = document.getElementById("mockDialog");
     mockIconBtn?.addEventListener("click", () => {
+      if (isFeatureDisabled("mockTests")) { showToast("Feature locked", "Mock Test Tracker is disabled on your minor safe account until you turn 18."); return; }
       try { const u = currentUser(); if (u) { mockAnimNext = true; renderMockTests(u); } } catch (error) { /* ignore */ }
       const di = document.getElementById("mockDateInput");
       if (di) { const d = new Date(); di.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; }
@@ -21788,7 +22712,7 @@ function totpAt(keyBytes, counter) {
           <p><b>17.4 What happens next.</b> The admin reads the paragraph and may close the matter. For words about illegal acts the admin may send you a written notice. It appears in the app and stays on screen until the admin has verified the matter. A printed copy can be made and sent to the email address you gave. For words about self-harm DuoTrack does not send legal notices. You see support information (Tele-MANAS 14416, free, 24 hours; 112 in an emergency) and the admin may check on you personally.</p>
           <p><b>17.5 Legal disclosure (the formal process).</b> The admin can look at your diary for a legal reason only by opening a numbered case, and never in secret. The case records who is asking (for example a court or the police), their reference number, the legal basis, what part of your diary is covered, and why. You are shown a written notice in the app and have 48 hours to object or give context by email. The only exception is an emergency where someone's safety is at serious risk, and you are told at the same moment. If you are under 18, a parent or guardian is informed too. Only after the admin authorises the case, and only when you next open your diary, does your own browser share your diary key with the admin. The admin then prepares a PDF of the covered pages, with a case number, a record of every step and a fingerprint (SHA-256) of the contents, and hands it only to the requesting authority. When the case closes, the shared key is deleted. Every step is written to a log you can read in the diary (the "i" button). Whole-diary reading for any other reason is not allowed.</p>
           <p><b>17.6 What this is not.</b> DuoTrack is a student project run by one person. A notice from the admin is not a court order or a police notice, and the app is not an emergency service. If someone is in danger, call 112.</p>
-          <p><b>17.7 Under 18.</b> Many users are under 18 (${ppGo("pp-10", "Section 10")}). A parent or guardian can ask for diary data to be removed through ${ppGo("pp-16", "Section 16")}.</p>
+          <p><b>17.7 Under 18.</b> For legally bounded minor accounts (${ppGo("pp-10", "Section 10")}), the Private Diary feature may be disabled by the admin until the user turns 18. A parent or guardian can ask for any diary data to be removed through ${ppGo("pp-16", "Section 16")}.</p>
           <p><b>17.8 Your choices.</b> You can edit or delete any page at any time, or not use the diary at all. The notice screen has a "Don't show this again" box, and you can read the summary again from the "i" button inside the diary.</p>`]);
       } catch (e) { /* ignore */ }
 
