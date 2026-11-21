@@ -4,6 +4,19 @@
   <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'none'">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script id="androidDetect">
+  /* ANDROID LAYER (added): detect Android before first paint. Force with ?android=1 or localStorage duotrackAndroidMode = "on" / "off". __A(androidText, otherText) picks wording. */
+  (function () {
+    var is = /Android/i.test(navigator.userAgent || "") || /[?&]android=1/.test(location.search);
+    try { var f = localStorage.getItem("duotrackAndroidMode"); if (f === "on") is = true; if (f === "off") is = false; } catch (e) { /* ignore */ }
+    window.__ANDROID = is; window.__A = function (a, o) { return is ? a : o; };
+    if (is) {
+      document.documentElement.classList.add("android");
+      var m = document.querySelector('meta[name="viewport"]');
+      if (m) m.setAttribute("content", "width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content");
+    }
+  })();
+  </script>
   <title>Free Study Timer, Pomodoro Focus &amp; AI Doubt Solver | DuoTrack</title>
   <meta name="description" content="Free study timer for JEE &amp; NEET students: Pomodoro-style focus timer, live study partner, mock test tracker, exam countdown and an AI doubt solver.">
   <link rel="canonical" href="https://abhishekpathak-800.github.io/ypt/">
@@ -6725,6 +6738,77 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
 @media (prefers-reduced-motion: reduce) { :is(.cs-option, .live-option) { transition: none; } }
 
   </style>
+<style id="androidLayer">
+/* ===== ANDROID LAYER (added) =====
+   Active only when <html class="android"> (set by #androidDetect). Desktop, iPhone and iPad are untouched.
+   NOTE FOR OTHER AIs: change Android behaviour HERE; do not edit the prebuilt parts of the app without asking Abhishek first. */
+html.android{-webkit-text-size-adjust:100%;text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+html.android body{cursor:auto!important;min-height:100svh;overscroll-behavior-y:contain;touch-action:manipulation;--shadow:0 2px 10px rgba(20,40,30,.1);--shadow-soft:0 1px 4px rgba(20,40,30,.08);--shadow-lift:0 4px 14px rgba(20,40,30,.12)}
+html.android body:is(.theme-night,.night-override){--shadow:0 2px 10px rgba(0,0,0,.35);--shadow-soft:0 1px 4px rgba(0,0,0,.3);--shadow-lift:0 4px 14px rgba(0,0,0,.4)}
+/* 1. No lag: no blur, no film grain, no drifting background, no decorative infinite loops */
+html.android *,html.android *::before,html.android *::after{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+html.android .app-grain,html.android .login-blob,html.android .lg-doodles{display:none!important}
+html.android body::before,html.android body::after,html.android .logo,html.android .continue-glow,html.android .continue-progress-fill,html.android .todo-progress-fill,html.android .todo-focus-btn,html.android .dday-calendar-page,html.android .jee-presentation::before,html.android .jee-presentation::after,html.android .jee-scroll-hint svg,html.android .mt-pulse,html.android .mt-empty svg,html.android .grok-toggle,html.android .questions-logo-btn,html.android .welcome-modal-feature-icon::after,html.android .welcome-modal-mascot,html.android .pizza-emoji,html.android .timer-toggle,html.android .timer-toggle-icon,html.android .pp-cine .pp-hero::before,html.android .ks-spot{animation:none!important}
+html.android body .panel,html.android body .topbar{background:color-mix(in srgb,var(--panel) 95%,transparent)}
+html.android :is([class*="modal"],[class*="dialog"],[class*="sheet"],dialog){overscroll-behavior:contain}
+/* 2. Login: the later "round 4" rule forced two columns on phones; stack it */
+html.android #loginScreen.login-screen{grid-template-columns:minmax(0,1fr);align-content:start;gap:18px;min-height:100svh;padding:64px 16px calc(28px + env(safe-area-inset-bottom,0px))}
+html.android #loginScreen .lg-headline{font-size:clamp(40px,12.5vw,54px);line-height:1.04}
+html.android #loginScreen .lg-lede,html.android #loginScreen .lg-stickers,html.android #loginScreen .lg-type{display:none}
+html.android #loginScreen .lg-auth{flex-direction:column;align-items:stretch;gap:14px;width:100%}
+html.android #loginScreen .lg-auth .lg-card{max-width:none;width:100%;padding:38px 20px 22px;border-radius:22px}
+html.android #loginScreen .lg-card h1{font-size:28px}
+html.android #loginScreen .lg-sub{font-size:15px;margin-bottom:20px}
+html.android #loginScreen .input-with-icon input{height:52px;font-size:16px}
+html.android #loginScreen .login-submit-btn{min-height:52px;font-size:16px}
+html.android #loginScreen .lg-rail{flex-direction:row;justify-content:center;align-self:center;order:1}
+html.android #loginScreen .lg-alt{width:52px;height:52px}
+html.android #loginScreen .lg-alt::after{display:none}
+html.android #loginScreen .lg-start{right:-4px}
+html.android #loginScreen .lg-legal{display:flex;flex-wrap:wrap;align-items:center;gap:0 4px}
+html.android #loginScreen .lg-legal a{display:inline-flex;align-items:center;min-height:44px;padding:0 6px}
+/* 3. App spacing: compact top bar, even 12px rhythm, room above the floating buttons */
+html.android .app{min-height:100svh}
+html.android body .topbar{position:static;box-shadow:none}
+html.android body .topbar-inner{width:100%;padding:10px 16px 12px;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"brand user" "actions actions";align-items:center;gap:10px 12px}
+html.android .topbar-inner .app-brand{grid-area:brand;min-width:0}
+html.android .topbar-inner .user-chip{grid-area:user;order:0;width:auto;margin:0}
+html.android .topbar-inner .top-actions{grid-area:actions;width:100%;flex-wrap:wrap;justify-content:flex-start;gap:8px}
+html.android .topbar .avatar{width:40px;height:40px}
+html.android body .top-actions :is(.icon-btn,.ghost-btn,.sync-pill,.questions-logo-btn){height:44px;min-height:44px}
+html.android body .top-actions :is(.icon-btn,.ghost-btn){width:44px;min-width:44px;padding:0}
+html.android body .top-actions .sync-pill{flex:1 1 140px;font-size:12px}
+html.android #shortcutsBtn,html.android kbd{display:none!important}
+html.android .layout{width:100%;max-width:none;margin:0;padding:12px 12px 8px;gap:12px}
+html.android body .panel{padding:16px;border-radius:18px}
+html.android footer{padding:12px 16px calc(88px + env(safe-area-inset-bottom,0px))}
+html.android footer a,html.android .why-jee-btn{display:inline-flex;align-items:center;min-height:44px;padding:0 4px;margin-left:8px}
+/* floating Chat pill and AI orb: smaller, clear of the system bar */
+html.android .chat-widget{right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px))}
+html.android .grok-widget{left:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px))}
+html.android .chat-toggle{min-height:48px;height:48px;padding:0 16px;gap:8px;font-size:15px;border-radius:24px;box-shadow:var(--shadow)}
+html.android .grok-toggle{box-shadow:0 4px 12px rgba(124,77,255,.35)}
+/* 4. Tap targets (40px+) */
+html.android :is(.todo-tag-btn,.todo-totp-btn,.todo-goal-btn,.todo-focus-btn,.todo-delete,.todo-res-btn,.res-close,.res-del,.small-btn,.jee-video-toggle,.mt-close,.mt-del,.welcome-modal-close,.mock-row-del,.download-image-btn,.call-screenshare-btn){min-width:40px;min-height:40px;opacity:1}
+html.android .todo-check{width:28px;height:28px}
+html.android .chat-message-more{display:flex!important;width:32px;height:32px;top:2px;right:2px}
+html.android .chat-message{padding-right:34px}
+/* todo row: text on top, 40px actions underneath */
+html.android .todo-item{display:grid!important;grid-template-columns:40px 28px minmax(0,1fr) auto auto auto auto;align-items:center;column-gap:6px;row-gap:2px;padding:8px 10px;-webkit-user-drag:none}
+html.android .todo-item>.todo-check{grid-column:1;grid-row:1;justify-self:center}
+html.android .todo-item>.todo-tag-icon{grid-column:2;grid-row:1}
+html.android .todo-item>.todo-text{grid-column:3/-1;grid-row:1;min-width:0;white-space:normal;overflow-wrap:anywhere;line-height:1.35;font-size:15px}
+html.android .todo-item>.todo-drag-handle{grid-column:1;grid-row:2;width:40px;height:40px;display:grid;place-items:center;touch-action:none;user-select:none}
+html.android .todo-item>.todo-goal-btn{grid-column:4;grid-row:2}
+html.android .todo-item>.todo-res-btn{grid-column:5;grid-row:2}
+html.android .todo-item>.todo-focus-btn{grid-column:6;grid-row:2}
+html.android .todo-item>.todo-delete{grid-column:7;grid-row:2}
+html.android .todo-item>.todo-meta-row{grid-column:1/-1;grid-row:3}
+html.android .todo-drag-handle svg{width:20px;height:20px}
+/* 5. Icons: never tiny, never huge */
+html.android :is(button,a,[role=button],summary) svg:not(:is([class*="mascot"],.brand-mark *,.logo *)){min-width:18px;min-height:18px;max-width:24px;max-height:24px}
+html.android :is(.partner-status-chip,.continue-eyebrow,.welcome-modal-eyebrow,.partner-subject-icon,.partner-card-stats,.todo-tag-icon) svg{min-width:14px;min-height:14px;max-width:20px;max-height:20px}
+</style>
 </head>
 <body>
 <noscript><p style="padding:16px;font:16px/1.5 system-ui,sans-serif">DuoTrack is a free study timer for JEE and NEET students with a live study partner, mock test tracker, exam countdown and AI doubt solver. Please turn on JavaScript to use the app.</p></noscript>
@@ -7584,7 +7668,7 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
         ["fonts", "Put the font licence files (OFL.txt for Inter, Anton and JetBrains Mono) in the fonts/ folder."],
         ["gemini", "Read Google's Gemini API terms about apps used by under-18s (ai.google.dev/gemini-api/terms) and act on them."],
         ["lawyer", "Get a lawyer's check before launch, especially for minors (DPDP Act 2023)."],
-        ["gst", "Register for GST and services, then set COFFEE_PAUSED = false to bring back Buy me a coffee. Declare tips as income."]
+        ["gst", "Register for GST and services, then put UPI_ID and PAYEE back in the coffee code (removed for now) and set COFFEE_PAUSED = false. Declare tips as income."]
       ]],
       ["In the code (do later)", [
         ["diary", "The diary is closed and its code is archived. Keep the archive key safe offline (never in the site)."],
@@ -7632,7 +7716,7 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
     try {
       if (localStorage.getItem("duotrackDefaultsV") !== "1") {
         localStorage.setItem("duotrackCardStyle", "outline");
-        localStorage.setItem("duotrackLiveBg", "koi");
+        localStorage.setItem("duotrackLiveBg", (window.__ANDROID && ((navigator.deviceMemory && navigator.deviceMemory <= 2) || (navigator.connection && navigator.connection.saveData))) ? "" : "koi");
         localStorage.setItem("duotrackDefaultsV", "1");
       }
     } catch (e) { /* storage blocked: the app falls back to its plain look */ }
@@ -7646,6 +7730,7 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
   var canvas = null, ctx = null, W = 0, H = 0, cur = "", scene = null, raf = 0, last = 0, clock = 0, resizeT = 0;
   var ptr = { x: -1e4, y: -1e4, vx: 0, vy: 0, t: 0, on: false, has: false, touch: false };
   var reduce = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+  var AND = !!window.__ANDROID, FRAME_MS = AND ? 42 : 32, cost = 0, nf = 0;  /* Android: ~24 fps, governor below */
 
   function rng(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
   function off(w, h) { var c = document.createElement("canvas"); c.width = Math.max(2, w); c.height = Math.max(2, h); return c; }
@@ -7896,12 +7981,12 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
     canvas = document.createElement("canvas"); canvas.id = "duoLiveCanvas"; canvas.setAttribute("aria-hidden", "true");
     document.body.insertBefore(canvas, document.body.firstChild); ctx = canvas.getContext("2d");
   }
-  function fit() { var cw = Math.max(1, innerWidth), ch = Math.max(1, innerHeight), s = Math.min(window.devicePixelRatio || 1, 1.25, 1500 / cw); W = Math.max(2, Math.round(cw * s)); H = Math.max(2, Math.round(ch * s)); canvas.width = W; canvas.height = H; }
+  function fit() { var cw = Math.max(1, innerWidth), ch = Math.max(1, innerHeight), s = Math.min(window.devicePixelRatio || 1, AND ? 1 : 1.25, 1500 / cw); W = Math.max(2, Math.round(cw * s)); H = Math.max(2, Math.round(ch * s)); canvas.width = W; canvas.height = H; }
   function frame(ts) {
     raf = requestAnimationFrame(frame); if (!scene) return;
-    if (ts - last < 32) return; var dt = Math.min(0.1, (ts - last) / 1000); last = ts; clock += dt;
+    if (ts - last < FRAME_MS) return; var dt = Math.min(0.1, (ts - last) / 1000); last = ts; clock += dt;
     ptr.on = ptr.has && (performance.now() - ptr.t) < (ptr.touch ? 1300 : 6000); var dk = Math.pow(0.02, dt); ptr.vx *= dk; ptr.vy *= dk;
-    try { scene.draw(ctx, clock, dt, ptr); } catch (e) { stop(); }
+    try { var t0 = performance.now(); scene.draw(ctx, clock, dt, ptr); if (AND) { cost = cost * 0.9 + (performance.now() - t0) * 0.1; if (++nf % 30 === 0) { if (cost > 30) stop(); else if (cost > 14 && FRAME_MS < 66) FRAME_MS = 66; } } } catch (e) { stop(); }
   }
   function stop() { if (raf) cancelAnimationFrame(raf); raf = 0; }
   function run() { stop(); if (!scene) return; last = performance.now(); if (reduce) { try { scene.draw(ctx, 2, 0, ptr); } catch (e) { /* ignore */ } return; } raf = requestAnimationFrame(frame); }
@@ -7934,6 +8019,75 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
   window.DuoLive = { list: Object.keys(S).map(function (k) { return { id: k, name: S[k].name, swatch: S[k].swatch }; }), set: set, current: function () { return cur; } };
 })();
 
+</script>
+<script id="androidLayerJs">
+/* ===== ANDROID LAYER (added): runs only on Android. NOTE FOR OTHER AIs: ask Abhishek before changing the prebuilt parts. ===== */
+(function () {
+  "use strict";
+  if (!window.__ANDROID) return;
+  var touchOnly = true;
+  try { touchOnly = !matchMedia("(hover: hover) and (pointer: fine)").matches; } catch (e) { /* keep default */ }
+
+  /* A. Tidy every stylesheet once: no sticky :hover on touch, text >= 12px, small-screen vh units, lighter shadows */
+  function split(s) { var out = [], d = 0, cur = "", i, c; for (i = 0; i < s.length; i++) { c = s[i]; if (c === "(" || c === "[") d++; else if (c === ")" || c === "]") d--; if (c === "," && d === 0) { out.push(cur); cur = ""; } else cur += c; } out.push(cur); return out; }
+  function soften(v) { return split(v).map(function (l) { return /inset/.test(l) ? l : l.replace(/(-?[\d.]+)(?:px)?\s+(-?[\d.]+)px\s+([\d.]+)px/, function (m, x, y, b) { return x + "px " + Math.min(+y, 8) + "px " + Math.min(+b, 16) + "px"; }); }).join(","); }
+  function fix(rule) {
+    var st = rule.style, sel = rule.selectorText, v, n;
+    if (!st) return;
+    v = st.fontSize;
+    if (v && /px$/.test(v)) { n = parseFloat(v); var floor = /badge|count|::?before|::?after|kbd|-th\b/.test(sel) ? 11 : 12; if (n < floor) st.setProperty("font-size", floor + "px", st.getPropertyPriority("font-size")); }
+    ["height", "min-height", "max-height"].forEach(function (p) {
+      var x = st.getPropertyValue(p);
+      if (x && /\dvh/.test(x)) st.setProperty(p, x.replace(/(\d)vh/g, p === "min-height" ? "$1svh" : "$1dvh"), st.getPropertyPriority(p));
+    });
+    v = st.getPropertyValue("box-shadow");
+    if (v && v !== "none" && v.indexOf("var(") < 0 && /(\d{2,})px/.test(v)) st.setProperty("box-shadow", soften(v), st.getPropertyPriority("box-shadow"));
+  }
+  function walk(list, parent) {
+    for (var i = list.length - 1; i >= 0; i--) {
+      var r = list[i];
+      try {
+        if (r.selectorText) {
+          if (touchOnly && r.selectorText.indexOf(":hover") > -1) {
+            var all = split(r.selectorText), keep = all.filter(function (s) { return s.indexOf(":hover") < 0 || s.indexOf(":not(:hover)") > -1; });
+            if (!keep.length) { parent.deleteRule(i); continue; }
+            if (keep.length !== all.length) r.selectorText = keep.join(",");
+          }
+          fix(r);
+        } else if (r.cssRules && r.type !== 7) walk(r.cssRules, r);
+      } catch (e) { /* skip rules the browser will not let us edit */ }
+    }
+  }
+  var done = new WeakSet();
+  function tidy(sheet) { if (!sheet || done.has(sheet) || (sheet.ownerNode && sheet.ownerNode.id === "androidLayer")) return; done.add(sheet); try { walk(sheet.cssRules, sheet); } catch (e) { /* cross-origin */ } }
+  Array.prototype.forEach.call(document.styleSheets, tidy);
+  new MutationObserver(function (list) {
+    list.forEach(function (m) { Array.prototype.forEach.call(m.addedNodes, function (n) { if (n.nodeName === "STYLE") tidy(n.sheet); }); });
+  }).observe(document.documentElement, { childList: true, subtree: true });
+
+  /* B. Reorder todos by touch: the row's HTML5 drag-and-drop is unreliable on Android, so the grip drives the same handlers */
+  var drag = null;
+  function fire(el, type) { el.dispatchEvent(new Event(type, { bubbles: true, cancelable: true })); }
+  document.addEventListener("pointerdown", function (e) {
+    var h = e.pointerType !== "mouse" && e.target.closest && e.target.closest(".todo-drag-handle"), item = h && h.closest(".todo-item");
+    if (!item) return;
+    drag = { item: item, id: e.pointerId };
+    try { h.setPointerCapture(e.pointerId); } catch (x) { /* ignore */ }
+    fire(item, "dragstart");
+  }, { passive: true });
+  document.addEventListener("pointermove", function (e) {
+    if (!drag || e.pointerId !== drag.id) return;
+    var t = document.elementFromPoint(e.clientX, e.clientY); if (t) fire(t, "dragover");
+  }, { passive: true });
+  function end(e, drop) {
+    if (!drag || e.pointerId !== drag.id) return;
+    var t = document.elementFromPoint(e.clientX, e.clientY);
+    if (drop && t) fire(t, "drop");
+    fire(drag.item, "dragend"); drag = null;
+  }
+  document.addEventListener("pointerup", function (e) { end(e, true); }, { passive: true });
+  document.addEventListener("pointercancel", function (e) { end(e, false); }, { passive: true });
+})();
 </script>
   <script type="module">
     /* ================================ #NOTES FOR ANY AI / DEVELOPER EDITING THIS FILE ================================
@@ -8025,18 +8179,42 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
        live ONLY on that server: nothing secret is sent to any browser. See ai-proxy-worker.js. */
     const DT_PROXY_URL = "https://duotrack-relay.mrabhishek8900.workers.dev";
 
-    const USERS = {
-      "abhi@990": {
-        password: "sha256$2d8c07b6836625808e7381126f8b9c829769db4e66964539f5361b655b7f87eb",
-        id: "abhi",
-        name: "Abhishek"
-      },
-      "aditya@hi": {
-        password: "sha256$d6d0bd54cbfb877e7497e82484e72530d059adef400d849fd04a1e0ceddac2f6",
-        id: "aditya",
-        name: "Aditya"
-      }
+    /* Built-in accounts. Their login IDs are NOT written here, only a hash of each (SHA-256 of "duotrack-lid|" + the ID).
+       USERS looks a typed login ID up by hashing it, so the code works as before without ever containing the IDs. */
+    const DT_BUILTIN = {
+      "562ae55dbdcf40bae0d7b4f3f2b622528180f642da59cb53893c9cab7ea78b7d": { password: "sha256$2d8c07b6836625808e7381126f8b9c829769db4e66964539f5361b655b7f87eb", id: "abhi", name: "Abhishek" },
+      "ca024d44cd3dbff799275557df2912fbe2784e95b85c911ce7721dba0ea7a51e": { password: "sha256$d6d0bd54cbfb877e7497e82484e72530d059adef400d849fd04a1e0ceddac2f6", id: "aditya", name: "Aditya" }
     };
+    function dtSha256Sync(str) {
+      const K = [0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+      const b = new TextEncoder().encode(str), l = b.length, n = (((l + 9 + 63) >> 6) << 6), m = new Uint8Array(n);
+      m.set(b); m[l] = 0x80;
+      const dv = new DataView(m.buffer); dv.setUint32(n - 4, (l * 8) >>> 0); dv.setUint32(n - 8, Math.floor((l * 8) / 4294967296));
+      let h0 = 0x6a09e667, h1 = 0xbb67ae85, h2 = 0x3c6ef372, h3 = 0xa54ff53a, h4 = 0x510e527f, h5 = 0x9b05688c, h6 = 0x1f83d9ab, h7 = 0x5be0cd19;
+      const w = new Uint32Array(64), rr = (x, c) => (x >>> c) | (x << (32 - c));
+      for (let o = 0; o < n; o += 64) {
+        for (let i = 0; i < 16; i++) w[i] = dv.getUint32(o + i * 4);
+        for (let i = 16; i < 64; i++) { const s0 = rr(w[i-15], 7) ^ rr(w[i-15], 18) ^ (w[i-15] >>> 3), s1 = rr(w[i-2], 17) ^ rr(w[i-2], 19) ^ (w[i-2] >>> 10); w[i] = (w[i-16] + s0 + w[i-7] + s1) | 0; }
+        let a = h0, bb = h1, c = h2, d = h3, e = h4, f = h5, g = h6, h = h7;
+        for (let i = 0; i < 64; i++) {
+          const S1 = rr(e, 6) ^ rr(e, 11) ^ rr(e, 25), ch = (e & f) ^ (~e & g), t1 = (h + S1 + ch + K[i] + w[i]) | 0;
+          const S0 = rr(a, 2) ^ rr(a, 13) ^ rr(a, 22), mj = (a & bb) ^ (a & c) ^ (bb & c), t2 = (S0 + mj) | 0;
+          h = g; g = f; f = e; e = (d + t1) | 0; d = c; c = bb; bb = a; a = (t1 + t2) | 0;
+        }
+        h0 = (h0 + a) | 0; h1 = (h1 + bb) | 0; h2 = (h2 + c) | 0; h3 = (h3 + d) | 0; h4 = (h4 + e) | 0; h5 = (h5 + f) | 0; h6 = (h6 + g) | 0; h7 = (h7 + h) | 0;
+      }
+      return [h0, h1, h2, h3, h4, h5, h6, h7].map((x) => (x >>> 0).toString(16).padStart(8, "0")).join("");
+    }
+    const dtBuiltinFor = (k) => (typeof k !== "string" ? undefined : k.startsWith("b_") && DT_BUILTIN[k.slice(2)] ? DT_BUILTIN[k.slice(2)] : DT_BUILTIN[dtSha256Sync("duotrack-lid|" + k)]);
+    const USERS = new Proxy({}, {
+      get(t, k) { if (typeof k !== "string" || k in t) return Reflect.get(t, k); return dtBuiltinFor(k); },
+      has(t, k) { return k in t || !!dtBuiltinFor(k); },
+      ownKeys(t) { return Reflect.ownKeys(t).concat(Object.keys(DT_BUILTIN).map((h) => "b_" + h)); },
+      getOwnPropertyDescriptor(t, k) {
+        if (typeof k === "string" && !(k in t) && k.startsWith("b_") && DT_BUILTIN[k.slice(2)]) return { value: DT_BUILTIN[k.slice(2)], writable: true, enumerable: true, configurable: true };
+        return Reflect.getOwnPropertyDescriptor(t, k);
+      }
+    });
 
     // Administrator portal login. This is NOT a study account (it is not in USERS), so it never shows up as a study partner.
     // Only a hash of the credentials is kept here, not the plain text.
@@ -8715,7 +8893,8 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
         <p><b>One drawback</b></p>
         <p>Linking ties your DuoTrack account to your Google account. Google can see that you use DuoTrack when you sign in, DuoTrack stores your Google account ID, and because the database does not yet have strict per-user rules (${ppGo("pp-12", "Section 12")}), that link is protected by the app and not by a server. If you would rather not link, keep using your ID and password, but your account will be paused after the time limit until the admin allows it.</p>`],
       ["pp-16", "16. Contact us", () => `<p>Contact: Abhishek, admin of DuoTrack. Email: ${ppLink("mailto:" + CONTACT_EMAIL, CONTACT_EMAIL)}. Use it for privacy questions, data removal, appeals and problems. Based in ${escapeHTML(LEGAL_ADDRESS)}.</p>${contactNoteHtml()}<p><b>Grievance officer (India, IT Rules 2021):</b> Abhishek Kumar, same email and address as above. Complaints are acknowledged within 24 hours and we aim to resolve them within 15 days. Inside the app you can also use the Contact Us link in the footer.</p>`],
-      ["pp-17", "17. Private diary (temporarily closed)", () => `<p>The private diary has been <b>temporarily closed</b> for everyone. A diary can be mishandled, and DuoTrack is a small project that cannot carry the legal costs of running one safely. We are sorry.</p>
+      ["pp-17", "17. Private diary (temporarily closed)", () => `<p style="margin:0 0 12px;padding:10px 12px;border-left:4px solid #c62828;background:rgba(198,40,40,.09);color:#c62828;font-weight:800">The private diary was shut down on 21 November 2026. It stays closed until this policy says otherwise.</p>
+        <p>The private diary has been <b>temporarily closed</b> for everyone. A diary can be mishandled, and DuoTrack is a small project that cannot carry the legal costs of running one safely. We are sorry.</p>
         <p><b>17.1 What this means.</b> You cannot open the diary or write new pages. The safety-word checks and the legal disclosure process are switched off. The admin is not opening or reading diary pages while it is closed.</p>
         <p><b>17.2 Old pages.</b> Pages you wrote before stay encrypted in the database (the same Firebase database as the rest of the app, see ${ppGo("pp-3", "Section 3")}). You can ask for them to be deleted through ${ppGo("pp-16", "Section 16")}.</p>
         <p><b>17.3 The code.</b> The diary's code has been taken out of the public page and kept offline in encrypted form by the admin.</p>
@@ -8790,7 +8969,7 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
     const HYDRATION_MINUTES_KEY = "duotrackHydrationMinutes";
     const WELCOME_POPUP_ENABLED_KEY = "duotrackWelcomePopupEnabled";
     const WELCOME_POPUP_TEXT_KEY = "duotrackWelcomePopupText";
-    const DEFAULT_WELCOME_POPUP_TEXT = "there's a new feature now — you can switch to timer mode by clicking on the arrow button (it helps in time-bound practice).";
+    const DEFAULT_WELCOME_POPUP_TEXT = __A("there's a new feature now — you can switch to timer mode by tapping the arrow button (it helps in time-bound practice).", "there's a new feature now — you can switch to timer mode by clicking on the arrow button (it helps in time-bound practice).");
     const SETTINGS_PASSWORD_HASH = "12c6fc5a29c65084d70864cc2b6335b7420b5c19273807b890cdd23508391dfe";   /* hash only - never the plain password */
     const EXPORT_VERSION = 1;
     const THEME_PRESETS = [
@@ -9633,7 +9812,7 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
         ${settingsSection({
           icon: "sparkle",
           title: "Backup Gemini keys (answers & voice)",
-          description: `Add as many extra Google/Gemini API keys as you like (press <strong>+ Add another key</strong>). Order: main key above → backup 1 → backup 2 → backup 3 → … If a key fails or its limit runs out (429 / overload), the next one takes over silently, for <strong>PDF answers and the read-aloud voice</strong>. Shared between both accounts. Use keys from different Google projects — keys in the same project share one limit.`,
+          description: `Add as many extra Google/Gemini API keys as you like (${__A("tap", "press")} <strong>+ Add another key</strong>). Order: main key above → backup 1 → backup 2 → backup 3 → … If a key fails or its limit runs out (429 / overload), the next one takes over silently, for <strong>PDF answers and the read-aloud voice</strong>. Shared between both accounts. Use keys from different Google projects — keys in the same project share one limit.`,
           tone: "ai",
           body: `
             <form id="geminiTtsKeysForm" class="field settings-inline-form">
@@ -11239,7 +11418,7 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
       });
       const filled = rows.filter((r) => r.querySelector("input").value.trim()).length;
       const count = document.getElementById("geminiKeyCount");
-      if (count) count.textContent = `${filled} backup key${filled === 1 ? "" : "s"} entered — press Save backup keys to keep them.`;
+      if (count) count.textContent = `${filled} backup key${filled === 1 ? "" : "s"} entered — ${__A("tap", "press")} Save backup keys to keep them.`;
       const add = document.getElementById("geminiKeyAddBtn");
       if (add) add.disabled = rows.length >= MAX_BACKUP_GEMINI_KEYS;
     }
@@ -13083,7 +13262,7 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
               <label class="pv-setrow pv-setcol"><span>Touchpad pinch speed <b data-ref="setPinchVal">1.0x</b></span>
                 <input type="range" class="pv-range" data-ref="setPinch" min="0.4" max="2.5" step="0.1">
               </label>
-              <p class="pv-hint">Zoom: pinch on the touchpad, Ctrl + scroll, Ctrl + / -, or the buttons. Drag with the hand tool (H), Space, or the middle button to pan.</p>
+              <p class="pv-hint">${__A("Zoom: pinch with two fingers, or use the buttons. Drag with the hand tool to move around.", "Zoom: pinch on the touchpad, Ctrl + scroll, Ctrl + / -, or the buttons. Drag with the hand tool (H), Space, or the middle button to pan.")}</p>
             </section>
           </aside>
           <div class="pv-scroller" data-ref="scroller" tabindex="0" aria-label="Document pages"><div class="pv-pages" data-ref="pages"></div></div>
@@ -13659,7 +13838,7 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
         if (S.tool === "crop") {
           const ready = Boolean(S.crop && S.crop.done);
           toolPop.hidden = false;
-          toolPop.innerHTML = `<span class="pv-poplabel">${ready ? "Press <b>Enter</b> to send to AI · drag again to redo · <b>Esc</b> to cancel" : "Drag a box around the question you want to ask about"}</span><button type="button" class="pv-cropask" data-crop-ask${ready ? "" : " disabled"}>${pvIcon("spark")}Ask AI <kbd>Enter</kbd></button>`;
+          toolPop.innerHTML = `<span class="pv-poplabel">${ready ? __A("Tap <b>Ask AI</b> to send · drag again to redo · tap <b>✕</b> to cancel", "Press <b>Enter</b> to send to AI · drag again to redo · <b>Esc</b> to cancel") : "Drag a box around the question you want to ask about"}</span><button type="button" class="pv-cropask" data-crop-ask${ready ? "" : " disabled"}>${pvIcon("spark")}Ask AI${__A("", " <kbd>Enter</kbd>")}</button>`;
           return;
         }
         const draw = S.tool === "draw";
@@ -13669,7 +13848,7 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
         const labels = draw ? ["Thin", "Medium", "Thick"] : ["Small", "Medium", "Large"];
         toolPop.hidden = false;
         toolPop.innerHTML = `
-          ${draw ? `<div class="pv-seg"><button type="button" data-pen="pen" class="${S.pen.kind === "pen" ? "is-on" : ""}">Pen</button><button type="button" data-pen="hl" class="${S.pen.kind === "hl" ? "is-on" : ""}">Highlighter</button><button type="button" data-pen="er" class="${eras ? "is-on" : ""}">Eraser</button></div>` : `<span class="pv-poplabel">Click on the page to type</span>`}
+          ${draw ? `<div class="pv-seg"><button type="button" data-pen="pen" class="${S.pen.kind === "pen" ? "is-on" : ""}">Pen</button><button type="button" data-pen="hl" class="${S.pen.kind === "hl" ? "is-on" : ""}">Highlighter</button><button type="button" data-pen="er" class="${eras ? "is-on" : ""}">Eraser</button></div>` : `<span class="pv-poplabel">${__A("Tap", "Click")} on the page to type</span>`}
           ${draw && !eras ? `<div class="pv-seg"><button type="button" data-straight="1" class="pv-straight${S.pen.straight ? " is-on" : ""}" title="Snap strokes to a straight line (or hold Shift)" aria-pressed="${S.pen.straight ? "true" : "false"}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 18 20 6"/><circle cx="4" cy="18" r="1.6"/><circle cx="20" cy="6" r="1.6"/></svg>Straight line</button></div>` : ""}
           ${eras ? `<span class="pv-poplabel">Drag over drawings or notes to erase them</span>` : `<div class="pv-swatches">${PV_COLORS.map((c) => `<button type="button" class="pv-swatch${cfg.color === c ? " is-on" : ""}" data-color="${c}" style="--c:${S.invert ? pvInvColor(c, draw && S.pen.kind === "hl") : c}" aria-label="Colour ${c}"></button>`).join("")}</div>`}
           <div class="pv-seg">${sizes.map((s, i) => `<button type="button" data-size="${s}" class="${cfg.size === s ? "is-on" : ""}">${labels[i]}</button>`).join("")}</div>`;
@@ -13858,7 +14037,7 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
         const list = readArchive();
         aiMsgs.innerHTML = (list.length
           ? `<div class="pv-hist-head">Past chats for this PDF</div>` + list.map((c, i) => `<div class="pv-hist-item"><button type="button" data-act="aiHistOpen" data-idx="${i}"><b>${escapeHTML(c.title)}</b><span>${new Date(c.ts).toLocaleDateString()} · ${c.msgs.length} messages</span></button><button type="button" class="pv-hist-del" data-act="aiHistDel" data-idx="${i}" title="Delete this chat" aria-label="Delete this chat">×</button></div>`).join("")
-          : `<div class="pv-ai-empty">${pvIcon("clock")}<br>No past chats yet.<br>Press <b>+</b> to start a new chat — the current one is saved here.</div>`)
+          : `<div class="pv-ai-empty">${pvIcon("clock")}<br>No past chats yet.<br>${__A("Tap", "Press")} <b>+</b> to start a new chat — the current one is saved here.</div>`)
           + `<button type="button" class="pv-hist-cloudbtn" data-act="aiCloud">All saved AI chats (cloud)</button>`;
       }
       function clearAiChat() {
@@ -14291,7 +14470,7 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
           }
           await speakWithGemini(text, token, entry);
         } catch (error) {
-          if (token === S.tts.token) ttsNote(error && error.started ? "Voice stopped — Gemini is overloaded right now. Press Listen to continue." : ((error && error.message) || "Couldn't read that aloud."), false);
+          if (token === S.tts.token) ttsNote(error && error.started ? __A("Voice stopped — Gemini is overloaded right now. Tap Listen to continue.", "Voice stopped — Gemini is overloaded right now. Press Listen to continue.") : ((error && error.message) || "Couldn't read that aloud."), false);
         }
         if (token === S.tts.token) { S.tts.state = "idle"; S.tts.idx = -1; updateSpeakButtons(); }
       }
@@ -14301,12 +14480,12 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
         const n = S.aiImages.length;
         aiAttach.hidden = !n;
         aiTray.innerHTML = S.aiImages.map((u, i) => `<span class="pv-ai-th"><img src="${escapeHTML(safeImgSrc(u))}" alt="Crop ${i + 1}"><i>${i + 1}</i><button type="button" data-act="aiDrop" data-idx="${i}" title="Remove this crop" aria-label="Remove crop ${i + 1}">×</button></span>`).join("");
-        aiInput.placeholder = n > 1 ? `Ask about these ${n} questions… (or press Enter to solve all)` : n ? "Ask about this question… (or just press Enter to solve)" : "Type your question…";
+        aiInput.placeholder = n > 1 ? `Ask about these ${n} questions… (or ${__A("tap send", "press Enter")} to solve all)` : n ? __A("Ask about this question… (or just tap send to solve)", "Ask about this question… (or just press Enter to solve)") : "Type your question…";
       }
       function renderAi() {
         if (S.aiHistView) { renderHistView(); return; }
         if (!S.aiChat.length && !S.aiBusy) {
-          aiMsgs.innerHTML = `<div class="pv-ai-empty">${pvIcon("spark")}<br>Use the <b>crop</b> tool, drag a box around a question and press <b>Enter</b>.<br>Then type your doubt and the AI will answer.<br>The AI can also read and see this PDF — try <b>“question 5 solve karo”</b> or <b>“page 12 samjhao”</b>.</div>`;
+          aiMsgs.innerHTML = `<div class="pv-ai-empty">${pvIcon("spark")}<br>Use the <b>crop</b> tool, drag a box around a question and ${__A("tap <b>Ask AI</b>", "press <b>Enter</b>")}.<br>Then type your doubt and the AI will answer.<br>The AI can also read and see this PDF — try <b>“question 5 solve karo”</b> or <b>“page 12 samjhao”</b>.</div>`;
           return;
         }
         aiMsgs.innerHTML = S.aiChat.map((m, i) => m.role === "user"
@@ -14350,7 +14529,7 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
         if (!b) return;
         b.classList.toggle("is-on", S.aiPdfAccess);
         b.setAttribute("aria-pressed", S.aiPdfAccess ? "true" : "false");
-        b.title = S.aiPdfAccess ? "AI can read and see this PDF (click to turn off)" : "AI can't see this PDF (click to turn on)";
+        b.title = S.aiPdfAccess ? `AI can read and see this PDF (${__A("tap", "click")} to turn off)` : `AI can't see this PDF (${__A("tap", "click")} to turn on)`;
       }
       function loadAllPdfText() {
         if (S.pdfTextAll) return S.pdfTextAll;
@@ -16547,7 +16726,7 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
       if (ad && adminEditing) {
         const act = ad.dataset.ad;
         if (act === "bigger" || act === "smaller") {
-          if (!adminSelected) { showToast("Pick an icon", "Click an icon first."); return; }
+          if (!adminSelected) { showToast("Pick an icon", __A("Tap an icon first.", "Click an icon first.")); return; }
           const c = adminCfg(adminSelected);
           c.s = adminClamp(+(c.s + (act === "bigger" ? 0.1 : -0.1)).toFixed(2), 0.4, 3);
         } else if (act === "resetOne" && adminSelected) {
@@ -16976,7 +17155,7 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
         const btn = i.locked ? `<div class="dg-row"><button type="button" class="dg-btn" data-dg-gallow="${escapeHTML(u.id)}">Allow</button></div>` : "";
         return `<div class="dg-req dg-pr">${dgAvatar(u)}<div class="dg-pr-body"><b>${escapeHTML(u.name)}</b><p>${escapeHTML(status)}</p>${btn}</div></div>`;
       }).join("");
-      return `<p class="dg-sub">Accounts without Google linked. A locked account stays paused until you press Allow, which also restarts its countdown.</p>${html || '<p class="dg-sub">No accounts to review yet.</p>'}`;
+      return `<p class="dg-sub">Accounts without Google linked. A locked account stays paused until you ${__A("tap", "press")} Allow, which also restarts its countdown.</p>${html || '<p class="dg-sub">No accounts to review yet.</p>'}`;
     }
 
     /* ---------- admin portal: change the time ---------- */
@@ -17722,7 +17901,7 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
     }
     setInterval(mnApply, 800);
     async function mnPullLimits() {
-      const u = mnMe(); if (!u) return;
+      const u = mnMe(); if (!u || !u.minor) return;
       const key = Object.keys(USERS).find((k) => USERS[k] === u); if (!key) return;
       try { const a = (await get(mnAccRef(key))).val(); if (a) { u.minor = !!a.minor; u.limits = a.limits || null; } } catch (error) { /* ignore */ }
     }
@@ -22787,8 +22966,8 @@ function totpAt(keyBytes, counter) {
     /* ===== Buy me a coffee: dialog, UPI QR, claims, admin approval ===== */
     const duoCoffee = (function coffeeInit() {
       "use strict";
-      const UPI_ID = "abhishekkumar800@fam", PAYEE = "Abhishek Kumar", MAX_AMOUNT = 10000, MAX_PENDING = 3;
-      const HIDDEN_FOR = ["aditya@hi"];                                  /* login IDs that never see this feature */
+      const UPI_ID = "", PAYEE = "", MAX_AMOUNT = 10000, MAX_PENDING = 3;
+      const HIDDEN_FOR_IDS = ["aditya"];                                  /* user ids that never see this feature */
       const SAFE = /^[A-Za-z0-9_-]{1,64}$/, EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
       const RS = "\u20B9";
       const base = () => "duotrack/groups/" + GROUP_ID + "/coffee";
@@ -22799,7 +22978,7 @@ function totpAt(keyBytes, counter) {
       const shown = (el) => !!el && el.getClientRects().length > 0 && getComputedStyle(el).visibility !== "hidden";
       const toast = (t, b) => { try { showToast(t, b); } catch (e) { /* app still starting */ } };
       const uid = () => { try { return currentUserId || null; } catch (e) { return null; } };
-      const hiddenIds = () => HIDDEN_FOR.map((k) => USERS[k] && USERS[k].id).filter(Boolean);
+      const hiddenIds = () => HIDDEN_FOR_IDS.slice();
       const allowed = () => { const u = uid(); return !!u && hiddenIds().indexOf(u) === -1; };
       const myName = () => { const u = uid(); return (USERS_BY_ID[u] && USERS_BY_ID[u].name) || u || "Friend"; };
       const fmtDate = (ms) => { try { return new Date(ms).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); } catch (e) { return ""; } };
