@@ -4,19 +4,6 @@
   <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'none'">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script id="androidDetect">
-  /* ANDROID LAYER (added): detect Android before first paint. Force with ?android=1 or localStorage duotrackAndroidMode = "on" / "off". __A(androidText, otherText) picks wording. */
-  (function () {
-    var is = /Android/i.test(navigator.userAgent || "") || /[?&]android=1/.test(location.search);
-    try { var f = localStorage.getItem("duotrackAndroidMode"); if (f === "on") is = true; if (f === "off") is = false; } catch (e) { /* ignore */ }
-    window.__ANDROID = is; window.__A = function (a, o) { return is ? a : o; };
-    if (is) {
-      document.documentElement.classList.add("android");
-      var m = document.querySelector('meta[name="viewport"]');
-      if (m) m.setAttribute("content", "width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content");
-    }
-  })();
-  </script>
   <title>Free Study Timer, Pomodoro Focus &amp; AI Doubt Solver | DuoTrack</title>
   <meta name="description" content="Free study timer for JEE &amp; NEET students: Pomodoro-style focus timer, live study partner, mock test tracker, exam countdown and an AI doubt solver.">
   <link rel="canonical" href="https://abhishekpathak-800.github.io/ypt/">
@@ -6118,6 +6105,82 @@ textarea.dg-in { height: auto; padding: 10px 12px; resize: vertical; }
 @keyframes ppRise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
 @keyframes ppGlow { from { opacity: .6; transform: translate(0,0); } to { opacity: 1; transform: translate(6%, 8%); } }
 @media (prefers-reduced-motion: reduce) { .pp-cine *, .pp-cine.pp-js [data-reveal] { animation: none !important; transition: none !important; opacity: 1 !important; transform: none !important; } .pp-cine .pp-doc h1 { color: #fff; -webkit-text-fill-color: #fff; } }
+/* ---- Cinematic "neon coast" look for the Privacy Policy and Terms pages. Own artwork (CSS + SVG), no outside images or logos. ---- */
+.pp-page.vc { background: #12042b; color: #f4ecff; --vcy: 0; }
+.vc .vc-bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: linear-gradient(180deg, #0b0221 0%, #2a0b5e 26%, #8a1f8f 52%, #ff3d8b 70%, #ff9a4d 84%, #ffd36e 100%); background-size: 100% 130%; animation: vcSky 22s ease-in-out infinite alternate; }
+.vc .vc-stars { position: absolute; left: 0; top: 0; width: 2px; height: 2px; border-radius: 50%; animation: vcTwinkle 4.5s ease-in-out infinite alternate; }
+.vc .vc-sun { position: absolute; left: 50%; bottom: calc(24vh - 14vmin); width: min(64vmin, 560px); aspect-ratio: 1; border-radius: 50%; transform: translate(-50%, calc(var(--vcy, 0) * -0.04px)); background: radial-gradient(circle at 50% 38%, #fff6b0 0%, #ffd34d 32%, #ff8a3d 62%, #ff2e93 100%); box-shadow: 0 0 120px 30px rgba(255,80,150,.55), 0 0 280px 80px rgba(255,150,80,.35); -webkit-mask-image: linear-gradient(#000 0 50%, transparent 50% 54%, #000 54% 66%, transparent 66% 71%, #000 71% 81%, transparent 81% 88%, #000 88% 100%); mask-image: linear-gradient(#000 0 50%, transparent 50% 54%, #000 54% 66%, transparent 66% 71%, #000 71% 81%, transparent 81% 88%, #000 88% 100%); animation: vcSun 9s ease-in-out infinite alternate; }
+.vc .vc-flare { position: absolute; left: -20%; right: -20%; bottom: calc(24vh + 11vmin); height: 3px; background: linear-gradient(90deg, transparent, rgba(95,243,255,.0) 20%, rgba(95,243,255,.85) 48%, rgba(255,255,255,.95) 50%, rgba(255,80,160,.85) 52%, transparent 80%); filter: blur(1.5px); opacity: .7; animation: vcFlare 7s ease-in-out infinite alternate; }
+.vc .vc-city { position: absolute; left: 0; right: 0; bottom: 23.5vh; height: 24vh; transform: translateY(calc(var(--vcy, 0) * -0.02px)); }
+.vc .vc-city svg { display: block; width: 100%; height: 100%; }
+.vc .vc-w { animation: vcWin 5s ease-in-out infinite alternate; }
+.vc .vc-sea { position: absolute; left: 0; right: 0; bottom: 0; height: 24vh; background: linear-gradient(180deg, #4a1280 0%, #240a52 38%, #0b0220 100%); overflow: hidden; }
+.vc .vc-sea::before { content: ""; position: absolute; left: 50%; top: 0; width: min(46vmin, 420px); height: 100%; transform: translateX(-50%); background: repeating-linear-gradient(180deg, rgba(255,205,110,.85) 0 3px, transparent 3px 11px); -webkit-mask-image: linear-gradient(180deg, #000, transparent 95%); mask-image: linear-gradient(180deg, #000, transparent 95%); opacity: .65; animation: vcShimmer 3.2s linear infinite; }
+.vc .vc-sea::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(180deg, rgba(255,255,255,.06) 0 1px, transparent 1px 9px); animation: vcShimmer 6s linear infinite reverse; }
+.vc .vc-palm { position: absolute; bottom: -2vh; height: 78vh; width: auto; aspect-ratio: 320 / 600; transform: translateY(calc(var(--vcy, 0) * -0.03px)); }
+.vc .vc-palm svg { display: block; width: 100%; height: 100%; transform-origin: 50% 100%; animation: vcSway 7s ease-in-out infinite alternate; filter: drop-shadow(0 0 18px rgba(255,46,147,.25)); }
+.vc .vc-palm.l { left: -4vw; }
+.vc .vc-palm.r { right: -5vw; transform: translateY(calc(var(--vcy, 0) * -0.03px)) scaleX(-1); height: 64vh; }
+.vc .vc-palm.r svg { animation-delay: -3s; }
+.vc .vc-grain { position: absolute; inset: -50%; opacity: .09; background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); animation: vcGrain .8s steps(6) infinite; }
+.vc .vc-vig { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 45%, transparent 38%, rgba(6,0,20,.62) 100%), linear-gradient(180deg, rgba(8,0,26,.55), transparent 22%, transparent 70%, rgba(8,0,26,.45)); }
+.vc .vc-scan { position: absolute; inset: 0; background: repeating-linear-gradient(180deg, rgba(0,0,0,.14) 0 1px, transparent 1px 3px); mix-blend-mode: multiply; opacity: .35; }
+/* opening: letterbox bars slide away */
+.vc .vc-intro { position: fixed; inset: 0; z-index: 30; pointer-events: none; animation: vcGone .01s 2.5s forwards; }
+.vc .vc-bar { position: absolute; left: 0; right: 0; height: 50.5vh; background: #05000f; animation: vcBars 1.5s .85s cubic-bezier(.77,0,.18,1) forwards; }
+.vc .vc-bar.t { top: 0; } .vc .vc-bar.b { bottom: 0; }
+.vc .vc-intro-t { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); text-align: center; font-family: 'Anton', Impact, sans-serif; text-transform: uppercase; letter-spacing: .5em; font-size: clamp(14px, 3.2vw, 26px); color: #fff; text-shadow: 0 0 18px #ff2e93, 0 0 40px #5ff3ff; animation: vcTitle 1.9s ease forwards; }
+/* page furniture */
+.vc .pp-bar { z-index: 6; background: rgba(12,3,32,.72); border-bottom: 1px solid rgba(255,90,170,.35); color: #fff; box-shadow: 0 8px 30px rgba(255,46,147,.18); }
+.vc .pp-bar b { font-family: 'Anton', Impact, sans-serif; letter-spacing: .24em; text-transform: uppercase; font-weight: 400; font-size: 18px; text-shadow: 0 0 14px rgba(255,46,147,.8); }
+.vc .pp-close { background: linear-gradient(135deg, #ff2e93, #ff8a3d); color: #fff; border-radius: 999px; padding: 0 22px; box-shadow: 0 6px 24px rgba(255,46,147,.5); transition: transform .15s, box-shadow .15s; }
+.vc .pp-close:hover { transform: translateY(-2px) scale(1.04); box-shadow: 0 10px 32px rgba(255,46,147,.75); }
+.vc .pp-progress { height: 3px; }
+.vc .pp-progress i { background: linear-gradient(90deg, #5ff3ff, #ff2e93, #ffb347); box-shadow: 0 0 14px rgba(255,46,147,.9), 0 0 28px rgba(95,243,255,.6); }
+.vc .pp-doc { position: relative; z-index: 2; max-width: 940px; counter-reset: vcn; }
+.vc .pp-hero { padding: clamp(54px, 13vh, 130px) 0 14px; }
+.vc .pp-hero::before { background: radial-gradient(closest-side, rgba(255,46,147,.35), transparent 72%); }
+.vc .pp-eyebrow { color: #5ff3ff; letter-spacing: .5em; font-size: 13px; text-shadow: 0 0 12px rgba(95,243,255,.9); animation: vcFlick 5s infinite; }
+.vc .pp-doc h1 { font-family: 'Anton', Impact, sans-serif; font-weight: 400; text-transform: uppercase; font-size: clamp(54px, 12.5vw, 150px); line-height: .92; letter-spacing: .02em; background: linear-gradient(180deg, #fff7c2 0%, #ffd166 24%, #ff7a59 52%, #ff2e93 78%, #8a3dff 100%); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 24px rgba(255,46,147,.55)) drop-shadow(0 6px 0 rgba(18,2,50,.85)); animation: vcRise 1s 2.1s cubic-bezier(.2,.8,.2,1) both; }
+.vc .pp-hero .pp-meta { display: inline-block; margin-top: 12px; padding: 6px 14px; border-radius: 999px; background: rgba(95,243,255,.12); border: 1px solid rgba(95,243,255,.5); color: #b8fbff; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; letter-spacing: .12em; text-transform: uppercase; }
+.vc .pp-lead { margin-top: 18px; max-width: 56ch; padding-left: 16px; border-left: 3px solid #ff2e93; color: #f0e4ff; text-shadow: 0 2px 14px rgba(0,0,0,.6); font-size: 20px; }
+.vc .pp-toc { counter-reset: vct; gap: 10px; }
+.vc .pp-toc a { counter-increment: vct; position: relative; padding: 13px 14px 13px 52px; color: #fff; background: rgba(14,5,36,.62); border: 1px solid rgba(255,255,255,.14); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); transition: transform .18s, border-color .18s, box-shadow .18s, background .18s; }
+.vc .pp-toc a::before { content: counter(vct, decimal-leading-zero); position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-family: 'Anton', Impact, sans-serif; letter-spacing: .06em; font-size: 17px; color: #ff6fb3; text-shadow: 0 0 10px rgba(255,46,147,.8); }
+.vc .pp-toc a:hover, .vc .pp-toc a:focus-visible { transform: translateY(-3px); border-color: #5ff3ff; background: rgba(40,12,80,.8); box-shadow: 0 10px 30px rgba(95,243,255,.28), 0 0 0 1px rgba(95,243,255,.4) inset; }
+.vc .pp-doc section { counter-increment: vcn; position: relative; margin: 28px 0; padding: 30px clamp(18px, 3.4vw, 38px) 28px; border: 1px solid transparent; border-radius: 22px; overflow: hidden; background: linear-gradient(rgba(14,5,36,.78), rgba(14,5,36,.78)) padding-box, linear-gradient(135deg, rgba(255,46,147,.8), rgba(95,243,255,.5) 55%, rgba(255,170,70,.7)) border-box; -webkit-backdrop-filter: blur(14px) saturate(1.2); backdrop-filter: blur(14px) saturate(1.2); box-shadow: 0 22px 60px rgba(0,0,0,.5); transition: box-shadow .25s; }
+.vc .pp-doc section:hover { box-shadow: 0 26px 70px rgba(255,46,147,.28), 0 22px 60px rgba(0,0,0,.5); }
+.vc .pp-doc section::before { content: counter(vcn, decimal-leading-zero); position: absolute; right: 16px; top: -10px; font-family: 'Anton', Impact, sans-serif; font-size: clamp(76px, 15vw, 150px); line-height: 1; color: transparent; -webkit-text-stroke: 1px rgba(255,255,255,.16); pointer-events: none; }
+.vc .pp-doc h2 { position: relative; font-family: 'Anton', Impact, sans-serif; font-weight: 400; text-transform: uppercase; letter-spacing: .05em; font-size: clamp(24px, 3.6vw, 34px); color: #fff; text-shadow: 0 0 18px rgba(255,46,147,.55); padding-bottom: 12px; }
+.vc .pp-doc h2::after { content: ""; position: absolute; left: 0; bottom: 0; width: 64px; height: 3px; border-radius: 3px; background: linear-gradient(90deg, #ff2e93, #5ff3ff); box-shadow: 0 0 12px rgba(255,46,147,.8); transition: width .8s .2s cubic-bezier(.2,.8,.2,1); }
+.vc.pp-js [data-reveal].in h2::after, .vc .pp-doc section:hover h2::after { width: 168px; }
+.vc .pp-doc p, .vc .pp-doc li { color: #f1e7ff; }
+.vc .pp-doc b, .vc .pp-doc strong { color: #fff; }
+.vc .pp-doc a { color: #5ff3ff; text-decoration-color: rgba(95,243,255,.5); }
+.vc .pp-doc a:hover { color: #fff; text-shadow: 0 0 12px #5ff3ff; }
+.vc .pp-doc code { background: rgba(255,46,147,.2); color: #ffd1e8; }
+.vc .pp-meta { color: rgba(240,228,255,.72); }
+.vc .pp-top { color: #ff9ad0 !important; }
+.vc .pp-doc p[style*="#c62828"] { color: #ff6b7e !important; background: rgba(255,59,87,.15) !important; border-left-color: #ff3b57 !important; text-shadow: 0 0 14px rgba(255,59,87,.55); border-radius: 0 12px 12px 0; }
+.vc .pp-doc ul, .vc .pp-doc ol { padding-left: 22px; }
+.vc .pp-doc li::marker { color: #ff6fb3; }
+.vc.pp-js [data-reveal] { opacity: 0; transform: translateY(40px) scale(.985); filter: blur(6px); transition: opacity .8s ease, transform .8s cubic-bezier(.2,.8,.2,1), filter .8s ease; }
+.vc.pp-js [data-reveal].in { opacity: 1; transform: none; filter: none; }
+@keyframes vcSky { from { background-position: 50% 0; } to { background-position: 50% 100%; } }
+@keyframes vcTwinkle { from { opacity: .55; } to { opacity: 1; } }
+@keyframes vcSun { from { filter: brightness(1) saturate(1); } to { filter: brightness(1.12) saturate(1.2); } }
+@keyframes vcFlare { from { transform: translateX(-6%); opacity: .45; } to { transform: translateX(6%); opacity: .85; } }
+@keyframes vcWin { from { opacity: .25; } to { opacity: .95; } }
+@keyframes vcShimmer { from { background-position: 0 0; } to { background-position: 0 44px; } }
+@keyframes vcSway { from { transform: rotate(-1.6deg); } to { transform: rotate(1.8deg); } }
+@keyframes vcGrain { 0% { transform: translate(0,0); } 20% { transform: translate(-3%,2%); } 40% { transform: translate(2%,-3%); } 60% { transform: translate(-2%,-1%); } 80% { transform: translate(3%,3%); } 100% { transform: translate(0,0); } }
+@keyframes vcBars { to { height: 0; } }
+@keyframes vcTitle { 0% { opacity: 0; letter-spacing: .9em; } 25% { opacity: 1; letter-spacing: .5em; } 70% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes vcGone { to { visibility: hidden; } }
+@keyframes vcRise { from { opacity: 0; transform: translateY(26px) scale(.96); filter: blur(10px) drop-shadow(0 0 24px rgba(255,46,147,.55)); } to { opacity: 1; transform: none; } }
+@keyframes vcFlick { 0%, 92%, 100% { opacity: 1; } 94% { opacity: .35; } 96% { opacity: 1; } 98% { opacity: .5; } }
+@media (max-width: 640px) { .vc .vc-palm { height: 52vh; } .vc .vc-palm.r { display: none; } .vc .vc-grain { opacity: .06; } .vc .pp-doc section::before { font-size: 70px; } }
+@media (prefers-reduced-motion: reduce) { .vc *, .vc .vc-bg { animation: none !important; } .vc .vc-intro { display: none; } .vc.pp-js [data-reveal] { opacity: 1 !important; transform: none !important; filter: none !important; transition: none !important; } .vc .pp-doc h1 { opacity: 1 !important; } }
 /* dark mode: chat was unreadable (light bubbles with light text) */
 body:is(.theme-night, .night-override) .chat-message { background: #25322b; color: var(--ink); border-color: var(--line); box-shadow: none; }
 body:is(.theme-night, .night-override) .chat-message.mine { background: #1c4a33; border-color: #2f7a52; color: #effff4; }
@@ -6738,77 +6801,6 @@ body.cs-gradient :is(.subject-option, .mode-option):not(.active) { box-shadow: i
 @media (prefers-reduced-motion: reduce) { :is(.cs-option, .live-option) { transition: none; } }
 
   </style>
-<style id="androidLayer">
-/* ===== ANDROID LAYER (added) =====
-   Active only when <html class="android"> (set by #androidDetect). Desktop, iPhone and iPad are untouched.
-   NOTE FOR OTHER AIs: change Android behaviour HERE; do not edit the prebuilt parts of the app without asking Abhishek first. */
-html.android{-webkit-text-size-adjust:100%;text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
-html.android body{cursor:auto!important;min-height:100svh;overscroll-behavior-y:contain;touch-action:manipulation;--shadow:0 2px 10px rgba(20,40,30,.1);--shadow-soft:0 1px 4px rgba(20,40,30,.08);--shadow-lift:0 4px 14px rgba(20,40,30,.12)}
-html.android body:is(.theme-night,.night-override){--shadow:0 2px 10px rgba(0,0,0,.35);--shadow-soft:0 1px 4px rgba(0,0,0,.3);--shadow-lift:0 4px 14px rgba(0,0,0,.4)}
-/* 1. No lag: no blur, no film grain, no drifting background, no decorative infinite loops */
-html.android *,html.android *::before,html.android *::after{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
-html.android .app-grain,html.android .login-blob,html.android .lg-doodles{display:none!important}
-html.android body::before,html.android body::after,html.android .logo,html.android .continue-glow,html.android .continue-progress-fill,html.android .todo-progress-fill,html.android .todo-focus-btn,html.android .dday-calendar-page,html.android .jee-presentation::before,html.android .jee-presentation::after,html.android .jee-scroll-hint svg,html.android .mt-pulse,html.android .mt-empty svg,html.android .grok-toggle,html.android .questions-logo-btn,html.android .welcome-modal-feature-icon::after,html.android .welcome-modal-mascot,html.android .pizza-emoji,html.android .timer-toggle,html.android .timer-toggle-icon,html.android .pp-cine .pp-hero::before,html.android .ks-spot{animation:none!important}
-html.android body .panel,html.android body .topbar{background:color-mix(in srgb,var(--panel) 95%,transparent)}
-html.android :is([class*="modal"],[class*="dialog"],[class*="sheet"],dialog){overscroll-behavior:contain}
-/* 2. Login: the later "round 4" rule forced two columns on phones; stack it */
-html.android #loginScreen.login-screen{grid-template-columns:minmax(0,1fr);align-content:start;gap:18px;min-height:100svh;padding:64px 16px calc(28px + env(safe-area-inset-bottom,0px))}
-html.android #loginScreen .lg-headline{font-size:clamp(40px,12.5vw,54px);line-height:1.04}
-html.android #loginScreen .lg-lede,html.android #loginScreen .lg-stickers,html.android #loginScreen .lg-type{display:none}
-html.android #loginScreen .lg-auth{flex-direction:column;align-items:stretch;gap:14px;width:100%}
-html.android #loginScreen .lg-auth .lg-card{max-width:none;width:100%;padding:38px 20px 22px;border-radius:22px}
-html.android #loginScreen .lg-card h1{font-size:28px}
-html.android #loginScreen .lg-sub{font-size:15px;margin-bottom:20px}
-html.android #loginScreen .input-with-icon input{height:52px;font-size:16px}
-html.android #loginScreen .login-submit-btn{min-height:52px;font-size:16px}
-html.android #loginScreen .lg-rail{flex-direction:row;justify-content:center;align-self:center;order:1}
-html.android #loginScreen .lg-alt{width:52px;height:52px}
-html.android #loginScreen .lg-alt::after{display:none}
-html.android #loginScreen .lg-start{right:-4px}
-html.android #loginScreen .lg-legal{display:flex;flex-wrap:wrap;align-items:center;gap:0 4px}
-html.android #loginScreen .lg-legal a{display:inline-flex;align-items:center;min-height:44px;padding:0 6px}
-/* 3. App spacing: compact top bar, even 12px rhythm, room above the floating buttons */
-html.android .app{min-height:100svh}
-html.android body .topbar{position:static;box-shadow:none}
-html.android body .topbar-inner{width:100%;padding:10px 16px 12px;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"brand user" "actions actions";align-items:center;gap:10px 12px}
-html.android .topbar-inner .app-brand{grid-area:brand;min-width:0}
-html.android .topbar-inner .user-chip{grid-area:user;order:0;width:auto;margin:0}
-html.android .topbar-inner .top-actions{grid-area:actions;width:100%;flex-wrap:wrap;justify-content:flex-start;gap:8px}
-html.android .topbar .avatar{width:40px;height:40px}
-html.android body .top-actions :is(.icon-btn,.ghost-btn,.sync-pill,.questions-logo-btn){height:44px;min-height:44px}
-html.android body .top-actions :is(.icon-btn,.ghost-btn){width:44px;min-width:44px;padding:0}
-html.android body .top-actions .sync-pill{flex:1 1 140px;font-size:12px}
-html.android #shortcutsBtn,html.android kbd{display:none!important}
-html.android .layout{width:100%;max-width:none;margin:0;padding:12px 12px 8px;gap:12px}
-html.android body .panel{padding:16px;border-radius:18px}
-html.android footer{padding:12px 16px calc(88px + env(safe-area-inset-bottom,0px))}
-html.android footer a,html.android .why-jee-btn{display:inline-flex;align-items:center;min-height:44px;padding:0 4px;margin-left:8px}
-/* floating Chat pill and AI orb: smaller, clear of the system bar */
-html.android .chat-widget{right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px))}
-html.android .grok-widget{left:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px))}
-html.android .chat-toggle{min-height:48px;height:48px;padding:0 16px;gap:8px;font-size:15px;border-radius:24px;box-shadow:var(--shadow)}
-html.android .grok-toggle{box-shadow:0 4px 12px rgba(124,77,255,.35)}
-/* 4. Tap targets (40px+) */
-html.android :is(.todo-tag-btn,.todo-totp-btn,.todo-goal-btn,.todo-focus-btn,.todo-delete,.todo-res-btn,.res-close,.res-del,.small-btn,.jee-video-toggle,.mt-close,.mt-del,.welcome-modal-close,.mock-row-del,.download-image-btn,.call-screenshare-btn){min-width:40px;min-height:40px;opacity:1}
-html.android .todo-check{width:28px;height:28px}
-html.android .chat-message-more{display:flex!important;width:32px;height:32px;top:2px;right:2px}
-html.android .chat-message{padding-right:34px}
-/* todo row: text on top, 40px actions underneath */
-html.android .todo-item{display:grid!important;grid-template-columns:40px 28px minmax(0,1fr) auto auto auto auto;align-items:center;column-gap:6px;row-gap:2px;padding:8px 10px;-webkit-user-drag:none}
-html.android .todo-item>.todo-check{grid-column:1;grid-row:1;justify-self:center}
-html.android .todo-item>.todo-tag-icon{grid-column:2;grid-row:1}
-html.android .todo-item>.todo-text{grid-column:3/-1;grid-row:1;min-width:0;white-space:normal;overflow-wrap:anywhere;line-height:1.35;font-size:15px}
-html.android .todo-item>.todo-drag-handle{grid-column:1;grid-row:2;width:40px;height:40px;display:grid;place-items:center;touch-action:none;user-select:none}
-html.android .todo-item>.todo-goal-btn{grid-column:4;grid-row:2}
-html.android .todo-item>.todo-res-btn{grid-column:5;grid-row:2}
-html.android .todo-item>.todo-focus-btn{grid-column:6;grid-row:2}
-html.android .todo-item>.todo-delete{grid-column:7;grid-row:2}
-html.android .todo-item>.todo-meta-row{grid-column:1/-1;grid-row:3}
-html.android .todo-drag-handle svg{width:20px;height:20px}
-/* 5. Icons: never tiny, never huge */
-html.android :is(button,a,[role=button],summary) svg:not(:is([class*="mascot"],.brand-mark *,.logo *)){min-width:18px;min-height:18px;max-width:24px;max-height:24px}
-html.android :is(.partner-status-chip,.continue-eyebrow,.welcome-modal-eyebrow,.partner-subject-icon,.partner-card-stats,.todo-tag-icon) svg{min-width:14px;min-height:14px;max-width:20px;max-height:20px}
-</style>
 </head>
 <body>
 <noscript><p style="padding:16px;font:16px/1.5 system-ui,sans-serif">DuoTrack is a free study timer for JEE and NEET students with a live study partner, mock test tracker, exam countdown and AI doubt solver. Please turn on JavaScript to use the app.</p></noscript>
@@ -7716,7 +7708,7 @@ html.android :is(.partner-status-chip,.continue-eyebrow,.welcome-modal-eyebrow,.
     try {
       if (localStorage.getItem("duotrackDefaultsV") !== "1") {
         localStorage.setItem("duotrackCardStyle", "outline");
-        localStorage.setItem("duotrackLiveBg", (window.__ANDROID && ((navigator.deviceMemory && navigator.deviceMemory <= 2) || (navigator.connection && navigator.connection.saveData))) ? "" : "koi");
+        localStorage.setItem("duotrackLiveBg", "koi");
         localStorage.setItem("duotrackDefaultsV", "1");
       }
     } catch (e) { /* storage blocked: the app falls back to its plain look */ }
@@ -7730,7 +7722,6 @@ html.android :is(.partner-status-chip,.continue-eyebrow,.welcome-modal-eyebrow,.
   var canvas = null, ctx = null, W = 0, H = 0, cur = "", scene = null, raf = 0, last = 0, clock = 0, resizeT = 0;
   var ptr = { x: -1e4, y: -1e4, vx: 0, vy: 0, t: 0, on: false, has: false, touch: false };
   var reduce = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
-  var AND = !!window.__ANDROID, FRAME_MS = AND ? 42 : 32, cost = 0, nf = 0;  /* Android: ~24 fps, governor below */
 
   function rng(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
   function off(w, h) { var c = document.createElement("canvas"); c.width = Math.max(2, w); c.height = Math.max(2, h); return c; }
@@ -7981,12 +7972,12 @@ html.android :is(.partner-status-chip,.continue-eyebrow,.welcome-modal-eyebrow,.
     canvas = document.createElement("canvas"); canvas.id = "duoLiveCanvas"; canvas.setAttribute("aria-hidden", "true");
     document.body.insertBefore(canvas, document.body.firstChild); ctx = canvas.getContext("2d");
   }
-  function fit() { var cw = Math.max(1, innerWidth), ch = Math.max(1, innerHeight), s = Math.min(window.devicePixelRatio || 1, AND ? 1 : 1.25, 1500 / cw); W = Math.max(2, Math.round(cw * s)); H = Math.max(2, Math.round(ch * s)); canvas.width = W; canvas.height = H; }
+  function fit() { var cw = Math.max(1, innerWidth), ch = Math.max(1, innerHeight), s = Math.min(window.devicePixelRatio || 1, 1.25, 1500 / cw); W = Math.max(2, Math.round(cw * s)); H = Math.max(2, Math.round(ch * s)); canvas.width = W; canvas.height = H; }
   function frame(ts) {
     raf = requestAnimationFrame(frame); if (!scene) return;
-    if (ts - last < FRAME_MS) return; var dt = Math.min(0.1, (ts - last) / 1000); last = ts; clock += dt;
+    if (ts - last < 32) return; var dt = Math.min(0.1, (ts - last) / 1000); last = ts; clock += dt;
     ptr.on = ptr.has && (performance.now() - ptr.t) < (ptr.touch ? 1300 : 6000); var dk = Math.pow(0.02, dt); ptr.vx *= dk; ptr.vy *= dk;
-    try { var t0 = performance.now(); scene.draw(ctx, clock, dt, ptr); if (AND) { cost = cost * 0.9 + (performance.now() - t0) * 0.1; if (++nf % 30 === 0) { if (cost > 30) stop(); else if (cost > 14 && FRAME_MS < 66) FRAME_MS = 66; } } } catch (e) { stop(); }
+    try { scene.draw(ctx, clock, dt, ptr); } catch (e) { stop(); }
   }
   function stop() { if (raf) cancelAnimationFrame(raf); raf = 0; }
   function run() { stop(); if (!scene) return; last = performance.now(); if (reduce) { try { scene.draw(ctx, 2, 0, ptr); } catch (e) { /* ignore */ } return; } raf = requestAnimationFrame(frame); }
@@ -8019,75 +8010,6 @@ html.android :is(.partner-status-chip,.continue-eyebrow,.welcome-modal-eyebrow,.
   window.DuoLive = { list: Object.keys(S).map(function (k) { return { id: k, name: S[k].name, swatch: S[k].swatch }; }), set: set, current: function () { return cur; } };
 })();
 
-</script>
-<script id="androidLayerJs">
-/* ===== ANDROID LAYER (added): runs only on Android. NOTE FOR OTHER AIs: ask Abhishek before changing the prebuilt parts. ===== */
-(function () {
-  "use strict";
-  if (!window.__ANDROID) return;
-  var touchOnly = true;
-  try { touchOnly = !matchMedia("(hover: hover) and (pointer: fine)").matches; } catch (e) { /* keep default */ }
-
-  /* A. Tidy every stylesheet once: no sticky :hover on touch, text >= 12px, small-screen vh units, lighter shadows */
-  function split(s) { var out = [], d = 0, cur = "", i, c; for (i = 0; i < s.length; i++) { c = s[i]; if (c === "(" || c === "[") d++; else if (c === ")" || c === "]") d--; if (c === "," && d === 0) { out.push(cur); cur = ""; } else cur += c; } out.push(cur); return out; }
-  function soften(v) { return split(v).map(function (l) { return /inset/.test(l) ? l : l.replace(/(-?[\d.]+)(?:px)?\s+(-?[\d.]+)px\s+([\d.]+)px/, function (m, x, y, b) { return x + "px " + Math.min(+y, 8) + "px " + Math.min(+b, 16) + "px"; }); }).join(","); }
-  function fix(rule) {
-    var st = rule.style, sel = rule.selectorText, v, n;
-    if (!st) return;
-    v = st.fontSize;
-    if (v && /px$/.test(v)) { n = parseFloat(v); var floor = /badge|count|::?before|::?after|kbd|-th\b/.test(sel) ? 11 : 12; if (n < floor) st.setProperty("font-size", floor + "px", st.getPropertyPriority("font-size")); }
-    ["height", "min-height", "max-height"].forEach(function (p) {
-      var x = st.getPropertyValue(p);
-      if (x && /\dvh/.test(x)) st.setProperty(p, x.replace(/(\d)vh/g, p === "min-height" ? "$1svh" : "$1dvh"), st.getPropertyPriority(p));
-    });
-    v = st.getPropertyValue("box-shadow");
-    if (v && v !== "none" && v.indexOf("var(") < 0 && /(\d{2,})px/.test(v)) st.setProperty("box-shadow", soften(v), st.getPropertyPriority("box-shadow"));
-  }
-  function walk(list, parent) {
-    for (var i = list.length - 1; i >= 0; i--) {
-      var r = list[i];
-      try {
-        if (r.selectorText) {
-          if (touchOnly && r.selectorText.indexOf(":hover") > -1) {
-            var all = split(r.selectorText), keep = all.filter(function (s) { return s.indexOf(":hover") < 0 || s.indexOf(":not(:hover)") > -1; });
-            if (!keep.length) { parent.deleteRule(i); continue; }
-            if (keep.length !== all.length) r.selectorText = keep.join(",");
-          }
-          fix(r);
-        } else if (r.cssRules && r.type !== 7) walk(r.cssRules, r);
-      } catch (e) { /* skip rules the browser will not let us edit */ }
-    }
-  }
-  var done = new WeakSet();
-  function tidy(sheet) { if (!sheet || done.has(sheet) || (sheet.ownerNode && sheet.ownerNode.id === "androidLayer")) return; done.add(sheet); try { walk(sheet.cssRules, sheet); } catch (e) { /* cross-origin */ } }
-  Array.prototype.forEach.call(document.styleSheets, tidy);
-  new MutationObserver(function (list) {
-    list.forEach(function (m) { Array.prototype.forEach.call(m.addedNodes, function (n) { if (n.nodeName === "STYLE") tidy(n.sheet); }); });
-  }).observe(document.documentElement, { childList: true, subtree: true });
-
-  /* B. Reorder todos by touch: the row's HTML5 drag-and-drop is unreliable on Android, so the grip drives the same handlers */
-  var drag = null;
-  function fire(el, type) { el.dispatchEvent(new Event(type, { bubbles: true, cancelable: true })); }
-  document.addEventListener("pointerdown", function (e) {
-    var h = e.pointerType !== "mouse" && e.target.closest && e.target.closest(".todo-drag-handle"), item = h && h.closest(".todo-item");
-    if (!item) return;
-    drag = { item: item, id: e.pointerId };
-    try { h.setPointerCapture(e.pointerId); } catch (x) { /* ignore */ }
-    fire(item, "dragstart");
-  }, { passive: true });
-  document.addEventListener("pointermove", function (e) {
-    if (!drag || e.pointerId !== drag.id) return;
-    var t = document.elementFromPoint(e.clientX, e.clientY); if (t) fire(t, "dragover");
-  }, { passive: true });
-  function end(e, drop) {
-    if (!drag || e.pointerId !== drag.id) return;
-    var t = document.elementFromPoint(e.clientX, e.clientY);
-    if (drop && t) fire(t, "drop");
-    fire(drag.item, "dragend"); drag = null;
-  }
-  document.addEventListener("pointerup", function (e) { end(e, true); }, { passive: true });
-  document.addEventListener("pointercancel", function (e) { end(e, false); }, { passive: true });
-})();
 </script>
   <script type="module">
     /* ================================ #NOTES FOR ANY AI / DEVELOPER EDITING THIS FILE ================================
@@ -8900,18 +8822,65 @@ html.android :is(.partner-status-chip,.continue-eyebrow,.welcome-modal-eyebrow,.
         <p><b>17.3 The code.</b> The diary's code has been taken out of the public page and kept offline in encrypted form by the admin.</p>
         <p><b>17.4 If it comes back.</b> This policy will be updated first, and you will be asked to read it again.</p>`]
     ];
+    /* ===== Cinematic "neon coast" look for the Privacy Policy and Terms pages (own artwork: CSS + SVG, no outside images) ===== */
+    function vcRand(seed) { let x = seed; return () => (x = (x * 16807) % 2147483647) / 2147483647; }
+    function vcSkyline(seed, fill, lit) {
+      const r = vcRand(seed); let x = 0, out = "";
+      while (x < 1600) {
+        const w = 28 + Math.floor(r() * 62), h = 46 + Math.floor(r() * (r() > .82 ? 150 : 96)), y = 200 - h;
+        out += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}"/>`;
+        if (r() > .7) out += `<rect x="${x + w / 2 - 2}" y="${y - 22}" width="4" height="22" fill="${fill}"/>`;
+        if (lit) for (let k = 0; k < 7; k++) {
+          const wx = x + 5 + Math.floor(r() * Math.max(1, w - 12)), wy = y + 8 + Math.floor(r() * Math.max(1, h - 16));
+          out += `<rect class="vc-w" style="animation-delay:-${(r() * 5).toFixed(1)}s" x="${wx}" y="${wy}" width="3" height="4" fill="${r() > .5 ? "#ff6fb3" : "#5ff3ff"}"/>`;
+        }
+        x += w + Math.floor(r() * 6);
+      }
+      return out;
+    }
+    function vcPalm() {
+      const leaf = "M0 0 C34 -30 92 -40 146 -6 C170 8 182 30 190 58 C158 22 112 8 66 12 C40 14 18 10 0 0Z";
+      let fr = "";
+      [-84, -58, -32, -8, 18, 44].forEach((a, i) => { fr += `<path d="${leaf}" transform="rotate(${a}) scale(${1 - i * .035})"/><path d="${leaf}" transform="scale(-1,1) rotate(${a}) scale(${1 - i * .035})"/>`; });
+      return `<svg viewBox="0 0 320 600" aria-hidden="true"><defs><linearGradient id="vcpg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a0640"/><stop offset="1" stop-color="#07010f"/></linearGradient></defs><g fill="url(#vcpg)"><path d="M140 600 C152 450 176 290 154 128 L166 128 C192 292 176 452 168 600Z"/><g transform="translate(160 128)">${fr}</g><circle cx="150" cy="132" r="7"/><circle cx="168" cy="136" r="6"/></g></svg>`;
+    }
+    function vcBgHtml(title) {
+      const r = vcRand(7); let st = "";
+      for (let i = 0; i < 70; i++) st += `${(r() * 100).toFixed(1)}vw ${(r() * 52).toFixed(1)}vh 0 ${r() > .85 ? 1 : 0}px rgba(255,255,255,${(.35 + r() * .6).toFixed(2)})${i < 69 ? "," : ""}`;
+      return `<div class="vc-bg" aria-hidden="true"><div class="vc-stars" style="box-shadow:${st}"></div><div class="vc-sun"></div><div class="vc-flare"></div>
+        <div class="vc-city"><svg viewBox="0 0 1600 200" preserveAspectRatio="none">${vcSkyline(11, "#2a0a58", false)}${vcSkyline(23, "#10031f", true)}</svg></div>
+        <div class="vc-sea"></div><div class="vc-palm l">${vcPalm()}</div><div class="vc-palm r">${vcPalm()}</div>
+        <div class="vc-scan"></div><div class="vc-grain"></div><div class="vc-vig"></div></div>
+        <div class="vc-intro" aria-hidden="true"><div class="vc-bar t"></div><div class="vc-bar b"></div><div class="vc-intro-t">DuoTrack &middot; ${title}</div></div>`;
+    }
+    function vcWire(page, full) {
+      let raf = 0;
+      page.addEventListener("scroll", () => { if (raf) return; raf = requestAnimationFrame(() => { raf = 0; page.style.setProperty("--vcy", String(page.scrollTop)); }); }, { passive: true });
+      if (!full) return;
+      try {
+        const bar = page.querySelector(".pp-progress i");
+        page.addEventListener("scroll", () => { const h = page.scrollHeight - page.clientHeight; if (bar) bar.style.width = (h > 0 ? Math.min(100, page.scrollTop / h * 100) : 0) + "%"; }, { passive: true });
+        if ("IntersectionObserver" in window) {
+          page.classList.add("pp-js");
+          const io = new IntersectionObserver((list) => list.forEach((en) => { if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); } }), { root: page, threshold: 0.06, rootMargin: "0px 0px -6% 0px" });
+          page.querySelectorAll("[data-reveal]").forEach((el) => io.observe(el));
+        }
+      } catch (err) { /* the plain page still works */ }
+    }
+
     function ppOpen(anchor) {
       let page = document.getElementById("ppPage");
       if (!page) {
         page = document.createElement("div");
-        page.id = "ppPage"; page.className = "pp-page pp-cine"; page.setAttribute("role", "dialog"); page.setAttribute("aria-modal", "true"); page.setAttribute("aria-label", "Privacy Policy");
-        page.innerHTML = `<div class="pp-bar"><b>DuoTrack</b><button type="button" class="pp-close" data-pp-close>Close</button><div class="pp-progress" aria-hidden="true"><i></i></div></div>
+        page.id = "ppPage"; page.className = "pp-page pp-cine vc"; page.setAttribute("role", "dialog"); page.setAttribute("aria-modal", "true"); page.setAttribute("aria-label", "Privacy Policy");
+        page.innerHTML = `${vcBgHtml("Privacy Policy")}<div class="pp-bar"><b>DuoTrack</b><button type="button" class="pp-close" data-pp-close>Close</button><div class="pp-progress" aria-hidden="true"><i></i></div></div>
           <article class="pp-doc"><header class="pp-hero"><p class="pp-eyebrow">Your data. Plainly.</p><h1>Privacy Policy</h1><p class="pp-meta">Last updated ${PP_UPDATED}</p>
           <p class="pp-lead">This page explains, in plain words, exactly what DuoTrack stores about you and why. Tap a heading below to jump to it.</p></header>
           <nav class="pp-toc" aria-label="Contents">${PP_SECTIONS.map((x) => `<a href="#${x[0]}" data-pp-go="${x[0]}">${x[1]}</a>`).join("")}</nav>
           ${PP_SECTIONS.map((x) => `<section id="${x[0]}" data-reveal><h2>${x[1]}</h2>${x[2]()}<a class="pp-top" href="#" data-pp-go="ppTop">Back to top</a></section>`).join("")}
           <p class="pp-meta">Questions? ${ppLink("mailto:" + CONTACT_EMAIL, "Email the admin")}.</p></article>`;
         document.body.appendChild(page);
+        vcWire(page, false);
         /* cinematic touches: reading-progress bar and fade-in sections */
         try {
           const bar = page.querySelector(".pp-progress i");
@@ -8969,7 +8938,7 @@ html.android :is(.partner-status-chip,.continue-eyebrow,.welcome-modal-eyebrow,.
     const HYDRATION_MINUTES_KEY = "duotrackHydrationMinutes";
     const WELCOME_POPUP_ENABLED_KEY = "duotrackWelcomePopupEnabled";
     const WELCOME_POPUP_TEXT_KEY = "duotrackWelcomePopupText";
-    const DEFAULT_WELCOME_POPUP_TEXT = __A("there's a new feature now — you can switch to timer mode by tapping the arrow button (it helps in time-bound practice).", "there's a new feature now — you can switch to timer mode by clicking on the arrow button (it helps in time-bound practice).");
+    const DEFAULT_WELCOME_POPUP_TEXT = "there's a new feature now — you can switch to timer mode by clicking on the arrow button (it helps in time-bound practice).";
     const SETTINGS_PASSWORD_HASH = "12c6fc5a29c65084d70864cc2b6335b7420b5c19273807b890cdd23508391dfe";   /* hash only - never the plain password */
     const EXPORT_VERSION = 1;
     const THEME_PRESETS = [
@@ -9812,7 +9781,7 @@ html.android :is(.partner-status-chip,.continue-eyebrow,.welcome-modal-eyebrow,.
         ${settingsSection({
           icon: "sparkle",
           title: "Backup Gemini keys (answers & voice)",
-          description: `Add as many extra Google/Gemini API keys as you like (${__A("tap", "press")} <strong>+ Add another key</strong>). Order: main key above → backup 1 → backup 2 → backup 3 → … If a key fails or its limit runs out (429 / overload), the next one takes over silently, for <strong>PDF answers and the read-aloud voice</strong>. Shared between both accounts. Use keys from different Google projects — keys in the same project share one limit.`,
+          description: `Add as many extra Google/Gemini API keys as you like (press <strong>+ Add another key</strong>). Order: main key above → backup 1 → backup 2 → backup 3 → … If a key fails or its limit runs out (429 / overload), the next one takes over silently, for <strong>PDF answers and the read-aloud voice</strong>. Shared between both accounts. Use keys from different Google projects — keys in the same project share one limit.`,
           tone: "ai",
           body: `
             <form id="geminiTtsKeysForm" class="field settings-inline-form">
@@ -11418,7 +11387,7 @@ html.android :is(.partner-status-chip,.continue-eyebrow,.welcome-modal-eyebrow,.
       });
       const filled = rows.filter((r) => r.querySelector("input").value.trim()).length;
       const count = document.getElementById("geminiKeyCount");
-      if (count) count.textContent = `${filled} backup key${filled === 1 ? "" : "s"} entered — ${__A("tap", "press")} Save backup keys to keep them.`;
+      if (count) count.textContent = `${filled} backup key${filled === 1 ? "" : "s"} entered — press Save backup keys to keep them.`;
       const add = document.getElementById("geminiKeyAddBtn");
       if (add) add.disabled = rows.length >= MAX_BACKUP_GEMINI_KEYS;
     }
@@ -13262,7 +13231,7 @@ html.android :is(.partner-status-chip,.continue-eyebrow,.welcome-modal-eyebrow,.
               <label class="pv-setrow pv-setcol"><span>Touchpad pinch speed <b data-ref="setPinchVal">1.0x</b></span>
                 <input type="range" class="pv-range" data-ref="setPinch" min="0.4" max="2.5" step="0.1">
               </label>
-              <p class="pv-hint">${__A("Zoom: pinch with two fingers, or use the buttons. Drag with the hand tool to move around.", "Zoom: pinch on the touchpad, Ctrl + scroll, Ctrl + / -, or the buttons. Drag with the hand tool (H), Space, or the middle button to pan.")}</p>
+              <p class="pv-hint">Zoom: pinch on the touchpad, Ctrl + scroll, Ctrl + / -, or the buttons. Drag with the hand tool (H), Space, or the middle button to pan.</p>
             </section>
           </aside>
           <div class="pv-scroller" data-ref="scroller" tabindex="0" aria-label="Document pages"><div class="pv-pages" data-ref="pages"></div></div>
@@ -13838,7 +13807,7 @@ html.android :is(.partner-status-chip,.continue-eyebrow,.welcome-modal-eyebrow,.
         if (S.tool === "crop") {
           const ready = Boolean(S.crop && S.crop.done);
           toolPop.hidden = false;
-          toolPop.innerHTML = `<span class="pv-poplabel">${ready ? __A("Tap <b>Ask AI</b> to send · drag again to redo · tap <b>✕</b> to cancel", "Press <b>Enter</b> to send to AI · drag again to redo · <b>Esc</b> to cancel") : "Drag a box around the question you want to ask about"}</span><button type="button" class="pv-cropask" data-crop-ask${ready ? "" : " disabled"}>${pvIcon("spark")}Ask AI${__A("", " <kbd>Enter</kbd>")}</button>`;
+          toolPop.innerHTML = `<span class="pv-poplabel">${ready ? "Press <b>Enter</b> to send to AI · drag again to redo · <b>Esc</b> to cancel" : "Drag a box around the question you want to ask about"}</span><button type="button" class="pv-cropask" data-crop-ask${ready ? "" : " disabled"}>${pvIcon("spark")}Ask AI <kbd>Enter</kbd></button>`;
           return;
         }
         const draw = S.tool === "draw";
@@ -13848,7 +13817,7 @@ html.android :is(.partner-status-chip,.continue-eyebrow,.welcome-modal-eyebrow,.
         const labels = draw ? ["Thin", "Medium", "Thick"] : ["Small", "Medium", "Large"];
         toolPop.hidden = false;
         toolPop.innerHTML = `
-          ${draw ? `<div class="pv-seg"><button type="button" data-pen="pen" class="${S.pen.kind === "pen" ? "is-on" : ""}">Pen</button><button type="button" data-pen="hl" class="${S.pen.kind === "hl" ? "is-on" : ""}">Highlighter</button><button type="button" data-pen="er" class="${eras ? "is-on" : ""}">Eraser</button></div>` : `<span class="pv-poplabel">${__A("Tap", "Click")} on the page to type</span>`}
+          ${draw ? `<div class="pv-seg"><button type="button" data-pen="pen" class="${S.pen.kind === "pen" ? "is-on" : ""}">Pen</button><button type="button" data-pen="hl" class="${S.pen.kind === "hl" ? "is-on" : ""}">Highlighter</button><button type="button" data-pen="er" class="${eras ? "is-on" : ""}">Eraser</button></div>` : `<span class="pv-poplabel">Click on the page to type</span>`}
           ${draw && !eras ? `<div class="pv-seg"><button type="button" data-straight="1" class="pv-straight${S.pen.straight ? " is-on" : ""}" title="Snap strokes to a straight line (or hold Shift)" aria-pressed="${S.pen.straight ? "true" : "false"}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 18 20 6"/><circle cx="4" cy="18" r="1.6"/><circle cx="20" cy="6" r="1.6"/></svg>Straight line</button></div>` : ""}
           ${eras ? `<span class="pv-poplabel">Drag over drawings or notes to erase them</span>` : `<div class="pv-swatches">${PV_COLORS.map((c) => `<button type="button" class="pv-swatch${cfg.color === c ? " is-on" : ""}" data-color="${c}" style="--c:${S.invert ? pvInvColor(c, draw && S.pen.kind === "hl") : c}" aria-label="Colour ${c}"></button>`).join("")}</div>`}
           <div class="pv-seg">${sizes.map((s, i) => `<button type="button" data-size="${s}" class="${cfg.size === s ? "is-on" : ""}">${labels[i]}</button>`).join("")}</div>`;
@@ -14037,7 +14006,7 @@ html.android :is(.partner-status-chip,.continue-eyebrow,.welcome-modal-eyebrow,.
         const list = readArchive();
         aiMsgs.innerHTML = (list.length
           ? `<div class="pv-hist-head">Past chats for this PDF</div>` + list.map((c, i) => `<div class="pv-hist-item"><button type="button" data-act="aiHistOpen" data-idx="${i}"><b>${escapeHTML(c.title)}</b><span>${new Date(c.ts).toLocaleDateString()} · ${c.msgs.length} messages</span></button><button type="button" class="pv-hist-del" data-act="aiHistDel" data-idx="${i}" title="Delete this chat" aria-label="Delete this chat">×</button></div>`).join("")
-          : `<div class="pv-ai-empty">${pvIcon("clock")}<br>No past chats yet.<br>${__A("Tap", "Press")} <b>+</b> to start a new chat — the current one is saved here.</div>`)
+          : `<div class="pv-ai-empty">${pvIcon("clock")}<br>No past chats yet.<br>Press <b>+</b> to start a new chat — the current one is saved here.</div>`)
           + `<button type="button" class="pv-hist-cloudbtn" data-act="aiCloud">All saved AI chats (cloud)</button>`;
       }
       function clearAiChat() {
@@ -14470,7 +14439,7 @@ html.android :is(.partner-status-chip,.continue-eyebrow,.welcome-modal-eyebrow,.
           }
           await speakWithGemini(text, token, entry);
         } catch (error) {
-          if (token === S.tts.token) ttsNote(error && error.started ? __A("Voice stopped — Gemini is overloaded right now. Tap Listen to continue.", "Voice stopped — Gemini is overloaded right now. Press Listen to continue.") : ((error && error.message) || "Couldn't read that aloud."), false);
+          if (token === S.tts.token) ttsNote(error && error.started ? "Voice stopped — Gemini is overloaded right now. Press Listen to continue." : ((error && error.message) || "Couldn't read that aloud."), false);
         }
         if (token === S.tts.token) { S.tts.state = "idle"; S.tts.idx = -1; updateSpeakButtons(); }
       }
@@ -14480,12 +14449,12 @@ html.android :is(.partner-status-chip,.continue-eyebrow,.welcome-modal-eyebrow,.
         const n = S.aiImages.length;
         aiAttach.hidden = !n;
         aiTray.innerHTML = S.aiImages.map((u, i) => `<span class="pv-ai-th"><img src="${escapeHTML(safeImgSrc(u))}" alt="Crop ${i + 1}"><i>${i + 1}</i><button type="button" data-act="aiDrop" data-idx="${i}" title="Remove this crop" aria-label="Remove crop ${i + 1}">×</button></span>`).join("");
-        aiInput.placeholder = n > 1 ? `Ask about these ${n} questions… (or ${__A("tap send", "press Enter")} to solve all)` : n ? __A("Ask about this question… (or just tap send to solve)", "Ask about this question… (or just press Enter to solve)") : "Type your question…";
+        aiInput.placeholder = n > 1 ? `Ask about these ${n} questions… (or press Enter to solve all)` : n ? "Ask about this question… (or just press Enter to solve)" : "Type your question…";
       }
       function renderAi() {
         if (S.aiHistView) { renderHistView(); return; }
         if (!S.aiChat.length && !S.aiBusy) {
-          aiMsgs.innerHTML = `<div class="pv-ai-empty">${pvIcon("spark")}<br>Use the <b>crop</b> tool, drag a box around a question and ${__A("tap <b>Ask AI</b>", "press <b>Enter</b>")}.<br>Then type your doubt and the AI will answer.<br>The AI can also read and see this PDF — try <b>“question 5 solve karo”</b> or <b>“page 12 samjhao”</b>.</div>`;
+          aiMsgs.innerHTML = `<div class="pv-ai-empty">${pvIcon("spark")}<br>Use the <b>crop</b> tool, drag a box around a question and press <b>Enter</b>.<br>Then type your doubt and the AI will answer.<br>The AI can also read and see this PDF — try <b>“question 5 solve karo”</b> or <b>“page 12 samjhao”</b>.</div>`;
           return;
         }
         aiMsgs.innerHTML = S.aiChat.map((m, i) => m.role === "user"
@@ -14529,7 +14498,7 @@ html.android :is(.partner-status-chip,.continue-eyebrow,.welcome-modal-eyebrow,.
         if (!b) return;
         b.classList.toggle("is-on", S.aiPdfAccess);
         b.setAttribute("aria-pressed", S.aiPdfAccess ? "true" : "false");
-        b.title = S.aiPdfAccess ? `AI can read and see this PDF (${__A("tap", "click")} to turn off)` : `AI can't see this PDF (${__A("tap", "click")} to turn on)`;
+        b.title = S.aiPdfAccess ? "AI can read and see this PDF (click to turn off)" : "AI can't see this PDF (click to turn on)";
       }
       function loadAllPdfText() {
         if (S.pdfTextAll) return S.pdfTextAll;
@@ -16726,7 +16695,7 @@ html.android :is(.partner-status-chip,.continue-eyebrow,.welcome-modal-eyebrow,.
       if (ad && adminEditing) {
         const act = ad.dataset.ad;
         if (act === "bigger" || act === "smaller") {
-          if (!adminSelected) { showToast("Pick an icon", __A("Tap an icon first.", "Click an icon first.")); return; }
+          if (!adminSelected) { showToast("Pick an icon", "Click an icon first."); return; }
           const c = adminCfg(adminSelected);
           c.s = adminClamp(+(c.s + (act === "bigger" ? 0.1 : -0.1)).toFixed(2), 0.4, 3);
         } else if (act === "resetOne" && adminSelected) {
@@ -17155,7 +17124,7 @@ html.android :is(.partner-status-chip,.continue-eyebrow,.welcome-modal-eyebrow,.
         const btn = i.locked ? `<div class="dg-row"><button type="button" class="dg-btn" data-dg-gallow="${escapeHTML(u.id)}">Allow</button></div>` : "";
         return `<div class="dg-req dg-pr">${dgAvatar(u)}<div class="dg-pr-body"><b>${escapeHTML(u.name)}</b><p>${escapeHTML(status)}</p>${btn}</div></div>`;
       }).join("");
-      return `<p class="dg-sub">Accounts without Google linked. A locked account stays paused until you ${__A("tap", "press")} Allow, which also restarts its countdown.</p>${html || '<p class="dg-sub">No accounts to review yet.</p>'}`;
+      return `<p class="dg-sub">Accounts without Google linked. A locked account stays paused until you press Allow, which also restarts its countdown.</p>${html || '<p class="dg-sub">No accounts to review yet.</p>'}`;
     }
 
     /* ---------- admin portal: change the time ---------- */
@@ -17319,14 +17288,15 @@ html.android :is(.partner-status-chip,.continue-eyebrow,.welcome-modal-eyebrow,.
       let page = document.getElementById("tcPage");
       if (!page) {
         page = document.createElement("div");
-        page.id = "tcPage"; page.className = "pp-page"; page.setAttribute("role", "dialog"); page.setAttribute("aria-modal", "true"); page.setAttribute("aria-label", "Terms and Conditions");
-        page.innerHTML = `<div class="pp-bar"><b>DuoTrack</b><button type="button" class="pp-close" data-pp-close>Close</button></div>
-          <article class="pp-doc"><h1>Terms and Conditions</h1><p class="pp-meta">Last updated ${TC_UPDATED}</p>
-          <p class="pp-lead">These are the rules for using DuoTrack, in plain words. Tap a heading to jump to it.</p>
+        page.id = "tcPage"; page.className = "pp-page pp-cine vc"; page.setAttribute("role", "dialog"); page.setAttribute("aria-modal", "true"); page.setAttribute("aria-label", "Terms and Conditions");
+        page.innerHTML = `${vcBgHtml("Terms and Conditions")}<div class="pp-bar"><b>DuoTrack</b><button type="button" class="pp-close" data-pp-close>Close</button><div class="pp-progress" aria-hidden="true"><i></i></div></div>
+          <article class="pp-doc"><header class="pp-hero"><p class="pp-eyebrow">The rules. Plainly.</p><h1>Terms and Conditions</h1><p class="pp-meta">Last updated ${TC_UPDATED}</p>
+          <p class="pp-lead">These are the rules for using DuoTrack, in plain words. Tap a heading to jump to it.</p></header>
           <nav class="pp-toc" aria-label="Contents">${TC_SECTIONS.map((x) => `<a href="#${x[0]}" data-pp-go="${x[0]}">${x[1]}</a>`).join("")}</nav>
-          ${TC_SECTIONS.map((x) => `<section id="${x[0]}"><h2>${x[1]}</h2>${x[2]()}<a class="pp-top" href="#" data-pp-go="ppTop">Back to top</a></section>`).join("")}
+          ${TC_SECTIONS.map((x) => `<section id="${x[0]}" data-reveal><h2>${x[1]}</h2>${x[2]()}<a class="pp-top" href="#" data-pp-go="ppTop">Back to top</a></section>`).join("")}
           <p class="pp-meta">Questions? ${ppLink("mailto:" + CONTACT_EMAIL, "Email the admin")}.</p></article>`;
         document.body.appendChild(page);
+        vcWire(page, true);
         page.addEventListener("click", (e) => {
           if (e.target.closest("[data-pp-close]")) { page.hidden = true; document.body.style.overflow = ""; return; }
           const go = e.target.closest("[data-pp-go]");
