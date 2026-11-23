@@ -16885,6 +16885,7 @@ body .chat-widget.sb-full .chat-panel > .sb-walls { position: absolute; width: 3
           </div>
           ${mnAdminCardHtml()}
           ${gsAdminCardHtml()}
+          ${window.samAdminCardHtml ? window.samAdminCardHtml() : ""}
           <div class="ap-card">
             <h2>Study time — today</h2>
             <p>Change today's study time for any user. Typing in a subject updates the total; you can also edit the total directly. Only today is changed.</p>
@@ -23946,7 +23947,7 @@ function totpAt(keyBytes, counter) {
          record (running / subject / mode / seconds / questions). When her partner opens the app she simply catches up.
        - If the tab closes while she is "running", Firebase onDisconnect marks her stopped, so she never keeps a stale clock.
        - Chat goes through the existing relay (api.groq.com is already redirected by the fetch wrapper above). No key is here.
-       - She has no real password: her account gets a random unknown hash. Nobody needs to log in as her.
+       - Her login ID and password are created/changed by the administrator in the admin portal (card "Samridhi - study partner login"). No password is stored in this file.
        Persona settings are in PERSONAS just below.
        ==================================================================================================================== */
     (() => {
@@ -24099,21 +24100,6 @@ function totpAt(keyBytes, counter) {
       let odFn = null, busy = false, fast = false; const planCache = {}, caught = {}, csCache = {}, obsDone = {};
 
       async function onDisc(refx) { if (!odFn) odFn = (await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js")).onDisconnect; return odFn(refx); }
-
-      /* make the very first account + user record (admin browser only, once) */
-      async function seedPersonas() {
-        for (const P of PERSONAS) {
-          if (USERS[P.loginId] || USERS_BY_ID[P.id]) continue;
-          const acRef = GR(`accounts/${P.loginId}`);
-          if ((await get(acRef)).exists()) continue;
-          const hex = [...crypto.getRandomValues(new Uint8Array(32))].map((b) => b.toString(16).padStart(2, "0")).join("");
-          const account = { password: "sha256$" + hex, id: P.id, name: P.name, createdAt: Date.now() };     // random hash: nobody can log in as her
-          await set(acRef, account);
-          await set(userRef(P.id), { ...defaultUserState(account), profilePic: P.profilePic || "", pickPartner: true });
-          USERS[P.loginId] = account; USERS_BY_ID[P.id] = account;
-          showToast(`${P.name} is ready`, "Reload the app once so she appears in the partner list.");
-        }
-      }
 
       async function getPlan(P, day, pid) {
         const key = P.id + day; if (planCache[key]) return planCache[key];
@@ -24303,7 +24289,6 @@ TASK: ${task} Output only the message text. For two or three short texts in a ro
         if (busy) return; busy = true;
         try {
           if (!currentUserId || !firebaseReady || IDS.has(currentUserId) || state.day !== todayKey()) return;   // wait until the app's own day rollover is done
-          if (currentUserId === RQ_REVIEWER_ID) await seedPersonas();
           for (const P of PERSONAS) {
             const u = state.users[P.id]; if (!u) continue;
             const mine = u.partnerId === currentUserId; if (!mine && u.partnerId) continue;                    // she belongs to another person's browser
@@ -24318,18 +24303,44 @@ TASK: ${task} Output only the message text. For two or three short texts in a ro
           }
         } catch (e) { console.warn("Samridhi:", (e && e.message) || e); } finally { busy = false; }
       }
+      /* ---- admin portal card: the administrator creates / changes Samridhi's login ID and password. Only a hash is saved. ---- */
+      const samKey = (P) => Object.keys(USERS).find((k) => USERS[k] && USERS[k].id === P.id) || "";
+      window.samAdminCardHtml = () => PERSONAS.map((P) => {
+        const key = samKey(P), u = state.users[P.id], partner = u && u.partnerId && state.users[u.partnerId];
+        return `<div class="ap-card" id="samAdmin_${escapeHTML(P.id)}">
+          <h2>${escapeHTML(P.name)} - study partner login</h2>
+          <p>${key ? `Her login ID is <b>${escapeHTML(key)}</b>${partner ? `, and she is ${escapeHTML(partner.name)}'s study partner right now` : ", and she has no study partner right now"}. A saved password can never be shown; type a new one below to change it.` : "She has no login yet. Choose a login ID and a password to create her account."}</p>
+          <div class="lc-form">
+            <div class="lc-two"><label>Login ID<input type="text" data-sam="login" maxlength="20" autocomplete="off" value="${escapeHTML(key || P.loginId)}" placeholder="lowercase, numbers, @ _ -"></label>
+            <label>Password (at least 6)<input type="password" data-sam="pw" maxlength="60" autocomplete="new-password"></label></div>
+            <button type="button" class="ap-primary" data-sam-ap="save" data-pid="${escapeHTML(P.id)}">${key ? "Save login and password" : "Create her account"}</button>
+            <p class="ap-note" data-sam="msg"></p>
+          </div></div>`;
+      }).join("");
+      document.addEventListener("click", async (e) => {
+        const b = e.target.closest && e.target.closest("[data-sam-ap]"); if (!b) return;
+        const portal = document.getElementById("adminPortal"); if (!portal || portal.hidden) return;                       // administrator portal only
+        const P = PERSONAS.find((p) => p.id === b.dataset.pid); if (!P) return;
+        const card = b.closest(".ap-card"), q = (k) => card.querySelector(`[data-sam="${k}"]`), msg = q("msg");
+        const login = q("login").value.trim().toLowerCase(), pw = q("pw").value;
+        if (!/^[a-z0-9@_-]{4,20}$/.test(login)) { msg.textContent = "Login ID: 4 to 20 characters, lowercase letters, numbers, @ _ or -."; return; }
+        if (pw.length < 6) { msg.textContent = "The password needs at least 6 characters."; return; }
+        b.disabled = true; msg.textContent = "Saving...";
+        try {
+          if (await isAdminLoginId(login)) { msg.textContent = "That ID is reserved."; return; }
+          const oldKey = samKey(P);
+          if (login !== oldKey && (USERS[login] || (await get(mnAccRef(login))).exists())) { msg.textContent = "That login ID is already taken."; return; }
+          const old = oldKey ? USERS[oldKey] : null, account = { ...(old || {}), id: P.id, name: P.name, password: await pwHash(login, pw), createdAt: (old && old.createdAt) || Date.now() };
+          delete account.needsPassword;
+          await set(mnAccRef(login), account);
+          if (oldKey && oldKey !== login) { await remove(mnAccRef(oldKey)); delete USERS[oldKey]; }
+          USERS[login] = account; USERS_BY_ID[P.id] = account;
+          if (!(await get(userRef(P.id))).exists()) await set(userRef(P.id), { ...defaultUserState(account), profilePic: P.profilePic || "", pickPartner: true });
+          showToast("Saved", `${P.name}'s login ID is ${login}. Reload the app once so she shows in the partner list.`); renderAdminPortal();
+        } catch (x) { msg.textContent = "Could not save: " + ((x && x.message) || x); }
+        finally { b.disabled = false; }
+      });
       setTimeout(tick, 4000); setInterval(tick, 15000); setInterval(() => { if (fast && !document.hidden) tick(); }, 4000);     // faster while a chat is live
-      /* admin only (log in as "abhi", open the browser console): dtSamridhiSetLogin("sami@990", "new password") sets or changes her login. The password is never stored in this file. */
-      window.dtSamridhiSetLogin = async (loginId, password, personaId) => {
-        if (currentUserId !== RQ_REVIEWER_ID) throw new Error("admin only");
-        const P = PERSONAS.find((p) => p.id === (personaId || PERSONAS[0].id)); loginId = String(loginId || "").trim();
-        if (!P || !/^[A-Za-z0-9@_-]{3,30}$/.test(loginId) || String(password || "").length < 6) throw new Error("login id: 3-30 letters/numbers/@_- ; password: at least 6 characters");
-        const oldKey = Object.keys(USERS).find((k) => USERS[k] && USERS[k].id === P.id) || P.loginId, old = USERS[oldKey] || { id: P.id, name: P.name, createdAt: Date.now() };
-        const account = { ...old, id: P.id, name: P.name, password: await pwHash(loginId, String(password)) };
-        await set(GR(`accounts/${loginId}`), account); if (oldKey !== loginId) { await remove(GR(`accounts/${oldKey}`)); delete USERS[oldKey]; }
-        USERS[loginId] = account; USERS_BY_ID[P.id] = account; showToast("Login updated", `${P.name} can now log in with ${loginId}.`); return "done";
-      };
-      window.dtSamridhi = { tick, plans: planCache };                        // handy in the browser console: dtSamridhi.plans
     })();
   </script>
 </body>
