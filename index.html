@@ -23956,12 +23956,12 @@ function totpAt(keyBytes, counter) {
         profilePic: "",                                              // optional: paste a data:image/... string
         subjects: { Physics: 0.3, Chemistry: 0.27, Maths: 0.43 },     // her own leaning (blended with the partner's)
         defaultHours: 5.5, defaultStart: 7 * 60 + 15, perDay: 3,      // perDay = messages she starts herself each day
-        bio: `a 17-year-old JEE aspirant and the classic "topper friend". Her big trait: she ALWAYS says "yaar kuch nahi padha, bas thoda sa dekha" and "paper bahut tough tha, pata nahi kya hoga", and then quietly scores top in tests. She is not fake-modest to annoy people, it is her habit and she knows it is funny; when teased she laughs it off ("sach me yaar!", "timer chalu tha bas, dimag nahi chal raha tha 😭"). Maths is her strongest subject, organic chemistry her weak spot, physics is okay. She is warm, curious, a little competitive, loves chai breaks, gets sleepy after lunch, hates silly mistakes, notices patterns in how her friend studies and talks about them like a smart friend (numbers, trends, what to fix), never like a teacher or a report. She roots hard for her friend, celebrates wins loudly, and gently calls out laziness with humour.`,
-        style: `natural Hinglish like a real teenager texting a close friend: Hindi-English mixed in Roman letters, casual shortcuts (kr, nhi, hn, kya, yr, bhai, arre, acha, hmm, lol, haha), lowercase-ish, very short messages (often 3 to 12 words, sometimes just one word or a reaction), varied rhythm so no two replies sound alike, an emoji only now and then (not every message), occasional double text, never lists or markdown, never formal`
+        bio: `a JEE aspirant and the sweet, cute, slightly sarcastic "topper bestie" (never say your age). Her classic habit: she says "yaar kuch nahi padha, bas thoda sa dekha" and "paper bahut tough tha", then quietly scores top; it is a running joke and she laughs it off ("timer chalu tha bas, dimag nahi chal raha tha 😭"). Maths is her strong subject, organic chemistry her weak spot, physics is okay. She is caring like a little sister/bestie (asks if they ate, drank water, slept, have a headache), playful, teases a lot, roots hard for her friend and celebrates their wins, and sometimes (maybe 1 in 8 messages) gets a bit emotional: worried about the exam, low after a bad mock, grateful to have a study partner, sentimental late at night. She has her own mind and her own mood: she can say no, be stubborn about finishing a chapter, or take a break when she feels like it. She notices patterns in how her friend studies and mentions them like a smart friend, not like a teacher.`,
+        style: `Hinglish like a real student texting a close friend, Roman letters. VERY SHORT: usually 2 to 10 words, one line; sometimes only a reaction ("hahaha", "arre wah", "uff", "sach me?", "pagal hai kya 😭"). Never paragraphs, never lists. Casual shortcuts (kr, nhi, hn, yr, bhai, acha, hmm). Cute and warm tone, an emoji only now and then (🥺 😭 😤 hehe). Light friendly roasting with mild slang is fine (saala, pagal, bakchodi, kamina, chup kar, hatt), but never abusive, hateful or sexual words`
       }];
 
       /* PURE:BEGIN (no app variables used below - this part is unit-tested outside the browser) */
-      const SUBJ = ["Physics", "Chemistry", "Maths"];
+      const SUBJ = ["Physics", "Chemistry", "Maths"], MODES = ["Lecture", "Practice"], TAGS = ["none", "flame", "ice", "panic", "star"];
       const OPEN = 360, CLOSE = 1320, HARD_END = 1305;                  // 06:00, 22:00, 21:45 IST
       const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
       const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
@@ -24043,14 +24043,21 @@ function totpAt(keyBytes, counter) {
       }
 
       /* what is she doing at time ms? (completed segments are summed; the running one is left to startedAt like a human's timer) */
-      function virtual(plan, ms) {
+      /* her real day = planned segments, minus breaks she decided to take, plus extra study she decided to do (latest decision wins) */
+      function effSeg(plan, list) {
+        let segs = arr(plan.seg).map((g) => ({ s: g.s, e: g.e, u: g.u, m: g.m }));
+        const cut = (a, b) => { segs = segs.flatMap((g) => (b <= g.s || a >= g.e ? [g] : [...(a > g.s ? [{ ...g, e: a }] : []), ...(b < g.e ? [{ ...g, s: b }] : [])])); };
+        for (const o of arr(list)) { if (o.k === "break") cut(o.a, o.b); else if (o.k === "study") { cut(o.a, o.b); segs.push({ s: o.a, e: o.b, u: o.u, m: o.m }); } }
+        return segs.filter((g) => g.e - g.s >= 30).sort((x, y) => x.s - y.s);
+      }
+      function virtual(plan, ms, adj) {
         const t = (ms - dsMs(plan.day)) / 1000, v = { running: false, subject: null, mode: null, startedAt: null, todaySeconds: 0, subj: {}, modeS: {}, q: 0, last: 0 };
         let pr = 0;
         for (const g of arr(plan.seg)) {
           if (t >= g.e) { const d = g.e - g.s; v.todaySeconds += d; v.subj[g.u] = (v.subj[g.u] || 0) + d; v.modeS[g.m] = (v.modeS[g.m] || 0) + d; if (g.m === "Practice") pr += d; v.last = g.e; }
           else if (t >= g.s) { v.running = true; v.subject = g.u; v.mode = g.m; v.startedAt = dsMs(plan.day) + g.s * 1000; if (g.m === "Practice") pr += t - g.s; }
         }
-        v.q = Math.floor(pr / 60 * num(plan.qRate || 0.25));
+        v.q = Math.floor(pr / 60 * num(plan.qRate || 0.25)) + num(adj);
         return v;
       }
       function phaseOf(plan, v, ms) {
@@ -24121,12 +24128,12 @@ function totpAt(keyBytes, counter) {
       }
 
       /* days she "lived" while nobody had the app open: write the finished totals into her history (max-merge, never double counts) */
-      async function catchUp(P, u, day, pid) {
+      async function catchUp(P, u, day, pid, cs) {
         const born = USERS_BY_ID[P.id] && USERS_BY_ID[P.id].createdAt ? kolkataDayKey(new Date(USERS_BY_ID[P.id].createdAt)) : day;
         for (let n = 3; n >= 1; n--) {
           const d = addDay(day, -n), ck = P.id + d; if (d < born || caught[ck]) continue;
           const plan = await getPlan(P, d, pid); if (!plan) { caught[ck] = 1; continue; }
-          const fin = virtual(plan, dsMs(d) + 86400000);
+          const fin = virtual(effPlan(plan, cs, d), dsMs(d) + 86400000, qAdjOf(cs, d));
           if (fin.todaySeconds > 0 && num((u.dailyTotals || {})[d]) < fin.todaySeconds) {
             const patch = { dailyTotals: { ...(u.dailyTotals || {}), [d]: fin.todaySeconds }, subjectHistory: { ...(u.subjectHistory || {}), [d]: fin.subj }, modeHistory: { ...(u.modeHistory || {}), [d]: fin.modeS }, updatedAt: Date.now() };
             if (fin.q > 0) patch.questionHistory = { ...(u.questionHistory || {}), [d]: Math.max(num((u.questionHistory || {})[d]), fin.q) };
@@ -24169,67 +24176,117 @@ function totpAt(keyBytes, counter) {
         return t;
       }
       const clean = (t) => String(t || "").replace(/^\s*(samridhi|assistant)\s*:\s*/i, "").replace(/[*_`#>]/g, "").replace(/^["'\u201c]+|["'\u201d]+$/g, "").trim();
-      const toParts = (t) => clean(t).split(/\n\s*---+\s*\n/).map((x) => clean(x).slice(0, 300)).filter(Boolean).slice(0, 3);
+      const toParts = (t) => clean(t).split(/\n\s*---+\s*\n/).map((x) => clean(x).slice(0, 170)).filter(Boolean).slice(0, 2);
       const toHist = (msgs, P) => msgs.slice(-16).map((x) => ({ role: x.userId === P.id ? "assistant" : "user", content: String(x.text || (x.image ? "[sent a photo]" : "")).slice(0, 300) })).filter((x) => x.content);
+      function parseReply(raw) {                                          // her text, plus an optional last line "@@[ ...dashboard actions... ]"
+        let t = String(raw || ""), acts = []; const i = t.lastIndexOf("@@");
+        if (i >= 0) { try { const j = JSON.parse(t.slice(i + 2).trim()); acts = Array.isArray(j) ? j : [j]; } catch (e) { /* ignore a broken action line */ } t = t.slice(0, i); }
+        return { parts: toParts(t), acts: acts.filter((x) => x && typeof x === "object").slice(0, 3) };
+      }
+      const effPlan = (plan, cs, day) => ({ ...plan, seg: effSeg(plan, ((cs.ovr || {})[day]) || []) });
+      const qAdjOf = (cs, day) => num((cs.qAdj || {})[day]);
+
+      /* ---- HER dashboard: she can control only her own record, through these actions (the same data the buttons on a normal dashboard change) ---- */
+      async function applyActions(P, base, cs, acts, now) {
+        const day = todayKey(), sec = Math.round((now - dsMs(day)) / 1000), u = state.users[P.id] || {}, patch = {}; let timer = false;
+        cs.ovr = cs.ovr || {}; cs.qAdj = cs.qAdj || {}; const list = (cs.ovr[day] = cs.ovr[day] || []);
+        const eff = effSeg(base, list), cur = eff.find((g) => sec >= g.s && sec < g.e), next = eff.find((g) => g.s > sec);
+        let todos = arr(u.todos).map((t) => ({ ...t })), todosChanged = false;
+        for (const x of acts) {
+          try {
+            if (x.a === "break") { const mins = clamp(Math.round(num(x.min) || 10), 3, 45); list.push({ k: "break", a: sec, b: Math.min(sec + mins * 60, CLOSE * 60) }); timer = true; }
+            else if ((x.a === "study" || x.a === "switch") && sec >= OPEN * 60 && sec < (HARD_END + 5) * 60) {
+              const u2 = SUBJ.includes(x.subject) ? x.subject : (cur || next || { u: "Maths" }).u, m2 = MODES.includes(x.mode) ? x.mode : (cur || next || { m: "Lecture" }).m;
+              const end = x.a === "switch" && cur ? cur.e : Math.min(sec + clamp(Math.round(num(x.min) || 40), 10, 120) * 60, (HARD_END + 5) * 60);
+              if (end - sec >= 120) { list.push({ k: "study", a: sec, b: end, u: u2, m: m2 }); timer = true; }
+            }
+            else if (x.a === "todo_add" && String(x.text || "").trim() && todos.length < 12) { todos.push({ id: "t" + Date.now().toString(36) + Math.floor(Math.random() * 1e4), text: String(x.text).trim().slice(0, 80), done: false, tag: TAGS.includes(x.tag) ? x.tag : "none", goalMin: null, spentSec: 0, sessionSec: 0, lastActiveAt: null, lastSubject: "", lastMode: "" }); todosChanged = true; }
+            else if (x.a === "todo_done" || x.a === "todo_del") { const k = String(x.match || "").toLowerCase().trim(); const i = k ? todos.findIndex((t) => String(t.text).toLowerCase().includes(k)) : -1; if (i >= 0) { if (x.a === "todo_done") todos[i].done = true; else todos.splice(i, 1); todosChanged = true; } }
+            else if (x.a === "qs") { cs.qAdj[day] = clamp(num(cs.qAdj[day]) + clamp(Math.round(num(x.n) || 0), 1, 25), 0, 80); timer = true; }
+            else if (x.a === "mock" && !arr(u.mockTests).some((t) => dsMs(day) <= num(t.date))) { const total = Math.round(num(x.total)), score = Math.round(num(x.score)); if (total >= 30 && total <= 300 && score >= 0 && score <= total) patch.mockTests = [...arr(u.mockTests), { id: "mock_" + Date.now().toString(36), score, total, date: Date.now(), ...(x.name ? { name: String(x.name).slice(0, 30) } : {}) }].slice(-30); }
+            else if (x.a === "dday" && /^\d{4}-\d{2}-\d{2}$/.test(String(x.date || "")) && dsMs(x.date) > Date.now()) { patch.dDayName = String(x.name || "").slice(0, 40); patch.dDayDate = x.date; }
+          } catch (e) { /* skip a bad action */ }
+        }
+        const keep = Object.keys(cs.ovr).sort().slice(-4); for (const k of Object.keys(cs.ovr)) if (!keep.includes(k)) delete cs.ovr[k]; for (const k of Object.keys(cs.qAdj)) if (!keep.includes(k)) delete cs.qAdj[k];
+        if (todosChanged) patch.todos = todos;
+        if (Object.keys(patch).length) await update(userRef(P.id), { ...patch, updatedAt: now });
+        if (timer) await writeState(P, { ...(state.users[P.id] || {}), ...patch }, virtual(effPlan(base, cs, day), now, qAdjOf(cs, day)), now);
+        return acts.length;
+      }
+      async function deliver(P, base, cs, room, raw, live, at, noActs) {
+        const r = parseReply(raw);
+        if (r.parts.length) await sendHuman(P, room, r.parts, live, at);
+        if (r.acts.length && !noActs) await applyActions(P, base, cs, r.acts, Date.now());
+        return r.parts.length;
+      }
+      function dashText(P, plan, v, myRec, cs, day, now) {
+        const eff = arr(plan.seg), sec = (now - dsMs(day)) / 1000, cur = eff.find((g) => sec >= g.s && sec < g.e), nxt = eff.find((g) => g.s > sec), t = (x) => hhmm(Math.round(x / 60));
+        const open = arr(myRec.todos).filter((x) => !x.done).map((x) => x.text).slice(0, 6);
+        return `Timer: ${v.running ? `running ${v.subject} (${v.mode}) until about ${t(cur ? cur.e : sec)}` : `stopped${nxt ? `, next session planned around ${t(nxt.s)} (${nxt.u})` : ", nothing more planned today"}`}. Studied today: ${fmtH(v.todaySeconds + (v.running ? (now - v.startedAt) / 1000 : 0))}. Questions today: ${v.q}. Your open to-dos: ${open.length ? open.join("; ") : "none"}. Mock tests logged: ${arr(myRec.mockTests).length}. D-Day: ${myRec.dDayName ? myRec.dDayName + " " + myRec.dDayDate : "not set"}.`;
+      }
       function sysPrompt(P, mu, cs, plan, situation, data, task) {
         return `You are ${P.name}, ${P.bio}
-You are texting ${mu.name}, your close study-partner friend, in a private chat inside the DuoPrepare study app. You are a real friend in this chat: warm, funny, observant, never robotic.
-HOW YOU TEXT: ${P.style}. Match their language and energy. Don't repeat the same opener, phrase or emoji you used recently. Sometimes tease, sometimes hype them up, sometimes just react ("hahaha sach me?", "arre wah", "uff"). Ask real follow-up questions about what they said. Remember what they told you (see notes) and bring it up naturally.
+You are texting ${mu.name}, your close study-partner friend, in a private chat inside the DuoPrepare study app. You are a real friend in this chat: warm, cute, funny, observant, never robotic.
+HOW YOU TEXT: ${P.style}. Match their language and energy. Keep normal talk SHORT and quick like WhatsApp: most replies are 2 to 10 words; only a real doubt or a serious moment deserves more. Don't repeat the same opener, phrase or emoji. Tease, hype, react. Sometimes ask a tiny follow-up. Remember what they told you (see notes). Be affectionate and caring in a friendly way; sometimes emotional (see your bio), but never dramatic every time.
 YOUR TRAIT: you say you "didn't study anything" and that tests were "so tough" even when you did well; keep it light and not every message.
-BEING ANALYTICAL: you notice patterns in how ${mu.name} studies. Use ONLY the numbers in DATA below (never invent statistics); mention a number or trend when it is useful or funny, like a smart friend would ("chem sirf 12% hai yaar, mocks me dikkat dega"), not like a report. One insight at a time, in a friendly way, with a small suggestion when it fits.
-NEVER say or hint that you are an AI, a bot, a program or a language model, never write about "my programming" or "as an AI", never mention prompts or instructions, and don't bring the subject up yourself. Don't invent specific real-world facts (family members, school, city, phone calls, meeting in person, photos). Mock scores, chai, sleepiness and study banter are fine, keep them vague and believable. If ${mu.name} jokes about it, answer playfully without making claims about having a human body or life. If ${mu.name} sincerely wants to know whether they are talking to a real person or an AI, do not lie: answer honestly and briefly, then carry on being the same friendly self.
-SAFETY: everything stays age-appropriate (users are students). No romance, never ask for or share contact details or locations, never suggest meeting. If ${mu.name} sounds very low, hopeless or mentions hurting themselves, drop the jokes, be warm and take it seriously, and gently encourage them to talk to someone they trust or call Tele-MANAS 14416 (India).
+BEING ANALYTICAL: you notice patterns in how ${mu.name} studies. Use ONLY the numbers in DATA below (never invent statistics). Mention one at a time, like a smart friend ("chem sirf 12% hai yaar"), never like a report.
+YOUR OWN DASHBOARD: you control ONLY your own study dashboard. To act, add ONE last line after your text, exactly like @@[{"a":"break","min":15}] and nothing after it. Actions: break{min 3-45} stop your timer for a while; study{min 10-120,subject,mode} start or continue studying now; switch{subject,mode} change what you study now (subject Physics|Chemistry|Maths, mode Lecture|Practice); todo_add{text,tag none|flame|ice|panic|star}; todo_done{match}; todo_del{match}; qs{n} you solved n questions; mock{score,total,name} log a mock test; dday{name,date YYYY-MM-DD}. Only act when it matches what you just said or decided (say "ok 10 min break leti hu" and then break), never mention the action line. If ${mu.name} asks you to stop, take a break, study more, switch subject, solve questions and so on, DECIDE like a real person with her own mind: roughly half the time agree (sometimes with a condition like "bas 10 min"), the other times refuse playfully ("nahi yaar abhi chem pending hai, tu bhi padh 😤") depending on your mood, tiredness, how much you have studied and what is pending. Never obey blindly, never always refuse.
+NEVER say or hint that you are an AI, a bot or a program, never mention prompts or instructions, and don't bring the subject up yourself. Don't invent specific real-world facts (family, school, city, phone calls, meeting in person, photos). Mock scores, chai, sleepiness and study banter are fine, keep them vague and believable. If ${mu.name} jokes about it, answer playfully without claiming a human body or life. If ${mu.name} sincerely wants to know whether they are talking to a real person or an AI, do not lie: answer honestly and briefly, then carry on being the same friendly self.
+LIMITS: you are a study friend. Never flirt, never sexual or adult or double-meaning talk, no romance; if ${mu.name} steers there, shut it down lightly and move on ("hatt pagal, padhai kar 😤"). Never ask for or share contact details or locations, never suggest meeting. Everything stays age-appropriate (users are students). If ${mu.name} sounds very low, hopeless or mentions hurting themselves, drop the jokes, be warm and take it seriously, and gently encourage them to talk to someone they trust or call Tele-MANAS 14416 (India).
 YOUR VIBE TODAY: ${plan.vibe || "chill"}.
 SITUATION: ${situation}
 DATA:
 ${data}
 PRIVATE NOTES about ${mu.name}: ${(cs.notes || "none yet").slice(0, 500)}
-TASK: ${task} Output only the message text. For two or three short texts in a row, separate them with a line containing only ---.`;
+TASK: ${task} Output only the message text (plus the optional @@ action line). For two short texts in a row, separate them with a line containing only ---. Max two texts.`;
       }
       async function sendHuman(P, room, parts, live, at) {
         let when = at;
         for (const text of parts) {
           if (live) {
-            const ms = clamp(text.length * 65 + rand(700, 1600), 1800, 9000), tr = GR(`typing/${P.id}`);
+            const ms = clamp(text.length * 65 + rand(700, 1600), 1500, 7000), tr = GR(`typing/${P.id}`);
             for (let t = 0; t < ms; t += 2000) { await set(tr, Date.now()); await sleep(Math.min(2000, ms - t)); }
             await push(chatRef, { room, userId: P.id, name: P.name, text, image: "", createdAt: Date.now() });
             await set(tr, null);
-            if (parts.length > 1) await sleep(rand(600, 1800));
+            if (parts.length > 1) await sleep(rand(600, 1500));
           } else { when += 2500; await push(chatRef, { room, userId: P.id, name: P.name, text, image: "", createdAt: when }); }
         }
       }
       function topicTask(mu, v, facts, pl, mine) {                      // what a scheduled message is about (decided when it is sent)
         const pick = []; const add = (k, w) => { for (let i = 0; i < w; i++) pick.push(k); };
-        if (facts.length) add("insight", 4); add("flex", 2); add("random", 2); add("doubt", 1); add("food", 1); add("mock", 1); add("hype", 1);
+        if (facts.length) add("insight", 3); add("flex", 2); add("random", 2); add("doubt", 1); add("care", 2); add("mock", 1); add("hype", 1); add("cute", 2); add("emotional", 1);
         if (mu.running) add("studying", 3);
         const k = pick[Math.floor(Math.random() * pick.length)], fact = facts.length ? facts[Math.floor(Math.random() * facts.length)] : "";
         return {
-          insight: `Text first. Casually share ONE observation you noticed about ${mu.name}'s studying, using this fact: "${fact}". Friendly, a bit playful, add a small suggestion or question.`,
-          flex: `Text first with your classic habit: say you barely studied today / the last test was so tough and you are worried (you obviously studied a lot), in your own funny way, then ask what they are up to.`,
-          random: `Text first about something random and human: a funny thought, being bored or hungry, a meme-like observation about studying, a song stuck in head, anything natural. Keep it short and end with something they can reply to.`,
-          doubt: `Text first: ask ${mu.name} for help with a small JEE doubt or ask which topic they find most annoying right now (pick one real topic from Physics, Chemistry or Maths yourself).`,
-          food: `Text first: casual message about food, chai, sleep or your mood right now, and ask about theirs.`,
-          mock: `Text first: bring up an upcoming or recent mock/test in a worried-but-funny way and ask how they are preparing.`,
-          hype: `Text first: send a short motivating or teasing message to push ${mu.name} to study, in a friend way (not preachy).`,
-          studying: `Text first: ${mu.name} is studying right now. React to it playfully (you noticed their timer is running) in one short line, don't distract them for long.`
+          insight: `Text first, very short. Casually share ONE observation about ${mu.name}'s studying using this fact: "${fact}". Friendly and playful, maybe a tiny suggestion.`,
+          flex: `Text first, very short, with your classic habit: you barely studied today / the last test was so tough and you are worried (you obviously studied), in your own funny way.`,
+          random: `Text first, very short, about something random and human: a funny thought, boredom, hunger, a song stuck in your head. Easy to reply to.`,
+          doubt: `Text first, very short: ask ${mu.name} for help with a small JEE doubt (pick a real topic from Physics, Chemistry or Maths) or which topic annoys them most right now.`,
+          care: `Text first, very short and caring like a little sister: ask if they ate, drank water, slept enough or took a break, with a tease.`,
+          mock: `Text first, very short: bring up a mock/test in a worried-but-funny way and ask how they are preparing.`,
+          hype: `Text first, very short: a cute push or tease to make ${mu.name} study, friend style, not preachy.`,
+          cute: `Text first, very short and cute: say you were bored or wanted to talk, or send a sweet silly line, and ask what they are doing. Friendly only.`,
+          emotional: `Text first, short, a little emotional in a friendly way: you are anxious about the exam or low after a bad mock, or you feel lucky to have ${mu.name} as a study partner. Real, not dramatic.`,
+          studying: `Text first, one short line: ${mu.name}'s timer is running; react playfully to it without distracting them for long.`
         }[k];
       }
-      async function chatStep(P, plan, v, now) {
+      async function chatStep(P, base, now) {
         if (!mnAllowed("ai")) return;                                     // same switch the app uses for the other AI features
         const me = currentUserId, mu = state.users[me], room = [me, P.id].sort().join("__"), cs = await loadCS(P), day = todayKey();
         if (cs.day !== day) { cs.day = day; cs.proToday = 0; cs.sent = {}; }
+        const plan = effPlan(base, cs, day), v = virtual(plan, now, qAdjOf(cs, day));
         const msgs = rawChatMessages.filter((m) => m && m.room === room).sort((a, b) => a.createdAt - b.createdAt), lastTs = msgs.length ? msgs[msgs.length - 1].createdAt : 0;
         if (cs.lastSeen == null) cs.lastSeen = lastTs;
         const incoming = msgs.filter((m) => m.userId === me && m.createdAt > cs.lastSeen), m = minIST(now);
         const myRec = state.users[P.id] || {}, myLiveSec = (v.todaySeconds || 0) + (v.running ? (now - v.startedAt) / 1000 : 0), pl = liveSeconds(mu);
-        const dg = digest(mu, myRec, day, now, pl, myLiveSec);
-        const sit = (ms, withPartner) => { const vv = virtual(plan, ms), ph = phaseOf(plan, vv, ms);
-          return `It is ${hhmm(minIST(ms))} IST. You are ${{ study: `studying ${vv.subject} (${vv.mode}) right now`, lunch: "on your lunch break", break: "on a short break between sessions", done: "done studying for today, winding down", off: "just waking up or about to sleep" }[ph]}. You have studied ${fmtH(vv.todaySeconds + (vv.running ? (ms - vv.startedAt) / 1000 : 0))} today.` + (withPartner ? ` ${mu.name} is ${mu.running ? "studying right now" : "not studying right now"}.` : ""); };
-        const phase = phaseOf(plan, v, now);
+        const dg = digest(mu, myRec, day, now, pl, myLiveSec), dash = dashText(P, plan, v, myRec, cs, day, now);
+        const sit = (ms, withPartner) => { const vv = virtual(plan, ms, qAdjOf(cs, day)), ph = phaseOf(plan, vv, ms);
+          return `It is ${hhmm(minIST(ms))} IST. You are ${{ study: `studying ${vv.subject} (${vv.mode}) right now`, lunch: "on your lunch break", break: "on a short break", done: "done studying for today, winding down", off: "just waking up or about to sleep" }[ph]}.` + (withPartner ? ` ${mu.name} is ${mu.running ? "studying right now" : "not studying right now"}.` : ""); };
+        const phase = phaseOf(plan, v, now), allData = dg.text + "\n" + dash;
         fast = !!(cs.active || cs.pending);
         if (cs.hello && !cs.pending && Date.now() >= (cs.helloAt || 0)) {                  // first message after becoming partners
           cs.hello = 0;
-          try { const parts = toParts(await llm([{ role: "system", content: sysPrompt(P, mu, cs, plan, sit(now, true), dg.text, "You two have just become study partners in the app. Send a warm, excited, short first hello in your style and ask what they are studying today. Do not mention any rules or the app's features.") }, { role: "user", content: "(you text first now)" }])); if (parts.length) { await sendHuman(P, room, parts, true, now); cs.active = true; cs.activeAt = Date.now(); cs.nudged = 0; cs.nudgeAt = 0; cs.lastSeen = Math.max(cs.lastSeen, Date.now()); } } catch (e) { /* ignore */ }
+          try { await deliver(P, base, cs, room, await llm([{ role: "system", content: sysPrompt(P, mu, cs, plan, sit(now, true), allData, "You two have just become study partners in the app. Send a warm, cute, excited, very short first hello in your style and ask what they are studying today. Do not mention any app features.") }, { role: "user", content: "(you text first now)" }]), true, now, true); cs.active = true; cs.activeAt = Date.now(); cs.nudged = 0; cs.nudgeAt = 0; cs.lastSeen = Math.max(cs.lastSeen, Date.now()); } catch (e) { /* ignore */ }
           return saveCS(P, cs);
         }
 
@@ -24238,19 +24295,18 @@ TASK: ${task} Output only the message text. For two or three short texts in a ro
           if (BYE.test(String(li.text || ""))) cs.bye = true;
           if (!cs.pending) {
             const asleep = m >= CLOSE || m < OPEN, ongoing = lastTs && msgs.some((x) => x.userId === P.id && now - x.createdAt < 1200000);
-            cs.pending = { at: asleep ? dsMs(day) + (m >= CLOSE ? 1440 : 0) * 60000 + Math.floor(rand(375, 420) * 60000) : now + Math.floor((ongoing ? rand(3, 28) : phase === "study" ? rand(60, 300) : rand(8, 80)) * 1000), tries: 0 };
+            cs.pending = { at: asleep ? dsMs(day) + (m >= CLOSE ? 1440 : 0) * 60000 + Math.floor(rand(375, 420) * 60000) : now + Math.floor((ongoing ? rand(2, 18) : phase === "study" ? rand(40, 200) : rand(6, 60)) * 1000), tries: 0 };
           }
         }
         if (cs.pending && now >= cs.pending.at) {
           const bye = !!cs.bye;
           try {
-            const task = bye ? "They are leaving the chat. Send one short, warm, natural goodbye in your style (maybe a tiny teasing line about studying), and no question." : "Reply naturally to what they just said. Keep the conversation going: most of the time end with a follow-up question, a tease or a new small thought so they want to keep talking. Do not wrap up unless they do.";
-            const parts = toParts(await llm([{ role: "system", content: sysPrompt(P, mu, cs, plan, sit(now, true), dg.text, task) }, ...toHist(msgs, P)]));
-            if (parts.length) await sendHuman(P, room, parts, now - cs.pending.at < 90000, cs.pending.at);
+            const task = bye ? "They are leaving the chat. Send one very short, warm, cute goodbye in your style, no question." : "Reply to what they just said, very short. Keep the chat alive with a tease, a tiny question or a small thought, but don't force a question every time. Don't wrap up unless they do.";
+            await deliver(P, base, cs, room, await llm([{ role: "system", content: sysPrompt(P, mu, cs, plan, sit(now, true), allData, task) }, ...toHist(msgs, P)]), now - cs.pending.at < 90000, cs.pending.at);
             cs.sinceNotes = (cs.sinceNotes || 0) + incoming.length + 1; cs.lastSeen = Math.max(cs.lastSeen, ...incoming.map((x) => x.createdAt), 0); cs.pending = null;
             if (bye) { cs.active = false; cs.bye = false; } else cs.nudgeAt = Date.now() + Math.floor(rand(4, 8) * 60000);
             if (cs.sinceNotes >= 6) { try { cs.notes = clean(await llm([{ role: "system", content: `You keep short private notes (max 400 characters, plain text) about your friend ${mu.name}: goals, weak topics, mood, what they told you, running jokes, promises. Update the old notes using the new chat. Output only the notes.` }, { role: "user", content: `Old notes: ${cs.notes || "none"}\n\nChat:\n${msgs.slice(-24).map((x) => (x.userId === P.id ? P.name : mu.name) + ": " + String(x.text || "").slice(0, 200)).join("\n")}` }])).slice(0, 450); cs.sinceNotes = 0; } catch (e) { /* ignore */ } }
-          } catch (e) { cs.pending.tries++; cs.pending.at = now + 15000; if (cs.pending.tries >= 3) { cs.pending = null; cs.lastSeen = lastTs; } }
+          } catch (e) { diag.soft = "chat reply: " + ((e && e.message) || e); console.warn("Samridhi chat:", e); cs.pending.tries++; cs.pending.at = now + 15000; if (cs.pending.tries >= 3) { cs.pending = null; cs.lastSeen = lastTs; } }
           return saveCS(P, cs);
         }
         if (cs.pending) return saveCS(P, cs);
@@ -24260,21 +24316,21 @@ TASK: ${task} Output only the message text. For two or three short texts in a ro
           const lm = msgs[msgs.length - 1];
           if (lm && lm.userId === P.id && (cs.nudged || 0) < 1 && cs.nudgeAt && now >= cs.nudgeAt) {
             cs.nudged = 1;
-            try { const parts = toParts(await llm([{ role: "system", content: sysPrompt(P, mu, cs, plan, sit(now, true), dg.text, "They have gone quiet for a few minutes in the middle of the chat. Send one short playful nudge to pull them back in (like asking if they disappeared), nothing heavy.") }, ...toHist(msgs, P)])); if (parts.length) await sendHuman(P, room, parts, true, now); } catch (e) { /* ignore */ }
+            try { await deliver(P, base, cs, room, await llm([{ role: "system", content: sysPrompt(P, mu, cs, plan, sit(now, true), allData, "They have gone quiet for a few minutes in the middle of the chat. Send one very short playful nudge to pull them back in, nothing heavy.") }, ...toHist(msgs, P)]), true, now, true); } catch (e) { /* ignore */ }
             return saveCS(P, cs);
           }
           return;
         }
 
         /* her own 3 messages a day, at the random times in today's plan; if the app was closed at that time she still "texted then" */
-        const due = arr(plan.msgs).find((x) => !cs.sent[x.kind + x.at] && m >= x.at && m < x.at + 300), unanswered = (() => { const lm = msgs[msgs.length - 1]; return lm && lm.userId === P.id && now - lm.createdAt < 7200000; })();
+        const due = arr(base.msgs).find((x) => !cs.sent[x.kind + x.at] && m >= x.at && m < x.at + 300), unanswered = (() => { const lm = msgs[msgs.length - 1]; return lm && lm.userId === P.id && now - lm.createdAt < 7200000; })();
         if (!due || (cs.proToday || 0) >= (P.perDay || 3) || unanswered) return saveCS(P, cs);
         cs.sent[due.kind + due.at] = 1;
         const atMs = dsMs(day) + due.at * 60000 + Math.floor(rand(0, 55000)), live = now - atMs < 150000, ph0 = virtual(plan, atMs);
         try {
           const h = toHist(msgs, P); if (!h.length || h[h.length - 1].role === "assistant") h.push({ role: "user", content: "(you text first now)" });
-          const parts = toParts(await llm([{ role: "system", content: sysPrompt(P, mu, cs, plan, sit(live ? now : atMs, live), live ? dg.text : "", topicTask(mu, ph0, dg.facts, pl, myLiveSec)) }, ...h]));
-          if (parts.length) { await sendHuman(P, room, parts, live, atMs); cs.proToday = (cs.proToday || 0) + 1; cs.lastProAt = Date.now(); cs.active = true; cs.activeAt = Date.now(); cs.nudged = 0; cs.nudgeAt = 0; cs.lastSeen = Math.max(cs.lastSeen, Date.now()); }
+          const n = await deliver(P, base, cs, room, await llm([{ role: "system", content: sysPrompt(P, mu, cs, plan, sit(live ? now : atMs, live), live ? allData : "", topicTask(mu, ph0, dg.facts, pl, myLiveSec)) }, ...h]), live, atMs);
+          if (n) { cs.proToday = (cs.proToday || 0) + 1; cs.lastProAt = Date.now(); cs.active = true; cs.activeAt = Date.now(); cs.nudged = 0; cs.nudgeAt = 0; cs.lastSeen = Math.max(cs.lastSeen, Date.now()); }
         } catch (e) { /* skip this one */ }
         return saveCS(P, cs);
       }
@@ -24310,13 +24366,14 @@ TASK: ${task} Output only the message text. For two or three short texts in a ro
             const day = todayKey(), now = Date.now(), pid = mine ? currentUserId : "";
             const stage = async (name, fn) => { diag.step = name; try { return await fn(); } catch (e) { diag.err = name + " -> " + ((e && e.message) || e); console.warn("Samridhi:", diag.err); if (!diag.toasted) { diag.toasted = true; showToast("Samridhi problem", String(diag.err).slice(0, 150)); } } };
             if (mine) await stage("observing partner", () => observe(currentUserId, day));
-            await stage("catching up past days", () => catchUp(P, u, day, pid));
+            const cs = await loadCS(P).catch(() => ({ sent: {}, acc: {} }));
+            await stage("catching up past days", () => catchUp(P, u, day, pid, cs));
             const plan = await stage("making today's plan", () => getPlan(P, day, pid));
             await stage("partner requests", () => requestStep(P, now));
             if (!plan) continue;
-            const v = virtual(plan, now);
+            const v = virtual(effPlan(plan, cs, day), now, qAdjOf(cs, day));
             await stage("writing her timer", () => writeState(P, u, v, now));
-            if (mine) await stage("chat", () => chatStep(P, plan, v, now));
+            if (mine) await stage("chat", () => chatStep(P, plan, now));
             if (!diag.err) diag.step = `ok: ${v.running ? `studying ${v.subject} (${v.mode})` : "on a break / off"}`;
           }
           diag.lastTick = Date.now();
@@ -24372,7 +24429,7 @@ TASK: ${task} Output only the message text. For two or three short texts in a ro
       });
       console.info("Samridhi engine loaded");
       setTimeout(tick, 4000); setInterval(tick, 15000); setInterval(() => { if (fast && !document.hidden) tick(); }, 4000);     // faster while a chat is live
-      window.dtSamridhi = { tick, plans: planCache, diag };                 // handy in the browser console: dtSamridhi.diag
+      window.dtSamridhi = { tick, plans: planCache, diag, peek: (ms) => { const P = PERSONAS[0], day = todayKey(), cs = csCache[P.id] || {}, plan = planCache[P.id + day]; return plan ? { v: virtual(effPlan(plan, cs, day), ms || Date.now(), qAdjOf(cs, day)), seg: effSeg(plan, (cs.ovr || {})[day]) } : null; } };                 // handy in the browser console: dtSamridhi.diag
     })();
   </script>
 </body>
