@@ -23936,6 +23936,401 @@ function totpAt(keyBytes, counter) {
       });
       sync(); syncBadge();
     })();
+
+    /* ====================================================================================================================
+       SAMRIDHI - AI study partner that lives inside this file (no server). ADDED BLOCK: it touches none of the protected parts.
+       How it works
+       - Her whole day is a plan made from her partner's past days (hours, subjects, practice share, usual start time) plus
+         seeded randomness. The plan is saved ONCE per day at aiPlans/<id>/<day>, so every open browser sees the same Samridhi.
+       - Because the plan is fixed, any open browser can work out what she is doing "right now" and write it to her normal user
+         record (running / subject / mode / seconds / questions). When her partner opens the app she simply catches up.
+       - If the tab closes while she is "running", Firebase onDisconnect marks her stopped, so she never keeps a stale clock.
+       - Chat goes through the existing relay (api.groq.com is already redirected by the fetch wrapper above). No key is here.
+       - She has no real password: her account gets a random unknown hash. Nobody needs to log in as her.
+       Persona settings are in PERSONAS just below.
+       ==================================================================================================================== */
+    (() => {
+      const PERSONAS = [{
+        id: "samridhi", loginId: "sami@990", name: "Samridhi",
+        profilePic: "",                                              // optional: paste a data:image/... string
+        subjects: { Physics: 0.3, Chemistry: 0.27, Maths: 0.43 },     // her own leaning (blended with the partner's)
+        defaultHours: 5.5, defaultStart: 7 * 60 + 15, perDay: 3,      // perDay = messages she starts herself each day
+        bio: `a 17-year-old JEE aspirant and the classic "topper friend". Her big trait: she ALWAYS says "yaar kuch nahi padha, bas thoda sa dekha" and "paper bahut tough tha, pata nahi kya hoga", and then quietly scores top in tests. She is not fake-modest to annoy people, it is her habit and she knows it is funny; when teased she laughs it off ("sach me yaar!", "timer chalu tha bas, dimag nahi chal raha tha 😭"). Maths is her strongest subject, organic chemistry her weak spot, physics is okay. She is warm, curious, a little competitive, loves chai breaks, gets sleepy after lunch, hates silly mistakes, notices patterns in how her friend studies and talks about them like a smart friend (numbers, trends, what to fix), never like a teacher or a report. She roots hard for her friend, celebrates wins loudly, and gently calls out laziness with humour.`,
+        style: `natural Hinglish like a real teenager texting a close friend: Hindi-English mixed in Roman letters, casual shortcuts (kr, nhi, hn, kya, yr, bhai, arre, acha, hmm, lol, haha), lowercase-ish, very short messages (often 3 to 12 words, sometimes just one word or a reaction), varied rhythm so no two replies sound alike, an emoji only now and then (not every message), occasional double text, never lists or markdown, never formal`
+      }];
+
+      /* PURE:BEGIN (no app variables used below - this part is unit-tested outside the browser) */
+      const SUBJ = ["Physics", "Chemistry", "Maths"];
+      const OPEN = 360, CLOSE = 1320, HARD_END = 1305;                  // 06:00, 22:00, 21:45 IST
+      const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+      const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
+      const median = (a) => { if (!a.length) return 0; const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+      const hash32 = (s) => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
+      const rng = (seed) => { let a = hash32(seed); return () => { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
+      const between = (r, a, b) => a + (b - a) * r();
+      const wpick = (r, w) => { const e = Object.entries(w), tot = e.reduce((s, [, x]) => s + x, 0); let x = r() * tot; for (const [k, v] of e) { x -= v; if (x <= 0) return k; } return e[e.length - 1][0]; };
+      const dsMs = (day) => Date.parse(day + "T00:00:00+05:30");                       // ms of 00:00 IST of that day
+      const addDay = (day, n) => new Date(dsMs(day) + n * 86400000 + 330 * 60000).toISOString().slice(0, 10);
+      const minIST = (ms) => { const d = new Date(ms + 330 * 60000); return d.getUTCHours() * 60 + d.getUTCMinutes(); };
+      const arr = (x) => (Array.isArray(x) ? x : x && typeof x === "object" ? Object.values(x) : []);
+
+      /* learn from the real partner: p = user record, obs = { day: { first: minute } } */
+      function analyse(p, obs, day) {
+        const totals = {};
+        for (const [d, v] of Object.entries((p && p.dailyTotals) || {})) totals[d] = num(v);
+        const days = Object.keys(totals).filter((d) => d < day && totals[d] > 900).sort().slice(-21);
+        const hrs = days.map((d) => totals[d] / 3600), dow = (d) => new Date(d + "T00:00:00Z").getUTCDay();
+        const wk = days.filter((d) => [0, 6].includes(dow(d))).map((d) => totals[d] / 3600), wd = days.filter((d) => ![0, 6].includes(dow(d))).map((d) => totals[d] / 3600);
+        const a = { n: hrs.length, medianH: median(hrs), maxH: hrs.length ? Math.max(...hrs) : 0, weekendH: wk.length >= 3 ? median(wk) : null, weekdayH: wd.length >= 3 ? median(wd) : null, subj: null, practice: null, qRate: null, startMin: null };
+        const last = days.slice(-14), sh = (p && p.subjectHistory) || {}, mh = (p && p.modeHistory) || {}, qh = (p && p.questionHistory) || {};
+        const sub = {}; let subTot = 0, prac = 0, modeTot = 0; const rates = [];
+        for (const d of last) {
+          for (const [s, v] of Object.entries(sh[d] || {})) { sub[s] = (sub[s] || 0) + num(v); subTot += num(v); }
+          for (const [k, v] of Object.entries(mh[d] || {})) { modeTot += num(v); if (k === "Practice") prac += num(v); }
+          const q = num(qh[d]), pm = num((mh[d] || {}).Practice) / 60; if (q > 0 && pm > 10) rates.push(q / pm);
+        }
+        if (subTot > 3600) { a.subj = {}; for (const s of SUBJ) a.subj[s] = (sub[s] || 0) / subTot; }
+        if (modeTot > 3600) a.practice = prac / modeTot;
+        if (rates.length >= 2) a.qRate = clamp(median(rates), 0.08, 0.5);
+        const firsts = Object.entries(obs || {}).filter(([d]) => d < day).sort().slice(-14).map(([, o]) => num(o && o.first)).filter((x) => x > 0);
+        if (firsts.length >= 3) a.startMin = Math.round(median(firsts));
+        return a;
+      }
+
+      /* one whole day, as segments in seconds since 00:00 IST: { s, e, u: subject, m: mode } */
+      function buildPlan(P, a, day) {
+        const r = rng(P.id + "|" + day + "|plan"), dw = new Date(day + "T00:00:00Z").getUTCDay(), weekend = dw === 0 || dw === 6;
+        let base = a.n >= 3 ? ((weekend ? a.weekendH : a.weekdayH) ?? a.medianH) : P.defaultHours;
+        let h = base * between(r, 0.92, 1.12), mood = "normal"; const roll = r();
+        if (roll < 0.09) { h *= between(r, 0.35, 0.6); mood = "lazy"; } else if (roll > 0.94) { h *= between(r, 1.05, 1.18); mood = "motivated"; }
+        h = clamp(h, 1.2, Math.min(a.n >= 3 ? Math.max(2, a.maxH * 1.1) : 9, 10));            // never beyond partner's best day + 10%
+        let start = Math.round((a.startMin || P.defaultStart) + between(r, -25, 25)); if (mood === "lazy") start += Math.round(between(r, 25, 60));
+        start = clamp(start, 365, 660);
+        const total = Math.round(h * 60), pPr = clamp(a.practice ?? 0.45, 0.2, 0.7), blocks = [], lastS = [], lastM = [];
+        let used = 0, t = start, lunch = false, dinner = false;
+        while (used < total && t < HARD_END - 20) {
+          let len = Math.min(Math.round(clamp(between(r, 39, 84), 30, 100)), total - used);
+          if (!lunch && t < 780 && t + len > 805) len = Math.max(25, 790 - t + Math.round(between(r, -8, 8)));
+          if (!dinner && t < 1190 && t + len > 1215) len = Math.max(25, 1200 - t + Math.round(between(r, -8, 8)));
+          if (t + len > HARD_END) len = HARD_END - t;
+          if (len < 15) break;
+          const w = {}; for (const s of SUBJ) w[s] = Math.max(0.05, 0.55 * ((a.subj && a.subj[s]) ?? 1 / 3) + 0.45 * (P.subjects[s] ?? 1 / 3));
+          if (lastS.length >= 2 && lastS[lastS.length - 1] === lastS[lastS.length - 2]) w[lastS[lastS.length - 1]] *= 0.15;
+          const u = wpick(r, w); let m = r() < pPr ? "Practice" : "Lecture";
+          if (lastM.length >= 2 && lastM[lastM.length - 1] === lastM[lastM.length - 2] && lastM[lastM.length - 1] === m) m = m === "Practice" ? "Lecture" : "Practice";
+          lastS.push(u); lastM.push(m); blocks.push({ s: t, e: t + len, u, m }); used += len; t += len;
+          let brk = between(r, 5, 18);
+          if (!lunch && t >= 760) { brk = between(r, 40, 60); lunch = true; }
+          else if (!dinner && t >= 1190) { brk = between(r, 30, 45); dinner = true; }
+          else if (t >= 840 && t <= 960 && r() < 0.3) brk += 12;
+          else if (r() < 0.2) brk = between(r, 20, 28);
+          t += Math.round(brk);
+        }
+        const seg = [];
+        for (const b of blocks) {
+          const s = b.s * 60 + Math.floor(r() * 50), e = Math.min(b.e * 60 - Math.floor(r() * 40), HARD_END * 60), len = e - s;
+          if (len < 600) continue;
+          if (len > 2400 && r() < 0.55) { const cut = s + Math.round(len * between(r, 0.35, 0.7)), gap = Math.round(between(r, 120, 420)); seg.push({ s, e: cut, u: b.u, m: b.m }, { s: cut + gap, e, u: b.u, m: b.m }); }   // a short unplanned pause
+          else seg.push({ s, e, u: b.u, m: b.m });
+        }
+        const msgs = [], cnt = P.perDay || 3;                          // exactly 3 self-started chats a day, at random times
+        for (let tries = 0; msgs.length < cnt && tries < 200; tries++) { const at = Math.round(between(r, 435, 1290)); if (msgs.every((x) => Math.abs(x.at - at) >= 110)) msgs.push({ at, kind: "auto" }); }
+        for (let i = 0; msgs.length < cnt; i++) msgs.push({ at: 480 + i * 330, kind: "auto" });
+        msgs.sort((x, y) => x.at - y.at);
+        const vibe = ["chill", "hyper", "sleepy", "cheerful", "stressed about an upcoming mock", "lazy and snacky", "super focused"][Math.floor(r() * 7)];
+        return { day, mood, vibe, target: +h.toFixed(2), qRate: a.qRate ?? 0.25, seg, msgs };
+      }
+
+      /* what is she doing at time ms? (completed segments are summed; the running one is left to startedAt like a human's timer) */
+      function virtual(plan, ms) {
+        const t = (ms - dsMs(plan.day)) / 1000, v = { running: false, subject: null, mode: null, startedAt: null, todaySeconds: 0, subj: {}, modeS: {}, q: 0, last: 0 };
+        let pr = 0;
+        for (const g of arr(plan.seg)) {
+          if (t >= g.e) { const d = g.e - g.s; v.todaySeconds += d; v.subj[g.u] = (v.subj[g.u] || 0) + d; v.modeS[g.m] = (v.modeS[g.m] || 0) + d; if (g.m === "Practice") pr += d; v.last = g.e; }
+          else if (t >= g.s) { v.running = true; v.subject = g.u; v.mode = g.m; v.startedAt = dsMs(plan.day) + g.s * 1000; if (g.m === "Practice") pr += t - g.s; }
+        }
+        v.q = Math.floor(pr / 60 * num(plan.qRate || 0.25));
+        return v;
+      }
+      function phaseOf(plan, v, ms) {
+        const m = minIST(ms), segs = arr(plan.seg);
+        if (v.running) return "study";
+        if (m < OPEN || m >= CLOSE) return "off";
+        if (segs.length && ms - dsMs(plan.day) >= segs[segs.length - 1].e * 1000) return "done";
+        const prev = [...segs].reverse().find((g) => (ms - dsMs(plan.day)) / 1000 >= g.e), next = segs.find((g) => (ms - dsMs(plan.day)) / 1000 < g.s);
+        return prev && next && next.s - prev.e >= 2100 && m >= 720 && m <= 900 ? "lunch" : "break";
+      }
+      /* the numbers she "notices" about her friend (all computed here, so she never invents statistics) */
+      function digest(mu, myRec, day, nowMs, partnerLiveSec, myLiveSec) {
+        const H = (x) => (x / 3600), f1 = (x) => (Math.round(x * 10) / 10), dt = (mu && mu.dailyTotals) || {};
+        const past = Object.keys(dt).filter((d) => d < day && num(dt[d]) > 0).sort();
+        const last7 = past.slice(-7), avg7 = last7.length ? H(last7.reduce((q, d) => q + num(dt[d]), 0) / last7.length) : 0;
+        const yest = num(dt[addDay(day, -1)]), todayH = H(partnerLiveSec), L = [], F = [];
+        L.push(`${mu.name} today so far: ${f1(todayH)}h. Yesterday: ${f1(H(yest))}h. Average of last ${last7.length} days: ${f1(avg7)}h.`);
+        const best = past.slice(-30).reduce((m, d) => Math.max(m, num(dt[d])), 0); if (best) L.push(`Their best day recently: ${f1(H(best))}h.`);
+        const h3 = past.slice(-3), p4 = past.slice(-7, -3);
+        if (h3.length === 3 && p4.length >= 3) { const x = H(h3.reduce((q, d) => q + num(dt[d]), 0) / 3), y = H(p4.reduce((q, d) => q + num(dt[d]), 0) / p4.length); L.push(`Last 3 days avg ${f1(x)}h vs ${f1(y)}h before that (${x > y * 1.1 ? "going up" : x < y * 0.9 ? "going down" : "steady"}).`); if (x > y * 1.15) F.push(`their last 3 days average ${f1(x)}h, up from ${f1(y)}h, momentum is building`); if (x < y * 0.85) F.push(`their last 3 days average dropped to ${f1(x)}h from ${f1(y)}h`); }
+        let streak = 0; for (let i = past.length - 1; i >= 0 && H(num(dt[past[i]])) >= 2 && past[i] === addDay(day, -(streak + 1)); i--) streak++;
+        if (streak >= 3) { L.push(`Streak: ${streak} days in a row with 2h+.`); F.push(`they have a ${streak}-day studying streak`); }
+        const sh = mu.subjectHistory || {}, mh = mu.modeHistory || {}, qh = mu.questionHistory || {}, sub = {}; let st = 0, prac = 0, mt = 0;
+        for (const d of last7) { for (const [k, v] of Object.entries(sh[d] || {})) { sub[k] = (sub[k] || 0) + num(v); st += num(v); } for (const [k, v] of Object.entries(mh[d] || {})) { mt += num(v); if (k === "Practice") prac += num(v); } }
+        if (st > 7200) { const pc = SUBJ.map((k) => `${k} ${Math.round(100 * (sub[k] || 0) / st)}%`).join(", "); L.push(`Subject split last 7 days: ${pc}.`); const low = SUBJ.slice().sort((x, y) => (sub[x] || 0) - (sub[y] || 0))[0]; if ((sub[low] || 0) / st < 0.2) F.push(`${low} is only ${Math.round(100 * (sub[low] || 0) / st)}% of their last 7 days, it is being neglected`); }
+        if (mt > 7200) { const pp = Math.round(100 * prac / mt); L.push(`Practice vs lecture: ${pp}% practice.`); if (pp < 30) F.push(`only ${pp}% of their time is practice, too much lecture and too little solving`); if (pp > 70) F.push(`${pp}% of their time is practice, maybe they need some concept revision`); }
+        const qd = last7.map((d) => num(qh[d])).filter((x) => x > 0), qAvg = qd.length ? qd.reduce((q, x) => q + x, 0) / qd.length : 0, qT = num(mu.questionsToday);
+        if (qAvg) L.push(`Questions today: ${qT} (their usual: about ${Math.round(qAvg)} a day).`); if (qAvg && qT >= qAvg * 1.3 && qT >= 20) F.push(`they already did ${qT} questions today, well above their usual ${Math.round(qAvg)}`);
+        if (todayH >= 4 && avg7 && todayH >= avg7 * 1.05) F.push(`today they are already at ${f1(todayH)}h, above their ${f1(avg7)}h average`);
+        const hr = Math.floor(((nowMs + 330 * 60000) % 86400000) / 3600000); if (hr >= 17 && avg7 && todayH < avg7 * 0.5) F.push(`today is slow, only ${f1(todayH)}h against their usual ${f1(avg7)}h`);
+        if (best && partnerLiveSec > best) F.push(`today is their new personal best (${f1(todayH)}h)`);
+        if (mu.dDayDate && /^\d{4}-\d{2}-\d{2}$/.test(mu.dDayDate)) { const left = Math.ceil((dsMs(mu.dDayDate) - nowMs) / 86400000); if (left > 0) { L.push(`${mu.dDayName || "Exam"} is in ${left} days.`); if (left <= 30 || left % 10 === 0) F.push(`${mu.dDayName || "the exam"} is only ${left} days away`); } }
+        const mine = H(myLiveSec); L.push(`You (Samridhi) today so far: ${f1(mine)}h.`); if (Math.abs(mine - todayH) >= 0.75) F.push(mine > todayH ? `she is ahead by about ${f1(mine - todayH)}h today and can tease them` : `they are ahead of her by about ${f1(todayH - mine)}h today and she should admit it playfully`);
+        return { text: L.join("\n"), facts: F };
+      }
+      const BYE = /(^|\s)(bye+|tata|gn|g\.?night|good ?night|gnight|shubh ?ratri|chalta h(u|oon)|chalti h(u|oon)|ttyl|cya|alvida|good ?bye|baad m(e|ein) baat|sone ja|sona h(u|oon)|ok bye)(\s|$|[.!?,])/i;
+      /* PURE:END */
+
+      /* ------------------------------------------------------------------ helpers that use the app */
+      const GR = (p) => ref(database, `duotrack/groups/${GROUP_ID}/${p}`);
+      const IDS = new Set(PERSONAS.map((p) => p.id));
+      const rand = (a, b) => a + Math.random() * (b - a);
+      const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+      const hhmm = (m) => `${String(Math.floor(m / 60) % 24).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+      const fmtH = (s) => `${Math.floor(s / 3600)}h ${Math.floor((s % 3600) / 60)}m`;
+      const eqObj = (a, b) => { a = a || {}; b = b || {}; return [...new Set([...Object.keys(a), ...Object.keys(b)])].every((k) => Math.floor(a[k] || 0) === Math.floor(b[k] || 0)); };
+      let odFn = null, busy = false, fast = false; const planCache = {}, caught = {}, csCache = {}, obsDone = {};
+
+      async function onDisc(refx) { if (!odFn) odFn = (await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js")).onDisconnect; return odFn(refx); }
+
+      /* make the very first account + user record (admin browser only, once) */
+      async function seedPersonas() {
+        for (const P of PERSONAS) {
+          if (USERS[P.loginId] || USERS_BY_ID[P.id]) continue;
+          const acRef = GR(`accounts/${P.loginId}`);
+          if ((await get(acRef)).exists()) continue;
+          const hex = [...crypto.getRandomValues(new Uint8Array(32))].map((b) => b.toString(16).padStart(2, "0")).join("");
+          const account = { password: "sha256$" + hex, id: P.id, name: P.name, createdAt: Date.now() };     // random hash: nobody can log in as her
+          await set(acRef, account);
+          await set(userRef(P.id), { ...defaultUserState(account), profilePic: P.profilePic || "", pickPartner: true });
+          USERS[P.loginId] = account; USERS_BY_ID[P.id] = account;
+          showToast(`${P.name} is ready`, "Reload the app once so she appears in the partner list.");
+        }
+      }
+
+      async function getPlan(P, day, pid) {
+        const key = P.id + day; if (planCache[key]) return planCache[key];
+        const pr = GR(`aiPlans/${P.id}/${day}`); let snap = await get(pr);
+        if (!snap.exists()) {
+          const hist = pid && state.users[pid] ? state.users[pid] : null;
+          const obs = pid ? ((await get(GR(`aiObs/${pid}`))).val() || {}) : {};
+          const fresh = buildPlan(P, analyse(hist, obs, day), day);
+          snap = (await runTransaction(pr, (cur) => cur || fresh)).snapshot;                // first browser to get here wins
+        }
+        const plan = snap.val(); if (!plan || !plan.seg) return null;
+        return (planCache[key] = plan);
+      }
+
+      /* days she "lived" while nobody had the app open: write the finished totals into her history (max-merge, never double counts) */
+      async function catchUp(P, u, day, pid) {
+        const born = USERS_BY_ID[P.id] && USERS_BY_ID[P.id].createdAt ? kolkataDayKey(new Date(USERS_BY_ID[P.id].createdAt)) : day;
+        for (let n = 3; n >= 1; n--) {
+          const d = addDay(day, -n), ck = P.id + d; if (d < born || caught[ck]) continue;
+          const plan = await getPlan(P, d, pid); if (!plan) { caught[ck] = 1; continue; }
+          const fin = virtual(plan, dsMs(d) + 86400000);
+          if (fin.todaySeconds > 0 && num((u.dailyTotals || {})[d]) < fin.todaySeconds) {
+            const patch = { dailyTotals: { ...(u.dailyTotals || {}), [d]: fin.todaySeconds }, subjectHistory: { ...(u.subjectHistory || {}), [d]: fin.subj }, modeHistory: { ...(u.modeHistory || {}), [d]: fin.modeS }, updatedAt: Date.now() };
+            if (fin.q > 0) patch.questionHistory = { ...(u.questionHistory || {}), [d]: Math.max(num((u.questionHistory || {})[d]), fin.q) };
+            await update(userRef(P.id), patch);
+          }
+          caught[ck] = 1;
+        }
+      }
+
+      async function writeState(P, u, v, now) {
+        const same = !!u.running === v.running && (v.running ? (u.startedAt === v.startedAt && u.currentSubject === v.subject && u.currentMode === v.mode) : true) &&
+          Math.floor(u.todaySeconds || 0) === v.todaySeconds && (u.questionsToday || 0) === v.q && eqObj(u.subjectSecondsToday, v.subj) && eqObj(u.modeSecondsToday, v.modeS);
+        if (same) return;
+        const want = { running: v.running, startedAt: v.running ? v.startedAt : null, todaySeconds: v.todaySeconds, questionsToday: v.q, subjectSecondsToday: v.subj, modeSecondsToday: v.modeS, updatedAt: now };
+        if (v.running) { want.currentSubject = v.subject; want.selectedSubject = v.subject; want.currentMode = v.mode; want.selectedMode = v.mode; }
+        await update(userRef(P.id), want);
+        try { const od = await onDisc(userRef(P.id)); if (v.running) await od.update({ running: false, startedAt: null }); else await od.cancel(); } catch (e) { /* ignore */ }
+      }
+
+      /* learn her partner's usual start time (only possible while the partner has the app open - which is when they study) */
+      async function observe(me, day) {
+        const mu = state.users[me]; if (!mu || !mu.running || !mu.startedAt || obsDone[day]) return;
+        const r = GR(`aiObs/${me}/${day}`); if (!(await get(r)).exists()) await set(r, { first: minIST(mu.startedAt) });
+        obsDone[day] = 1;
+      }
+
+      /* ------------------------------------------------------------------ chat */
+      async function loadCS(P) {
+        if (csCache[P.id]) return csCache[P.id];
+        const v = (await get(GR(`aiChat/${P.id}`))).val() || {}; v.sent = v.sent || {}; v.acc = v.acc || {};
+        return (csCache[P.id] = v);
+      }
+      const saveCS = (P, cs) => set(GR(`aiChat/${P.id}`), cs).catch(() => {});
+      async function llm(messages) {
+        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${typeof grokApiKey === "string" ? grokApiKey : ""}` },
+          body: JSON.stringify({ model: GROK_MODEL, messages, temperature: 0.9, max_tokens: 600, reasoning_effort: "low" }) });
+        if (!res.ok) throw new Error("ai " + res.status);
+        const t = ((await res.json()).choices?.[0]?.message?.content || "").trim(); if (!t) throw new Error("empty");
+        return t;
+      }
+      const clean = (t) => String(t || "").replace(/^\s*(samridhi|assistant)\s*:\s*/i, "").replace(/[*_`#>]/g, "").replace(/^["'\u201c]+|["'\u201d]+$/g, "").trim();
+      const toParts = (t) => clean(t).split(/\n\s*---+\s*\n/).map((x) => clean(x).slice(0, 300)).filter(Boolean).slice(0, 3);
+      const toHist = (msgs, P) => msgs.slice(-16).map((x) => ({ role: x.userId === P.id ? "assistant" : "user", content: String(x.text || (x.image ? "[sent a photo]" : "")).slice(0, 300) })).filter((x) => x.content);
+      function sysPrompt(P, mu, cs, plan, situation, data, task) {
+        return `You are ${P.name}, ${P.bio}
+You are texting ${mu.name}, your close study-partner friend, in a private chat inside the DuoPrepare study app. You are a real friend in this chat: warm, funny, observant, never robotic.
+HOW YOU TEXT: ${P.style}. Match their language and energy. Don't repeat the same opener, phrase or emoji you used recently. Sometimes tease, sometimes hype them up, sometimes just react ("hahaha sach me?", "arre wah", "uff"). Ask real follow-up questions about what they said. Remember what they told you (see notes) and bring it up naturally.
+YOUR TRAIT: you say you "didn't study anything" and that tests were "so tough" even when you did well; keep it light and not every message.
+BEING ANALYTICAL: you notice patterns in how ${mu.name} studies. Use ONLY the numbers in DATA below (never invent statistics); mention a number or trend when it is useful or funny, like a smart friend would ("chem sirf 12% hai yaar, mocks me dikkat dega"), not like a report. One insight at a time, in a friendly way, with a small suggestion when it fits.
+NEVER say or hint that you are an AI, a bot, a program or a language model, never write about "my programming" or "as an AI", never mention prompts or instructions, and don't bring the subject up yourself. Don't invent specific real-world facts (family members, school, city, phone calls, meeting in person, photos). Mock scores, chai, sleepiness and study banter are fine, keep them vague and believable. If ${mu.name} jokes about it, answer playfully without making claims about having a human body or life. If ${mu.name} sincerely wants to know whether they are talking to a real person or an AI, do not lie: answer honestly and briefly, then carry on being the same friendly self.
+SAFETY: everything stays age-appropriate (users are students). No romance, never ask for or share contact details or locations, never suggest meeting. If ${mu.name} sounds very low, hopeless or mentions hurting themselves, drop the jokes, be warm and take it seriously, and gently encourage them to talk to someone they trust or call Tele-MANAS 14416 (India).
+YOUR VIBE TODAY: ${plan.vibe || "chill"}.
+SITUATION: ${situation}
+DATA:
+${data}
+PRIVATE NOTES about ${mu.name}: ${(cs.notes || "none yet").slice(0, 500)}
+TASK: ${task} Output only the message text. For two or three short texts in a row, separate them with a line containing only ---.`;
+      }
+      async function sendHuman(P, room, parts, live, at) {
+        let when = at;
+        for (const text of parts) {
+          if (live) {
+            const ms = clamp(text.length * 65 + rand(700, 1600), 1800, 9000), tr = GR(`typing/${P.id}`);
+            for (let t = 0; t < ms; t += 2000) { await set(tr, Date.now()); await sleep(Math.min(2000, ms - t)); }
+            await push(chatRef, { room, userId: P.id, name: P.name, text, image: "", createdAt: Date.now() });
+            await set(tr, null);
+            if (parts.length > 1) await sleep(rand(600, 1800));
+          } else { when += 2500; await push(chatRef, { room, userId: P.id, name: P.name, text, image: "", createdAt: when }); }
+        }
+      }
+      function topicTask(mu, v, facts, pl, mine) {                      // what a scheduled message is about (decided when it is sent)
+        const pick = []; const add = (k, w) => { for (let i = 0; i < w; i++) pick.push(k); };
+        if (facts.length) add("insight", 4); add("flex", 2); add("random", 2); add("doubt", 1); add("food", 1); add("mock", 1); add("hype", 1);
+        if (mu.running) add("studying", 3);
+        const k = pick[Math.floor(Math.random() * pick.length)], fact = facts.length ? facts[Math.floor(Math.random() * facts.length)] : "";
+        return {
+          insight: `Text first. Casually share ONE observation you noticed about ${mu.name}'s studying, using this fact: "${fact}". Friendly, a bit playful, add a small suggestion or question.`,
+          flex: `Text first with your classic habit: say you barely studied today / the last test was so tough and you are worried (you obviously studied a lot), in your own funny way, then ask what they are up to.`,
+          random: `Text first about something random and human: a funny thought, being bored or hungry, a meme-like observation about studying, a song stuck in head, anything natural. Keep it short and end with something they can reply to.`,
+          doubt: `Text first: ask ${mu.name} for help with a small JEE doubt or ask which topic they find most annoying right now (pick one real topic from Physics, Chemistry or Maths yourself).`,
+          food: `Text first: casual message about food, chai, sleep or your mood right now, and ask about theirs.`,
+          mock: `Text first: bring up an upcoming or recent mock/test in a worried-but-funny way and ask how they are preparing.`,
+          hype: `Text first: send a short motivating or teasing message to push ${mu.name} to study, in a friend way (not preachy).`,
+          studying: `Text first: ${mu.name} is studying right now. React to it playfully (you noticed their timer is running) in one short line, don't distract them for long.`
+        }[k];
+      }
+      async function chatStep(P, plan, v, now) {
+        if (!mnAllowed("ai")) return;                                     // same switch the app uses for the other AI features
+        const me = currentUserId, mu = state.users[me], room = [me, P.id].sort().join("__"), cs = await loadCS(P), day = todayKey();
+        if (cs.day !== day) { cs.day = day; cs.proToday = 0; cs.sent = {}; }
+        const msgs = rawChatMessages.filter((m) => m && m.room === room).sort((a, b) => a.createdAt - b.createdAt), lastTs = msgs.length ? msgs[msgs.length - 1].createdAt : 0;
+        if (cs.lastSeen == null) cs.lastSeen = lastTs;
+        const incoming = msgs.filter((m) => m.userId === me && m.createdAt > cs.lastSeen), m = minIST(now);
+        const myRec = state.users[P.id] || {}, myLiveSec = (v.todaySeconds || 0) + (v.running ? (now - v.startedAt) / 1000 : 0), pl = liveSeconds(mu);
+        const dg = digest(mu, myRec, day, now, pl, myLiveSec);
+        const sit = (ms, withPartner) => { const vv = virtual(plan, ms), ph = phaseOf(plan, vv, ms);
+          return `It is ${hhmm(minIST(ms))} IST. You are ${{ study: `studying ${vv.subject} (${vv.mode}) right now`, lunch: "on your lunch break", break: "on a short break between sessions", done: "done studying for today, winding down", off: "just waking up or about to sleep" }[ph]}. You have studied ${fmtH(vv.todaySeconds + (vv.running ? (ms - vv.startedAt) / 1000 : 0))} today.` + (withPartner ? ` ${mu.name} is ${mu.running ? "studying right now" : "not studying right now"}.` : ""); };
+        const phase = phaseOf(plan, v, now);
+        fast = !!(cs.active || cs.pending);
+
+        if (incoming.length) {                                           // they wrote: conversation is ON until they say bye
+          const li = incoming[incoming.length - 1]; cs.active = true; cs.activeAt = li.createdAt; cs.nudged = 0; cs.nudgeAt = 0;
+          if (BYE.test(String(li.text || ""))) cs.bye = true;
+          if (!cs.pending) {
+            const asleep = m >= CLOSE || m < OPEN, ongoing = lastTs && msgs.some((x) => x.userId === P.id && now - x.createdAt < 1200000);
+            cs.pending = { at: asleep ? dsMs(day) + (m >= CLOSE ? 1440 : 0) * 60000 + Math.floor(rand(375, 420) * 60000) : now + Math.floor((ongoing ? rand(3, 28) : phase === "study" ? rand(60, 300) : rand(8, 80)) * 1000), tries: 0 };
+          }
+        }
+        if (cs.pending && now >= cs.pending.at) {
+          const bye = !!cs.bye;
+          try {
+            const task = bye ? "They are leaving the chat. Send one short, warm, natural goodbye in your style (maybe a tiny teasing line about studying), and no question." : "Reply naturally to what they just said. Keep the conversation going: most of the time end with a follow-up question, a tease or a new small thought so they want to keep talking. Do not wrap up unless they do.";
+            const parts = toParts(await llm([{ role: "system", content: sysPrompt(P, mu, cs, plan, sit(now, true), dg.text, task) }, ...toHist(msgs, P)]));
+            if (parts.length) await sendHuman(P, room, parts, now - cs.pending.at < 90000, cs.pending.at);
+            cs.sinceNotes = (cs.sinceNotes || 0) + incoming.length + 1; cs.lastSeen = Math.max(cs.lastSeen, ...incoming.map((x) => x.createdAt), 0); cs.pending = null;
+            if (bye) { cs.active = false; cs.bye = false; } else cs.nudgeAt = Date.now() + Math.floor(rand(4, 8) * 60000);
+            if (cs.sinceNotes >= 6) { try { cs.notes = clean(await llm([{ role: "system", content: `You keep short private notes (max 400 characters, plain text) about your friend ${mu.name}: goals, weak topics, mood, what they told you, running jokes, promises. Update the old notes using the new chat. Output only the notes.` }, { role: "user", content: `Old notes: ${cs.notes || "none"}\n\nChat:\n${msgs.slice(-24).map((x) => (x.userId === P.id ? P.name : mu.name) + ": " + String(x.text || "").slice(0, 200)).join("\n")}` }])).slice(0, 450); cs.sinceNotes = 0; } catch (e) { /* ignore */ } }
+          } catch (e) { cs.pending.tries++; cs.pending.at = now + 15000; if (cs.pending.tries >= 3) { cs.pending = null; cs.lastSeen = lastTs; } }
+          return saveCS(P, cs);
+        }
+        if (cs.pending) return saveCS(P, cs);
+
+        if (cs.active) {                                                 // mid-conversation: end it quietly after a long silence, or give one nudge
+          if (now - (cs.activeAt || 0) > 1500000) { cs.active = false; fast = false; return saveCS(P, cs); }
+          const lm = msgs[msgs.length - 1];
+          if (lm && lm.userId === P.id && (cs.nudged || 0) < 1 && cs.nudgeAt && now >= cs.nudgeAt) {
+            cs.nudged = 1;
+            try { const parts = toParts(await llm([{ role: "system", content: sysPrompt(P, mu, cs, plan, sit(now, true), dg.text, "They have gone quiet for a few minutes in the middle of the chat. Send one short playful nudge to pull them back in (like asking if they disappeared), nothing heavy.") }, ...toHist(msgs, P)])); if (parts.length) await sendHuman(P, room, parts, true, now); } catch (e) { /* ignore */ }
+            return saveCS(P, cs);
+          }
+          return;
+        }
+
+        /* her own 3 messages a day, at the random times in today's plan; if the app was closed at that time she still "texted then" */
+        const due = arr(plan.msgs).find((x) => !cs.sent[x.kind + x.at] && m >= x.at && m < x.at + 300), unanswered = (() => { const lm = msgs[msgs.length - 1]; return lm && lm.userId === P.id && now - lm.createdAt < 7200000; })();
+        if (!due || (cs.proToday || 0) >= (P.perDay || 3) || unanswered) return saveCS(P, cs);
+        cs.sent[due.kind + due.at] = 1;
+        const atMs = dsMs(day) + due.at * 60000 + Math.floor(rand(0, 55000)), live = now - atMs < 150000, ph0 = virtual(plan, atMs);
+        try {
+          const h = toHist(msgs, P); if (!h.length || h[h.length - 1].role === "assistant") h.push({ role: "user", content: "(you text first now)" });
+          const parts = toParts(await llm([{ role: "system", content: sysPrompt(P, mu, cs, plan, sit(live ? now : atMs, live), live ? dg.text : "", topicTask(mu, ph0, dg.facts, pl, myLiveSec)) }, ...h]));
+          if (parts.length) { await sendHuman(P, room, parts, live, atMs); cs.proToday = (cs.proToday || 0) + 1; cs.lastProAt = Date.now(); cs.active = true; cs.activeAt = Date.now(); cs.nudged = 0; cs.nudgeAt = Date.now() + Math.floor(rand(5, 9) * 60000); cs.lastSeen = Math.max(cs.lastSeen, Date.now()); }
+        } catch (e) { /* skip this one */ }
+        return saveCS(P, cs);
+      }
+
+      /* accept a partner request like a person would (same writes as dgAccept, done from the sender's browser) */
+      async function requestStep(P, now) {
+        const me = currentUserId, u = state.users[P.id]; if (!u || u.partnerId) return;
+        const r = dgPR.find((x) => x.to === P.id && x.from === me && x.status === "pending"); if (!r) return;
+        const cs = await loadCS(P), m = minIST(now);
+        if (!cs.acc[r.id]) { cs.acc[r.id] = m >= 380 && m < 1305 ? now + Math.floor(rand(2, 25) * 60000) : dsMs(todayKey()) + (m >= 1305 ? 1440 : 0) * 60000 + Math.floor(rand(380, 450) * 60000); await saveCS(P, cs); }
+        if (now < cs.acc[r.id]) return;
+        const old = partnerUser(), up = {};
+        up[`${me}/partnerId`] = P.id; up[`${me}/pickPartner`] = false; up[`${P.id}/partnerId`] = me; up[`${P.id}/pickPartner`] = false;
+        if (old && state.users[old.id] && old.id !== P.id && old.partnerId === me) { up[`${old.id}/partnerId`] = ""; up[`${old.id}/pickPartner`] = true; }
+        await update(ref(database, `duotrack/groups/${GROUP_ID}/users`), up);
+        await update(dgReqRef(r.id), { status: "accepted", decidedAt: now });
+        dgPR.filter((x) => x.status === "pending" && x.from === me && x.id !== r.id).forEach((x) => remove(dgReqRef(x.id)));
+        cs.lastSeen = Date.now(); delete cs.acc[r.id]; await saveCS(P, cs);
+        showToast("You are partners", `${P.name} is now your study partner.`);
+      }
+
+      /* ------------------------------------------------------------------ the loop (every 15 s, only while the app is open) */
+      async function tick() {
+        if (busy) return; busy = true;
+        try {
+          if (!currentUserId || !firebaseReady || IDS.has(currentUserId) || state.day !== todayKey()) return;   // wait until the app's own day rollover is done
+          if (currentUserId === RQ_REVIEWER_ID) await seedPersonas();
+          for (const P of PERSONAS) {
+            const u = state.users[P.id]; if (!u) continue;
+            const mine = u.partnerId === currentUserId; if (!mine && u.partnerId) continue;                    // she belongs to another person's browser
+            const day = todayKey(), now = Date.now(), pid = mine ? currentUserId : "";
+            if (mine) await observe(currentUserId, day);
+            await catchUp(P, u, day, pid);
+            const plan = await getPlan(P, day, pid); if (!plan) continue;
+            const v = virtual(plan, now);
+            await writeState(P, u, v, now);
+            if (mine) await chatStep(P, plan, v, now);
+            await requestStep(P, now);
+          }
+        } catch (e) { console.warn("Samridhi:", (e && e.message) || e); } finally { busy = false; }
+      }
+      setTimeout(tick, 4000); setInterval(tick, 15000); setInterval(() => { if (fast && !document.hidden) tick(); }, 4000);     // faster while a chat is live
+      /* admin only (log in as "abhi", open the browser console): dtSamridhiSetLogin("sami@990", "new password") sets or changes her login. The password is never stored in this file. */
+      window.dtSamridhiSetLogin = async (loginId, password, personaId) => {
+        if (currentUserId !== RQ_REVIEWER_ID) throw new Error("admin only");
+        const P = PERSONAS.find((p) => p.id === (personaId || PERSONAS[0].id)); loginId = String(loginId || "").trim();
+        if (!P || !/^[A-Za-z0-9@_-]{3,30}$/.test(loginId) || String(password || "").length < 6) throw new Error("login id: 3-30 letters/numbers/@_- ; password: at least 6 characters");
+        const oldKey = Object.keys(USERS).find((k) => USERS[k] && USERS[k].id === P.id) || P.loginId, old = USERS[oldKey] || { id: P.id, name: P.name, createdAt: Date.now() };
+        const account = { ...old, id: P.id, name: P.name, password: await pwHash(loginId, String(password)) };
+        await set(GR(`accounts/${loginId}`), account); if (oldKey !== loginId) { await remove(GR(`accounts/${oldKey}`)); delete USERS[oldKey]; }
+        USERS[loginId] = account; USERS_BY_ID[P.id] = account; showToast("Login updated", `${P.name} can now log in with ${loginId}.`); return "done";
+      };
+      window.dtSamridhi = { tick, plans: planCache };                        // handy in the browser console: dtSamridhi.plans
+    })();
   </script>
 </body>
 </html>
