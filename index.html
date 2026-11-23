@@ -24227,6 +24227,11 @@ TASK: ${task} Output only the message text. For two or three short texts in a ro
           return `It is ${hhmm(minIST(ms))} IST. You are ${{ study: `studying ${vv.subject} (${vv.mode}) right now`, lunch: "on your lunch break", break: "on a short break between sessions", done: "done studying for today, winding down", off: "just waking up or about to sleep" }[ph]}. You have studied ${fmtH(vv.todaySeconds + (vv.running ? (ms - vv.startedAt) / 1000 : 0))} today.` + (withPartner ? ` ${mu.name} is ${mu.running ? "studying right now" : "not studying right now"}.` : ""); };
         const phase = phaseOf(plan, v, now);
         fast = !!(cs.active || cs.pending);
+        if (cs.hello && !cs.pending && Date.now() >= (cs.helloAt || 0)) {                  // first message after becoming partners
+          cs.hello = 0;
+          try { const parts = toParts(await llm([{ role: "system", content: sysPrompt(P, mu, cs, plan, sit(now, true), dg.text, "You two have just become study partners in the app. Send a warm, excited, short first hello in your style and ask what they are studying today. Do not mention any rules or the app's features.") }, { role: "user", content: "(you text first now)" }])); if (parts.length) { await sendHuman(P, room, parts, true, now); cs.active = true; cs.activeAt = Date.now(); cs.nudged = 0; cs.nudgeAt = 0; cs.lastSeen = Math.max(cs.lastSeen, Date.now()); } } catch (e) { /* ignore */ }
+          return saveCS(P, cs);
+        }
 
         if (incoming.length) {                                           // they wrote: conversation is ON until they say bye
           const li = incoming[incoming.length - 1]; cs.active = true; cs.activeAt = li.createdAt; cs.nudged = 0; cs.nudgeAt = 0;
@@ -24278,8 +24283,9 @@ TASK: ${task} Output only the message text. For two or three short texts in a ro
       async function requestStep(P, now) {
         const me = currentUserId, u = state.users[P.id]; if (!u || u.partnerId) return;
         const r = dgPR.find((x) => x.to === P.id && x.from === me && x.status === "pending"); if (!r) return;
-        const cs = await loadCS(P), m = minIST(now);
-        if (!cs.acc[r.id]) { cs.acc[r.id] = m >= 380 && m < 1305 ? now + Math.floor(rand(2, 25) * 60000) : dsMs(todayKey()) + (m >= 1305 ? 1440 : 0) * 60000 + Math.floor(rand(380, 450) * 60000); await saveCS(P, cs); }
+        fast = true;                                                                  // they are waiting right now: check every few seconds
+        const cs = await loadCS(P);
+        if (!cs.acc[r.id]) { cs.acc[r.id] = now + Math.floor(rand(6, 22) * 1000); await saveCS(P, cs); }       // a few seconds, like someone seeing the request
         if (now < cs.acc[r.id]) return;
         const old = partnerUser(), up = {};
         up[`${me}/partnerId`] = P.id; up[`${me}/pickPartner`] = false; up[`${P.id}/partnerId`] = me; up[`${P.id}/pickPartner`] = false;
@@ -24287,13 +24293,13 @@ TASK: ${task} Output only the message text. For two or three short texts in a ro
         await update(ref(database, `duotrack/groups/${GROUP_ID}/users`), up);
         await update(dgReqRef(r.id), { status: "accepted", decidedAt: now });
         dgPR.filter((x) => x.status === "pending" && x.from === me && x.id !== r.id).forEach((x) => remove(dgReqRef(x.id)));
-        cs.lastSeen = Date.now(); delete cs.acc[r.id]; await saveCS(P, cs);
+        cs.lastSeen = Date.now(); delete cs.acc[r.id]; cs.hello = 1; cs.helloAt = Date.now() + Math.floor(rand(10, 30) * 1000); await saveCS(P, cs);
         showToast("You are partners", `${P.name} is now your study partner.`);
       }
 
       /* ------------------------------------------------------------------ the loop (every 15 s, only while the app is open) */
       async function tick() {
-        if (busy) return; busy = true; diag.lastTry = Date.now();
+        if (busy) return; busy = true; diag.lastTry = Date.now(); diag.err = "";
         try {
           if (!currentUserId || !firebaseReady || IDS.has(currentUserId)) { diag.step = "waiting: she is driven from a normal student's browser (not the admin portal, and not logged in as herself)"; return; }
           if (state.day !== todayKey()) { diag.step = "waiting for the app's own day rollover"; return; }
@@ -24302,16 +24308,18 @@ TASK: ${task} Output only the message text. For two or three short texts in a ro
             if (!u) { diag.step = `${P.name}'s record is not loaded yet: reload the app once after creating her login`; continue; }
             const mine = u.partnerId === currentUserId; if (!mine && u.partnerId) { diag.step = `${P.name} belongs to another student's browser`; continue; }
             const day = todayKey(), now = Date.now(), pid = mine ? currentUserId : "";
-            diag.step = "observing partner"; if (mine) await observe(currentUserId, day);
-            diag.step = "catching up past days"; await catchUp(P, u, day, pid);
-            diag.step = "making today's plan"; const plan = await getPlan(P, day, pid); if (!plan) { diag.step = "no plan"; continue; }
+            const stage = async (name, fn) => { diag.step = name; try { return await fn(); } catch (e) { diag.err = name + " -> " + ((e && e.message) || e); console.warn("Samridhi:", diag.err); if (!diag.toasted) { diag.toasted = true; showToast("Samridhi problem", String(diag.err).slice(0, 150)); } } };
+            if (mine) await stage("observing partner", () => observe(currentUserId, day));
+            await stage("catching up past days", () => catchUp(P, u, day, pid));
+            const plan = await stage("making today's plan", () => getPlan(P, day, pid));
+            await stage("partner requests", () => requestStep(P, now));
+            if (!plan) continue;
             const v = virtual(plan, now);
-            diag.step = "writing her timer"; await writeState(P, u, v, now);
-            diag.step = "chat"; if (mine) await chatStep(P, plan, v, now);
-            diag.step = "partner requests"; await requestStep(P, now);
-            diag.step = `ok: ${v.running ? `studying ${v.subject} (${v.mode})` : "on a break / off"}`;
+            await stage("writing her timer", () => writeState(P, u, v, now));
+            if (mine) await stage("chat", () => chatStep(P, plan, v, now));
+            if (!diag.err) diag.step = `ok: ${v.running ? `studying ${v.subject} (${v.mode})` : "on a break / off"}`;
           }
-          diag.lastTick = Date.now(); diag.err = "";
+          diag.lastTick = Date.now();
         } catch (e) {
           diag.err = (diag.step || "") + " -> " + ((e && e.message) || e); console.warn("Samridhi:", diag.err);
           if (!diag.toasted) { diag.toasted = true; showToast("Samridhi problem", String(diag.err).slice(0, 150)); }
