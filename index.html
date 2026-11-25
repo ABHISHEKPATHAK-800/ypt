@@ -24728,6 +24728,205 @@ TASK: ${task} Output only the message text (plus the optional @@ and ## lines). 
       setTimeout(tick, 4000); setInterval(tick, 15000); setInterval(() => { if (fast && !document.hidden) tick(); }, 4000);     // faster while a chat is live
       window.dtSamridhi = { tick, plans: planCache, diag, cs: csCache, mind: () => { const c = csCache[PERSONAS[0].id] || {}, b = c.brain; return b ? { energy: Math.round(b.energy), focus: Math.round(b.focus), mood: moodLabel(b.mood, b), close: b.rel && Math.round(b.rel.close), memories: arr(b.mem).length, diary: arr(b.diary).length, events: arr(c.ev).map((e) => e.text) } : null; } };               // browser console: dtSamridhi.diag, dtSamridhi.cs
     })();
+
+    /* ====================================================================================================================
+       CHAT FEATURES (added block, touches none of the protected parts)
+       - Search in the chat (magnifier button), pinned messages (shared in the room), saved/starred messages (private, this device)
+       - Doubt cards: "/doubt Physics: question" or a message starting with a question-mark emoji gets "Mark solved"
+       - Slash commands in the message box: /stats (shares your study card), /doubt, /todo, /help
+       - Extra actions in the message "⋮" menu: copy, pin, save, make it a to-do, explain with Grok
+       - Double-tap a message for a heart, and a jump-to-latest button
+       ==================================================================================================================== */
+    (() => {
+      const GRC = (p) => ref(database, `duotrack/groups/${GROUP_ID}/${p}`);
+      const lsGetC = (k) => { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } };
+      const lsSetC = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* ignore */ } };
+      const $ = (id) => document.getElementById(id);
+      const escC = (x) => escapeHTML(String(x == null ? "" : x));
+
+      /* CPURE:BEGIN (no app variables below - unit-tested outside the browser) */
+      const numC = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
+      const arrC = (x) => (Array.isArray(x) ? x : x && typeof x === "object" ? Object.values(x) : []);
+      const addDayC = (day, n) => new Date(Date.parse(day + "T00:00:00+05:30") + n * 86400000 + 330 * 60000).toISOString().slice(0, 10);
+      const hm = (sec) => `${Math.floor(sec / 3600)}h ${Math.floor((sec % 3600) / 60)}m`;
+      function parseCommand(v) { const m = /^\/(stats|doubt|todo|help)\b\s*([\s\S]*)$/i.exec(String(v || "").trim()); return m ? { cmd: m[1].toLowerCase(), arg: m[2].trim() } : null; }
+      function doubtText(arg) {                                           // "/doubt Physics: why ..." -> "❓ [Physics] why ..."
+        const m = /^(physics|chemistry|maths?|math)\s*[:\-]\s*([\s\S]+)$/i.exec(arg), nm = { physics: "Physics", chemistry: "Chemistry", math: "Maths", maths: "Maths" };
+        return (m ? `❓ [${nm[m[1].toLowerCase()]}] ${m[2].trim()}` : `❓ ${arg}`).slice(0, 320);
+      }
+      function streakOf(dailyTotals, today, liveToday) {                  // consecutive days with at least 1 hour, counting today once it passes 1 hour
+        const dt = dailyTotals || {}; let n = 0;
+        for (let i = liveToday >= 3600 ? 0 : 1; i <= 90; i++) { const ok = i === 0 ? liveToday >= 3600 : numC(dt[addDayC(today, -i)]) >= 3600; if (ok) n++; else break; }
+        return n;
+      }
+      function statsText(u, today, liveToday, nowMs) {
+        const top = Object.entries(u.subjectSecondsToday || {}).sort((a, b) => numC(b[1]) - numC(a[1]))[0], streak = streakOf(u.dailyTotals, today, liveToday);
+        let left = ""; if (u.dDayDate && /^\d{4}-\d{2}-\d{2}$/.test(u.dDayDate)) { const d = Math.ceil((Date.parse(u.dDayDate + "T00:00:00+05:30") - nowMs) / 86400000); if (d > 0) left = ` · ${d}d to ${u.dDayName || "the exam"}`; }
+        return `📊 ${u.name}: ${hm(liveToday)} today · ${numC(u.questionsToday)} Qs` + (streak ? ` · ${streak}-day streak` : "") + (top && numC(top[1]) >= 600 ? ` · most on ${top[0]}` : "") + left;
+      }
+      const findHits = (messages, q) => { const s = String(q || "").trim().toLowerCase(); return s ? messages.filter((m) => String(m.text || "").toLowerCase().includes(s)).map((m) => m.id) : []; };
+      function togglePinMap(pins, m, by, now) {                           // returns the new pin map; at most 3 pins, the oldest drops off
+        const next = { ...pins }; if (next[m.id]) { delete next[m.id]; return next; }
+        next[m.id] = { text: String(m.text || (m.image ? "Photo" : "")).slice(0, 120), name: m.name || "", by, at: now };
+        const ids = Object.keys(next).sort((a, b) => next[a].at - next[b].at); while (ids.length > 3) delete next[ids.shift()];
+        return next;
+      }
+      function toggleSavedList(list, m, room, now) { const i = list.findIndex((x) => x.id === m.id); if (i >= 0) { const c = list.slice(); c.splice(i, 1); return c; } return [{ id: m.id, text: String(m.text || (m.image ? "Photo" : "")).slice(0, 320), name: m.name || "", room, at: m.createdAt || now, saved: now }, ...list].slice(0, 100); }
+      const toggleSolved = (text) => (String(text).startsWith("✅") ? "❓" : "✅") + String(text).slice(String(text).startsWith("✅") || String(text).startsWith("❓") ? 1 : 0);
+      /* CPURE:END */
+
+      const msgsC = () => (typeof chatMessagesState !== "undefined" && Array.isArray(chatMessagesState) ? chatMessagesState : []);
+      const byId = (id) => msgsC().find((m) => m.id === id);
+      let pins = {}, pinRoom = null, pinUnsub = null, saved = [], searchQ = "", hits = [], hitI = -1, lastMenuId = "";
+      const sharedRoom = () => (typeof dgRoom !== "undefined" ? dgRoom !== "global" : true);                  // pins are shared only in the partner chat
+      const roomKey = () => (typeof dgRoomNow === "function" ? dgRoomNow() : "private");
+
+      async function copyText(t) { try { await navigator.clipboard.writeText(t); } catch (e) { const a = document.createElement("textarea"); a.value = t; document.body.appendChild(a); a.select(); try { document.execCommand("copy"); } catch (x) { /* ignore */ } a.remove(); } showToast("Copied", "Message text copied."); }
+      async function addTodoC(text) {
+        const t = String(text || "").trim().replace(/\s+/g, " ").slice(0, 80), u = state.users[currentUserId]; if (!t || !u) return;
+        const todos = arrC(u.todos); if (todos.length >= 40) { showToast("To-do list is full", "Finish or delete a few tasks first."); return; }
+        await writeUserPatch(currentUserId, { todos: [...todos, { id: "t" + Date.now().toString(36) + Math.floor(Math.random() * 1e4), text: t, done: false, tag: "none", goalMin: null, spentSec: 0, sessionSec: 0, lastActiveAt: null, lastSubject: "", lastMode: "" }] });
+        showToast("Added to your to-do list", t);
+      }
+      function jumpTo(id) {
+        const box = $("chatMessages"), el = box && box.querySelector(`[data-message-id="${(window.CSS && CSS.escape) ? CSS.escape(id) : id}"]`); if (!el) return false;
+        el.scrollIntoView({ block: "center", behavior: "smooth" }); el.classList.add("sam-flash"); setTimeout(() => el.classList.remove("sam-flash"), 1400); return true;
+      }
+
+      /* ---- pins (shared with the partner; if the Firebase rules refuse the folder, they stay on this device) ---- */
+      function renderPins() {
+        const bar = $("samPins"); if (!bar) return; const list = Object.entries(pins).map(([id, p]) => ({ id, ...p })).sort((a, b) => b.at - a.at);
+        bar.classList.toggle("hidden", !list.length); if (!list.length) { bar.classList.remove("open"); bar.innerHTML = ""; return; }
+        bar.innerHTML = `<div class="sam-pin-row"><div class="sam-pin-main" data-jump="${escC(list[0].id)}">📌 <b>${escC(list[0].name)}</b>: ${escC(list[0].text)}</div>${list.length > 1 ? `<button type="button" class="small-btn" data-pintoggle="1">+${list.length - 1}</button>` : ""}</div>` +
+          `<div class="sam-pin-list">${list.map((p) => `<div class="sam-pin-item"><span data-jump="${escC(p.id)}">📌 <b>${escC(p.name)}</b>: ${escC(p.text)}</span><button type="button" class="small-btn" data-unpin="${escC(p.id)}" title="Unpin">×</button></div>`).join("")}</div>`;
+      }
+      function pinSubscribe() {
+        const room = roomKey(); if (room === pinRoom) return;
+        if (pinUnsub) { try { pinUnsub(); } catch (e) { /* ignore */ } pinUnsub = null; }
+        pinRoom = room; pins = lsGetC("samPins|" + room) || {}; renderPins();
+        if (!sharedRoom()) return;
+        try { pinUnsub = onValue(GRC("chatPins/" + room), (s) => { pins = s.val() || {}; lsSetC("samPins|" + room, pins); renderPins(); augment(); }, () => { /* rules refuse: local pins */ }); } catch (e) { /* local pins */ }
+      }
+      async function togglePin(m) {
+        const room = pinRoom || roomKey(); pins = togglePinMap(pins, m, currentUserId, Date.now()); lsSetC("samPins|" + room, pins); renderPins(); augment();
+        if (sharedRoom()) { try { await set(GRC("chatPins/" + room), Object.keys(pins).length ? pins : null); } catch (e) { showToast("Pinned on this device only", "Allow chatPins in the Firebase rules to share pins."); } }
+      }
+
+      /* ---- saved messages (private to this device) ---- */
+      const savedKey = () => "samSaved|" + currentUserId;
+      const isSaved = (id) => saved.some((x) => x.id === id);
+      function toggleSave(m) { saved = toggleSavedList(saved, m, roomKey(), Date.now()); lsSetC(savedKey(), saved); augment(); renderSaved(); showToast(isSaved(m.id) ? "Saved" : "Removed from saved", String(m.text || "Photo").slice(0, 60)); }
+      function renderSaved() {
+        const p = $("samSaved"); if (!p || p.classList.contains("hidden")) return;
+        p.innerHTML = `<div class="sam-saved-head"><b>⭐ Saved messages</b><button type="button" class="small-btn" data-close="1">×</button></div>` +
+          (saved.length ? saved.map((x, i) => `<div class="sam-item"><div class="sam-item-top"><b>${escC(x.name)}</b><small>${new Date(x.at).toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</small></div><p>${escC(x.text)}</p><div class="sam-item-actions"><button type="button" data-i="${i}" data-a="copy">Copy</button><button type="button" data-i="${i}" data-a="todo">To-do</button><button type="button" data-i="${i}" data-a="open">Show in chat</button><button type="button" data-i="${i}" data-a="del">Remove</button></div></div>`).join("") : `<p class="sam-empty">Nothing saved yet. Open a message's ⋮ menu and choose "Save message" to keep notes, formulas and tips here.</p>`);
+      }
+
+      /* ---- search ---- */
+      function runSearch(q) {
+        searchQ = String(q || "").trim(); hits = findHits(msgsC(), searchQ); hitI = hits.length ? hits.length - 1 : -1;
+        const c = $("samSearchCount"); if (c) c.textContent = hits.length ? `${hitI + 1}/${hits.length}` : (searchQ ? "0" : "");
+        augment(); if (hitI >= 0) jumpTo(hits[hitI]);
+      }
+      function stepSearch(d) { if (!hits.length) return; hitI = (hitI + d + hits.length) % hits.length; $("samSearchCount").textContent = `${hitI + 1}/${hits.length}`; jumpTo(hits[hitI]); }
+
+      /* ---- decorate the rendered messages (flags, doubt cards, search hits); the app re-renders the list from scratch, so this runs after every render ---- */
+      function augment() {
+        const box = $("chatMessages"); if (!box) return;
+        box.querySelectorAll(".chat-message[data-message-id]").forEach((el) => {
+          const id = el.dataset.messageId, m = byId(id); if (!m) return;
+          el.classList.toggle("sam-hit", !!searchQ && hits.includes(id));
+          el.querySelectorAll(":scope > .sam-flags, :scope > .sam-doubt").forEach((n) => n.remove());
+          const flags = [pins[id] ? "📌" : "", isSaved(id) ? "⭐" : ""].filter(Boolean).join(" ");
+          if (flags) { const s = document.createElement("span"); s.className = "sam-flags"; s.textContent = flags; el.appendChild(s); }
+          const t = String(m.text || "");
+          if (t.startsWith("❓") || t.startsWith("✅")) {
+            const solved = t.startsWith("✅"), w = document.createElement("div"); w.className = "sam-doubt " + (solved ? "solved" : "open"); w.textContent = solved ? "Solved ✓" : "Open doubt";
+            if (m.userId === currentUserId) { const b = document.createElement("button"); b.type = "button"; b.className = "sam-solve"; b.dataset.id = id; b.textContent = solved ? "Reopen" : "Mark solved ✓"; w.appendChild(b); }
+            el.appendChild(w); if (solved) el.querySelectorAll(".edited-tag").forEach((n) => n.remove());
+          }
+        });
+        const latest = $("samLatest"); if (latest) latest.classList.toggle("hidden", box.scrollHeight - box.scrollTop - box.clientHeight < 180);
+      }
+
+      /* ---- extra actions in the existing "⋮" / right-click message menu ---- */
+      function augmentMenu(menu) {
+        if (menu.dataset.sam) return; menu.dataset.sam = "1"; const m = lastMenuId && byId(lastMenuId); if (!m) return;
+        const mk = (label, fn) => { const b = document.createElement("button"); b.type = "button"; b.textContent = label; b.addEventListener("click", () => fn(m)); return b; }, items = [];
+        if (m.text) items.push(mk("Copy text", (x) => copyText(x.text)));
+        items.push(mk(pins[m.id] ? "Unpin message" : "Pin message", togglePin), mk(isSaved(m.id) ? "Remove from saved" : "Save message", toggleSave));
+        if (m.text) items.push(mk("Make it a to-do", (x) => addTodoC(x.text)), mk("Explain with Grok", (x) => { const i = $("chatInput"); if (i) { i.value = ("@grok explain: " + x.text).slice(0, 320); i.focus(); } }));
+        let prev = menu.querySelector('[data-action="reply"]'); if (prev) items.forEach((b) => { prev.after(b); prev = b; }); else items.forEach((b) => menu.appendChild(b));
+        const r = menu.getBoundingClientRect(); if (r.bottom > window.innerHeight - 8) menu.style.top = Math.max(8, window.innerHeight - r.height - 12) + "px";
+      }
+
+      function init() {
+        const panel = $("chatPanel"), box = $("chatMessages"), form = $("chatForm"), input = $("chatInput"), rooms = $("dgRooms"); if (!panel || !box || !form || !input) return;
+        const st = document.createElement("style"); st.id = "samChatCss";
+        st.textContent = `#samSearch,#samPins{padding:6px 10px;border-bottom:1px solid var(--line);background:var(--panel);font-size:13px;color:var(--ink)} #samSearch{display:flex;gap:6px;align-items:center} #samSearch input{flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--paper);color:var(--ink);font:inherit} #samSearchCount{min-width:34px;text-align:center;color:var(--muted)}
+          .sam-pin-row{display:flex;gap:6px;align-items:center} .sam-pin-main,.sam-pin-item span{flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer} .sam-pin-list{display:none;margin-top:6px} #samPins.open .sam-pin-list{display:block} .sam-pin-item{display:flex;gap:6px;align-items:center;padding:3px 0}
+          .sam-hit{outline:2px solid var(--yellow);outline-offset:2px} .sam-flash{animation:samFlash 1.2s ease} @keyframes samFlash{0%{box-shadow:0 0 0 0 rgba(244,197,66,.9)}100%{box-shadow:0 0 0 14px rgba(244,197,66,0)}}
+          .sam-flags{position:absolute;bottom:3px;left:8px;font-size:11px;opacity:.9} .sam-doubt{margin-top:6px;display:flex;gap:8px;align-items:center;font-size:12px;font-weight:600} .sam-doubt.open{color:var(--blue)} .sam-doubt.solved{color:var(--green)}
+          .sam-solve{border:1px solid currentColor;background:transparent;color:inherit;border-radius:999px;padding:2px 9px;font-size:12px;cursor:pointer}
+          #samSaved{position:absolute;left:0;right:0;top:48px;bottom:0;z-index:30;background:var(--panel);color:var(--ink);overflow:auto;padding:10px} .sam-saved-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px} .sam-item{border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin-bottom:8px} .sam-item p{margin:4px 0 6px;white-space:pre-wrap;word-break:break-word} .sam-item-top{display:flex;justify-content:space-between;gap:8px} .sam-item small,.sam-empty{color:var(--muted)} .sam-item-actions{display:flex;flex-wrap:wrap;gap:6px} .sam-item-actions button{border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:3px 10px;font-size:12px;cursor:pointer}
+          .sam-latest{position:absolute;right:14px;bottom:78px;z-index:6;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--ink);box-shadow:var(--shadow-soft);cursor:pointer;font-size:16px}`;
+        document.head.appendChild(st);
+        if (getComputedStyle(panel).position === "static") panel.style.position = "relative";
+        const actions = panel.querySelector(".chat-head-actions"), sizeBtn = $("chatSizeBtn");
+        const mkBtn = (id, label, title) => { const b = document.createElement("button"); b.id = id; b.type = "button"; b.className = "small-btn"; b.title = title; b.setAttribute("aria-label", title); b.textContent = label; return b; };
+        const sBtn = mkBtn("samSearchBtn", "🔍", "Search this chat"), vBtn = mkBtn("samSavedBtn", "⭐", "Saved messages");
+        if (actions) { if (sizeBtn) { actions.insertBefore(sBtn, sizeBtn); actions.insertBefore(vBtn, sizeBtn); } else { actions.appendChild(sBtn); actions.appendChild(vBtn); } }
+        const bar = document.createElement("div"); bar.id = "samSearch"; bar.className = "hidden"; bar.innerHTML = `<input id="samSearchInput" type="search" placeholder="Search messages" autocomplete="off"><span id="samSearchCount"></span><button type="button" class="small-btn" data-s="-1" title="Previous">▲</button><button type="button" class="small-btn" data-s="1" title="Next">▼</button><button type="button" class="small-btn" data-s="x" title="Close">×</button>`;
+        const pinBar = document.createElement("div"); pinBar.id = "samPins"; pinBar.className = "hidden";
+        const anchor = rooms || box.previousElementSibling; if (anchor && anchor.after) { anchor.after(bar); bar.after(pinBar); } else { box.before(bar); box.before(pinBar); }
+        const savedPanel = document.createElement("div"); savedPanel.id = "samSaved"; savedPanel.className = "hidden"; panel.appendChild(savedPanel);
+        const latest = document.createElement("button"); latest.id = "samLatest"; latest.type = "button"; latest.className = "sam-latest hidden"; latest.title = "Jump to latest"; latest.textContent = "↓"; panel.appendChild(latest);
+        saved = lsGetC(savedKey()) || [];
+
+        sBtn.addEventListener("click", () => { bar.classList.toggle("hidden"); if (!bar.classList.contains("hidden")) $("samSearchInput").focus(); else { $("samSearchInput").value = ""; runSearch(""); } });
+        bar.addEventListener("input", (e) => { if (e.target.id === "samSearchInput") runSearch(e.target.value); });
+        bar.addEventListener("keydown", (e) => { if (e.target.id === "samSearchInput" && e.key === "Enter") { e.preventDefault(); stepSearch(e.shiftKey ? -1 : 1); } });
+        bar.addEventListener("click", (e) => { const b = e.target.closest("[data-s]"); if (!b) return; if (b.dataset.s === "x") { $("samSearchInput").value = ""; runSearch(""); bar.classList.add("hidden"); } else stepSearch(Number(b.dataset.s)); });
+        pinBar.addEventListener("click", (e) => {
+          const un = e.target.closest("[data-unpin]"); if (un) { const m = byId(un.dataset.unpin) || { id: un.dataset.unpin, text: "" }; togglePin(m); return; }
+          if (e.target.closest("[data-pintoggle]")) { pinBar.classList.toggle("open"); return; }
+          const j = e.target.closest("[data-jump]"); if (j && !jumpTo(j.dataset.jump)) showToast("Older message", "Scroll up to load it in the chat.");
+        });
+        vBtn.addEventListener("click", () => { saved = lsGetC(savedKey()) || saved; savedPanel.classList.toggle("hidden"); renderSaved(); });
+        savedPanel.addEventListener("click", (e) => {
+          if (e.target.closest("[data-close]")) { savedPanel.classList.add("hidden"); return; }
+          const b = e.target.closest("[data-a]"); if (!b) return; const x = saved[Number(b.dataset.i)]; if (!x) return;
+          if (b.dataset.a === "copy") copyText(x.text); else if (b.dataset.a === "todo") addTodoC(x.text);
+          else if (b.dataset.a === "open") { savedPanel.classList.add("hidden"); if (!jumpTo(x.id)) showToast("Not in this chat view", "It is in another room or too far up. Open that room and scroll."); }
+          else if (b.dataset.a === "del") { saved.splice(Number(b.dataset.i), 1); lsSetC(savedKey(), saved); augment(); renderSaved(); }
+        });
+        latest.addEventListener("click", () => { box.scrollTo({ top: box.scrollHeight, behavior: "smooth" }); });
+        box.addEventListener("scroll", () => { latest.classList.toggle("hidden", box.scrollHeight - box.scrollTop - box.clientHeight < 180); }, { passive: true });
+        box.addEventListener("click", (e) => {                                                            // "Mark solved" on your own doubt cards
+          const b = e.target.closest(".sam-solve"); if (!b) return; const m = byId(b.dataset.id); if (!m || m.userId !== currentUserId) return;
+          update(chatMessageRef(m.id), { text: toggleSolved(m.text), editedAt: Date.now() }).catch(() => showToast("Could not update", "Try again."));
+        });
+        box.addEventListener("dblclick", (e) => {                                                         // double-tap = heart
+          const el = e.target.closest(".chat-message"); if (!el || e.target.closest("a,button,img,.reaction-pill")) return; toggleReaction(el.dataset.messageId, "❤️");
+        });
+        new MutationObserver(() => augment()).observe(box, { childList: true });
+        new MutationObserver((list) => { for (const mu of list) for (const n of mu.addedNodes) if (n.nodeType === 1 && n.classList && n.classList.contains("chat-context-menu")) augmentMenu(n); }).observe(document.body, { childList: true });
+        document.addEventListener("click", (e) => { const mb = e.target.closest && e.target.closest(".chat-message-more"); if (mb) { const el = mb.closest(".chat-message"); lastMenuId = el ? el.dataset.messageId : ""; } }, true);
+        document.addEventListener("contextmenu", (e) => { const el = e.target.closest && e.target.closest(".chat-message"); if (el) lastMenuId = el.dataset.messageId; }, true);
+        form.addEventListener("submit", (e) => {                                                          // /stats  /doubt  /todo  /help  (the app still sends the message itself, so bans and limits apply)
+          const c = parseCommand(input.value); if (!c) return;
+          const stop = () => { e.preventDefault(); e.stopImmediatePropagation(); input.value = ""; };
+          if (c.cmd === "stats") { const u = state.users[currentUserId]; if (u) input.value = statsText(u, todayKey(), liveSeconds(u), Date.now()).slice(0, 320); }
+          else if (c.cmd === "doubt") { if (!c.arg) { stop(); showToast("Doubt", "Write it like: /doubt Physics: why does a rolling ball slow down?"); } else input.value = doubtText(c.arg); }
+          else if (c.cmd === "todo") { stop(); if (c.arg) addTodoC(c.arg); else showToast("To-do", "Write it like: /todo revise rotational motion"); }
+          else if (c.cmd === "help") { stop(); showToast("Chat commands", "/stats shares your study card · /doubt Physics: question · /todo task · double-tap a message for ❤️ · ⋮ menu: pin, save, copy, to-do, explain"); }
+        }, true);
+        setInterval(pinSubscribe, 1500); setInterval(augment, 4000); pinSubscribe(); augment();
+        console.info("Chat features loaded");
+      }
+      const boot = setInterval(() => { if ($("chatPanel") && $("chatMessages") && $("chatForm")) { clearInterval(boot); try { init(); } catch (e) { console.warn("Chat features:", e); } } }, 500);
+      window.samChat = { parseCommand, statsText, doubtText, findHits, togglePinMap, _init: init };
+    })();
   </script>
 </body>
 </html>
