@@ -16886,6 +16886,7 @@ body .chat-widget.sb-full .chat-panel > .sb-walls { position: absolute; width: 3
           ${mnAdminCardHtml()}
           ${gsAdminCardHtml()}
           ${window.samAdminCardHtml ? window.samAdminCardHtml() : ""}
+          ${window.dtkAdminCardHtml ? window.dtkAdminCardHtml() : ""}
           <div class="ap-card">
             <h2>Study time — today</h2>
             <p>Change today's study time for any user. Typing in a subject updates the total; you can also edit the total directly. Only today is changed.</p>
@@ -24777,7 +24778,9 @@ TASK: ${task} Output only the message text (plus the optional @@ and ## lines). 
 
       const msgsC = () => (typeof chatMessagesState !== "undefined" && Array.isArray(chatMessagesState) ? chatMessagesState : []);
       const byId = (id) => msgsC().find((m) => m.id === id);
-      let pins = {}, pinRoom = null, pinUnsub = null, saved = [], searchQ = "", hits = [], hitI = -1, lastMenuId = "";
+      let pins = {}, pinRoom = null, pinUnsub = null, saved = [], searchQ = "", hits = [], hitI = -1, lastMenuId = "", muted = {}, sentAt = [];
+      const mutedKey = () => "samMuted|" + currentUserId;
+      const isGlobalRoom = () => typeof dgRoom !== "undefined" && dgRoom === "global";
       const sharedRoom = () => (typeof dgRoom !== "undefined" ? dgRoom !== "global" : true);                  // pins are shared only in the partner chat
       const roomKey = () => (typeof dgRoomNow === "function" ? dgRoomNow() : "private");
 
@@ -24835,6 +24838,7 @@ TASK: ${task} Output only the message text (plus the optional @@ and ## lines). 
         const box = $("chatMessages"); if (!box) return;
         box.querySelectorAll(".chat-message[data-message-id]").forEach((el) => {
           const id = el.dataset.messageId, m = byId(id); if (!m) return;
+          el.style.display = muted[m.userId] && m.userId !== currentUserId ? "none" : "";
           el.classList.toggle("sam-hit", !!searchQ && hits.includes(id));
           el.querySelectorAll(":scope > .sam-flags, :scope > .sam-doubt").forEach((n) => n.remove());
           const flags = [pins[id] ? "📌" : "", isSaved(id) ? "⭐" : ""].filter(Boolean).join(" ");
@@ -24854,6 +24858,7 @@ TASK: ${task} Output only the message text (plus the optional @@ and ## lines). 
         if (menu.dataset.sam) return; menu.dataset.sam = "1"; const m = lastMenuId && byId(lastMenuId); if (!m) return;
         const mk = (label, fn) => { const b = document.createElement("button"); b.type = "button"; b.textContent = label; b.addEventListener("click", () => fn(m)); return b; }, items = [];
         if (m.text) items.push(mk("Copy text", (x) => copyText(x.text)));
+        if (isGlobalRoom() && m.userId && m.userId !== currentUserId) items.push(mk(muted[m.userId] ? `Unmute ${m.name || "person"}` : `Mute ${m.name || "person"}`, (x) => { if (muted[x.userId]) delete muted[x.userId]; else muted[x.userId] = x.name || x.userId; lsSetC(mutedKey(), muted); augment(); showToast(muted[x.userId] ? "Muted" : "Unmuted", muted[x.userId] ? "Their messages are hidden for you." : "You can see their messages again."); }));
         items.push(mk(pins[m.id] ? "Unpin message" : "Pin message", togglePin), mk(isSaved(m.id) ? "Remove from saved" : "Save message", toggleSave));
         if (m.text) items.push(mk("Make it a to-do", (x) => addTodoC(x.text)), mk("Explain with Grok", (x) => { const i = $("chatInput"); if (i) { i.value = ("@grok explain: " + x.text).slice(0, 320); i.focus(); } }));
         let prev = menu.querySelector('[data-action="reply"]'); if (prev) items.forEach((b) => { prev.after(b); prev = b; }); else items.forEach((b) => menu.appendChild(b));
@@ -24881,7 +24886,7 @@ TASK: ${task} Output only the message text (plus the optional @@ and ## lines). 
         const anchor = rooms || box.previousElementSibling; if (anchor && anchor.after) { anchor.after(bar); bar.after(pinBar); } else { box.before(bar); box.before(pinBar); }
         const savedPanel = document.createElement("div"); savedPanel.id = "samSaved"; savedPanel.className = "hidden"; panel.appendChild(savedPanel);
         const latest = document.createElement("button"); latest.id = "samLatest"; latest.type = "button"; latest.className = "sam-latest hidden"; latest.title = "Jump to latest"; latest.textContent = "↓"; panel.appendChild(latest);
-        saved = lsGetC(savedKey()) || [];
+        saved = lsGetC(savedKey()) || []; muted = lsGetC(mutedKey()) || {};
 
         sBtn.addEventListener("click", () => { bar.classList.toggle("hidden"); if (!bar.classList.contains("hidden")) $("samSearchInput").focus(); else { $("samSearchInput").value = ""; runSearch(""); } });
         bar.addEventListener("input", (e) => { if (e.target.id === "samSearchInput") runSearch(e.target.value); });
@@ -24914,8 +24919,10 @@ TASK: ${task} Output only the message text (plus the optional @@ and ## lines). 
         document.addEventListener("click", (e) => { const mb = e.target.closest && e.target.closest(".chat-message-more"); if (mb) { const el = mb.closest(".chat-message"); lastMenuId = el ? el.dataset.messageId : ""; } }, true);
         document.addEventListener("contextmenu", (e) => { const el = e.target.closest && e.target.closest(".chat-message"); if (el) lastMenuId = el.dataset.messageId; }, true);
         form.addEventListener("submit", (e) => {                                                          // /stats  /doubt  /todo  /help  (the app still sends the message itself, so bans and limits apply)
-          const c = parseCommand(input.value); if (!c) return;
-          const stop = () => { e.preventDefault(); e.stopImmediatePropagation(); input.value = ""; };
+          const c = parseCommand(input.value), stop = () => { e.preventDefault(); e.stopImmediatePropagation(); input.value = ""; };
+          const sends = (!c || c.cmd === "stats" || (c.cmd === "doubt" && c.arg)) && input.value.trim();
+          if (sends) { const now = Date.now(); sentAt = sentAt.filter((t) => now - t < 20000); if (sentAt.length >= 6) { e.preventDefault(); e.stopImmediatePropagation(); showToast("Slow down", "You are sending messages too fast. Wait a few seconds."); return; } sentAt.push(now); }
+          if (!c) return;
           if (c.cmd === "stats") { const u = state.users[currentUserId]; if (u) input.value = statsText(u, todayKey(), liveSeconds(u), Date.now()).slice(0, 320); }
           else if (c.cmd === "doubt") { if (!c.arg) { stop(); showToast("Doubt", "Write it like: /doubt Physics: why does a rolling ball slow down?"); } else input.value = doubtText(c.arg); }
           else if (c.cmd === "todo") { stop(); if (c.arg) addTodoC(c.arg); else showToast("To-do", "Write it like: /todo revise rotational motion"); }
@@ -24925,7 +24932,321 @@ TASK: ${task} Output only the message text (plus the optional @@ and ## lines). 
         console.info("Chat features loaded");
       }
       const boot = setInterval(() => { if ($("chatPanel") && $("chatMessages") && $("chatForm")) { clearInterval(boot); try { init(); } catch (e) { console.warn("Chat features:", e); } } }, 500);
-      window.samChat = { parseCommand, statsText, doubtText, findHits, togglePinMap, _init: init };
+      window.samChat = { parseCommand, statsText, doubtText, findHits, togglePinMap, _init: init, mutedList: () => Object.entries(muted).map(([id, name]) => ({ id, name })), unmute: (id) => { delete muted[id]; lsSetC(mutedKey(), muted); augment(); } };
+    })();
+
+    /* ====================================================================================================================
+       STUDY TOOLKIT (added block, touches none of the protected parts). A new button in the top bar opens it.
+       - "Welcome back" guard: if the timer was left running while the app was closed, you choose how much of that time to keep
+       - Goals: daily goal, streak, week summary, 12-week heatmap, badges
+       - Focus: Pomodoro that can drive the study timer, "still studying?" check, keep-screen-awake
+       - Revise: spaced-repetition planner (1, 3, 7, 14, 30 days)    - Mistakes: an error notebook with a review mode
+       - Account: change your own password, download your study data (JSON / CSV), backup & restore, muted people
+       - Admin portal: overview, announcement banner, Firebase rules health check
+       Private data (notes, mistakes, revision) stays on this device; use Backup to move it.
+       ==================================================================================================================== */
+    (() => {
+      const GRT = (p) => ref(database, `duotrack/groups/${GROUP_ID}/${p}`);
+      const $ = (id) => document.getElementById(id);
+      const escT = (x) => escapeHTML(String(x == null ? "" : x));
+      const lsGetT = (k) => { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } };
+      const lsSetT = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* ignore */ } };
+
+      /* TPURE:BEGIN (no app variables below - unit-tested outside the browser) */
+      const numT = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
+      const arrT = (x) => (Array.isArray(x) ? x : x && typeof x === "object" ? Object.values(x) : []);
+      const addDayT = (day, n) => new Date(Date.parse(day + "T00:00:00+05:30") + n * 86400000 + 330 * 60000).toISOString().slice(0, 10);
+      const hmT = (sec) => `${Math.floor(Math.max(0, sec) / 3600)}h ${Math.floor((Math.max(0, sec) % 3600) / 60)}m`;
+      const SUBJ_T = ["Physics", "Chemistry", "Maths"], MTYPES = ["Concept gap", "Calculation", "Silly mistake", "Time pressure", "Guess"], SR = [1, 3, 7, 14, 30];
+      const uid = () => Date.now().toString(36) + Math.floor(Math.random() * 1e5).toString(36);
+
+      function goalStats(user, today, liveToday, goalH) {
+        const dt = (user && user.dailyTotals) || {}, goalS = Math.max(0.5, goalH) * 3600, secOf = (d) => (d === today ? liveToday : numT(dt[d]));
+        let streak = 0; for (let i = secOf(today) >= goalS ? 0 : 1; i < 500; i++) { if (secOf(addDayT(today, -i)) >= goalS) streak++; else break; }
+        const days = Object.keys(dt).concat(today).sort(); let best = 0, run = 0, last = null, reached = 0, maxDay = 0;
+        for (const d of days) { const s = secOf(d); maxDay = Math.max(maxDay, s); if (s >= goalS) { reached++; run = last && addDayT(last, 1) === d ? run + 1 : 1; last = d; best = Math.max(best, run); } }
+        const week = []; for (let i = 6; i >= 0; i--) { const d = addDayT(today, -i); week.push([d, secOf(d)]); }
+        const total = week.reduce((q, x) => q + x[1], 0), bestDay = week.reduce((a, b) => (b[1] > a[1] ? b : a));
+        const heat = []; for (let i = 83; i >= 0; i--) { const d = addDayT(today, -i), s = secOf(d); heat.push({ d, sec: s, lvl: s <= 0 ? 0 : s < goalS * 0.25 ? 1 : s < goalS * 0.5 ? 2 : s < goalS ? 3 : 4 }); }
+        const qh = (user && user.questionHistory) || {}, qMax = Math.max(numT(user && user.questionsToday), ...Object.values(qh).map(numT), 0), mocks = arrT(user && user.mockTests).length;
+        const badges = [{ id: "s3", name: "3-day streak", on: best >= 3 }, { id: "s7", name: "7-day streak", on: best >= 7 }, { id: "s14", name: "14-day streak", on: best >= 14 }, { id: "s30", name: "30-day streak", on: best >= 30 },
+          { id: "g5", name: "Goal crusher (5 days)", on: reached >= 5 }, { id: "d10", name: "10-hour day", on: maxDay >= 36000 }, { id: "q100", name: "100 questions in a day", on: qMax >= 100 }, { id: "m3", name: "Mock regular (3 mocks)", on: mocks >= 3 }];
+        return { streak, best, reached, week: { total, avg: total / 7, bestDay }, heat, badges, pct: Math.min(100, Math.round(100 * liveToday / goalS)) };
+      }
+      /* spaced repetition */
+      const newRev = (subject, topic, today) => ({ id: uid(), subject, topic: String(topic).trim().slice(0, 80), added: today, stage: 0, due: addDayT(today, SR[0]), lapses: 0, done: false });
+      function reviewRev(r, ok, today) { const n = { ...r }; if (ok) { n.stage = r.stage + 1; if (n.stage >= SR.length) { n.done = true; n.due = ""; } else n.due = addDayT(today, SR[n.stage]); } else { n.stage = 0; n.lapses = (r.lapses || 0) + 1; n.due = addDayT(today, 1); } return n; }
+      const dueRevs = (list, today) => list.filter((r) => !r.done && r.due && r.due <= today).sort((a, b) => (a.due < b.due ? -1 : 1));
+      /* mistakes */
+      const newMistake = (o, now) => ({ id: uid(), subject: SUBJ_T.includes(o.subject) ? o.subject : "Maths", topic: String(o.topic || "").trim().slice(0, 80), type: MTYPES.includes(o.type) ? o.type : "Concept gap", note: String(o.note || "").trim().slice(0, 600), at: now, reviewed: 0, last: 0, mastered: false });
+      function mistakeStats(list) { const byType = {}, bySubject = {}; let open = 0; for (const m of list) { byType[m.type] = (byType[m.type] || 0) + 1; bySubject[m.subject] = (bySubject[m.subject] || 0) + 1; if (!m.mastered) open++; } const top = Object.entries(byType).sort((a, b) => b[1] - a[1])[0]; return { byType, bySubject, open, top }; }
+      const reviewMistake = (m, got, now) => { const n = { ...m, last: now }; if (got) { n.reviewed = (m.reviewed || 0) + 1; if (n.reviewed >= 3) n.mastered = true; } return n; };
+      /* timer safety */
+      const awaySec = (u, now) => (u && u.running && u.startedAt && now - u.startedAt > 30 * 60000 ? Math.floor((now - u.startedAt) / 1000) : 0);
+      function trimPatch(u, keepSec, now) {                              // stop the timer and count only keepSec of the time since it was last saved (same fields the app's own stop button writes)
+        const el = Math.max(0, Math.floor(keepSec)), sj = u.currentSubject, md = u.currentMode || "Lecture", p = { todaySeconds: (u.todaySeconds || 0) + el, subjectSecondsToday: { ...(u.subjectSecondsToday || {}), [sj]: numT((u.subjectSecondsToday || {})[sj]) + el }, modeSecondsToday: { ...(u.modeSecondsToday || {}), [md]: numT((u.modeSecondsToday || {})[md]) + el }, running: false, startedAt: null };
+        if (u.activeTodoId && Array.isArray(u.todos) && el > 0) { const i = u.todos.findIndex((t) => t.id === u.activeTodoId); if (i !== -1 && !u.todos[i].done) p.todos = u.todos.map((t, j) => (j === i ? { ...t, spentSec: numT(t.spentSec) + el, sessionSec: numT(t.sessionSec) + el, lastActiveAt: now, lastSubject: sj, lastMode: md } : t)); }
+        return p;
+      }
+      function removeIdle(p, u, removeSec) {                             // take idle seconds back out of an already-built stop patch
+        const r = Math.max(0, Math.floor(removeSec)), sj = u.currentSubject, md = u.currentMode || "Lecture", sub = { ...(p.subjectSecondsToday || {}) }, mod = { ...(p.modeSecondsToday || {}) };
+        sub[sj] = Math.max(0, numT(sub[sj]) - r); mod[md] = Math.max(0, numT(mod[md]) - r); return { ...p, todaySeconds: Math.max(0, numT(p.todaySeconds) - r), subjectSecondsToday: sub, modeSecondsToday: mod };
+      }
+      /* pomodoro */
+      function pomoAdvance(p, now) { if (!p.on || now < p.end) return { p, changed: false }; const toBreak = p.phase === "focus"; return { p: { ...p, phase: toBreak ? "break" : "focus", end: now + (toBreak ? p.b : p.f) * 60000, cycles: toBreak ? (p.cycles || 0) + 1 : p.cycles }, changed: true }; }
+      const mmss = (ms) => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`; };
+      /* data export */
+      function csvOf(u) {
+        const dt = u.dailyTotals || {}, sh = u.subjectHistory || {}, mh = u.modeHistory || {}, qh = u.questionHistory || {}, rows = ["date,hours,questions,physics_h,chemistry_h,maths_h,lecture_h,practice_h"], h = (x) => (numT(x) / 3600).toFixed(2);
+        for (const d of Object.keys(dt).sort()) rows.push([d, h(dt[d]), numT(qh[d]), h((sh[d] || {}).Physics), h((sh[d] || {}).Chemistry), h((sh[d] || {}).Maths), h((mh[d] || {}).Lecture), h((mh[d] || {}).Practice)].join(","));
+        return rows.join("\n");
+      }
+      const annActive = (a, now) => !!(a && typeof a.text === "string" && a.text.trim() && (!a.until || numT(a.until) > now));
+      function overview(users, now, today) {
+        const list = Object.values(users || {}); let studying = 0, totalS = 0, activeY = 0; const y = addDayT(today, -1), tops = [];
+        for (const u of list) { const live = numT(u.todaySeconds) + (u.running && u.startedAt ? Math.max(0, Math.floor((now - u.startedAt) / 1000)) : 0); if (u.running) studying++; totalS += live; tops.push([u.name || u.id, live]); if (numT((u.dailyTotals || {})[y]) > 0 || live > 0) activeY++; }
+        tops.sort((a, b) => b[1] - a[1]); return { accounts: list.length, studying, totalS, active: activeY, tops: tops.filter((x) => x[1] > 0).slice(0, 5) };
+      }
+      const pwProblem = (pw, key) => (String(pw).length < 6 ? "Use at least 6 characters." : String(pw).length > 60 ? "Use at most 60 characters." : String(pw).toLowerCase() === String(key).toLowerCase() ? "The password cannot be the same as your login ID." : "");
+      /* TPURE:END */
+
+      /* ------------------------------------------------------------------ per-person local data */
+      const defaults = () => ({ goalH: 6, revs: [], mistakes: [], idleOn: false, idleMin: 30, wake: false, pomo: { on: false, phase: "focus", end: 0, f: 25, b: 5, cycles: 0, sync: true, sound: true } });
+      let D = null; const ui = { open: false, tab: "goals", mSubj: "", mType: "", mOpen: false, review: false, shown: {}, pwMsg: "" };
+      const KEY = () => "dtk|" + currentUserId;
+      const data = () => { if (!currentUserId) return defaults(); if (!D || D._uid !== currentUserId) { D = Object.assign(defaults(), lsGetT(KEY()) || {}); D.pomo = Object.assign(defaults().pomo, D.pomo || {}); D._uid = currentUserId; } return D; };
+      const save = () => { if (D && currentUserId) lsSetT(KEY(), D); };
+      const me = () => (typeof currentUser === "function" ? currentUser() : state.users[currentUserId]);
+
+      /* ------------------------------------------------------------------ timer safety: "welcome back", "still studying?", keep screen awake */
+      let awayShown = false, lastInput = Date.now(), idlePrompt = false, wakeLock = null; const trusted = {};      // trusted[id] = the startedAt the person confirmed as real study
+      function modal(html) { let m = $("dtkModal"); if (!m) { m = document.createElement("div"); m.id = "dtkModal"; m.className = "dtk-over"; document.body.appendChild(m); } m.innerHTML = `<div class="dtk-card dtk-small">${html}</div>`; m.classList.remove("hidden"); return m; }
+      const closeModal = () => { const m = $("dtkModal"); if (m) m.classList.add("hidden"); };
+      function askAway(u, sec) {
+        awayShown = true;
+        modal(`<div class="dtk-head"><b>Welcome back</b></div><p>Your study timer kept running for <b>${hmT(sec)}</b> since the app was last open. How much of that was real study?</p>
+          <label class="dtk-row">Keep <input id="dtkKeepMin" type="number" min="0" max="${Math.floor(sec / 60)}" step="5" value="0"> minutes</label>
+          <div class="dtk-actions"><button data-away="all">Keep all ${hmT(sec)}</button><button data-away="keep" class="dtk-primary">Keep that and stop</button><button data-away="none">Discard and stop</button></div>`);
+      }
+      async function applyAway(kind) {
+        const u = me(); closeModal(); awayShown = false; if (!u) return; if (kind === "all") { trusted[u.id] = u.startedAt; return; }
+        const keep = kind === "none" ? 0 : Math.min(Math.max(0, Math.floor(numT(($("dtkKeepMin") || {}).value) * 60)), Math.floor((Date.now() - u.startedAt) / 1000));
+        await writeUserPatch(u.id, trimPatch(u, keep, Date.now())); showToast("Timer stopped", keep ? `Kept ${hmT(keep)} from the time you were away.` : "The time you were away was not counted.");
+      }
+      function askIdle() {
+        idlePrompt = true; let left = 60;
+        const m = modal(`<div class="dtk-head"><b>Still studying?</b></div><p>No activity for a while. Your timer will stop in <b id="dtkIdleLeft">60</b> seconds and the idle time will not be counted.</p><div class="dtk-actions"><button data-idle="yes" class="dtk-primary">Yes, I'm studying</button><button data-idle="stop">Stop the timer</button></div>`);
+        const t = setInterval(() => { left--; const el = $("dtkIdleLeft"); if (el) el.textContent = String(left); if (!idlePrompt) { clearInterval(t); return; } if (left <= 0) { clearInterval(t); idleStop(); } }, 1000); void m;
+      }
+      async function idleStop() {
+        idlePrompt = false; closeModal(); const u = me(); if (!u || !u.running) return;
+        const idle = Math.max(0, Math.floor((Date.now() - lastInput) / 1000)), p = removeIdle(timerCheckpointPatch(u, true) || trimPatch(u, 0, Date.now()), u, idle);
+        await writeUserPatch(u.id, p); showToast("Timer stopped", `Idle time (${hmT(idle)}) was not counted.`);
+      }
+      async function wakeSync(on) {
+        try { if (on && !wakeLock && navigator.wakeLock) { wakeLock = await navigator.wakeLock.request("screen"); wakeLock.addEventListener("release", () => { wakeLock = null; }); } else if (!on && wakeLock) { await wakeLock.release(); wakeLock = null; } } catch (e) { wakeLock = null; }
+      }
+      function slowTick() {
+        if (!currentUserId || typeof firebaseReady === "undefined" || !firebaseReady) return; const u = me(), d = data(), now = Date.now(); if (!u) return;
+        if (!awayShown && awaySec(u, now) && trusted[u.id] !== u.startedAt) askAway(u, awaySec(u, now));
+        const mdl = $("dtkModal"), modalOpen = !!(mdl && !mdl.classList.contains("hidden"));
+        if (d.idleOn && u.running && !idlePrompt && !modalOpen && now - lastInput > d.idleMin * 60000) askIdle();
+        wakeSync(!!(d.wake && u.running));
+        const due = dueRevs(d.revs, todayKey()).length, b = $("toolkitBadge"); if (b) { b.textContent = String(due); b.hidden = !due; }
+      }
+
+      /* ------------------------------------------------------------------ pomodoro */
+      let audio = null;
+      function beep() { try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); [0, 0.28].forEach((t) => { const o = audio.createOscillator(), g = audio.createGain(); o.frequency.value = 880; g.gain.value = 0.15; o.connect(g); g.connect(audio.destination); o.start(audio.currentTime + t); o.stop(audio.currentTime + t + 0.2); }); } catch (e) { /* ignore */ } }
+      function syncTimer(wantRunning) { const u = me(), b = $("timerToggleBtn"); if (u && b && !!u.running !== wantRunning) b.click(); }
+      function pomoTick() {
+        const d = data(), p = d.pomo, chip = $("dtkChip"); if (!p.on) { if (chip) chip.classList.add("hidden"); return; }
+        const r = pomoAdvance(p, Date.now());
+        if (r.changed) {
+          d.pomo = r.p; save(); const fb = r.p.phase === "break";
+          if (r.p.sound) beep(); showToast(fb ? "Break time" : "Focus time", fb ? `Rest for ${r.p.b} minutes.` : `Next ${r.p.f}-minute focus block.`);
+          try { if (window.Notification && Notification.permission === "granted") new Notification(fb ? "Break time" : "Back to focus"); } catch (e) { /* ignore */ }
+          if (r.p.sync) syncTimer(!fb);
+        }
+        const q = d.pomo; if (chip) { chip.classList.remove("hidden"); chip.textContent = `${q.phase === "focus" ? "🍅" : "☕"} ${mmss(q.end - Date.now())}`; }
+        const big = $("dtkPomoTime"); if (big) big.textContent = `${q.phase === "focus" ? "Focus" : "Break"} ${mmss(q.end - Date.now())}`;
+      }
+      function pomoStart(f, b) { const d = data(); d.pomo = { ...d.pomo, on: true, phase: "focus", f, b, end: Date.now() + f * 60000, cycles: 0 }; save(); if (d.pomo.sync) syncTimer(true); try { if (window.Notification && Notification.permission === "default") Notification.requestPermission(); } catch (e) { /* ignore */ } pomoTick(); render(); }
+      function pomoStop() { const d = data(); d.pomo = { ...d.pomo, on: false }; save(); if (d.pomo.sync) syncTimer(false); pomoTick(); render(); }
+
+      /* ------------------------------------------------------------------ the toolkit window */
+      const TABS = [["goals", "Goals"], ["focus", "Focus"], ["revise", "Revise"], ["mistakes", "Mistakes"], ["account", "Account"]];
+      const optSubj = (sel) => SUBJ_T.map((s) => `<option${s === sel ? " selected" : ""}>${s}</option>`).join("");
+      function tabGoals() {
+        const u = me() || {}, d = data(), live = liveSeconds(u), g = goalStats(u, todayKey(), live, d.goalH);
+        return `<div class="dtk-sec"><div class="dtk-bar"><i style="width:${g.pct}%"></i></div><p><b>${hmT(live)}</b> of ${d.goalH}h today (${g.pct}%)</p>
+          <label class="dtk-row">Daily goal <input id="dtkGoal" type="number" min="1" max="16" step="0.5" value="${d.goalH}"> hours <button data-act="goal">Save</button></label></div>
+          <div class="dtk-sec"><p>🔥 Streak <b>${g.streak}</b> day${g.streak === 1 ? "" : "s"} &nbsp;·&nbsp; best <b>${g.best}</b> &nbsp;·&nbsp; goal reached on <b>${g.reached}</b> days</p>
+          <p>This week: <b>${hmT(g.week.total)}</b> in total, about ${hmT(g.week.avg)} a day, best day ${g.week.bestDay[0].slice(5)} (${hmT(g.week.bestDay[1])}).</p></div>
+          <div class="dtk-sec"><b>Last 12 weeks</b><div class="dtk-heat">${g.heat.map((c) => `<i class="l${c.lvl}" title="${c.d}: ${hmT(c.sec)}"></i>`).join("")}</div></div>
+          <div class="dtk-sec"><b>Badges</b><div class="dtk-badges">${g.badges.map((b) => `<span class="${b.on ? "on" : ""}">${b.on ? "🏅" : "🔒"} ${escT(b.name)}</span>`).join("")}</div></div>`;
+      }
+      function tabFocus() {
+        const d = data(), p = d.pomo;
+        return `<div class="dtk-sec"><b>Pomodoro</b><p class="dtk-big" id="dtkPomoTime">${p.on ? "" : "Not running"}</p>
+          <div class="dtk-actions">${p.on ? `<button data-act="pomostop">Stop</button>` : `<button data-act="pomo" data-f="25" data-b="5" class="dtk-primary">25 / 5</button><button data-act="pomo" data-f="50" data-b="10">50 / 10</button><button data-act="pomo" data-f="90" data-b="15">90 / 15</button>`}</div>
+          <label class="dtk-row"><input type="checkbox" data-set="sync"${p.sync ? " checked" : ""}> Start and pause my study timer with it</label>
+          <label class="dtk-row"><input type="checkbox" data-set="sound"${p.sound ? " checked" : ""}> Beep when a block ends</label></div>
+          <div class="dtk-sec"><b>While the timer runs</b>
+          <label class="dtk-row"><input type="checkbox" data-set="idleOn"${d.idleOn ? " checked" : ""}> Ask "Still studying?" after <select data-set="idleMin">${[15, 30, 45, 60].map((m) => `<option${m === d.idleMin ? " selected" : ""}>${m}</option>`).join("")}</select> minutes without activity, and don't count the idle time</label>
+          <label class="dtk-row"><input type="checkbox" data-set="wake"${d.wake ? " checked" : ""}> Keep the screen awake while the timer runs${navigator.wakeLock ? "" : " (not supported on this browser)"}</label>
+          <p class="dtk-hint">If you ever leave the timer running and close the app, you'll be asked how much of that time to keep when you come back.</p></div>`;
+      }
+      function tabRevise() {
+        const d = data(), today = todayKey(), due = dueRevs(d.revs, today), up = d.revs.filter((r) => !r.done && !(r.due <= today)).sort((a, b) => (a.due < b.due ? -1 : 1)), done = d.revs.filter((r) => r.done).length;
+        const row = (r, btns) => `<div class="dtk-item"><div><b>${escT(r.topic)}</b> <small>${escT(r.subject)} · step ${r.stage + 1}/${SR.length}${r.due ? " · due " + r.due.slice(5) : ""}</small></div><div class="dtk-actions">${btns}</div></div>`;
+        return `<div class="dtk-sec"><b>Add what you studied today</b><div class="dtk-row"><select id="dtkRevSubj">${optSubj("")}</select><input id="dtkRevTopic" type="text" maxlength="80" placeholder="Chapter or topic (e.g. Rotational motion)"><button data-act="revadd" class="dtk-primary">Add</button></div><p class="dtk-hint">You'll be reminded after 1, 3, 7, 14 and 30 days.</p></div>
+          <div class="dtk-sec"><b>Due today (${due.length})</b>${due.length ? due.map((r) => row(r, `<button data-act="revok" data-id="${escT(r.id)}" class="dtk-primary">Remembered ✓</button><button data-act="revno" data-id="${escT(r.id)}">Forgot ✗</button>`)).join("") : `<p class="dtk-hint">Nothing due. Nice.</p>`}</div>
+          <div class="dtk-sec"><b>Coming up (${up.length})</b>${up.slice(0, 12).map((r) => row(r, `<button data-act="revdel" data-id="${escT(r.id)}">Delete</button>`)).join("") || `<p class="dtk-hint">Nothing scheduled yet.</p>`}<p class="dtk-hint">Mastered: ${done}</p></div>`;
+      }
+      function tabMistakes() {
+        const d = data(), all = d.mistakes, st = mistakeStats(all);
+        let list = all.filter((m) => (!ui.mSubj || m.subject === ui.mSubj) && (!ui.mType || m.type === ui.mType) && (!ui.mOpen || !m.mastered));
+        if (ui.review) list = list.filter((m) => !m.mastered).sort((a, b) => a.last - b.last).slice(0, 10);
+        const item = (m) => `<div class="dtk-item"><div><b>${escT(m.topic || "(no topic)")}</b> <small>${escT(m.subject)} · ${escT(m.type)} · reviewed ${m.reviewed}×${m.mastered ? " · mastered ✓" : ""}</small>${ui.review && !ui.shown[m.id] ? `<p><button data-act="mshow" data-id="${escT(m.id)}">Show the correct approach</button></p>` : `<p class="dtk-note">${escT(m.note) || "<i>No note</i>"}</p>`}</div><div class="dtk-actions">${m.mastered ? "" : `<button data-act="mgot" data-id="${escT(m.id)}" class="dtk-primary">Got it ✓</button><button data-act="munsure" data-id="${escT(m.id)}">Still unsure</button>`}<button data-act="mdel" data-id="${escT(m.id)}">Delete</button></div></div>`;
+        return `<div class="dtk-sec"><b>Log a mistake</b><div class="dtk-row"><select id="dtkMSubj">${optSubj("")}</select><select id="dtkMType">${MTYPES.map((t) => `<option>${t}</option>`).join("")}</select></div>
+          <input id="dtkMTopic" type="text" maxlength="80" placeholder="Topic or question (e.g. Moment of inertia of a ring)"><textarea id="dtkMNote" rows="3" maxlength="600" placeholder="What went wrong, and the correct approach"></textarea><div class="dtk-actions"><button data-act="madd" class="dtk-primary">Save mistake</button></div></div>
+          <div class="dtk-sec"><b>${all.length} logged · ${st.open} to master</b>${st.top ? `<p class="dtk-hint">Most common: ${escT(st.top[0])} (${st.top[1]}).</p>` : ""}
+          <div class="dtk-row"><select id="dtkFS"><option value="">All subjects</option>${optSubj(ui.mSubj)}</select><select id="dtkFT"><option value="">All types</option>${MTYPES.map((t) => `<option${t === ui.mType ? " selected" : ""}>${t}</option>`).join("")}</select><label><input type="checkbox" id="dtkFO"${ui.mOpen ? " checked" : ""}> to master only</label><button data-act="mreview">${ui.review ? "Exit review" : "Review mode"}</button></div>
+          ${list.map(item).join("") || `<p class="dtk-hint">${all.length ? "Nothing matches." : "Your mistakes will appear here. Reviewing them is the fastest way to stop repeating them."}</p>`}</div>`;
+      }
+      function tabAccount() {
+        const muted = window.samChat && window.samChat.mutedList ? window.samChat.mutedList() : [];
+        return `<div class="dtk-sec"><b>Change your password</b><input id="dtkPwCur" type="password" autocomplete="current-password" placeholder="Current password"><input id="dtkPwNew" type="password" autocomplete="new-password" placeholder="New password (at least 6)"><input id="dtkPwNew2" type="password" autocomplete="new-password" placeholder="Repeat the new password">
+          <div class="dtk-actions"><button data-act="pw" class="dtk-primary">Change password</button></div><p class="dtk-hint" id="dtkPwMsg">${escT(ui.pwMsg)}</p></div>
+          <div class="dtk-sec"><b>Download my study data</b><p class="dtk-hint">Your history, to-dos and mock tests, plus the notes in this toolkit.</p><div class="dtk-actions"><button data-act="expjson">JSON</button><button data-act="expcsv">CSV (spreadsheet)</button></div></div>
+          <div class="dtk-sec"><b>Backup toolkit data</b><p class="dtk-hint">Mistakes, revision and settings live on this device. Move them to another device with a backup file.</p><div class="dtk-actions"><button data-act="bkexp">Save backup file</button><button data-act="bkimp">Restore from file</button></div><input id="dtkFile" type="file" accept="application/json" class="hidden"></div>
+          <div class="dtk-sec"><b>Muted people (${muted.length})</b>${muted.map((m) => `<div class="dtk-item"><span>${escT(m.name)}</span><div class="dtk-actions"><button data-act="unmute" data-id="${escT(m.id)}">Unmute</button></div></div>`).join("") || `<p class="dtk-hint">Mute someone from the ⋮ menu of their message in the global chat.</p>`}</div>`;
+      }
+      function render() { const body = $("dtkBody"); if (!body) return; const tabs = $("dtkTabs"); if (tabs) tabs.innerHTML = TABS.map(([k, n]) => `<button type="button" data-tab="${k}" class="${ui.tab === k ? "on" : ""}">${n}</button>`).join(""); body.innerHTML = ({ goals: tabGoals, focus: tabFocus, revise: tabRevise, mistakes: tabMistakes, account: tabAccount })[ui.tab](); pomoTick(); }
+      function openKit(tab) { if (!currentUserId) return; ui.tab = tab || ui.tab; ui.open = true; $("dtkOverlay").classList.remove("hidden"); render(); }
+      const closeKit = () => { ui.open = false; const o = $("dtkOverlay"); if (o) o.classList.add("hidden"); };
+      function download(name, text, type) { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
+      async function changePassword() {
+        const cur = ($("dtkPwCur") || {}).value || "", nw = ($("dtkPwNew") || {}).value || "", n2 = ($("dtkPwNew2") || {}).value || "";
+        const key = Object.keys(USERS).find((k) => USERS[k] && USERS[k].id === currentUserId), say = (m) => { ui.pwMsg = m; const el = $("dtkPwMsg"); if (el) el.textContent = m; };
+        if (!key) return say("This login can't be changed here."); if (!cur || !nw) return say("Fill in all the fields."); if (nw !== n2) return say("The new passwords don't match."); const bad = pwProblem(nw, key); if (bad) return say(bad);
+        const lock = lsGetT("dtkPwLock") || { n: 0, until: 0 }; if (Date.now() < lock.until) return say("Too many wrong attempts. Try again in a few minutes.");
+        try {
+          if (!(await get(mnAccRef(key))).exists()) return say("This login is built into the app, so its password can only be changed by the administrator.");
+          const acc = USERS[key]; if (!(await passwordMatches(acc.password, key, cur))) { lock.n++; if (lock.n >= 5) { lock.until = Date.now() + 10 * 60000; lock.n = 0; } lsSetT("dtkPwLock", lock); return say("The current password is wrong."); }
+          const next = { ...acc, password: await pwHash(key, nw) }; await set(mnAccRef(key), next); USERS[key] = next; USERS_BY_ID[currentUserId] = next; lsSetT("dtkPwLock", { n: 0, until: 0 });
+          ["dtkPwCur", "dtkPwNew", "dtkPwNew2"].forEach((i) => { if ($(i)) $(i).value = ""; }); say("Password changed. Use the new one next time you log in."); showToast("Password changed", "Your new password is active.");
+        } catch (e) { say("Could not change it: " + String((e && e.message) || e).slice(0, 80)); }
+      }
+      function onAction(b) {
+        const d = data(), a = b.dataset.act, id = b.dataset.id, today = todayKey(), val = (i) => ($(i) ? $(i).value : "");
+        if (a === "close") return closeKit();
+        if (a === "goal") { d.goalH = Math.min(16, Math.max(1, numT(val("dtkGoal")) || 6)); save(); showToast("Goal saved", `${d.goalH} hours a day.`); }
+        else if (a === "pomo") pomoStart(numT(b.dataset.f), numT(b.dataset.b)); else if (a === "pomostop") pomoStop();
+        else if (a === "revadd") { const t = val("dtkRevTopic").trim(); if (!t) return showToast("Add a topic", "Write what you studied."); d.revs.push(newRev(val("dtkRevSubj") || "Maths", t, today)); save(); }
+        else if (a === "revok" || a === "revno") d.revs = d.revs.map((r) => (r.id === id ? reviewRev(r, a === "revok", today) : r));
+        else if (a === "revdel") d.revs = d.revs.filter((r) => r.id !== id);
+        else if (a === "madd") { const note = val("dtkMNote"), topic = val("dtkMTopic"); if (!topic.trim() && !note.trim()) return showToast("Write something", "Add a topic or a note."); d.mistakes.unshift(newMistake({ subject: val("dtkMSubj"), type: val("dtkMType"), topic, note }, Date.now())); d.mistakes = d.mistakes.slice(0, 300); save(); }
+        else if (a === "mgot" || a === "munsure") d.mistakes = d.mistakes.map((m) => (m.id === id ? reviewMistake(m, a === "mgot", Date.now()) : m));
+        else if (a === "mdel") d.mistakes = d.mistakes.filter((m) => m.id !== id); else if (a === "mshow") ui.shown[id] = 1; else if (a === "mreview") { ui.review = !ui.review; ui.shown = {}; }
+        else if (a === "pw") return changePassword();
+        else if (a === "unmute") { if (window.samChat && window.samChat.unmute) window.samChat.unmute(id); }
+        else if (a === "expjson") { const u = me() || {}; download(`duoprepare-${currentUserId}.json`, JSON.stringify({ exportedAt: new Date().toISOString(), id: currentUserId, name: u.name, history: { dailyTotals: u.dailyTotals, subjectHistory: u.subjectHistory, modeHistory: u.modeHistory, questionHistory: u.questionHistory }, todos: u.todos, mockTests: u.mockTests, toolkit: { ...d, _uid: undefined } }, null, 2), "application/json"); return; }
+        else if (a === "expcsv") { download(`duoprepare-${currentUserId}.csv`, csvOf(me() || {}), "text/csv"); return; }
+        else if (a === "bkexp") { download(`duoprepare-toolkit-${currentUserId}.json`, JSON.stringify({ ...d, _uid: undefined }), "application/json"); return; }
+        else if (a === "bkimp") { const f = $("dtkFile"); if (f) f.click(); return; }
+        save(); render(); slowTick();
+      }
+      function importBackup(file) {
+        const fr = new FileReader(); fr.onload = () => { try { const j = JSON.parse(String(fr.result)); if (!j || typeof j !== "object") throw new Error("bad file"); D = Object.assign(defaults(), j, { _uid: currentUserId }); D.pomo = Object.assign(defaults().pomo, D.pomo || {}, { on: false }); D.revs = arrT(D.revs); D.mistakes = arrT(D.mistakes); save(); render(); showToast("Restored", "Your toolkit data was restored."); } catch (e) { showToast("Could not restore", "That does not look like a backup file."); } }; fr.readAsText(file);
+      }
+      function onChange(e) {
+        const t = e.target, d = data(); if (t.id === "dtkFile") { if (t.files && t.files[0]) importBackup(t.files[0]); return; }
+        if (t.dataset && t.dataset.set) { const k = t.dataset.set; if (k === "idleMin") d.idleMin = numT(t.value) || 30; else if (k === "sync" || k === "sound") d.pomo[k] = !!t.checked; else d[k] = !!t.checked; save(); slowTick(); return; }
+        if (t.id === "dtkFS") ui.mSubj = t.value; else if (t.id === "dtkFT") ui.mType = t.value; else if (t.id === "dtkFO") ui.mOpen = !!t.checked; else return; render();
+      }
+
+      /* ------------------------------------------------------------------ announcement banner (shown to everyone) */
+      let ann = null, annUnsub = null;
+      function renderAnn() {
+        let bar = $("dtkAnn"); const now = Date.now(), dismissed = lsGetT("dtkAnnSeen") || "";
+        if (!annActive(ann, now) || dismissed === ann.id) { if (bar) bar.classList.add("hidden"); return; }
+        if (!bar) { bar = document.createElement("div"); bar.id = "dtkAnn"; document.body.appendChild(bar); bar.addEventListener("click", (e) => { if (e.target.closest("[data-annclose]")) { lsSetT("dtkAnnSeen", ann && ann.id); bar.classList.add("hidden"); } }); }
+        bar.className = "dtk-ann " + (ann.level === "warn" ? "warn" : "info"); bar.innerHTML = `<span>📢 ${escT(ann.text)}</span><button type="button" data-annclose="1" aria-label="Dismiss">×</button>`;
+      }
+      function annSubscribe() { try { annUnsub = onValue(GRT("announcement"), (s) => { ann = s.val(); renderAnn(); }, () => { /* rules refuse: no announcements */ }); } catch (e) { /* ignore */ } }
+
+      /* ------------------------------------------------------------------ admin portal cards: overview, announcement, rules health check */
+      const HEALTH_PATHS = ["chatPins", "aiPlans", "aiChat", "aiObs", "announcement"];
+      window.dtkAdminCardHtml = () => {
+        const o = overview(state.users, Date.now(), todayKey());
+        return `<div class="ap-card" id="dtkAdmin"><h2>Overview</h2><p>${o.accounts} accounts · <b>${o.studying}</b> studying right now · ${o.active} active since yesterday · <b>${hmT(o.totalS)}</b> studied today in total.</p>${o.tops.length ? `<p class="ap-note">Top today: ${o.tops.map((t) => `${escT(t[0])} ${hmT(t[1])}`).join(" · ")}</p>` : ""}</div>
+          <div class="ap-card"><h2>Announcement banner</h2><p>Shows at the top of the app for everyone until it expires or they dismiss it.</p><div class="lc-form">
+            <label>Message<textarea data-dtk="annText" rows="2" maxlength="280" placeholder="e.g. The app will be updated tonight at 11 pm."></textarea></label>
+            <div class="lc-two"><label>Style<select data-dtk="annLevel"><option value="info">Info</option><option value="warn">Warning</option></select></label><label>Show for<select data-dtk="annHours"><option value="6">6 hours</option><option value="24" selected>1 day</option><option value="72">3 days</option><option value="168">7 days</option><option value="0">Until I clear it</option></select></label></div>
+            <button type="button" class="ap-primary" data-dtk-ap="annPublish">Publish</button> <button type="button" data-dtk-ap="annClear">Clear banner</button><p class="ap-note" data-dtk="annMsg">${annActive(ann, Date.now()) ? "Live now: " + escT(ann.text) : "No banner is live."}</p></div></div>
+          <div class="ap-card"><h2>Firebase rules check</h2><p>Tests the folders that the newer features use (pins, Samridhi's memory, announcements) and tells you which ones your rules block.</p><button type="button" class="ap-primary" data-dtk-ap="health">Run check</button><div class="ap-note" data-dtk="healthOut"></div></div>`;
+      };
+      async function adminAction(b) {
+        const card = b.closest(".ap-card"), q = (k) => card.querySelector(`[data-dtk="${k}"]`), msg = q("annMsg") || q("healthOut"), a = b.dataset.dtkAp;
+        b.disabled = true;
+        try {
+          if (a === "annPublish") { const text = (q("annText").value || "").trim(); if (!text) { msg.textContent = "Write the message first."; return; } const h = numT(q("annHours").value), a2 = { id: uid(), text: text.slice(0, 280), level: q("annLevel").value === "warn" ? "warn" : "info", at: Date.now(), until: h ? Date.now() + h * 3600000 : 0 }; await set(GRT("announcement"), a2); ann = a2; msg.textContent = "Published. Everyone sees it now."; }
+          else if (a === "annClear") { await set(GRT("announcement"), null); ann = null; msg.textContent = "Cleared."; renderAnn(); }
+          else if (a === "health") {
+            msg.textContent = "Checking..."; const rows = [];
+            for (const p of HEALTH_PATHS) { const k = `${p}/__check`; let ok = true, why = ""; try { await set(GRT(k), { t: Date.now() }); const s = await get(GRT(k)); if (!s.exists()) { ok = false; why = "could not read back"; } await set(GRT(k), null); } catch (e) { ok = false; why = String((e && e.message) || e).replace(/^.*?:/, "").trim().slice(0, 60); } rows.push([p, ok, why]); }
+            const bad = rows.filter((r) => !r[1]); msg.innerHTML = rows.map((r) => `${r[1] ? "✅" : "❌"} <b>${escT(r[0])}</b>${r[1] ? "" : " - " + escT(r[2])}`).join("<br>") + (bad.length ? `<br><br>Give ${bad.map((r) => `<b>${escT(r[0])}</b>`).join(", ")} the same rule you already use for the <b>chat</b> folder (in Firebase, Realtime Database, Rules).` : "<br><br>All good.");
+          }
+        } catch (e) { if (msg) msg.textContent = "Failed: " + String((e && e.message) || e).slice(0, 100); } finally { b.disabled = false; }
+      }
+
+      /* ------------------------------------------------------------------ boot */
+      function init() {
+        const logout = $("logoutBtn"); if (!logout || $("toolkitBtn")) return;
+        const st = document.createElement("style"); st.id = "dtkCss";
+        st.textContent = `.dtk-over{position:fixed;inset:0;z-index:5000;background:rgba(10,18,14,.55);display:flex;align-items:center;justify-content:center;padding:14px} .dtk-over.hidden{display:none} .dtk-card{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);width:min(720px,100%);max-height:88vh;overflow:auto;padding:14px 16px} .dtk-small{width:min(440px,100%)}
+          .dtk-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:17px} #dtkTabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px} #dtkTabs button,.dtk-actions button,.dtk-row button{border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer} #dtkTabs button.on,.dtk-primary{background:var(--green)!important;color:#fff!important;border-color:var(--green)!important}
+          .dtk-sec{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:10px} .dtk-sec p{margin:6px 0} .dtk-hint{color:var(--muted);font-size:12.5px} .dtk-big{font-size:28px;font-weight:700;margin:6px 0} .dtk-note{white-space:pre-wrap;word-break:break-word}
+          .dtk-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0} .dtk-sec input[type=text],.dtk-sec input[type=password],.dtk-sec input[type=number],.dtk-sec select,.dtk-sec textarea,.dtk-card input[type=number]{border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--paper);color:var(--ink);font:inherit;max-width:100%} .dtk-sec input[type=text],.dtk-sec input[type=password],.dtk-sec textarea{width:100%;margin:4px 0}
+          .dtk-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px} .dtk-item{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;border-top:1px solid var(--line);padding:8px 0} .dtk-item small{color:var(--muted)}
+          .dtk-bar{height:12px;border-radius:999px;background:var(--green-2);overflow:hidden} .dtk-bar i{display:block;height:100%;background:var(--green)} .dtk-heat{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,13px);gap:3px;margin-top:8px;overflow:auto;padding-bottom:4px} .dtk-heat i{width:13px;height:13px;border-radius:3px;background:var(--line)} .dtk-heat i.l1{background:#cfe9d8} .dtk-heat i.l2{background:#93cfa8} .dtk-heat i.l3{background:#4fae75} .dtk-heat i.l4{background:var(--green)}
+          .dtk-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px} .dtk-badges span{border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12.5px;opacity:.55} .dtk-badges span.on{opacity:1;background:var(--green-2)}
+          #dtkChip{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:60;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-weight:700;box-shadow:var(--shadow-soft);cursor:pointer} #dtkChip.hidden{display:none}
+          .dtk-ann{position:fixed;top:0;left:0;right:0;z-index:4000;display:flex;gap:10px;justify-content:center;align-items:center;padding:8px 14px;font-size:14px;color:#fff;background:var(--blue)} .dtk-ann.warn{background:#b8741a} .dtk-ann.hidden{display:none} .dtk-ann button{background:transparent;border:0;color:#fff;font-size:20px;cursor:pointer}`;
+        document.head.appendChild(st);
+        const btn = document.createElement("button"); btn.id = "toolkitBtn"; btn.type = "button"; btn.className = "icon-btn mock-circle-btn"; btn.title = "Study toolkit: goals, focus, revision, mistakes"; btn.setAttribute("aria-label", "Study toolkit");
+        btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18"/></svg><span id="toolkitBadge" class="mock-circle-badge" hidden>0</span>`;
+        logout.before(btn); btn.addEventListener("click", () => openKit());
+        const ov = document.createElement("div"); ov.id = "dtkOverlay"; ov.className = "dtk-over hidden"; ov.innerHTML = `<div class="dtk-card" role="dialog" aria-modal="true" aria-label="Study toolkit"><div class="dtk-head"><b>Study toolkit</b><button type="button" class="small-btn" data-act="close" aria-label="Close">×</button></div><div id="dtkTabs"></div><div id="dtkBody"></div></div>`;
+        document.body.appendChild(ov);
+        const chip = document.createElement("button"); chip.id = "dtkChip"; chip.type = "button"; chip.className = "hidden"; chip.title = "Pomodoro"; document.body.appendChild(chip); chip.addEventListener("click", () => openKit("focus"));
+        ov.addEventListener("click", (e) => { if (e.target === ov) return closeKit(); const t = e.target.closest("[data-tab]"); if (t) { ui.tab = t.dataset.tab; return render(); } const b = e.target.closest("[data-act]"); if (b) onAction(b); });
+        ov.addEventListener("change", onChange);
+        document.addEventListener("click", (e) => {
+          const m = e.target.closest && e.target.closest("[data-away],[data-idle]"); if (!m) return; if (m.dataset.away) applyAway(m.dataset.away); else { idlePrompt = false; lastInput = Date.now(); closeModal(); if (m.dataset.idle === "stop") idleStop(); }
+        });
+        document.addEventListener("keydown", (e) => { if (e.key === "Escape" && ui.open) closeKit(); });
+        ["mousemove", "keydown", "touchstart", "click", "scroll"].forEach((ev) => document.addEventListener(ev, () => { lastInput = Date.now(); }, { passive: true, capture: true }));
+        document.addEventListener("visibilitychange", () => { if (!document.hidden) { const d = data(); if (d.wake && me() && me().running) wakeSync(true); } });
+        document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest("[data-dtk-ap]"); if (!b) return; const p = $("adminPortal"); if (p && !p.hidden) adminAction(b); });
+        setInterval(pomoTick, 500); setInterval(slowTick, 5000); setTimeout(slowTick, 2500); annSubscribe(); setInterval(renderAnn, 60000);
+        /* While the app is open it saves the timer every 20 s. If the last save is older than 30 minutes the tab was closed or asleep, so that time is not trusted until the person confirms it. */
+        if (typeof timerCheckpointPatch === "function" && !timerCheckpointPatch._dtk) {
+          const origCp = timerCheckpointPatch;
+          timerCheckpointPatch = function (user, pause) { if (!pause && user && awaySec(user, Date.now()) && trusted[user.id] !== user.startedAt) { if (user.id === currentUserId && !awayShown) askAway(user, awaySec(user, Date.now())); return null; } return origCp(user, pause); };
+          timerCheckpointPatch._dtk = true;
+        }
+        if (typeof liveSeconds === "function" && !liveSeconds._dtk) {
+          const origLive = liveSeconds;
+          liveSeconds = function (user) { if (user && user.running && user.startedAt && awaySec(user, Date.now()) && trusted[user.id] !== user.startedAt) return numT(user.todaySeconds) + 1800; return origLive(user); };
+          liveSeconds._dtk = true;
+        }
+        console.info("Study toolkit loaded");
+      }
+      const boot = setInterval(() => { if ($("logoutBtn") && typeof currentUser === "function") { clearInterval(boot); try { init(); } catch (e) { console.warn("Study toolkit:", e); } } }, 600);
+      window.dtk = { goalStats, reviewRev, newRev, dueRevs, trimPatch, removeIdle, awaySec, csvOf, overview, pomoAdvance, annActive, mistakeStats, _init: init, _slow: slowTick, _trusted: trusted, _open: openKit, _render: render, _act: onAction, _data: data };
     })();
   </script>
 </body>
