@@ -8322,8 +8322,7 @@ body .chat-widget.sb-full .chat-panel > .sb-walls { position: absolute; width: 3
     /* Built-in accounts. Their login IDs are NOT written here, only a hash of each (SHA-256 of "duotrack-lid|" + the ID).
        USERS looks a typed login ID up by hashing it, so the code works as before without ever containing the IDs. */
     const DT_BUILTIN = {
-      "562ae55dbdcf40bae0d7b4f3f2b622528180f642da59cb53893c9cab7ea78b7d": { password: "sha256$2d8c07b6836625808e7381126f8b9c829769db4e66964539f5361b655b7f87eb", id: "abhi", name: "Abhishek" },
-      "ca024d44cd3dbff799275557df2912fbe2784e95b85c911ce7721dba0ea7a51e": { password: "sha256$d6d0bd54cbfb877e7497e82484e72530d059adef400d849fd04a1e0ceddac2f6", id: "aditya", name: "Aditya" }
+      "562ae55dbdcf40bae0d7b4f3f2b622528180f642da59cb53893c9cab7ea78b7d": { password: "pbkdf2$600000$69A4cxad6C81SGwDmvE2+A==$fQv1YMJTwWSdLNcHsnFwfRJwAh6UhK1OAnaxhWIea7g=", id: "abhi", name: "Abhishek" }
     };
     function dtSha256Sync(str) {
       const K = [0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
@@ -8358,9 +8357,9 @@ body .chat-widget.sb-full .chat-panel > .sb-walls { position: absolute; width: 3
 
     // Administrator portal login. This is NOT a study account (it is not in USERS), so it never shows up as a study partner.
     // Only a hash of the credentials is kept here, not the plain text.
-    const ADMIN_ID_HASH = "fffa76fe4e82d3a09a72392a339700c6bb778ac1b3ccf8568011d281ca76364a";      // only a hash of the admin portal ID is kept here
-    async function isAdminLoginId(k) { return (await sha256Hex("duotrack-adminid|" + String(k).trim())) === ADMIN_ID_HASH; }
-    const ADMIN_HASH = "dbbc84c88e9cbc7613842ebfe5ab67937c8097b6c8be4b94b1433eda6ea98270";
+    const ADMIN_ID_HASH = "pbkdf2$210000$mIAvIfRtA7SVmCS0od/88A==$y91YDeq1PXjCdV+j2nzHCWqiNJ9cYqi0aQmgG9bn4tk=";      // only a hash of the admin portal ID is kept here
+    async function isAdminLoginId(k) { return ADMIN_ID_HASH.startsWith("pbkdf2$") ? dtPbkdf2Verify(ADMIN_ID_HASH, "duotrack-adminid|" + String(k).trim()) : (await sha256Hex("duotrack-adminid|" + String(k).trim())) === ADMIN_ID_HASH; }
+    const ADMIN_HASH = "pbkdf2$600000$kf+bV3DjONY79gR0edTijw==$4mugTkMPbmJf5LGkj1g20M4KQKM+vS8CdSP7F5ASsWM=";
     const adminLayoutRef = ref(database, `duotrack/groups/${GROUP_ID}/adminLayout`);
     let adminLayout = { all: 1, icons: {} };      // shared by everyone, saved by the administrator
     let adminEditing = false;                      // true while the icon layout editor is open (render() pauses)
@@ -8380,13 +8379,36 @@ body .chat-widget.sb-full .chat-panel > .sb-walls { position: absolute; width: 3
        in this file: this page is public on GitHub Pages, so anything written here can be read by anyone. */
     /* Passwords are stored as "sha256$<hash>" (salted with the login ID). Old plain-text accounts still log in once and
        are upgraded to a hash automatically, so nobody gets locked out. */
+    /* NEW: PBKDF2-HMAC-SHA256, 600,000 rounds, random salt per password. Format: pbkdf2$rounds$salt$hash.
+       Old sha256$ and plain-text passwords still log in once and are upgraded automatically. (Argon2 does not exist in browsers; PBKDF2 does.) */
+    const DT_PBKDF2_ITER = 600000;
+    const dtB64 = (u8) => btoa(String.fromCharCode(...u8));
+    const dtUnB64 = (t) => Uint8Array.from(atob(t), (c) => c.charCodeAt(0));
+    async function dtPbkdf2Raw(material, salt, iter) {
+      const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(material), "PBKDF2", false, ["deriveBits"]);
+      return new Uint8Array(await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt, iterations: iter }, key, 256));
+    }
+    async function dtPbkdf2Make(material, iter = DT_PBKDF2_ITER) {
+      const salt = crypto.getRandomValues(new Uint8Array(16));
+      return `pbkdf2$${iter}$${dtB64(salt)}$${dtB64(await dtPbkdf2Raw(material, salt, iter))}`;
+    }
+    async function dtPbkdf2Verify(stored, material) {
+      const p = String(stored || "").split("$");
+      if (p.length !== 4 || p[0] !== "pbkdf2") return false;
+      const iter = Number(p[1]); if (!(iter >= 10000 && iter <= 5000000)) return false;
+      const got = await dtPbkdf2Raw(material, dtUnB64(p[2]), iter), want = dtUnB64(p[3]);
+      if (got.length !== want.length) return false;
+      let d = 0; for (let i = 0; i < got.length; i++) d |= got[i] ^ want[i];
+      return d === 0;
+    }
     async function pwHash(loginKey, plain) {
-      return "sha256$" + await sha256Hex(`duotrack-pw|${loginKey}|${plain}`);
+      return dtPbkdf2Make(`duotrack-pw|${loginKey}|${plain}`);
     }
     async function passwordMatches(stored, loginKey, entered) {
       stored = String(stored || "");
       if (!stored) return false;
-      if (stored.startsWith("sha256$")) return stored === await pwHash(loginKey, entered);
+      if (stored.startsWith("pbkdf2$")) return dtPbkdf2Verify(stored, `duotrack-pw|${loginKey}|${entered}`);
+      if (stored.startsWith("sha256$")) return stored === "sha256$" + await sha256Hex(`duotrack-pw|${loginKey}|${entered}`);   /* old format, upgraded at login */
       return stored === entered;                          /* legacy plain-text account */
     }
     /* Only allow safe picture sources (own photos / https links) inside HTML attributes. */
@@ -8668,7 +8690,7 @@ body .chat-widget.sb-full .chat-panel > .sb-walls { position: absolute; width: 3
     async function dgApprove(id, btn) {
       const r = dgPending.find((x) => x.requestId === id);
       if (!r) return;
-      if (!r.loginId || !String(r.passHash || "").startsWith("sha256$")) { showToast("Cannot approve", "This request has no saved login. Ask them to send a new request."); return; }
+      if (!r.loginId || !/^(sha256|pbkdf2)\$/.test(String(r.passHash || ""))) { showToast("Cannot approve", "This request has no saved login. Ask them to send a new request."); return; }
       if (USERS[r.loginId]) { showToast("Login ID taken", "Another account now uses that ID. Reject this request and ask for a new one."); return; }
       btn.disabled = true; btn.textContent = "Creating...";
       try {
@@ -9219,7 +9241,7 @@ body .chat-widget.sb-full .chat-panel > .sb-walls { position: absolute; width: 3
     const WELCOME_POPUP_ENABLED_KEY = "duotrackWelcomePopupEnabled";
     const WELCOME_POPUP_TEXT_KEY = "duotrackWelcomePopupText";
     const DEFAULT_WELCOME_POPUP_TEXT = "there's a new feature now — you can switch to timer mode by clicking on the arrow button (it helps in time-bound practice).";
-    const SETTINGS_PASSWORD_HASH = "12c6fc5a29c65084d70864cc2b6335b7420b5c19273807b890cdd23508391dfe";   /* hash only - never the plain password */
+    const SETTINGS_PASSWORD_HASH = "pbkdf2$600000$04x3CjbL8XHKZAz4Cfiu1w==$JJ/ECR6Mq9brO+A9RqtxyIRFTl6JBIeCFUwWpBbVq4k=";   /* hash only - never the plain password */
     const EXPORT_VERSION = 1;
     const THEME_PRESETS = [
       {
@@ -11525,7 +11547,7 @@ body .chat-widget.sb-full .chat-panel > .sb-walls { position: absolute; width: 3
         {
           role: "system",
           content: [
-            "You are 'AI', a study buddy living inside DuoPrepare, a JEE (Indian engineering entrance exam) prep app shared by two students who are friends. Messages before this may be tagged with the sender's name (e.g. 'Abhishek: ...' or 'Aditya: ...') — that's their real Study Chat history, so you already know what they've been talking about, studying, or slacking off on.",
+            "You are 'AI', a study buddy living inside DuoPrepare, a JEE (Indian engineering entrance exam) prep app shared by students who are friends. Messages before this may be tagged with the sender's name (e.g. 'Abhishek: ...') — that's their real Study Chat history, so you already know what they've been talking about, studying, or slacking off on.",
             "",
             "READ THE HISTORY PROPERLY: Don't just glance at the last line — actually scan everything given to you before replying: who said what, jokes already made, topics already covered, promises made ('kal test dunga' type things), moods. Reuse specifics from it naturally, the way a friend who was actually present in the chat would, instead of giving a generic reply that could've fit anywhere.",
             "",
@@ -11795,6 +11817,7 @@ body .chat-widget.sb-full .chat-panel > .sb-walls { position: absolute; width: 3
     // Gemini generateContent REST call (works straight from the browser, no SDK/npm needed).
     // history: [{role: "user"|"assistant", content}], imageDataUrl: optional cropped question.
     async function callGeminiPdfApi(promptText, history, imageDataUrl = "", opts = {}) {
+      if (!dtPdfUnlocked()) throw new Error("PDF AI is locked by the admin.");
       if (!geminiAllKeys().length) {
         throw new Error("No Gemini API key set yet. Add one in Settings → PDF AI (Gemini).");
       }
@@ -12052,7 +12075,7 @@ body .chat-widget.sb-full .chat-panel > .sb-walls { position: absolute; width: 3
 
     // Builds the shared Study Chat's recent history as {role, content} turns so
     // the AI "remembers" what both people have been saying — not just the one
-    // @grok line. Names are prefixed so it can tell Abhishek and Aditya apart.
+    // @grok line. Names are prefixed so it can tell people apart.
     function buildStudyChatHistoryForAi(excludingMessageId) {
       return chatMessagesState
         .filter((message) => message.id !== excludingMessageId)
@@ -12145,7 +12168,7 @@ body .chat-widget.sb-full .chat-panel > .sb-walls { position: absolute; width: 3
 
     // Temporarily closed accounts: can log in, but see ONLY the closure popup + Contact Us (with Appeal).
     // Abhishek (the reviewer) can unban from the appeal popup; that is saved in Firebase and overrides this list.
-    const TEMP_CLOSED_ACCOUNTS = ["aditya"];
+    const TEMP_CLOSED_ACCOUNTS = [];
         const APPEAL_REVIEWER_ID = "abhi";
     /* TODO (later, child safety): add a report-to-police process for sexual or abusive content involving minors (POCSO ss.19-21, IT Act s.67B),
        image moderation for uploads, and no private chat between strangers and minors. Tracked in the admin to-do card (adminTodo script). */
@@ -13058,6 +13081,7 @@ body .chat-widget.sb-full .chat-panel > .sb-walls { position: absolute; width: 3
     }
     /* Saved AI chats (cloud) - works with or without the PDF still existing. opts.onOpen(chat) adds a "Continue in this PDF" button. */
     function openPdfAiChatsModal(opts = {}) {
+      if (!dtPdfGate(() => openPdfAiChatsModal(opts))) return;
       ensurePdfAiStyle();
       const back = document.createElement("div");
       back.className = "pac-back";
@@ -13387,6 +13411,7 @@ body .chat-widget.sb-full .chat-panel > .sb-walls { position: absolute; width: 3
     }
 
     function openPdfViewer(record, blob) {
+      if (!dtPdfGate(() => openPdfViewer(record, blob))) return;
       const prefs = pvPrefs();
       const S = {
         pdf: null, n: 0, slots: [], zoom: 100, fit: prefs.fit === "100" ? null : (prefs.fit === "page" ? "page" : "width"),
@@ -15500,6 +15525,7 @@ body .chat-widget.sb-full .chat-panel > .sb-walls { position: absolute; width: 3
     }
 
     function openNativePdfFrame(record, blob, message) {
+      if (!dtPdfGate(() => openNativePdfFrame(record, blob, message))) return;
       const url = URL.createObjectURL(blob);
       const root = document.createElement("div");
       root.className = "pv-root pv-fallback";
@@ -16790,7 +16816,7 @@ body .chat-widget.sb-full .chat-panel > .sb-walls { position: absolute; width: 3
       }
       let ok = false;
       try {
-        ok = (await sha256Hex(`duotrack-admin|${loginId.value.trim()}|${password.value}`)) === ADMIN_HASH;
+        ok = ADMIN_HASH.startsWith("pbkdf2$") ? await dtPbkdf2Verify(ADMIN_HASH, `duotrack-admin|${loginId.value.trim()}|${password.value}`) : (await sha256Hex(`duotrack-admin|${loginId.value.trim()}|${password.value}`)) === ADMIN_HASH;
       } catch (e) {
         loginError.textContent = "Admin login needs a secure page (https:// or file://).";
         return;
@@ -16850,6 +16876,7 @@ body .chat-widget.sb-full .chat-panel > .sb-walls { position: absolute; width: 3
 
     function openAdminPortal() {
       ensureAdminUi();
+      dtAdminHousekeeping();
       get(requestsRef).then((snap) => gsPurgeRejected(Object.values(snap.val() || {}))).catch(() => {});      // clean up old rejected requests
       loginScreen.classList.add("hidden");
       renderAdminPortal();
@@ -16900,6 +16927,7 @@ body .chat-widget.sb-full .chat-panel > .sb-walls { position: absolute; width: 3
           ${gsAdminCardHtml()}
           ${window.samAdminCardHtml ? window.samAdminCardHtml() : ""}
           ${window.dtkAdminCardHtml ? window.dtkAdminCardHtml() : ""}
+          ${dtPdfAdminCardHtml()}
           <div class="ap-card">
             <h2>Study time — today</h2>
             <p>Change today's study time for any user. Typing in a subject updates the total; you can also edit the total directly. Only today is changed.</p>
@@ -17913,7 +17941,7 @@ body .chat-widget.sb-full .chat-panel > .sb-walls { position: absolute; width: 3
         return;
       }
       const loginKey = loginId.value.trim();
-      const account = USERS[loginKey];
+      const account = dtRemovedLogin(loginKey) ? undefined : USERS[loginKey];
       let okPw = false;
       try { okPw = !!account && await passwordMatches(account.password, loginKey, password.value); }
       catch (e) { loginError.textContent = "Login needs a secure page (https:// or file://)."; return; }
@@ -17925,7 +17953,7 @@ body .chat-widget.sb-full .chat-panel > .sb-walls { position: absolute; width: 3
         return;
       }
       loginFails = 0; await dtLockClear(loginKey);
-      if (account.dyn && !String(account.password).startsWith("sha256$")) {          /* upgrade old plain-text password */
+      if (account.dyn && !String(account.password).startsWith("pbkdf2$")) {          /* upgrade old plain-text / sha256 password to PBKDF2 */
         try {
           const hashed = await pwHash(loginKey, password.value);
           await set(ref(database, `duotrack/groups/${GROUP_ID}/accounts/${loginKey}/password`), hashed);
@@ -21883,7 +21911,7 @@ function totpAt(keyBytes, counter) {
         const settingsError = document.getElementById("settingsError");
 
         let settingsOk = false;
-        try { settingsOk = (await sha256Hex(`duotrack-settings|${enteredPassword}`)) === SETTINGS_PASSWORD_HASH; } catch (e) { settingsOk = false; }
+        try { settingsOk = SETTINGS_PASSWORD_HASH.startsWith("pbkdf2$") ? await dtPbkdf2Verify(SETTINGS_PASSWORD_HASH, `duotrack-settings|${enteredPassword}`) : (await sha256Hex(`duotrack-settings|${enteredPassword}`)) === SETTINGS_PASSWORD_HASH; } catch (e) { settingsOk = false; }
         if (!settingsOk) {
           settingsError.textContent = "Wrong settings password.";
           return;
@@ -22794,7 +22822,7 @@ function totpAt(keyBytes, counter) {
     const dtLockId = async (id) => (await sha256Hex("duotrack-lock|" + String(id).trim().toLowerCase())).slice(0, 32);
     const dtLocLock = (k) => { try { return JSON.parse(localStorage.getItem("dtLock|" + k) || "null") || { n: 0, until: 0 }; } catch (e) { return { n: 0, until: 0 }; } };
     const dtLocSave = (k, v) => { try { localStorage.setItem("dtLock|" + k, JSON.stringify(v)); } catch (e) { /* ignore */ } };
-    const dtKnownId = (id) => id === "__admin__" || !!USERS[String(id).trim()];
+    const dtKnownId = (id) => id === "__admin__" || String(id).startsWith("__pdf__") || !!USERS[String(id).trim()];
     async function dtLockCheck(id) {
       const k = await dtLockId(id); let until = dtLocLock(k).until || 0;
       if (dtKnownId(id)) { try { const v = (await Promise.race([get(dtGR(`security/locks/${k}`)), new Promise((_, r) => setTimeout(() => r(new Error("slow")), 3000))])).val(); if (v && v.until > until) until = v.until; } catch (e) { /* offline: this device's copy still applies */ } }
@@ -22926,10 +22954,102 @@ function totpAt(keyBytes, counter) {
         if (uid) { dtEnsureIdentity(uid).catch(() => {}); dtSessionWatch(uid); } else { dtSessionWatch(""); dtWatchPeer(""); }
       }
       if (!uid) return;
+      if (DT_REMOVED_USER_IDS.includes(uid)) { dtForceLogout("This account was removed."); return; }
       const i = dtRoomInfo(); dtWatchPeer(i && !i.bot ? i.peerId : "");
       dtHeal().catch(() => {}); dtDrawBar();
     }, 1500);
     /* ===== end of secure chat + login guard ===== */
+
+    /* ================================================================================================================
+       PDF LOCK + HOUSEKEEPING (added)
+       - PDF viewer and PDF AI are locked for everybody until the admin's 4-digit password is typed (once per browser session).
+       - The admin sets / changes / removes the code in the admin portal ("PDF lock" card). Only a PBKDF2 hash is stored.
+       - Honest note: a 4-digit code is a door lock, not a vault. It stops normal users, not a determined programmer.
+       ================================================================================================================ */
+    const pdfLockRef = ref(database, `duotrack/groups/${GROUP_ID}/pdfLock`);
+    let dtPdfLock = { on: true, code: "", loaded: false };
+    onValue(pdfLockRef, (s) => { const v = s.val() || {}; dtPdfLock = { on: v.on !== false, code: typeof v.code === "string" ? v.code : "", loaded: true }; }, () => { dtPdfLock.loaded = true; });
+    const dtPdfOkKey = () => "dtPdfOk|" + (dtPdfLock.code || "none").slice(-24);
+    function dtPdfUnlocked() { if (dtPdfLock.loaded && !dtPdfLock.on) return true; try { return sessionStorage.getItem(dtPdfOkKey()) === "1"; } catch (e) { return false; } }
+    function dtPdfGate(proceed) {
+      if (dtPdfUnlocked()) return true;
+      dtPdfShowLock(proceed); return false;
+    }
+    function dtPdfShowLock(proceed) {
+      const old = document.getElementById("dtPdfLockBox"); if (old) old.remove();
+      const box = document.createElement("div"); box.id = "dtPdfLockBox";
+      box.style.cssText = "position:fixed;inset:0;z-index:99999;display:grid;place-items:center;background:rgba(0,0,0,.62);padding:16px";
+      const noCode = !dtPdfLock.code;
+      box.innerHTML = `<div role="dialog" aria-modal="true" aria-label="PDF locked" style="max-width:380px;width:100%;background:Canvas;color:CanvasText;border:1px solid GrayText;border-radius:16px;padding:20px;box-shadow:0 12px 40px rgba(0,0,0,.4)">
+        <h2 style="margin:0 0 8px;font-size:19px">🔒 PDF is partially locked</h2>
+        <p style="margin:0 0 12px;font-size:14px;line-height:1.45">This is partially locked by the admin of DuoTrack because of some security vulnerabilities. ${noCode ? "The admin has not given out a password yet. Please ask the admin." : "Ask the admin for the 4-digit password to get in."}</p>
+        ${noCode ? "" : `<input id="dtPdfCode" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="4-digit password" style="width:100%;box-sizing:border-box;padding:11px;font-size:18px;letter-spacing:.3em;text-align:center;border-radius:10px;border:1px solid GrayText;background:Field;color:FieldText">
+        <p id="dtPdfErr" role="alert" style="margin:8px 0 0;min-height:18px;font-size:13px;color:#c0392b"></p>`}
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+          <button type="button" id="dtPdfClose" style="padding:9px 14px;border-radius:10px;border:1px solid GrayText;background:transparent;color:inherit;cursor:pointer">Close</button>
+          ${noCode ? "" : `<button type="button" id="dtPdfGo" style="padding:9px 16px;border-radius:10px;border:0;background:#2563eb;color:#fff;cursor:pointer">Unlock</button>`}
+        </div></div>`;
+      document.body.appendChild(box);
+      const close = () => box.remove(), err = box.querySelector("#dtPdfErr"), inp = box.querySelector("#dtPdfCode");
+      box.querySelector("#dtPdfClose").onclick = close;
+      box.addEventListener("click", (e) => { if (e.target === box) close(); });
+      if (!inp) return;
+      inp.focus(); inp.addEventListener("input", () => { inp.value = inp.value.replace(/\D/g, "").slice(0, 4); });
+      const go = async () => {
+        const code = inp.value; if (!/^\d{4}$/.test(code)) { err.textContent = "Type the 4 digits."; return; }
+        const lid = "__pdf__" + (currentUserId || "guest"), lk = await dtLockCheck(lid);
+        if (lk.locked) { err.textContent = dtLockMsg(lk.ms); return; }
+        let ok = false; try { ok = await dtPbkdf2Verify(dtPdfLock.code, "duotrack-pdflock|" + code); } catch (e) { ok = false; }
+        if (!ok) { const f = await dtLockFail(lid); err.textContent = f.locked ? dtLockMsg(f.ms) : `Wrong password. ${f.left} attempt(s) left.`; inp.value = ""; return; }
+        await dtLockClear(lid); try { sessionStorage.setItem(dtPdfOkKey(), "1"); } catch (e) { /* ignore */ }
+        close(); if (typeof proceed === "function") proceed();
+      };
+      box.querySelector("#dtPdfGo").onclick = go; inp.addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
+    }
+    function dtPdfAdminCardHtml() {
+      const st = !dtPdfLock.on ? "OFF: everyone can open PDFs" : dtPdfLock.code ? "ON: locked, code is set" : "ON: locked, no code set yet";
+      return `<div class="ap-card"><h2>PDF lock</h2>
+        <p>PDF viewer and PDF AI are locked for everyone. People type your 4-digit password once per browser session. Status: <b>${st}</b></p>
+        <div class="ap-row"><input id="dtPdfNewCode" type="text" inputmode="numeric" maxlength="4" placeholder="new 4 digits" autocomplete="off" style="width:120px">
+        <button type="button" class="ap-primary" data-dtpdf="save">Save code and lock</button>
+        <button type="button" data-dtpdf="off">Turn lock off</button></div></div>`;
+    }
+    document.addEventListener("click", async (e) => {
+      const b = e.target.closest && e.target.closest("[data-dtpdf]"); if (!b) return;
+      try {
+        if (b.dataset.dtpdf === "save") {
+          const v = (document.getElementById("dtPdfNewCode") || {}).value || "";
+          if (!/^\d{4}$/.test(v)) { showToast("PDF lock", "Type exactly 4 digits."); return; }
+          await set(pdfLockRef, { on: true, code: await dtPbkdf2Make("duotrack-pdflock|" + v), at: dtNow() }); showToast("PDF lock", "Locked. Share the code only with people you trust.");
+        } else if (b.dataset.dtpdf === "off") {
+          await set(pdfLockRef, { on: false, code: dtPdfLock.code || "", at: dtNow() }); showToast("PDF lock", "Lock turned off for everyone.");
+        }
+        setTimeout(() => { if (typeof renderAdminPortal === "function") renderAdminPortal(); }, 500);
+      } catch (error) { showToast("PDF lock", "Could not save. Check your internet and the database rules (pdfLock)."); }
+    });
+
+    /* ---------- removed account + exposed keys: cleaned up whenever the admin opens the portal ---------- */
+    const DT_REMOVED_USER_IDS = ["aditya"];
+    const DT_REMOVED_LOGIN_HASHES = ["ca024d44cd3dbff799275557df2912fbe2784e95b85c911ce7721dba0ea7a51e"];
+    const dtRemovedLogin = (k) => DT_REMOVED_LOGIN_HASHES.includes(dtSha256Sync("duotrack-lid|" + String(k)));
+    async function dtAdminHousekeeping() {
+      try {
+        for (const uid of DT_REMOVED_USER_IDS) {
+          const accs = (await get(accountsRef)).val() || {};
+          for (const [k, a] of Object.entries(accs)) if (a && a.id === uid) await remove(ref(database, `duotrack/groups/${GROUP_ID}/accounts/${k}`));
+          for (const n of ["users", "accountStatus", "appeals", "pdfAiChats", "typing"]) await remove(dtGR(`${n}/${uid}`));
+          const us = (await get(dtGR("users"))).val() || {};
+          for (const [id, u] of Object.entries(us)) if (u && u.partnerId === uid) await update(dtGR("users"), { [`${id}/partnerId`]: "", [`${id}/pairId`]: "", [`${id}/pickPartner`]: true });
+          const gl = (await get(dtGR("googleLinks"))).val() || {};
+          for (const [k, v] of Object.entries(gl)) if (v === uid || (v && v.id === uid)) await remove(dtGR(`googleLinks/${k}`));
+        }
+        if (DT_PROXY_URL) {                                    /* keys live on the relay, so the public copies must not exist */
+          await remove(grokConfigRef).catch(() => {});
+          await update(geminiConfigRef, { apiKey: null }).catch(() => {});
+        }
+      } catch (error) { console.warn("housekeeping skipped", error && error.message); }
+    }
+    /* ===== end of PDF lock + housekeeping ===== */
 
     state = defaultState();
     listenToFirebase();
@@ -23637,7 +23757,7 @@ function totpAt(keyBytes, counter) {
     const duoCoffee = (function coffeeInit() {
       "use strict";
       const UPI_ID = "", PAYEE = "", MAX_AMOUNT = 10000, MAX_PENDING = 3;
-      const HIDDEN_FOR_IDS = ["aditya"];                                  /* user ids that never see this feature */
+      const HIDDEN_FOR_IDS = [];                                  /* user ids that never see this feature */
       const SAFE = /^[A-Za-z0-9_-]{1,64}$/, EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
       const RS = "\u20B9";
       const base = () => "duotrack/groups/" + GROUP_ID + "/coffee";
