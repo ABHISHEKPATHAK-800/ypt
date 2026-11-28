@@ -23940,6 +23940,97 @@ function totpAt(keyBytes, counter) {
     })();
 
     /* ====================================================================================================================
+       ICONS & MOTION (added block): a hand-drawn icon set for the new features (ink stroke + an offset highlighter mark, so it reads
+       like a marked-up notebook rather than a stock pack), small animations, and a "Look & motion" setting in the toolkit.
+       window.dti.i("name", size) returns an inline SVG. Nothing here touches the app's own icons except a gentle hover/press motion.
+       ==================================================================================================================== */
+    (() => {
+      const ICONS = {
+        kit: { a: '<rect x="4" y="10" width="16.4" height="9.6" rx="2.8"/>', s: '<path class="lid" d="M8.7 8.4V6.7a1.7 1.7 0 0 1 1.7-1.7h3.2a1.7 1.7 0 0 1 1.7 1.7v1.7"/><rect x="3.3" y="8.4" width="17.4" height="11.6" rx="2.9"/><path d="M3.5 13.4h6.1m4.8 0h6.1"/><rect class="clasp" x="9.9" y="11.7" width="4.2" height="3.5" rx="1.1"/>' },
+        search: { a: '<circle cx="10.4" cy="10.4" r="5.6"/>', s: '<circle cx="10.4" cy="10.4" r="6.2"/><path class="hd" d="M15 15.2 20 20.2"/>' },
+        bookmark: { a: '<path d="M7.4 5.8h9.4v13.6L12 15.8 7.4 19.4z"/>', s: '<path d="M6.5 4.4h11a.9.9 0 0 1 .9.9v14.5a.5.5 0 0 1-.8.4L12 15.5l-5.6 4.7a.5.5 0 0 1-.8-.4V5.3a.9.9 0 0 1 .9-.9z"/><path d="m12 7.7.9 1.9 2.1.3-1.5 1.5.4 2.1-1.9-1-1.9 1 .4-2.1-1.5-1.5 2.1-.3z"/>' },
+        pin: { a: '<path d="M10.4 5.2h3.6v4.4c0 1.4.8 2.5 2 3.2H8.4c1.2-.7 2-1.8 2-3.2z"/>', s: '<path d="M8.4 4.2h7.2"/><path d="M9.6 4.2v5.4c0 1.1-.7 2-2.1 2.8a.6.6 0 0 0 .3 1.1h8.4a.6.6 0 0 0 .3-1.1c-1.4-.8-2.1-1.7-2.1-2.8V4.2"/><path d="M12 13.6v6.6"/>' },
+        down: { a: '<circle cx="12" cy="12.4" r="6.6"/>', s: '<path d="M12 5.4v12.6"/><path d="m6.8 12.8 5.2 5.2 5.2-5.2"/>' },
+        flame: { a: '<path d="M12 6.4c1.3 2.4 4.7 4 4.7 8a4.7 4.7 0 0 1-9.4 0c0-1.9.9-3.1 1.7-4 .2 1 .8 1.7 1.5 2 .1-2.2 0-4 1.5-6z"/>', s: '<path d="M12 3.2c.9 3.1 5.9 5.2 5.9 10.9a5.9 5.9 0 0 1-11.8 0c0-2.4 1.1-4 2.2-5.1.2 1.3.9 2.3 2 2.8C10 8.1 10.4 5.5 12 3.2z"/><path d="M12 19.7c-1.5 0-2.5-1-2.5-2.3 0-1.4 1.1-2.2 1.6-3.1.9.6 1.9 1.2 1.9 2.6"/>' },
+        medal: { a: '<circle cx="12" cy="14.4" r="4.8"/>', s: '<circle cx="12" cy="14.2" r="5.3"/><path d="M8.6 10.3 6.6 4.2h4.1l1.3 3.3M15.4 10.3l2-6.1h-4.1"/><path d="m12 12 .8 1.6 1.7.2-1.2 1.2.3 1.7-1.6-.8-1.6.8.3-1.7-1.2-1.2 1.7-.2z"/>' },
+        lock: { a: '<rect x="6.6" y="11.4" width="12" height="8.6" rx="2.2"/>', s: '<rect x="5.7" y="10.4" width="12.8" height="9.4" rx="2.3"/><path d="M8.6 10.4V8.3a3.4 3.4 0 0 1 6.8 0v2.1"/><circle cx="12" cy="15" r="1.2"/>' },
+        timer: { a: '<circle cx="12.8" cy="14" r="7"/>', s: '<circle cx="12" cy="13.2" r="7.1"/><path d="M12 13.2V9.4l2.7 1.9"/><path d="M9.7 3.4h4.6M12 3.4v2.7"/><path d="m17.4 6 1.4-1.4"/>' },
+        cup: { a: '<path d="M6.2 11.2h10.6v3.6a4.4 4.4 0 0 1-4.4 4.4h-1.8a4.4 4.4 0 0 1-4.4-4.4z"/>', s: '<path d="M5.4 10.2h11.2v4.2a4.6 4.6 0 0 1-4.6 4.6h-2a4.6 4.6 0 0 1-4.6-4.6z"/><path d="M16.6 11.2h1.1a2.2 2.2 0 0 1 0 4.4h-1.3"/><path class="st1" d="M8.8 7.8c-1-1-.5-1.9.1-2.6.5-.6.3-1.2-.1-1.7"/><path class="st2" d="M12.4 7.8c-1-1-.5-1.9.1-2.6.5-.6.3-1.2-.1-1.7"/>' },
+        goal: { a: '<circle cx="12" cy="12" r="4"/>', s: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4.1"/><path d="m12 12 6.5-6.5M16.3 5.2h2.5v2.5"/>' },
+        loop: { a: '<circle cx="12" cy="12" r="4.2"/>', s: '<path d="M5.6 11.2A6.6 6.6 0 0 1 17.4 8"/><path d="M18.4 4.6V8H15"/><path d="M18.4 12.8A6.6 6.6 0 0 1 6.6 16"/><path d="M5.6 19.4V16H9"/>' },
+        notebook: { a: '<path d="M7 5.4h9.6v13.6H7z"/>', s: '<path d="M6.2 3.8h10.6a1.4 1.4 0 0 1 1.4 1.4v13.6a1.4 1.4 0 0 1-1.4 1.4H6.2a1.4 1.4 0 0 1-1.4-1.4V5.2a1.4 1.4 0 0 1 1.4-1.4z"/><path d="M8.7 3.8v16.4"/><path d="m11.4 8.6 3.4 3.4m0-3.4-3.4 3.4"/><path d="M11.4 15.6h3.4"/>' },
+        user: { a: '<circle cx="12" cy="8.6" r="3.2"/>', s: '<circle cx="12" cy="8.4" r="3.6"/><path d="M5 19.6a7 7 0 0 1 14 0"/>' },
+        close: { a: "", s: '<path d="M6.4 6.4l11.2 11.2M17.6 6.4 6.4 17.6"/>' },
+        copy: { a: '<rect x="9.2" y="9.2" width="10.4" height="10.4" rx="2.4"/>', s: '<rect x="8.4" y="8.4" width="11.2" height="11.2" rx="2.4"/><path d="M15.6 8.4V6.8a2.4 2.4 0 0 0-2.4-2.4H6.8a2.4 2.4 0 0 0-2.4 2.4v6.4a2.4 2.4 0 0 0 2.4 2.4h1.6"/>' },
+        todo: { a: '<rect x="5.6" y="5.6" width="13.2" height="13.2" rx="3"/>', s: '<rect x="4.4" y="4.4" width="15.2" height="15.2" rx="3.4"/><path d="m8.4 12.2 2.6 2.6 4.8-5.2"/>' },
+        bulb: { a: '<circle cx="12.6" cy="9.6" r="4.4"/>', s: '<path d="M9.2 17.2h5.6M10 19.8h4"/><path d="M12 3.8a5.4 5.4 0 0 0-3.2 9.8c.6.5.8 1.1.8 1.8v.4h4.8v-.4c0-.7.2-1.3.8-1.8A5.4 5.4 0 0 0 12 3.8z"/>' },
+        mute: { a: '<path d="M4.6 9.6h3.2l4.4-3.4v11.6l-4.4-3.4H4.6z"/>', s: '<path d="M4.6 9.6h3.2l4.4-3.4v11.6l-4.4-3.4H4.6z"/><path d="m16 9.4 4 5.2m0-5.2-4 5.2"/>' },
+        ask: { a: '<path d="M5.4 6.2h14v9.2h-6l-4.2 3.2v-3.2H5.4z"/>', s: '<path d="M5 5.2h14a1.4 1.4 0 0 1 1.4 1.4v8.4A1.4 1.4 0 0 1 19 16.4h-6l-4.4 3.4v-3.4H5A1.4 1.4 0 0 1 3.6 15V6.6A1.4 1.4 0 0 1 5 5.2z"/><path d="M10.2 9.4a1.9 1.9 0 1 1 2.6 1.8c-.6.3-.8.6-.8 1.2"/><circle cx="12" cy="13.9" r=".55" fill="currentColor" stroke="none"/>' },
+        check: { a: '<circle cx="12.6" cy="12.6" r="8"/>', s: '<circle cx="12" cy="12" r="8.4"/><path class="chk" d="m8.2 12.4 2.7 2.7 5-5.6"/>' },
+        mega: { a: '<path d="M5.4 9.4h2.2L14 5.4V19l-6.4-4H5.4a1 1 0 0 1-1-1v-3.6a1 1 0 0 1 1-1z"/>', s: '<path d="M4.4 10.4v3.6a1 1 0 0 0 1 1h2.2L14 19V5.4L7.6 9.4H5.4a1 1 0 0 0-1 1z"/><path class="w1" d="M16.6 9.4a3.6 3.6 0 0 1 0 5.2"/><path class="w2" d="M18.8 7.2a6.6 6.6 0 0 1 0 9.6"/>' },
+        down2: { a: "", s: '<path d="M12 4.6v10.2M7.8 11l4.2 4.2 4.2-4.2M5 19.4h14"/>' },
+        heart: { a: "", s: '<path d="M12 19.6s-7-4.4-7-9.6a3.9 3.9 0 0 1 7-2.3A3.9 3.9 0 0 1 19 10c0 5.2-7 9.6-7 9.6z" fill="currentColor"/>' },
+        spark: { a: "", s: '<path d="M12 4v3M12 17v3M4 12h3M17 12h3"/>' }
+      };
+      const icon = (name, size, cls) => { const d = ICONS[name]; return d ? `<svg class="dti dti-${name}${cls ? " " + cls : ""}" viewBox="0 0 24 24" width="${size || 20}" height="${size || 20}" aria-hidden="true" focusable="false"><g class="a">${d.a || ""}</g><g class="s">${d.s}</g></svg>` : ""; };
+
+      const prefsKey = "dti|prefs", HI = { sun: "#f2c14e", mint: "#7ad3a6", coral: "#f08a7a", sky: "#7cc4ee" };
+      const load = () => { try { return Object.assign({ style: "hi", hi: "sun", motion: "auto" }, JSON.parse(localStorage.getItem(prefsKey) || "null") || {}); } catch (e) { return { style: "hi", hi: "sun", motion: "auto" }; } };
+      let prefs = load();
+      function apply() {
+        const h = document.documentElement; if (!h) return;
+        const sys = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches, m = prefs.motion === "auto" ? (sys ? "calm" : "full") : prefs.motion;
+        h.classList.toggle("dti-line", prefs.style === "line"); h.classList.toggle("dti-calm", m === "calm"); h.classList.toggle("dti-off", m === "off");
+        h.style.setProperty("--dti-hi", HI[prefs.hi] || HI.sun);
+      }
+      function setPrefs(p) { prefs = Object.assign(prefs, p); try { localStorage.setItem(prefsKey, JSON.stringify(prefs)); } catch (e) { /* ignore */ } apply(); }
+      function heart(x, y) {                                              // a heart floats up from where you double-tapped
+        if (document.documentElement.classList.contains("dti-off")) return;
+        const h = document.createElement("div"); h.className = "dti-heart"; h.style.left = x + "px"; h.style.top = y + "px"; h.innerHTML = icon("heart", 34); document.body.appendChild(h); setTimeout(() => h.remove(), 950);
+      }
+
+      const css = `
+        .dti{display:inline-block;vertical-align:-.2em;overflow:visible;flex:none}
+        .dti .s{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+        .dti .a{fill:var(--dti-hi,#f2c14e);opacity:.5;transform:translate(1.2px,1.1px);transition:transform .28s cubic-bezier(.34,1.56,.64,1),opacity .2s}
+        html.dti-line .dti .a{display:none}
+        :hover>.dti .a,.dti-host:hover .dti .a{transform:translate(.4px,.3px);opacity:.7}
+        :hover>.dti-kit .lid{transform:translateY(-1.7px)} .dti-kit .lid,.dti-kit .clasp{transition:transform .3s cubic-bezier(.34,1.56,.64,1)} :hover>.dti-kit .clasp{transform:translateY(.8px)}
+        :hover>.dti-search .hd{transform:rotate(-14deg)} .dti-search .hd{transform-origin:15px 15.2px;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+        :hover>.dti-loop .s{animation:dtiSpin .7s ease} .dti-goal .s{transform-origin:12px 12px} :hover>.dti-goal .s{animation:dtiSpin .8s ease}
+        .dti-flame .s{transform-origin:50% 92%;animation:dtiFlick 1.7s ease-in-out infinite}
+        .dti-cup .st1,.dti-cup .st2{animation:dtiSteam 2.6s ease-in-out infinite} .dti-cup .st2{animation-delay:1s}
+        .dti-mega .w1,.dti-mega .w2{animation:dtiWave 1.8s ease-in-out infinite} .dti-mega .w2{animation-delay:.35s}
+        .dti-check .chk{stroke-dasharray:24;stroke-dashoffset:0} .dti-check.fresh .chk{animation:dtiDraw .5s .05s ease-out both} .dti-check.fresh{animation:dtiPop .45s ease both}
+        .dti-pin.fresh,.dti-bookmark.fresh,.dti-medal.fresh{animation:dtiPop .5s cubic-bezier(.34,1.56,.64,1) both} .dti-pin.drop{animation:dtiDrop .55s cubic-bezier(.34,1.56,.64,1) both}
+        .dti-down{animation:dtiBounce 1.7s ease-in-out infinite}
+        .dti-heart{position:fixed;z-index:6000;pointer-events:none;color:#e2566c;animation:dtiHeart .9s ease-out both}
+        body .icon-btn svg,body .small-btn svg{transition:transform .28s cubic-bezier(.34,1.56,.64,1)} body .icon-btn:hover svg{transform:rotate(-7deg) scale(1.1)} body .icon-btn:active svg,body .small-btn:active svg{transform:scale(.88)}
+        @keyframes dtiPop{0%{transform:scale(.55);opacity:0}60%{transform:scale(1.14);opacity:1}100%{transform:scale(1)}}
+        @keyframes dtiDrop{0%{transform:translateY(-9px) rotate(-18deg);opacity:0}70%{transform:translateY(1px) rotate(4deg);opacity:1}100%{transform:none}}
+        @keyframes dtiFlick{0%,100%{transform:scale(1,1) skewX(0)}28%{transform:scale(.97,1.07) skewX(-2.5deg)}56%{transform:scale(1.02,.97) skewX(2deg)}78%{transform:scale(.99,1.04) skewX(-1deg)}}
+        @keyframes dtiSteam{0%{opacity:0;transform:translateY(2px)}40%{opacity:.95}100%{opacity:0;transform:translateY(-3px)}}
+        @keyframes dtiWave{0%,100%{opacity:.2}50%{opacity:1}}
+        @keyframes dtiDraw{from{stroke-dashoffset:24}to{stroke-dashoffset:0}}
+        @keyframes dtiSpin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+        @keyframes dtiBounce{0%,100%{transform:translateY(-1px)}50%{transform:translateY(2.5px)}}
+        @keyframes dtiSlideDown{from{transform:translateY(-8px);opacity:0}to{transform:none;opacity:1}}
+        @keyframes dtiSlideRight{from{transform:translateX(26px);opacity:0}to{transform:none;opacity:1}}
+        @keyframes dtiIn{from{transform:translateY(9px);opacity:0}to{transform:none;opacity:1}}
+        @keyframes dtiScaleIn{from{transform:scale(.95) translateY(6px);opacity:0}to{transform:none;opacity:1}}
+        @keyframes dtiFade{from{opacity:0}to{opacity:1}}
+        @keyframes dtiCell{from{transform:scale(.2);opacity:0}to{transform:none;opacity:1}}
+        @keyframes dtiRing{0%{box-shadow:0 0 0 0 rgba(79,174,117,.55)}100%{box-shadow:0 0 0 12px rgba(79,174,117,0)}}
+        @keyframes dtiGlow{0%,100%{box-shadow:0 0 0 0 rgba(242,193,78,0)}50%{box-shadow:0 0 0 4px rgba(242,193,78,.4)}}
+        @keyframes dtiHeart{0%{transform:translate(-50%,-50%) scale(.2);opacity:0}22%{transform:translate(-50%,-80%) scale(1.15);opacity:1}100%{transform:translate(-50%,-230%) scale(.85) rotate(9deg);opacity:0}}
+        html.dti-calm .dti-flame .s,html.dti-calm .dti-cup .st1,html.dti-calm .dti-cup .st2,html.dti-calm .dti-mega .w1,html.dti-calm .dti-mega .w2,html.dti-calm .dti-down{animation:none}
+        html.dti-off .dti,html.dti-off .dti *,html.dti-off [class*="dtk-"],html.dti-off [class*="sam-"],html.dti-off #dtkOverlay,html.dti-off #dtkModal,html.dti-off #samSearch,html.dti-off #samPins,html.dti-off #samSaved,html.dti-off #samLatest{animation:none!important;transition:none!important}
+        @media (prefers-reduced-motion:reduce){html:not(.dti-motion-pick) .dti-flame .s,html:not(.dti-motion-pick) .dti-down{animation:none}}`;
+      const st = document.createElement("style"); st.id = "dtiCss"; st.textContent = css; document.head.appendChild(st); apply();
+      window.dti = { i: icon, heart, prefs: () => ({ ...prefs }), set: setPrefs, HI, names: Object.keys(ICONS) };
+    })();
+
+    /* ====================================================================================================================
        SAMRIDHI - AI study partner that lives inside this file (no server). ADDED BLOCK: it touches none of the protected parts.
        - She only acts while her partner has the app open. When the partner's timer turns ON she turns ON a minute or two later
          and stays on while it is on; when it is off, an AI "brain" (with simple rules as a back-up) decides when she studies or rests,
@@ -24744,6 +24835,8 @@ TASK: ${task} Output only the message text (plus the optional @@ and ## lines). 
       const lsSetC = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* ignore */ } };
       const $ = (id) => document.getElementById(id);
       const escC = (x) => escapeHTML(String(x == null ? "" : x));
+      const I = (n, s, c) => (window.dti ? window.dti.i(n, s, c) : "");
+      const freshSolved = {};
 
       /* CPURE:BEGIN (no app variables below - unit-tested outside the browser) */
       const numC = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
@@ -24800,8 +24893,8 @@ TASK: ${task} Output only the message text (plus the optional @@ and ## lines). 
       function renderPins() {
         const bar = $("samPins"); if (!bar) return; const list = Object.entries(pins).map(([id, p]) => ({ id, ...p })).sort((a, b) => b.at - a.at);
         bar.classList.toggle("hidden", !list.length); if (!list.length) { bar.classList.remove("open"); bar.innerHTML = ""; return; }
-        bar.innerHTML = `<div class="sam-pin-row"><div class="sam-pin-main" data-jump="${escC(list[0].id)}">📌 <b>${escC(list[0].name)}</b>: ${escC(list[0].text)}</div>${list.length > 1 ? `<button type="button" class="small-btn" data-pintoggle="1">+${list.length - 1}</button>` : ""}</div>` +
-          `<div class="sam-pin-list">${list.map((p) => `<div class="sam-pin-item"><span data-jump="${escC(p.id)}">📌 <b>${escC(p.name)}</b>: ${escC(p.text)}</span><button type="button" class="small-btn" data-unpin="${escC(p.id)}" title="Unpin">×</button></div>`).join("")}</div>`;
+        bar.innerHTML = `<div class="sam-pin-row"><div class="sam-pin-main" data-jump="${escC(list[0].id)}">${I("pin", 15, "drop")} <b>${escC(list[0].name)}</b>: ${escC(list[0].text)}</div>${list.length > 1 ? `<button type="button" class="small-btn" data-pintoggle="1">+${list.length - 1}</button>` : ""}</div>` +
+          `<div class="sam-pin-list">${list.map((p) => `<div class="sam-pin-item"><span data-jump="${escC(p.id)}">${I("pin", 14)} <b>${escC(p.name)}</b>: ${escC(p.text)}</span><button type="button" class="small-btn" data-unpin="${escC(p.id)}" title="Unpin">×</button></div>`).join("")}</div>`;
       }
       function pinSubscribe() {
         const room = roomKey(); if (room === pinRoom) return;
@@ -24821,8 +24914,8 @@ TASK: ${task} Output only the message text (plus the optional @@ and ## lines). 
       function toggleSave(m) { saved = toggleSavedList(saved, m, roomKey(), Date.now()); lsSetC(savedKey(), saved); augment(); renderSaved(); showToast(isSaved(m.id) ? "Saved" : "Removed from saved", String(m.text || "Photo").slice(0, 60)); }
       function renderSaved() {
         const p = $("samSaved"); if (!p || p.classList.contains("hidden")) return;
-        p.innerHTML = `<div class="sam-saved-head"><b>⭐ Saved messages</b><button type="button" class="small-btn" data-close="1">×</button></div>` +
-          (saved.length ? saved.map((x, i) => `<div class="sam-item"><div class="sam-item-top"><b>${escC(x.name)}</b><small>${new Date(x.at).toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</small></div><p>${escC(x.text)}</p><div class="sam-item-actions"><button type="button" data-i="${i}" data-a="copy">Copy</button><button type="button" data-i="${i}" data-a="todo">To-do</button><button type="button" data-i="${i}" data-a="open">Show in chat</button><button type="button" data-i="${i}" data-a="del">Remove</button></div></div>`).join("") : `<p class="sam-empty">Nothing saved yet. Open a message's ⋮ menu and choose "Save message" to keep notes, formulas and tips here.</p>`);
+        p.innerHTML = `<div class="sam-saved-head"><b>${I("bookmark", 17)} Saved messages</b><button type="button" class="small-btn" data-close="1">×</button></div>` +
+          (saved.length ? saved.map((x, i) => `<div class="sam-item" style="--i:${i}"><div class="sam-item-top"><b>${escC(x.name)}</b><small>${new Date(x.at).toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</small></div><p>${escC(x.text)}</p><div class="sam-item-actions"><button type="button" data-i="${i}" data-a="copy">Copy</button><button type="button" data-i="${i}" data-a="todo">To-do</button><button type="button" data-i="${i}" data-a="open">Show in chat</button><button type="button" data-i="${i}" data-a="del">Remove</button></div></div>`).join("") : `<p class="sam-empty">Nothing saved yet. Open a message's ⋮ menu and choose "Save message" to keep notes, formulas and tips here.</p>`);
       }
 
       /* ---- search ---- */
@@ -24841,12 +24934,12 @@ TASK: ${task} Output only the message text (plus the optional @@ and ## lines). 
           el.style.display = muted[m.userId] && m.userId !== currentUserId ? "none" : "";
           el.classList.toggle("sam-hit", !!searchQ && hits.includes(id));
           el.querySelectorAll(":scope > .sam-flags, :scope > .sam-doubt").forEach((n) => n.remove());
-          const flags = [pins[id] ? "📌" : "", isSaved(id) ? "⭐" : ""].filter(Boolean).join(" ");
-          if (flags) { const s = document.createElement("span"); s.className = "sam-flags"; s.textContent = flags; el.appendChild(s); }
+          const flags = (pins[id] ? I("pin", 12) : "") + (isSaved(id) ? I("bookmark", 12) : "");
+          if (flags) { const s = document.createElement("span"); s.className = "sam-flags"; s.innerHTML = flags; el.appendChild(s); }
           const t = String(m.text || "");
           if (t.startsWith("❓") || t.startsWith("✅")) {
-            const solved = t.startsWith("✅"), w = document.createElement("div"); w.className = "sam-doubt " + (solved ? "solved" : "open"); w.textContent = solved ? "Solved ✓" : "Open doubt";
-            if (m.userId === currentUserId) { const b = document.createElement("button"); b.type = "button"; b.className = "sam-solve"; b.dataset.id = id; b.textContent = solved ? "Reopen" : "Mark solved ✓"; w.appendChild(b); }
+            const solved = t.startsWith("✅"), w = document.createElement("div"); w.className = "sam-doubt " + (solved ? "solved" : "open"); w.innerHTML = I(solved ? "check" : "ask", 16, solved && freshSolved[id] ? "fresh" : "") + `<span>${solved ? "Solved" : "Open doubt"}</span>`;
+            if (m.userId === currentUserId) { const b = document.createElement("button"); b.type = "button"; b.className = "sam-solve"; b.dataset.id = id; b.textContent = solved ? "Reopen" : "Mark solved"; w.appendChild(b); }
             el.appendChild(w); if (solved) el.querySelectorAll(".edited-tag").forEach((n) => n.remove());
           }
         });
@@ -24856,11 +24949,11 @@ TASK: ${task} Output only the message text (plus the optional @@ and ## lines). 
       /* ---- extra actions in the existing "⋮" / right-click message menu ---- */
       function augmentMenu(menu) {
         if (menu.dataset.sam) return; menu.dataset.sam = "1"; const m = lastMenuId && byId(lastMenuId); if (!m) return;
-        const mk = (label, fn) => { const b = document.createElement("button"); b.type = "button"; b.textContent = label; b.addEventListener("click", () => fn(m)); return b; }, items = [];
-        if (m.text) items.push(mk("Copy text", (x) => copyText(x.text)));
-        if (isGlobalRoom() && m.userId && m.userId !== currentUserId) items.push(mk(muted[m.userId] ? `Unmute ${m.name || "person"}` : `Mute ${m.name || "person"}`, (x) => { if (muted[x.userId]) delete muted[x.userId]; else muted[x.userId] = x.name || x.userId; lsSetC(mutedKey(), muted); augment(); showToast(muted[x.userId] ? "Muted" : "Unmuted", muted[x.userId] ? "Their messages are hidden for you." : "You can see their messages again."); }));
-        items.push(mk(pins[m.id] ? "Unpin message" : "Pin message", togglePin), mk(isSaved(m.id) ? "Remove from saved" : "Save message", toggleSave));
-        if (m.text) items.push(mk("Make it a to-do", (x) => addTodoC(x.text)), mk("Explain with Grok", (x) => { const i = $("chatInput"); if (i) { i.value = ("@grok explain: " + x.text).slice(0, 320); i.focus(); } }));
+        const mk = (label, fn, ic) => { const b = document.createElement("button"); b.type = "button"; b.innerHTML = (ic ? I(ic, 16) + " " : "") + escC(label); b.addEventListener("click", () => fn(m)); return b; }, items = [];
+        if (m.text) items.push(mk("Copy text", (x) => copyText(x.text), "copy"));
+        if (isGlobalRoom() && m.userId && m.userId !== currentUserId) items.push(mk(muted[m.userId] ? `Unmute ${m.name || "person"}` : `Mute ${m.name || "person"}`, (x) => { if (muted[x.userId]) delete muted[x.userId]; else muted[x.userId] = x.name || x.userId; lsSetC(mutedKey(), muted); augment(); showToast(muted[x.userId] ? "Muted" : "Unmuted", muted[x.userId] ? "Their messages are hidden for you." : "You can see their messages again."); }, "mute"));
+        items.push(mk(pins[m.id] ? "Unpin message" : "Pin message", togglePin, "pin"), mk(isSaved(m.id) ? "Remove from saved" : "Save message", toggleSave, "bookmark"));
+        if (m.text) items.push(mk("Make it a to-do", (x) => addTodoC(x.text), "todo"), mk("Explain with Grok", (x) => { const i = $("chatInput"); if (i) { i.value = ("@grok explain: " + x.text).slice(0, 320); i.focus(); } }, "bulb"));
         let prev = menu.querySelector('[data-action="reply"]'); if (prev) items.forEach((b) => { prev.after(b); prev = b; }); else items.forEach((b) => menu.appendChild(b));
         const r = menu.getBoundingClientRect(); if (r.bottom > window.innerHeight - 8) menu.style.top = Math.max(8, window.innerHeight - r.height - 12) + "px";
       }
@@ -24874,18 +24967,21 @@ TASK: ${task} Output only the message text (plus the optional @@ and ## lines). 
           .sam-flags{position:absolute;bottom:3px;left:8px;font-size:11px;opacity:.9} .sam-doubt{margin-top:6px;display:flex;gap:8px;align-items:center;font-size:12px;font-weight:600} .sam-doubt.open{color:var(--blue)} .sam-doubt.solved{color:var(--green)}
           .sam-solve{border:1px solid currentColor;background:transparent;color:inherit;border-radius:999px;padding:2px 9px;font-size:12px;cursor:pointer}
           #samSaved{position:absolute;left:0;right:0;top:48px;bottom:0;z-index:30;background:var(--panel);color:var(--ink);overflow:auto;padding:10px} .sam-saved-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px} .sam-item{border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin-bottom:8px} .sam-item p{margin:4px 0 6px;white-space:pre-wrap;word-break:break-word} .sam-item-top{display:flex;justify-content:space-between;gap:8px} .sam-item small,.sam-empty{color:var(--muted)} .sam-item-actions{display:flex;flex-wrap:wrap;gap:6px} .sam-item-actions button{border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:3px 10px;font-size:12px;cursor:pointer}
-          .sam-latest{position:absolute;right:14px;bottom:78px;z-index:6;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--ink);box-shadow:var(--shadow-soft);cursor:pointer;font-size:16px}`;
+          .sam-latest{position:absolute;right:14px;bottom:78px;z-index:6;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--ink);box-shadow:var(--shadow-soft);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;padding:0}
+          #samSearch,#samPins{animation:dtiSlideDown .28s ease both} #samSaved{animation:dtiSlideRight .26s ease both} .sam-item{animation:dtiIn .32s ease both;animation-delay:calc(var(--i,0)*45ms)} .sam-hit{animation:samHit 1.3s ease 2} @keyframes samHit{0%,100%{outline-color:var(--yellow)}50%{outline-color:transparent}}
+          .sam-flags{display:flex;gap:3px;align-items:center;color:var(--muted)} .sam-doubt{align-items:center} .sam-doubt .dti{flex:none} .sam-pin-main .dti,.sam-pin-item .dti,.sam-saved-head .dti{margin-right:4px;vertical-align:-3px} .chat-context-menu button .dti{margin-right:6px;vertical-align:-3px;opacity:.85}
+          .sam-latest:hover{transform:translateY(-2px)} .sam-latest{transition:transform .2s ease}`;
         document.head.appendChild(st);
         if (getComputedStyle(panel).position === "static") panel.style.position = "relative";
         const actions = panel.querySelector(".chat-head-actions"), sizeBtn = $("chatSizeBtn");
-        const mkBtn = (id, label, title) => { const b = document.createElement("button"); b.id = id; b.type = "button"; b.className = "small-btn"; b.title = title; b.setAttribute("aria-label", title); b.textContent = label; return b; };
-        const sBtn = mkBtn("samSearchBtn", "🔍", "Search this chat"), vBtn = mkBtn("samSavedBtn", "⭐", "Saved messages");
+        const mkBtn = (id, label, title) => { const b = document.createElement("button"); b.id = id; b.type = "button"; b.className = "small-btn"; b.title = title; b.setAttribute("aria-label", title); b.innerHTML = I(label, 18); return b; };
+        const sBtn = mkBtn("samSearchBtn", "search", "Search this chat"), vBtn = mkBtn("samSavedBtn", "bookmark", "Saved messages");
         if (actions) { if (sizeBtn) { actions.insertBefore(sBtn, sizeBtn); actions.insertBefore(vBtn, sizeBtn); } else { actions.appendChild(sBtn); actions.appendChild(vBtn); } }
         const bar = document.createElement("div"); bar.id = "samSearch"; bar.className = "hidden"; bar.innerHTML = `<input id="samSearchInput" type="search" placeholder="Search messages" autocomplete="off"><span id="samSearchCount"></span><button type="button" class="small-btn" data-s="-1" title="Previous">▲</button><button type="button" class="small-btn" data-s="1" title="Next">▼</button><button type="button" class="small-btn" data-s="x" title="Close">×</button>`;
         const pinBar = document.createElement("div"); pinBar.id = "samPins"; pinBar.className = "hidden";
         const anchor = rooms || box.previousElementSibling; if (anchor && anchor.after) { anchor.after(bar); bar.after(pinBar); } else { box.before(bar); box.before(pinBar); }
         const savedPanel = document.createElement("div"); savedPanel.id = "samSaved"; savedPanel.className = "hidden"; panel.appendChild(savedPanel);
-        const latest = document.createElement("button"); latest.id = "samLatest"; latest.type = "button"; latest.className = "sam-latest hidden"; latest.title = "Jump to latest"; latest.textContent = "↓"; panel.appendChild(latest);
+        const latest = document.createElement("button"); latest.id = "samLatest"; latest.type = "button"; latest.className = "sam-latest hidden"; latest.title = "Jump to latest"; latest.innerHTML = I("down", 20); panel.appendChild(latest);
         saved = lsGetC(savedKey()) || []; muted = lsGetC(mutedKey()) || {};
 
         sBtn.addEventListener("click", () => { bar.classList.toggle("hidden"); if (!bar.classList.contains("hidden")) $("samSearchInput").focus(); else { $("samSearchInput").value = ""; runSearch(""); } });
@@ -24909,10 +25005,10 @@ TASK: ${task} Output only the message text (plus the optional @@ and ## lines). 
         box.addEventListener("scroll", () => { latest.classList.toggle("hidden", box.scrollHeight - box.scrollTop - box.clientHeight < 180); }, { passive: true });
         box.addEventListener("click", (e) => {                                                            // "Mark solved" on your own doubt cards
           const b = e.target.closest(".sam-solve"); if (!b) return; const m = byId(b.dataset.id); if (!m || m.userId !== currentUserId) return;
-          update(chatMessageRef(m.id), { text: toggleSolved(m.text), editedAt: Date.now() }).catch(() => showToast("Could not update", "Try again."));
+          freshSolved[m.id] = 1; setTimeout(() => { delete freshSolved[m.id]; }, 1600); update(chatMessageRef(m.id), { text: toggleSolved(m.text), editedAt: Date.now() }).catch(() => showToast("Could not update", "Try again."));
         });
         box.addEventListener("dblclick", (e) => {                                                         // double-tap = heart
-          const el = e.target.closest(".chat-message"); if (!el || e.target.closest("a,button,img,.reaction-pill")) return; toggleReaction(el.dataset.messageId, "❤️");
+          const el = e.target.closest(".chat-message"); if (!el || e.target.closest("a,button,img,.reaction-pill")) return; toggleReaction(el.dataset.messageId, "❤️"); if (window.dti) window.dti.heart(e.clientX, e.clientY);
         });
         new MutationObserver(() => augment()).observe(box, { childList: true });
         new MutationObserver((list) => { for (const mu of list) for (const n of mu.addedNodes) if (n.nodeType === 1 && n.classList && n.classList.contains("chat-context-menu")) augmentMenu(n); }).observe(document.body, { childList: true });
@@ -24949,6 +25045,7 @@ TASK: ${task} Output only the message text (plus the optional @@ and ## lines). 
       const GRT = (p) => ref(database, `duotrack/groups/${GROUP_ID}/${p}`);
       const $ = (id) => document.getElementById(id);
       const escT = (x) => escapeHTML(String(x == null ? "" : x));
+      const I = (n, s, c) => (window.dti ? window.dti.i(n, s, c) : "");
       const lsGetT = (k) => { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } };
       const lsSetT = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* ignore */ } };
 
@@ -25068,31 +25165,38 @@ TASK: ${task} Output only the message text (plus the optional @@ and ## lines). 
           try { if (window.Notification && Notification.permission === "granted") new Notification(fb ? "Break time" : "Back to focus"); } catch (e) { /* ignore */ }
           if (r.p.sync) syncTimer(!fb);
         }
-        const q = d.pomo; if (chip) { chip.classList.remove("hidden"); chip.textContent = `${q.phase === "focus" ? "🍅" : "☕"} ${mmss(q.end - Date.now())}`; }
-        const big = $("dtkPomoTime"); if (big) big.textContent = `${q.phase === "focus" ? "Focus" : "Break"} ${mmss(q.end - Date.now())}`;
+        const q = d.pomo, left = Math.max(0, q.end - Date.now()), total = (q.phase === "focus" ? q.f : q.b) * 60000, used = Math.min(1, Math.max(0, 1 - left / total));
+        const setOff = (id, circ) => { const el = $(id); if (el && el.style) el.style.strokeDashoffset = (circ * used).toFixed(1); };
+        setOff("dtkRingFg", 326.7); setOff("dtkChipFg", 88);                     // the ring empties as the block runs out
+        if (chip) {
+          chip.classList.remove("hidden"); chip.classList.toggle("last", left < 10000);
+          if (chip.dataset.ph !== q.phase) { chip.dataset.ph = q.phase; const ci = $("dtkChipIco"); if (ci) ci.innerHTML = I(q.phase === "focus" ? "timer" : "cup", 14); const bi = $("dtkPomoIcon"); if (bi) bi.innerHTML = I(q.phase === "focus" ? "timer" : "cup", 22); if (r.changed) { chip.classList.add("flash"); setTimeout(() => chip.classList.remove("flash"), 950); } }
+          const ct = $("dtkChipTxt"); if (ct) ct.textContent = mmss(left);
+        }
+        const big = $("dtkPomoTime"); if (big) big.textContent = `${q.phase === "focus" ? "Focus" : "Break"} ${mmss(left)}`;
       }
       function pomoStart(f, b) { const d = data(); d.pomo = { ...d.pomo, on: true, phase: "focus", f, b, end: Date.now() + f * 60000, cycles: 0 }; save(); if (d.pomo.sync) syncTimer(true); try { if (window.Notification && Notification.permission === "default") Notification.requestPermission(); } catch (e) { /* ignore */ } pomoTick(); render(); }
       function pomoStop() { const d = data(); d.pomo = { ...d.pomo, on: false }; save(); if (d.pomo.sync) syncTimer(false); pomoTick(); render(); }
 
       /* ------------------------------------------------------------------ the toolkit window */
-      const TABS = [["goals", "Goals"], ["focus", "Focus"], ["revise", "Revise"], ["mistakes", "Mistakes"], ["account", "Account"]];
+      const TABS = [["goals", "Goals", "goal"], ["focus", "Focus", "timer"], ["revise", "Revise", "loop"], ["mistakes", "Mistakes", "notebook"], ["account", "Account", "user"]];
       const optSubj = (sel) => SUBJ_T.map((s) => `<option${s === sel ? " selected" : ""}>${s}</option>`).join("");
       function tabGoals() {
         const u = me() || {}, d = data(), live = liveSeconds(u), g = goalStats(u, todayKey(), live, d.goalH);
-        return `<div class="dtk-sec"><div class="dtk-bar"><i style="width:${g.pct}%"></i></div><p><b>${hmT(live)}</b> of ${d.goalH}h today (${g.pct}%)</p>
+        return `<div class="dtk-sec"><div class="dtk-bar"><i data-w="${g.pct}" style="width:0"></i></div><p><b>${hmT(live)}</b> of ${d.goalH}h today (${g.pct}%)</p>
           <label class="dtk-row">Daily goal <input id="dtkGoal" type="number" min="1" max="16" step="0.5" value="${d.goalH}"> hours <button data-act="goal">Save</button></label></div>
-          <div class="dtk-sec"><p>🔥 Streak <b>${g.streak}</b> day${g.streak === 1 ? "" : "s"} &nbsp;·&nbsp; best <b>${g.best}</b> &nbsp;·&nbsp; goal reached on <b>${g.reached}</b> days</p>
+          <div class="dtk-sec"><p class="dtk-streak">${I("flame", 20)} Streak <b>${g.streak}</b> day${g.streak === 1 ? "" : "s"} &nbsp;·&nbsp; best <b>${g.best}</b> &nbsp;·&nbsp; goal reached on <b>${g.reached}</b> days</p>
           <p>This week: <b>${hmT(g.week.total)}</b> in total, about ${hmT(g.week.avg)} a day, best day ${g.week.bestDay[0].slice(5)} (${hmT(g.week.bestDay[1])}).</p></div>
-          <div class="dtk-sec"><b>Last 12 weeks</b><div class="dtk-heat">${g.heat.map((c) => `<i class="l${c.lvl}" title="${c.d}: ${hmT(c.sec)}"></i>`).join("")}</div></div>
-          <div class="dtk-sec"><b>Badges</b><div class="dtk-badges">${g.badges.map((b) => `<span class="${b.on ? "on" : ""}">${b.on ? "🏅" : "🔒"} ${escT(b.name)}</span>`).join("")}</div></div>`;
+          <div class="dtk-sec"><b>Last 12 weeks</b><div class="dtk-heat">${g.heat.map((c, i) => `<i class="l${c.lvl}" style="--i:${i}" title="${c.d}: ${hmT(c.sec)}"></i>`).join("")}</div></div>
+          <div class="dtk-sec"><b>Badges</b><div class="dtk-badges">${g.badges.map((b, i) => `<span class="${b.on ? "on" : ""}" style="--i:${i}">${b.on ? I("medal", 16) : I("lock", 16)} ${escT(b.name)}</span>`).join("")}</div></div>`;
       }
       function tabFocus() {
         const d = data(), p = d.pomo;
-        return `<div class="dtk-sec"><b>Pomodoro</b><p class="dtk-big" id="dtkPomoTime">${p.on ? "" : "Not running"}</p>
+        return `<div class="dtk-sec"><b>${I("timer", 17)} Pomodoro</b><div class="dtk-pomo"><svg class="dtk-ring" viewBox="0 0 120 120" width="150" height="150"><circle class="bg" cx="60" cy="60" r="52"/><circle id="dtkRingFg" class="fg" cx="60" cy="60" r="52" stroke-dasharray="326.7" stroke-dashoffset="${p.on ? 0 : 326.7}" transform="rotate(-90 60 60)"/></svg><div class="dtk-ring-text"><span id="dtkPomoIcon"></span><b id="dtkPomoTime">${p.on ? "" : "Ready"}</b></div></div>
           <div class="dtk-actions">${p.on ? `<button data-act="pomostop">Stop</button>` : `<button data-act="pomo" data-f="25" data-b="5" class="dtk-primary">25 / 5</button><button data-act="pomo" data-f="50" data-b="10">50 / 10</button><button data-act="pomo" data-f="90" data-b="15">90 / 15</button>`}</div>
           <label class="dtk-row"><input type="checkbox" data-set="sync"${p.sync ? " checked" : ""}> Start and pause my study timer with it</label>
           <label class="dtk-row"><input type="checkbox" data-set="sound"${p.sound ? " checked" : ""}> Beep when a block ends</label></div>
-          <div class="dtk-sec"><b>While the timer runs</b>
+          <div class="dtk-sec"><b>${I("cup", 17)} While the timer runs</b>
           <label class="dtk-row"><input type="checkbox" data-set="idleOn"${d.idleOn ? " checked" : ""}> Ask "Still studying?" after <select data-set="idleMin">${[15, 30, 45, 60].map((m) => `<option${m === d.idleMin ? " selected" : ""}>${m}</option>`).join("")}</select> minutes without activity, and don't count the idle time</label>
           <label class="dtk-row"><input type="checkbox" data-set="wake"${d.wake ? " checked" : ""}> Keep the screen awake while the timer runs${navigator.wakeLock ? "" : " (not supported on this browser)"}</label>
           <p class="dtk-hint">If you ever leave the timer running and close the app, you'll be asked how much of that time to keep when you come back.</p></div>`;
@@ -25100,7 +25204,7 @@ TASK: ${task} Output only the message text (plus the optional @@ and ## lines). 
       function tabRevise() {
         const d = data(), today = todayKey(), due = dueRevs(d.revs, today), up = d.revs.filter((r) => !r.done && !(r.due <= today)).sort((a, b) => (a.due < b.due ? -1 : 1)), done = d.revs.filter((r) => r.done).length;
         const row = (r, btns) => `<div class="dtk-item"><div><b>${escT(r.topic)}</b> <small>${escT(r.subject)} · step ${r.stage + 1}/${SR.length}${r.due ? " · due " + r.due.slice(5) : ""}</small></div><div class="dtk-actions">${btns}</div></div>`;
-        return `<div class="dtk-sec"><b>Add what you studied today</b><div class="dtk-row"><select id="dtkRevSubj">${optSubj("")}</select><input id="dtkRevTopic" type="text" maxlength="80" placeholder="Chapter or topic (e.g. Rotational motion)"><button data-act="revadd" class="dtk-primary">Add</button></div><p class="dtk-hint">You'll be reminded after 1, 3, 7, 14 and 30 days.</p></div>
+        return `<div class="dtk-sec"><b>${I("loop", 17)} Add what you studied today</b><div class="dtk-row"><select id="dtkRevSubj">${optSubj("")}</select><input id="dtkRevTopic" type="text" maxlength="80" placeholder="Chapter or topic (e.g. Rotational motion)"><button data-act="revadd" class="dtk-primary">Add</button></div><p class="dtk-hint">You'll be reminded after 1, 3, 7, 14 and 30 days.</p></div>
           <div class="dtk-sec"><b>Due today (${due.length})</b>${due.length ? due.map((r) => row(r, `<button data-act="revok" data-id="${escT(r.id)}" class="dtk-primary">Remembered ✓</button><button data-act="revno" data-id="${escT(r.id)}">Forgot ✗</button>`)).join("") : `<p class="dtk-hint">Nothing due. Nice.</p>`}</div>
           <div class="dtk-sec"><b>Coming up (${up.length})</b>${up.slice(0, 12).map((r) => row(r, `<button data-act="revdel" data-id="${escT(r.id)}">Delete</button>`)).join("") || `<p class="dtk-hint">Nothing scheduled yet.</p>`}<p class="dtk-hint">Mastered: ${done}</p></div>`;
       }
@@ -25109,7 +25213,7 @@ TASK: ${task} Output only the message text (plus the optional @@ and ## lines). 
         let list = all.filter((m) => (!ui.mSubj || m.subject === ui.mSubj) && (!ui.mType || m.type === ui.mType) && (!ui.mOpen || !m.mastered));
         if (ui.review) list = list.filter((m) => !m.mastered).sort((a, b) => a.last - b.last).slice(0, 10);
         const item = (m) => `<div class="dtk-item"><div><b>${escT(m.topic || "(no topic)")}</b> <small>${escT(m.subject)} · ${escT(m.type)} · reviewed ${m.reviewed}×${m.mastered ? " · mastered ✓" : ""}</small>${ui.review && !ui.shown[m.id] ? `<p><button data-act="mshow" data-id="${escT(m.id)}">Show the correct approach</button></p>` : `<p class="dtk-note">${escT(m.note) || "<i>No note</i>"}</p>`}</div><div class="dtk-actions">${m.mastered ? "" : `<button data-act="mgot" data-id="${escT(m.id)}" class="dtk-primary">Got it ✓</button><button data-act="munsure" data-id="${escT(m.id)}">Still unsure</button>`}<button data-act="mdel" data-id="${escT(m.id)}">Delete</button></div></div>`;
-        return `<div class="dtk-sec"><b>Log a mistake</b><div class="dtk-row"><select id="dtkMSubj">${optSubj("")}</select><select id="dtkMType">${MTYPES.map((t) => `<option>${t}</option>`).join("")}</select></div>
+        return `<div class="dtk-sec"><b>${I("notebook", 17)} Log a mistake</b><div class="dtk-row"><select id="dtkMSubj">${optSubj("")}</select><select id="dtkMType">${MTYPES.map((t) => `<option>${t}</option>`).join("")}</select></div>
           <input id="dtkMTopic" type="text" maxlength="80" placeholder="Topic or question (e.g. Moment of inertia of a ring)"><textarea id="dtkMNote" rows="3" maxlength="600" placeholder="What went wrong, and the correct approach"></textarea><div class="dtk-actions"><button data-act="madd" class="dtk-primary">Save mistake</button></div></div>
           <div class="dtk-sec"><b>${all.length} logged · ${st.open} to master</b>${st.top ? `<p class="dtk-hint">Most common: ${escT(st.top[0])} (${st.top[1]}).</p>` : ""}
           <div class="dtk-row"><select id="dtkFS"><option value="">All subjects</option>${optSubj(ui.mSubj)}</select><select id="dtkFT"><option value="">All types</option>${MTYPES.map((t) => `<option${t === ui.mType ? " selected" : ""}>${t}</option>`).join("")}</select><label><input type="checkbox" id="dtkFO"${ui.mOpen ? " checked" : ""}> to master only</label><button data-act="mreview">${ui.review ? "Exit review" : "Review mode"}</button></div>
@@ -25117,14 +25221,17 @@ TASK: ${task} Output only the message text (plus the optional @@ and ## lines). 
       }
       function tabAccount() {
         const muted = window.samChat && window.samChat.mutedList ? window.samChat.mutedList() : [];
-        return `<div class="dtk-sec"><b>Change your password</b><input id="dtkPwCur" type="password" autocomplete="current-password" placeholder="Current password"><input id="dtkPwNew" type="password" autocomplete="new-password" placeholder="New password (at least 6)"><input id="dtkPwNew2" type="password" autocomplete="new-password" placeholder="Repeat the new password">
+        return `${appearance()}<div class="dtk-sec"><b>${I("lock", 17)} Change your password</b><input id="dtkPwCur" type="password" autocomplete="current-password" placeholder="Current password"><input id="dtkPwNew" type="password" autocomplete="new-password" placeholder="New password (at least 6)"><input id="dtkPwNew2" type="password" autocomplete="new-password" placeholder="Repeat the new password">
           <div class="dtk-actions"><button data-act="pw" class="dtk-primary">Change password</button></div><p class="dtk-hint" id="dtkPwMsg">${escT(ui.pwMsg)}</p></div>
-          <div class="dtk-sec"><b>Download my study data</b><p class="dtk-hint">Your history, to-dos and mock tests, plus the notes in this toolkit.</p><div class="dtk-actions"><button data-act="expjson">JSON</button><button data-act="expcsv">CSV (spreadsheet)</button></div></div>
-          <div class="dtk-sec"><b>Backup toolkit data</b><p class="dtk-hint">Mistakes, revision and settings live on this device. Move them to another device with a backup file.</p><div class="dtk-actions"><button data-act="bkexp">Save backup file</button><button data-act="bkimp">Restore from file</button></div><input id="dtkFile" type="file" accept="application/json" class="hidden"></div>
-          <div class="dtk-sec"><b>Muted people (${muted.length})</b>${muted.map((m) => `<div class="dtk-item"><span>${escT(m.name)}</span><div class="dtk-actions"><button data-act="unmute" data-id="${escT(m.id)}">Unmute</button></div></div>`).join("") || `<p class="dtk-hint">Mute someone from the ⋮ menu of their message in the global chat.</p>`}</div>`;
+          <div class="dtk-sec"><b>${I("down2", 17)} Download my study data</b><p class="dtk-hint">Your history, to-dos and mock tests, plus the notes in this toolkit.</p><div class="dtk-actions"><button data-act="expjson">JSON</button><button data-act="expcsv">CSV (spreadsheet)</button></div></div>
+          <div class="dtk-sec"><b>${I("copy", 17)} Backup toolkit data</b><p class="dtk-hint">Mistakes, revision and settings live on this device. Move them to another device with a backup file.</p><div class="dtk-actions"><button data-act="bkexp">Save backup file</button><button data-act="bkimp">Restore from file</button></div><input id="dtkFile" type="file" accept="application/json" class="hidden"></div>
+          <div class="dtk-sec"><b>${I("mute", 17)} Muted people (${muted.length})</b>${muted.map((m) => `<div class="dtk-item"><span>${escT(m.name)}</span><div class="dtk-actions"><button data-act="unmute" data-id="${escT(m.id)}">Unmute</button></div></div>`).join("") || `<p class="dtk-hint">Mute someone from the ⋮ menu of their message in the global chat.</p>`}</div>`;
       }
-      function render() { const body = $("dtkBody"); if (!body) return; const tabs = $("dtkTabs"); if (tabs) tabs.innerHTML = TABS.map(([k, n]) => `<button type="button" data-tab="${k}" class="${ui.tab === k ? "on" : ""}">${n}</button>`).join(""); body.innerHTML = ({ goals: tabGoals, focus: tabFocus, revise: tabRevise, mistakes: tabMistakes, account: tabAccount })[ui.tab](); pomoTick(); }
-      function openKit(tab) { if (!currentUserId) return; ui.tab = tab || ui.tab; ui.open = true; $("dtkOverlay").classList.remove("hidden"); render(); }
+      function render(enter) { const body = $("dtkBody"); if (!body) return; const tabs = $("dtkTabs"); if (tabs) tabs.innerHTML = TABS.map(([k, n, ic]) => `<button type="button" data-tab="${k}" class="${ui.tab === k ? "on" : ""}">${I(ic, 16)}<span>${n}</span></button>`).join(""); body.innerHTML = ({ goals: tabGoals, focus: tabFocus, revise: tabRevise, mistakes: tabMistakes, account: tabAccount })[ui.tab]();
+        if (body.classList) { body.classList.toggle("dtk-enter", !!enter); if (enter) setTimeout(() => body.classList.remove("dtk-enter"), 900); }
+        if (typeof requestAnimationFrame === "function") requestAnimationFrame(() => requestAnimationFrame(() => { if (body.querySelectorAll) body.querySelectorAll(".dtk-bar i[data-w]").forEach((el) => { el.style.width = el.dataset.w + "%"; }); }));
+        pomoTick(); }
+      function openKit(tab) { if (!currentUserId) return; ui.tab = tab || ui.tab; ui.open = true; $("dtkOverlay").classList.remove("hidden"); render(true); }
       const closeKit = () => { ui.open = false; const o = $("dtkOverlay"); if (o) o.classList.add("hidden"); };
       function download(name, text, type) { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
       async function changePassword() {
@@ -25139,9 +25246,22 @@ TASK: ${task} Output only the message text (plus the optional @@ and ## lines). 
           ["dtkPwCur", "dtkPwNew", "dtkPwNew2"].forEach((i) => { if ($(i)) $(i).value = ""; }); say("Password changed. Use the new one next time you log in."); showToast("Password changed", "Your new password is active.");
         } catch (e) { say("Could not change it: " + String((e && e.message) || e).slice(0, 80)); }
       }
+      function appearance() {
+        const pf = window.dti ? window.dti.prefs() : { style: "hi", hi: "sun", motion: "auto" }, HI = window.dti ? window.dti.HI : {};
+        const seg = (act, cur, opts) => opts.map(([v, n]) => `<button type="button" data-act="${act}" data-v="${v}" class="${cur === v ? "on" : ""}">${n}</button>`).join("");
+        return `<div class="dtk-sec"><b>${I("spark", 17)} Look &amp; motion</b>
+          <div class="dtk-row">Icon style ${seg("dstyle", pf.style, [["hi", "Highlighter"], ["line", "Outline"]])}</div>
+          <div class="dtk-row">Highlight colour <span class="dtk-sw">${Object.keys(HI).map((k) => `<button type="button" data-act="dhi" data-v="${k}" class="${pf.hi === k ? "on" : ""}" style="background:${HI[k]}" title="${k}" aria-label="${k}"></button>`).join("")}</span></div>
+          <div class="dtk-row">Motion ${seg("dmotion", pf.motion, [["auto", "Auto"], ["full", "Full"], ["calm", "Calm"], ["off", "Off"]])}</div>
+          <div class="dtk-row dtk-preview">${["kit", "flame", "cup", "mega", "pin", "check", "bookmark", "notebook"].map((n) => I(n, 28)).join("")}</div>
+          <p class="dtk-hint">Auto follows your device's "reduce motion" setting. Calm keeps one-time transitions but stops looping animations.</p></div>`;
+      }
       function onAction(b) {
         const d = data(), a = b.dataset.act, id = b.dataset.id, today = todayKey(), val = (i) => ($(i) ? $(i).value : "");
         if (a === "close") return closeKit();
+        if (a === "dstyle" || a === "dhi" || a === "dmotion") { if (window.dti) window.dti.set({ [a === "dstyle" ? "style" : a === "dhi" ? "hi" : "motion"]: b.dataset.v }); render(); return; }
+        const row = b.closest && b.closest(".dtk-item"), leaving = ["revok", "revno", "revdel", "mgot", "munsure", "mdel"].includes(a);
+        if (leaving && row && row.classList) { row.classList.add("out"); setTimeout(() => onAction(Object.assign({}, b, { closest: () => null })), 240); return; }          // slide the card away, then apply
         if (a === "goal") { d.goalH = Math.min(16, Math.max(1, numT(val("dtkGoal")) || 6)); save(); showToast("Goal saved", `${d.goalH} hours a day.`); }
         else if (a === "pomo") pomoStart(numT(b.dataset.f), numT(b.dataset.b)); else if (a === "pomostop") pomoStop();
         else if (a === "revadd") { const t = val("dtkRevTopic").trim(); if (!t) return showToast("Add a topic", "Write what you studied."); d.revs.push(newRev(val("dtkRevSubj") || "Maths", t, today)); save(); }
@@ -25173,7 +25293,7 @@ TASK: ${task} Output only the message text (plus the optional @@ and ## lines). 
         let bar = $("dtkAnn"); const now = Date.now(), dismissed = lsGetT("dtkAnnSeen") || "";
         if (!annActive(ann, now) || dismissed === ann.id) { if (bar) bar.classList.add("hidden"); return; }
         if (!bar) { bar = document.createElement("div"); bar.id = "dtkAnn"; document.body.appendChild(bar); bar.addEventListener("click", (e) => { if (e.target.closest("[data-annclose]")) { lsSetT("dtkAnnSeen", ann && ann.id); bar.classList.add("hidden"); } }); }
-        bar.className = "dtk-ann " + (ann.level === "warn" ? "warn" : "info"); bar.innerHTML = `<span>📢 ${escT(ann.text)}</span><button type="button" data-annclose="1" aria-label="Dismiss">×</button>`;
+        bar.className = "dtk-ann " + (ann.level === "warn" ? "warn" : "info"); bar.innerHTML = `<span class="dtk-annmsg">${I("mega", 20)}<span>${escT(ann.text)}</span></span><button type="button" data-annclose="1" aria-label="Dismiss">×</button>`;
       }
       function annSubscribe() { try { annUnsub = onValue(GRT("announcement"), (s) => { ann = s.val(); renderAnn(); }, () => { /* rules refuse: no announcements */ }); } catch (e) { /* ignore */ } }
 
@@ -25181,12 +25301,12 @@ TASK: ${task} Output only the message text (plus the optional @@ and ## lines). 
       const HEALTH_PATHS = ["chatPins", "aiPlans", "aiChat", "aiObs", "announcement"];
       window.dtkAdminCardHtml = () => {
         const o = overview(state.users, Date.now(), todayKey());
-        return `<div class="ap-card" id="dtkAdmin"><h2>Overview</h2><p>${o.accounts} accounts · <b>${o.studying}</b> studying right now · ${o.active} active since yesterday · <b>${hmT(o.totalS)}</b> studied today in total.</p>${o.tops.length ? `<p class="ap-note">Top today: ${o.tops.map((t) => `${escT(t[0])} ${hmT(t[1])}`).join(" · ")}</p>` : ""}</div>
-          <div class="ap-card"><h2>Announcement banner</h2><p>Shows at the top of the app for everyone until it expires or they dismiss it.</p><div class="lc-form">
+        return `<div class="ap-card" id="dtkAdmin"><h2>${I("kit", 20)} Overview</h2><p>${o.accounts} accounts · <b>${o.studying}</b> studying right now · ${o.active} active since yesterday · <b>${hmT(o.totalS)}</b> studied today in total.</p>${o.tops.length ? `<p class="ap-note">Top today: ${o.tops.map((t) => `${escT(t[0])} ${hmT(t[1])}`).join(" · ")}</p>` : ""}</div>
+          <div class="ap-card"><h2>${I("mega", 20)} Announcement banner</h2><p>Shows at the top of the app for everyone until it expires or they dismiss it.</p><div class="lc-form">
             <label>Message<textarea data-dtk="annText" rows="2" maxlength="280" placeholder="e.g. The app will be updated tonight at 11 pm."></textarea></label>
             <div class="lc-two"><label>Style<select data-dtk="annLevel"><option value="info">Info</option><option value="warn">Warning</option></select></label><label>Show for<select data-dtk="annHours"><option value="6">6 hours</option><option value="24" selected>1 day</option><option value="72">3 days</option><option value="168">7 days</option><option value="0">Until I clear it</option></select></label></div>
             <button type="button" class="ap-primary" data-dtk-ap="annPublish">Publish</button> <button type="button" data-dtk-ap="annClear">Clear banner</button><p class="ap-note" data-dtk="annMsg">${annActive(ann, Date.now()) ? "Live now: " + escT(ann.text) : "No banner is live."}</p></div></div>
-          <div class="ap-card"><h2>Firebase rules check</h2><p>Tests the folders that the newer features use (pins, Samridhi's memory, announcements) and tells you which ones your rules block.</p><button type="button" class="ap-primary" data-dtk-ap="health">Run check</button><div class="ap-note" data-dtk="healthOut"></div></div>`;
+          <div class="ap-card"><h2>${I("check", 20)} Firebase rules check</h2><p>Tests the folders that the newer features use (pins, Samridhi's memory, announcements) and tells you which ones your rules block.</p><button type="button" class="ap-primary" data-dtk-ap="health">Run check</button><div class="ap-note" data-dtk="healthOut"></div></div>`;
       };
       async function adminAction(b) {
         const card = b.closest(".ap-card"), q = (k) => card.querySelector(`[data-dtk="${k}"]`), msg = q("annMsg") || q("healthOut"), a = b.dataset.dtkAp;
@@ -25197,7 +25317,7 @@ TASK: ${task} Output only the message text (plus the optional @@ and ## lines). 
           else if (a === "health") {
             msg.textContent = "Checking..."; const rows = [];
             for (const p of HEALTH_PATHS) { const k = `${p}/__check`; let ok = true, why = ""; try { await set(GRT(k), { t: Date.now() }); const s = await get(GRT(k)); if (!s.exists()) { ok = false; why = "could not read back"; } await set(GRT(k), null); } catch (e) { ok = false; why = String((e && e.message) || e).replace(/^.*?:/, "").trim().slice(0, 60); } rows.push([p, ok, why]); }
-            const bad = rows.filter((r) => !r[1]); msg.innerHTML = rows.map((r) => `${r[1] ? "✅" : "❌"} <b>${escT(r[0])}</b>${r[1] ? "" : " - " + escT(r[2])}`).join("<br>") + (bad.length ? `<br><br>Give ${bad.map((r) => `<b>${escT(r[0])}</b>`).join(", ")} the same rule you already use for the <b>chat</b> folder (in Firebase, Realtime Database, Rules).` : "<br><br>All good.");
+            const bad = rows.filter((r) => !r[1]); msg.innerHTML = rows.map((r) => `<span style="color:${r[1] ? "var(--green)" : "#c0392b"}">${I(r[1] ? "check" : "close", 15)}</span> <b>${escT(r[0])}</b>${r[1] ? " - open" : " - blocked: " + escT(r[2])}`).join("<br>") + (bad.length ? `<br><br>Give ${bad.map((r) => `<b>${escT(r[0])}</b>`).join(", ")} the same rule you already use for the <b>chat</b> folder (in Firebase, Realtime Database, Rules).` : "<br><br>All good.");
           }
         } catch (e) { if (msg) msg.textContent = "Failed: " + String((e && e.message) || e).slice(0, 100); } finally { b.disabled = false; }
       }
@@ -25213,16 +25333,26 @@ TASK: ${task} Output only the message text (plus the optional @@ and ## lines). 
           .dtk-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px} .dtk-item{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;border-top:1px solid var(--line);padding:8px 0} .dtk-item small{color:var(--muted)}
           .dtk-bar{height:12px;border-radius:999px;background:var(--green-2);overflow:hidden} .dtk-bar i{display:block;height:100%;background:var(--green)} .dtk-heat{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,13px);gap:3px;margin-top:8px;overflow:auto;padding-bottom:4px} .dtk-heat i{width:13px;height:13px;border-radius:3px;background:var(--line)} .dtk-heat i.l1{background:#cfe9d8} .dtk-heat i.l2{background:#93cfa8} .dtk-heat i.l3{background:#4fae75} .dtk-heat i.l4{background:var(--green)}
           .dtk-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px} .dtk-badges span{border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12.5px;opacity:.55} .dtk-badges span.on{opacity:1;background:var(--green-2)}
-          #dtkChip{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:60;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-weight:700;box-shadow:var(--shadow-soft);cursor:pointer} #dtkChip.hidden{display:none}
-          .dtk-ann{position:fixed;top:0;left:0;right:0;z-index:4000;display:flex;gap:10px;justify-content:center;align-items:center;padding:8px 14px;font-size:14px;color:#fff;background:var(--blue)} .dtk-ann.warn{background:#b8741a} .dtk-ann.hidden{display:none} .dtk-ann button{background:transparent;border:0;color:#fff;font-size:20px;cursor:pointer}`;
+          #dtkChip{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:60;display:flex;align-items:center;gap:8px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:4px 14px 4px 5px;font-weight:700;box-shadow:var(--shadow-soft);cursor:pointer;animation:dtiPop .4s cubic-bezier(.34,1.56,.64,1) both} #dtkChip.hidden{display:none} #dtkChip.last{animation:dtiGlow 1s ease infinite} #dtkChip.flash{animation:dtiRing .95s ease}
+          .dtk-chipwrap{position:relative;display:inline-flex;width:34px;height:34px;align-items:center;justify-content:center} .dtk-chipwrap svg{position:absolute;inset:0} .dtk-chipico{position:relative;display:inline-flex}
+          .dtk-chipring circle,.dtk-ring circle{fill:none;stroke-linecap:round} .dtk-chipring circle{stroke-width:3.4} .dtk-ring circle{stroke-width:8} .dtk-chipring .bg,.dtk-ring .bg{stroke:var(--line)} .dtk-chipring .fg,.dtk-ring .fg{stroke:var(--green);transition:stroke-dashoffset .5s linear}
+          .dtk-pomo{position:relative;display:flex;align-items:center;justify-content:center;width:150px;height:150px;margin:6px auto} .dtk-ring-text{position:absolute;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:17px} .dtk-ring-text b{font-variant-numeric:tabular-nums}
+          .dtk-over{animation:dtiFade .2s ease both} .dtk-card{animation:dtiScaleIn .3s cubic-bezier(.2,.9,.3,1.15) both} #dtkBody.dtk-enter>*{animation:dtiIn .34s ease both} #dtkBody.dtk-enter>*:nth-child(2){animation-delay:.05s} #dtkBody.dtk-enter>*:nth-child(3){animation-delay:.1s} #dtkBody.dtk-enter>*:nth-child(4){animation-delay:.15s} #dtkBody.dtk-enter>*:nth-child(5){animation-delay:.2s} #dtkBody.dtk-enter>*:nth-child(n+6){animation-delay:.25s}
+          #dtkTabs button{display:inline-flex;align-items:center;gap:6px;transition:background .2s,color .2s,transform .2s} #dtkTabs button:hover{transform:translateY(-1px)} #dtkTabs button:active{transform:scale(.96)}
+          .dtk-bar i{transition:width .9s cubic-bezier(.2,.8,.2,1)} .dtk-streak{display:flex;align-items:center;gap:6px;flex-wrap:wrap} .dtk-enter .dtk-heat i{animation:dtiCell .38s ease both;animation-delay:calc(var(--i,0)*7ms)} .dtk-enter .dtk-badges span.on{animation:dtiPop .5s cubic-bezier(.34,1.56,.64,1) both;animation-delay:calc(var(--i,0)*70ms + .2s)} .dtk-badges .dti{vertical-align:-3px}
+          .dtk-item{transition:opacity .24s,transform .24s} .dtk-item.out{opacity:0;transform:translateX(24px)} .dtk-sec b .dti{vertical-align:-4px;margin-right:2px}
+          .dtk-row button.on{background:var(--green);color:#fff;border-color:var(--green)} .dtk-sw{display:inline-flex;gap:8px} .dtk-sw button{width:24px;height:24px;border-radius:50%;padding:0;border:2px solid var(--line);cursor:pointer;transition:transform .2s} .dtk-sw button:hover{transform:scale(1.15)} .dtk-sw button.on{border-color:var(--ink);transform:scale(1.12)} .dtk-preview{gap:14px;padding:8px 2px}
+          #toolkitBadge:not([hidden]){animation:dtiRing 2.4s ease infinite} html.dti-calm #toolkitBadge,html.dti-off #toolkitBadge{animation:none}
+          .dtk-ann{position:fixed;top:0;left:0;right:0;z-index:4000;display:flex;gap:10px;justify-content:center;align-items:center;padding:8px 14px;font-size:14px;color:#fff;background:var(--blue);animation:dtiSlideDown .4s ease both} .dtk-annmsg{display:inline-flex;gap:8px;align-items:center} .dtk-ann.warn{background:#b8741a} .dtk-ann.hidden{display:none} .dtk-ann button{background:transparent;border:0;color:#fff;font-size:20px;cursor:pointer}`;
         document.head.appendChild(st);
         const btn = document.createElement("button"); btn.id = "toolkitBtn"; btn.type = "button"; btn.className = "icon-btn mock-circle-btn"; btn.title = "Study toolkit: goals, focus, revision, mistakes"; btn.setAttribute("aria-label", "Study toolkit");
-        btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18"/></svg><span id="toolkitBadge" class="mock-circle-badge" hidden>0</span>`;
+        btn.innerHTML = `${I("kit", 22)}<span id="toolkitBadge" class="mock-circle-badge" hidden>0</span>`;
         logout.before(btn); btn.addEventListener("click", () => openKit());
-        const ov = document.createElement("div"); ov.id = "dtkOverlay"; ov.className = "dtk-over hidden"; ov.innerHTML = `<div class="dtk-card" role="dialog" aria-modal="true" aria-label="Study toolkit"><div class="dtk-head"><b>Study toolkit</b><button type="button" class="small-btn" data-act="close" aria-label="Close">×</button></div><div id="dtkTabs"></div><div id="dtkBody"></div></div>`;
+        const ov = document.createElement("div"); ov.id = "dtkOverlay"; ov.className = "dtk-over hidden"; ov.innerHTML = `<div class="dtk-card" role="dialog" aria-modal="true" aria-label="Study toolkit"><div class="dtk-head"><b>${I("kit", 20)} Study toolkit</b><button type="button" class="small-btn" data-act="close" aria-label="Close">${I("close", 16)}</button></div><div id="dtkTabs"></div><div id="dtkBody"></div></div>`;
         document.body.appendChild(ov);
-        const chip = document.createElement("button"); chip.id = "dtkChip"; chip.type = "button"; chip.className = "hidden"; chip.title = "Pomodoro"; document.body.appendChild(chip); chip.addEventListener("click", () => openKit("focus"));
-        ov.addEventListener("click", (e) => { if (e.target === ov) return closeKit(); const t = e.target.closest("[data-tab]"); if (t) { ui.tab = t.dataset.tab; return render(); } const b = e.target.closest("[data-act]"); if (b) onAction(b); });
+        const chip = document.createElement("button"); chip.id = "dtkChip"; chip.type = "button"; chip.className = "hidden"; chip.title = "Pomodoro";
+        chip.innerHTML = `<span class="dtk-chipwrap"><svg class="dtk-chipring" viewBox="0 0 36 36" width="34" height="34"><circle class="bg" cx="18" cy="18" r="14"/><circle id="dtkChipFg" class="fg" cx="18" cy="18" r="14" stroke-dasharray="88" stroke-dashoffset="0" transform="rotate(-90 18 18)"/></svg><span id="dtkChipIco" class="dtk-chipico"></span></span><span id="dtkChipTxt"></span>`; document.body.appendChild(chip); chip.addEventListener("click", () => openKit("focus"));
+        ov.addEventListener("click", (e) => { if (e.target === ov) return closeKit(); const t = e.target.closest("[data-tab]"); if (t) { ui.tab = t.dataset.tab; return render(true); } const b = e.target.closest("[data-act]"); if (b) onAction(b); });
         ov.addEventListener("change", onChange);
         document.addEventListener("click", (e) => {
           const m = e.target.closest && e.target.closest("[data-away],[data-idle]"); if (!m) return; if (m.dataset.away) applyAway(m.dataset.away); else { idlePrompt = false; lastInput = Date.now(); closeModal(); if (m.dataset.idle === "stop") idleStop(); }
