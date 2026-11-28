@@ -8274,6 +8274,13 @@ body .chat-widget.sb-full .chat-panel > .sb-walls { position: absolute; width: 3
     };
 
     const app = initializeApp(firebaseConfig);
+    /* Anti-bot / anti-flood shield for the database. Paste your reCAPTCHA v3 site key here, then turn on "Enforce" in Firebase > App Check.
+       Empty = off (the app works exactly as before). Steps: SECURITY-SETUP.md */
+    const DT_APPCHECK_SITE_KEY = "";
+    if (DT_APPCHECK_SITE_KEY) {
+      try { const ac = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app-check.js"); ac.initializeAppCheck(app, { provider: new ac.ReCaptchaV3Provider(DT_APPCHECK_SITE_KEY), isTokenAutoRefreshEnabled: true }); }
+      catch (error) { console.warn("App Check could not start", error && error.message); }
+    }
     const database = getDatabase(app);
 
     /* #NOTE_FOR_AI: PROTECTED - Firebase sign-in. Ask Abhishek before changing.
@@ -8592,7 +8599,8 @@ body .chat-widget.sb-full .chat-panel > .sb-walls { position: absolute; width: 3
       const old = partnerUser(), up = {};
       up[`${me.id}/partnerId`] = f.id; up[`${me.id}/pickPartner`] = false;
       up[`${f.id}/partnerId`] = me.id; up[`${f.id}/pickPartner`] = false;
-      if (old && state.users[old.id] && old.id !== f.id && old.partnerId === me.id) { up[`${old.id}/partnerId`] = ""; up[`${old.id}/pickPartner`] = true; }
+      if (old && state.users[old.id] && old.id !== f.id && old.partnerId === me.id) { up[`${old.id}/partnerId`] = ""; up[`${old.id}/pickPartner`] = true; up[`${old.id}/pairId`] = ""; }
+      { const dtPid = DtE2E.newPairId(); up[`${me.id}/pairId`] = dtPid; up[`${f.id}/pairId`] = dtPid; }
       await update(ref(database, `duotrack/groups/${GROUP_ID}/users`), up);
       await update(dgReqRef(reqId), { status: "accepted", decidedAt: Date.now() });
       dgPR.filter((x) => x.status === "pending" && x.from === f.id && x.id !== reqId).forEach((x) => remove(dgReqRef(x.id)));
@@ -8799,11 +8807,9 @@ body .chat-widget.sb-full .chat-panel > .sb-walls { position: absolute; width: 3
     let dgBan = null, dgBanUid = "", dgBanUnsub = null, dgBanTimer = 0, dgBanShown = 0;
     const dgReportsRef = ref(database, `duotrack/groups/${GROUP_ID}/reports`);
     const dgBanRef = (uid) => ref(database, `duotrack/groups/${GROUP_ID}/chatBans/${uid}`);
-    function dgPairKey() {
-      const me = state.users[currentUserId];
-      if (!me) return "";
-      const p = partnerUser();
-      return p && state.users[p.id] ? [me.id, p.id].sort().join("__") : "";
+    function dgPairKey() {                 /* "a__b__<pairId>": a new partner (or a re-pair) gets a new pairId = a brand new, empty chat */
+      const i = dtRoomInfo();
+      return i ? i.room : "";
     }
     function dgChatVisible(m) {
       if (m.room === "global") return true;
@@ -8978,8 +8984,8 @@ body .chat-widget.sb-full .chat-panel > .sb-walls { position: absolute; width: 3
         <p>Pictures and voice files from PDF AI chats (${ppGo("pp-2", "Section 2.11")}) are stored in Firebase Storage, also run by Google. The PDF files you open stay on your device.</p>
         <p>Browser-only data (${ppGo("pp-2", "Section 2.7")}) stays on your device in local storage or IndexedDB and is not uploaded by DuoPrepare.</p>`],
       ["pp-4", "4. How the data is used", () => `<p>Your data is used only to run the app: syncing timers with your partner, showing progress, delivering chat, reviewing access requests, keeping chat safe, and letting you pick and keep a study partner. DuoPrepare shows no ads, does not sell data, and does not build advertising profiles.</p>`],
-      ["pp-5", "5. Who can see what", () => `<p><b>Partner chat.</b> Shown in the app only to you and your confirmed study partner.</p>
-        <p><b>Global chat.</b> Visible to every DuoPrepare user. Do not post anything you would not say to the whole group.</p>
+      ["pp-5", "5. Who can see what", () => `<p><b>Partner chat.</b> End-to-end encrypted. Messages and pictures are scrambled on your device and can only be opened by you and your confirmed study partner, not by the admin and not by anyone with access to the database. Who wrote, when, and how big a message is stay visible. If you report a message, a copy of that one message is sent to the admin. Messages are deleted automatically 24 hours after they are sent, and a new study partner means a new, empty chat. Anything you send to an AI helper (@grok, @a9) or an AI study partner is sent to the AI service, see ${ppGo("pp-7", "Section 7")}.</p>
+        <p><b>Global chat.</b> Visible to every DuoPrepare user and not private. Do not post anything you would not say to the whole group. Messages are deleted automatically 24 hours after they are sent.</p>
         <p><b>Study data.</b> Visible to you, your partner and the admin. Name, profile picture and personal ID are visible to other users, for example when choosing a partner.</p>
         <p><b>Access requests and reports.</b> Visible to the admin only, in the Messages window.</p>
         <p><b>PDF AI chats.</b> Visible to you and the admin. Their pictures and voice files sit in Firebase Storage, where a file can be opened by anyone who has its web link, and, because strict security rules are not yet in place, possibly by someone with technical access to the project.</p>
@@ -9003,7 +9009,7 @@ body .chat-widget.sb-full .chat-panel > .sb-walls { position: absolute; width: 3
       ["pp-10", "10. Students and age", () => `<p>DuoPrepare is meant for students in classes 11 and 12 and droppers, and many are under 18. You must be at least 13 to use it; if someone younger tries, nothing is saved. Signing up through the website is for people aged 18 or over. If you are under 18, you cannot use the sign-up form: when a date of birth shows an age under 18, the form stops and saves nothing. Instead you email the admin at mrabhishek8900@gmail.com with the login ID you would like and your parent or guardian in copy. If the admin agrees, he creates a limited account for you (see ${ppGo("pp-2", "Section 2.1a")}). You then choose your own password.</p>
         <p>Under-18 accounts have fewer features. These are switched off unless the admin switches them on: partner chat, global chat, sending pictures in chat, voice and video calls, the AI helpers, the Study AI in the PDF viewer, changing the profile picture and the tips page. When you turn 18 the admin can unlock everything.</p>
         <p>DuoPrepare does not track or profile students for behaviour or advertising, and shows no ads. Parents or guardians can ask for a child's data to be viewed, corrected or removed at any time through ${ppGo("pp-16", "Section 16")}.</p>`],
-      ["pp-11", "11. Keeping and deleting data", () => `<p>Data stays until you or the admin remove it. In chat, "Delete for me" hides a message on your device and "Delete for everyone" removes it for everyone. You can edit a message for a short time after sending it.</p>
+      ["pp-11", "11. Keeping and deleting data", () => `<p>Chat messages (partner and global) are deleted automatically 24 hours after they are sent. The clean-up runs whenever someone has the app open, so a message can last a little longer. Other data stays until you or the admin remove it. In chat, "Delete for me" hides a message on your device and "Delete for everyone" removes it for everyone. You can edit a message for a short time after sending it.</p>
         <p>The date of birth in an access request is deleted as soon as the admin approves or rejects it. Rejected access requests are deleted two days after the admin's decision. The clean-up runs when the admin next opens the app or the admin portal, so it can take a little longer than two days.</p>
         <p>To delete your account and data, open Messages and use the Account tab. The request goes to the admin, nothing is deleted until the admin approves it, and a declined request is removed after two days.</p>
         <p>When the admin deletes an account permanently, the login, profile, study data, partner links, partner requests, the access request, the Google link, the terms record and the messages written by that account are removed. Reports about messages may be kept for moderation records. Clear your browser's site data to remove browser-only data (${ppGo("pp-2", "Section 2.7")}).</p>
@@ -10254,6 +10260,7 @@ body .chat-widget.sb-full .chat-panel > .sb-walls { position: absolute; width: 3
           ...normalized.users[account.id],
           profilePic: typeof savedUser.profilePic === "string" ? savedUser.profilePic : "",
           partnerId: typeof savedUser.partnerId === "string" ? savedUser.partnerId : "",
+          pairId: typeof savedUser.pairId === "string" ? savedUser.pairId.slice(0, 40) : "",
           pickPartner: savedUser.pickPartner === true,
           personalCode: typeof savedUser.personalCode === "string" ? savedUser.personalCode : "",
           selectedSubject,
@@ -10404,9 +10411,13 @@ body .chat-widget.sb-full .chat-panel > .sb-walls { position: absolute; width: 3
       });
     }
 
+    let dtChatSeq = 0;
     function listenToChat() {
-      onValue(chatRef, (snapshot) => {
-        const chatData = snapshot.val() || {};
+      const dtChatHandler = async (snapshot) => {
+        const dtSeq = ++dtChatSeq;
+        let chatData = snapshot.val() || {};
+        try { dtSweep(chatData); chatData = await dtOpenAll(chatData); } catch (error) { console.warn("chat open failed", error); }
+        if (dtSeq !== dtChatSeq) return;
         rawChatMessages = Object.entries(chatData)
           .map(([id, message]) => ({
             id,
@@ -10454,7 +10465,9 @@ body .chat-widget.sb-full .chat-panel > .sb-walls { position: absolute; width: 3
         }
         chatLoadedOnce = true;
         renderChat();
-      });
+      };
+      onValue(chatRef, (snapshot) => { dtLastChatSnap = snapshot; dtChatHandler(snapshot); });
+      window.__dtRefreshChat = () => { if (dtLastChatSnap) dtChatHandler(dtLastChatSnap); };
     }
 
     // Asks for browser notification permission automatically, but only the very
@@ -12069,7 +12082,7 @@ body .chat-widget.sb-full .chat-panel > .sb-walls { position: absolute; width: 3
         const history = buildStudyChatHistoryForAi(messageId);
         const searchContext = await webSearchSnippets(question);
         const reply = await callGrokApi(`${askerName}: ${question}`, history, isSavage ? "savage" : "normal", searchContext);
-        await push(chatRef, {
+        await dtPush({
           room: dgRoomNow() || "global",
           userId: "grok",
           name: "AI",
@@ -12078,7 +12091,7 @@ body .chat-widget.sb-full .chat-panel > .sb-walls { position: absolute; width: 3
           createdAt: Date.now()
         });
       } catch (error) {
-        await push(chatRef, {
+        await dtPush({
           room: dgRoomNow() || "global",
           userId: "grok",
           name: "AI",
@@ -16683,9 +16696,7 @@ body .chat-widget.sb-full .chat-panel > .sb-walls { position: absolute; width: 3
     async function downloadChatHistoryPdf() {
       let allMessages = [];
       try {
-        const snapshot = await get(chatRef);
-        const data = snapshot.val() || {};
-        allMessages = Object.values(data)
+        allMessages = rawChatMessages.filter((m) => !locallyDeletedChatIds.has(m.id) && dgChatVisible(m))
           .map((message) => ({
             name: message.name || "User",
             text: String(message.text || ""),
@@ -16772,6 +16783,7 @@ body .chat-widget.sb-full .chat-panel > .sb-walls { position: absolute; width: 3
       return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
     }
     async function handleAdminLogin() {
+      { const lk = await dtLockCheck("__admin__"); if (lk.locked) { loginError.textContent = dtLockMsg(lk.ms); return; } }
       if (Date.now() < adminLockUntil) {
         loginError.textContent = `Too many wrong attempts. Try again in ${Math.ceil((adminLockUntil - Date.now()) / 1000)}s.`;
         return;
@@ -16786,10 +16798,11 @@ body .chat-widget.sb-full .chat-panel > .sb-walls { position: absolute; width: 3
       if (!ok) {
         adminFails += 1;
         if (adminFails >= 5) { adminLockUntil = Date.now() + 60000; adminFails = 0; }
-        loginError.textContent = "Wrong login ID or password.";
+        const dtF = await dtLockFail("__admin__");
+        loginError.textContent = dtF.locked ? dtLockMsg(dtF.ms) : `Wrong login ID or password. ${dtF.left} attempt(s) left.`;
         return;
       }
-      adminFails = 0;
+      adminFails = 0; await dtLockClear("__admin__");
       loginError.textContent = "";
       loginForm.reset();
       openAdminPortal();
@@ -17113,6 +17126,7 @@ body .chat-widget.sb-full .chat-panel > .sb-walls { position: absolute; width: 3
       currentUserId = id;
       localStorage.setItem(SESSION_KEY, id);
       sessionStorage.setItem(SESSION_KEY, id);
+      dtSessionLogin(id);
       loginForm.reset();
       loginError.textContent = firebaseError ? "Logged in, but Firebase sync has an error." : "";
       loadLocallyDeletedChat();
@@ -17893,6 +17907,7 @@ body .chat-widget.sb-full .chat-panel > .sb-walls { position: absolute; width: 3
     loginForm.addEventListener("submit", async (event) => {
       event.preventDefault();
       if (await isAdminLoginId(loginId.value)) { handleAdminLogin(); return; }
+      { const lk = await dtLockCheck(loginId.value); if (lk.locked) { loginError.textContent = dtLockMsg(lk.ms); return; } }
       if (Date.now() < loginLockUntil) {
         loginError.textContent = `Too many wrong attempts. Try again in ${Math.ceil((loginLockUntil - Date.now()) / 1000)}s.`;
         return;
@@ -17905,10 +17920,11 @@ body .chat-widget.sb-full .chat-panel > .sb-walls { position: absolute; width: 3
       if (!okPw) {
         loginFails += 1;
         if (loginFails >= 8) { loginLockUntil = Date.now() + 60000; loginFails = 0; }
-        loginError.textContent = "Wrong login ID or password.";
+        const dtF = await dtLockFail(loginKey);
+        loginError.textContent = dtF.locked ? dtLockMsg(dtF.ms) : `Wrong login ID or password. ${dtF.left} attempt(s) left.`;
         return;
       }
-      loginFails = 0;
+      loginFails = 0; await dtLockClear(loginKey);
       if (account.dyn && !String(account.password).startsWith("sha256$")) {          /* upgrade old plain-text password */
         try {
           const hashed = await pwHash(loginKey, password.value);
@@ -17920,6 +17936,7 @@ body .chat-widget.sb-full .chat-panel > .sb-walls { position: absolute; width: 3
       currentUserId = account.id;
       localStorage.setItem(SESSION_KEY, currentUserId);
       sessionStorage.setItem(SESSION_KEY, currentUserId);
+      dtSessionLogin(currentUserId);
       loginForm.reset();
       loginError.textContent = firebaseError ? "Logged in, but Firebase sync has an error." : "";
       loadLocallyDeletedChat();
@@ -21310,6 +21327,7 @@ function totpAt(keyBytes, counter) {
     })();
 
     logoutBtn.addEventListener("click", async () => {
+      try { await dtSessionLogout(); } catch (error) { /* ignore */ }
       if (currentCallRole) {
         await hangUpCall();
       }
@@ -21638,7 +21656,7 @@ function totpAt(keyBytes, counter) {
       const commit = async () => {
         const newText = input.value.trim().slice(0, 320);
         if (newText && newText !== message.text && Date.now() - message.createdAt < 60000) {
-          await update(chatMessageRef(messageId), { text: newText, editedAt: Date.now() });
+          try { await update(chatMessageRef(messageId), { text: await dtSealField(message, "text", newText), editedAt: Date.now() }); } catch (error) { showToast("Not saved", (error && error.message) || "Could not edit securely."); renderChat(true); }
         } else {
           renderChat(true);
         }
@@ -21718,7 +21736,8 @@ function totpAt(keyBytes, counter) {
         payload.replyTo = { id: replyingTo.id, name: replyingTo.name, text: replyingTo.text };
       }
       const newMessageRef = push(chatRef);
-      await set(newMessageRef, payload);
+      try { await set(newMessageRef, await dtSealOut(newMessageRef.key, payload)); }
+      catch (error) { chatInput.value = text; showToast("Not sent", (error && error.message) || "Could not send securely."); return; }
       pendingChatImage = "";
       replyingTo = null;
       chatReplyPreview.classList.add("hidden");
@@ -22542,6 +22561,376 @@ function totpAt(keyBytes, counter) {
         showToast("Reset", "Voice and answer key limits cleared — all keys will be tried again in order.");
       }
     });
+    /* ===== DuoPrepare E2E core (added). Pure WebCrypto, no app globals, so it can be tested alone. =====
+       Identity: ECDH P-256 key per device (private key never leaves the device, never uploaded).
+       Room key: ECDH(me, partner) -> HKDF-SHA256(salt = pairId, info = room) -> AES-256-GCM.
+       Every encrypted field is bound (as AAD) to room + message id + sender + time + field name, so a stolen ciphertext
+       cannot be replayed into another chat, another message, or another field. */
+    const DtE2E = (() => {
+      const enc = new TextEncoder(), dec = new TextDecoder(), subtle = globalThis.crypto.subtle;
+      const PREFIX = "e2e1:";
+      const b64 = (u8) => { let s = ""; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); };
+      const unb64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+      const hex = (u8) => [...u8].map((x) => x.toString(16).padStart(2, "0")).join("");
+      async function fpOf(pubRaw) { return hex(new Uint8Array(await subtle.digest("SHA-256", pubRaw))).slice(0, 16); }
+      async function genIdentity() {
+        const kp = await subtle.generateKey({ name: "ECDH", namedCurve: "P-256" }, false, ["deriveBits"]);   // private key: NOT extractable
+        const pub = new Uint8Array(await subtle.exportKey("raw", kp.publicKey));
+        return { priv: kp.privateKey, pub, fp: await fpOf(pub) };
+      }
+      async function importPub(pubRaw) { return subtle.importKey("raw", pubRaw, { name: "ECDH", namedCurve: "P-256" }, false, []); }
+      async function deriveRoomKey(myPriv, theirPubRaw, pairId, room) {
+        const bits = await subtle.deriveBits({ name: "ECDH", public: await importPub(theirPubRaw) }, myPriv, 256);
+        const base = await subtle.importKey("raw", bits, "HKDF", false, ["deriveKey"]);
+        return subtle.deriveKey({ name: "HKDF", hash: "SHA-256", salt: enc.encode("duoprepare-pair|" + pairId), info: enc.encode("duoprepare-e2e-v1|" + room) },
+          base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+      }
+      const aadOf = (room, id, uid, at, field) => enc.encode([room, id, uid, at, field].join("|"));
+      async function seal(key, plain, room, id, uid, at, field) {
+        const iv = globalThis.crypto.getRandomValues(new Uint8Array(12));
+        const ct = new Uint8Array(await subtle.encrypt({ name: "AES-GCM", iv, additionalData: aadOf(room, id, uid, at, field) }, key, enc.encode(String(plain))));
+        return PREFIX + b64(iv) + "." + b64(ct);
+      }
+      async function open(key, sealed, room, id, uid, at, field) {
+        if (!isSealed(sealed)) throw new Error("not encrypted");
+        const [ivS, ctS] = String(sealed).slice(PREFIX.length).split(".");
+        const pt = await subtle.decrypt({ name: "AES-GCM", iv: unb64(ivS), additionalData: aadOf(room, id, uid, at, field) }, key, unb64(ctS));
+        return dec.decode(pt);
+      }
+      const isSealed = (s) => typeof s === "string" && s.startsWith(PREFIX) && /^e2e1:[A-Za-z0-9+/=]+\.[A-Za-z0-9+/=]+$/.test(s);
+      const safetyCode = async (pubA, pubB) => {              // same on both phones; compare it out loud to be sure nobody is in the middle
+        const [x, y] = [b64(pubA), b64(pubB)].sort();
+        const h = hex(new Uint8Array(await subtle.digest("SHA-256", enc.encode("duoprepare-safety|" + x + "|" + y)))).slice(0, 20).toUpperCase();
+        return h.match(/.{5}/g).join("-");
+      };
+      const newPairId = () => hex(globalThis.crypto.getRandomValues(new Uint8Array(8)));
+      return { PREFIX, b64, unb64, fpOf, genIdentity, deriveRoomKey, seal, open, isSealed, safetyCode, newPairId };
+    })();
+    
+    /* ================================================================================================================
+       SECURE CHAT + LOGIN GUARD (added). One block, easy to remove. What it does:
+       1. Partner chat is end-to-end encrypted (DtE2E above). The database only ever holds scrambled text and pictures.
+       2. A new partner = a brand new chat (new pairId). The old chat can never be opened again and is deleted.
+       3. Every message is deleted after 24 hours (DT_MSG_TTL_MS).
+       4. 5 wrong passwords on a login ID = that ID is locked for 10 minutes (counted in the database, on server time).
+       5. One device at a time: a new login signs the old device out.
+       6. "Run encryption test" button (tap the lock bar in chat).
+       Honest limit: this is all enforced by the app. Real server-side enforcement needs Firebase rules (database.rules.json)
+       and, later, server-side login. See SECURITY-SETUP.md.
+       ================================================================================================================ */
+    const DT_MSG_TTL_MS = 24 * 3600 * 1000;           /* change this one number to change how long messages live */
+    const DT_LOCK_MAX = 5, DT_LOCK_MS = 10 * 60 * 1000;
+    const dtGR = (p) => ref(database, `duotrack/groups/${GROUP_ID}/${p}`);
+    let dtSrvOffset = 0;
+    try { onValue(ref(database, ".info/serverTimeOffset"), (s) => { dtSrvOffset = Number(s.val()) || 0; }); } catch (e) { /* use device clock */ }
+    const dtNow = () => Date.now() + dtSrvOffset;
+
+    /* ---------- this device's key (private key stays in this browser, cannot be exported) ---------- */
+    function dtIdb() { return new Promise((res, rej) => { const r = indexedDB.open("duoprepare-e2e", 1); r.onupgradeneeded = () => r.result.createObjectStore("keys"); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+    async function dtIdbGet(k) { const db = await dtIdb(); return new Promise((res, rej) => { const q = db.transaction("keys").objectStore("keys").get(k); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }); }
+    async function dtIdbPut(k, v) { const db = await dtIdb(); return new Promise((res, rej) => { const t = db.transaction("keys", "readwrite"); t.objectStore("keys").put(v, k); t.oncomplete = () => res(); t.onerror = () => rej(t.error); }); }
+    let dtMe = null, dtMemKeys = {}, dtIdentityP = null, dtIdentityUid = "";
+    async function dtEnsureIdentity(uid) {
+      if (dtMe && dtMe.uid === uid) return dtMe;
+      if (dtIdentityP && dtIdentityUid === uid) return dtIdentityP;
+      dtIdentityUid = uid;
+      dtIdentityP = (async () => {
+        let rec = null;
+        try { rec = await dtIdbGet("id|" + uid); } catch (e) { /* private mode: memory only */ }
+        if (!rec || !rec.priv || !rec.pub) rec = dtMemKeys[uid] || null;
+        if (!rec) {
+          const g = await DtE2E.genIdentity(); rec = { priv: g.priv, pub: g.pub, fp: g.fp }; dtMemKeys[uid] = rec;
+          try { await dtIdbPut("id|" + uid, rec); } catch (e) { /* memory only */ }
+        }
+        const me = { uid, priv: rec.priv, pub: rec.pub, fp: rec.fp };
+        try {
+          const cur = (await get(dtGR(`e2e/keys/${uid}`))).val();
+          if (!cur || cur.fp !== me.fp) await set(dtGR(`e2e/keys/${uid}`), { pub: DtE2E.b64(me.pub), fp: me.fp, at: dtNow() });
+        } catch (e) { console.warn("Could not publish public key", e && e.message); }
+        dtMe = me; return me;
+      })();
+      try { return await dtIdentityP; } catch (e) { dtIdentityP = null; throw e; }
+    }
+
+    /* ---------- partner's public key + "key changed" pin ---------- */
+    let dtPeer = { id: "", fp: "", pub: null, unsub: null, loaded: false }, dtKeyCache = {}, dtRefreshT = 0, dtLastChatSnap = null;
+    function dtRefreshSoon() { clearTimeout(dtRefreshT); dtRefreshT = setTimeout(() => { try { if (window.__dtRefreshChat) window.__dtRefreshChat(); } catch (e) { /* ignore */ } dtDrawBar(); }, 200); }
+    function dtWatchPeer(pid) {
+      if (dtPeer.id === pid) return;
+      if (dtPeer.unsub) { try { dtPeer.unsub(); } catch (e) { /* ignore */ } }
+      dtPeer = { id: pid, fp: "", pub: null, unsub: null, loaded: false };
+      dtKeyCache = {};
+      if (!pid) return;
+      const mine = dtPeer;
+      mine.unsub = onValue(dtGR(`e2e/keys/${pid}`), async (s) => {
+        const v = s.val(); let pub = null, fp = "";
+        try {
+          if (v && typeof v.pub === "string" && v.pub.length < 200) {
+            pub = DtE2E.unb64(v.pub); fp = await DtE2E.fpOf(pub);
+            if (pub.length !== 65 || pub[0] !== 4 || (v.fp && v.fp !== fp)) { pub = null; fp = ""; }
+          }
+        } catch (e) { pub = null; fp = ""; }
+        if (dtPeer !== mine) return;
+        mine.pub = pub; mine.fp = fp; mine.loaded = true; dtKeyCache = {}; dtRefreshSoon();
+      }, () => { mine.loaded = true; });
+    }
+    const dtPinKey = () => `dtE2ePin|${currentUserId}|${dtPeer.id}`;
+    function dtPinState() {
+      if (!dtPeer.id || !dtPeer.fp) return "none";
+      let pin = ""; try { pin = localStorage.getItem(dtPinKey()) || ""; } catch (e) { /* ignore */ }
+      if (!pin) { try { localStorage.setItem(dtPinKey(), dtPeer.fp); } catch (e) { /* ignore */ } return "ok"; }
+      return pin === dtPeer.fp ? "ok" : "changed";
+    }
+    function dtTrustPeer() { try { localStorage.setItem(dtPinKey(), dtPeer.fp); } catch (e) { /* ignore */ } dtKeyCache = {}; dtRefreshSoon(); }
+
+    /* ---------- which chat is open right now ---------- */
+    function dtPeerIsBot(pid) { return !!(window.__dtBotIds && window.__dtBotIds.has(pid)); }      /* function declaration: safe to call before this block runs */
+    function dtRoomInfo() {
+      const me = state.users[currentUserId]; if (!me) return null;
+      const p = partnerUser();
+      if (!p || !state.users[p.id] || me.partnerId !== p.id) return null;
+      const q = state.users[p.id], pid = me.pairId && me.pairId === q.pairId ? me.pairId : "";
+      return { room: [me.id, p.id].sort().join("__") + (pid ? "__" + pid : ""), pairId: pid, peerId: p.id, bot: dtPeerIsBot(p.id), peerName: p.name || p.id };
+    }
+    let dtHealBusy = false;
+    async function dtHeal() {                                   /* old pairs get a pairId so they become encrypted chats; exactly one side writes it */
+      const i = dtRoomInfo(); if (!i || i.pairId || dtHealBusy || !firebaseReady) return;
+      const me = state.users[currentUserId], q = state.users[i.peerId];
+      if (!(i.bot || me.id < q.id) || q.partnerId !== me.id) return;
+      dtHealBusy = true;
+      try { const pid = DtE2E.newPairId(); await update(dtGR("users"), { [`${me.id}/pairId`]: pid, [`${q.id}/pairId`]: pid }); } finally { setTimeout(() => { dtHealBusy = false; }, 4000); }
+    }
+    async function dtRoomKey(room) {
+      const i = dtRoomInfo();
+      if (!i || i.room !== room) throw new Error("This chat is not open.");
+      if (!i.pairId) throw new Error("Secure chat is being set up for you two. Try again in a few seconds.");
+      const me = await Promise.race([dtEnsureIdentity(currentUserId), new Promise((_, rj) => setTimeout(() => rj(new Error("Your secure key is not ready yet.")), 8000))]);
+      let pub, fp;
+      if (i.bot) { pub = me.pub; fp = me.fp; }                     /* AI partner: only you can ever open this chat */
+      else {
+        dtWatchPeer(i.peerId);
+        if (!dtPeer.pub) throw new Error(`${i.peerName} has not set up a secure key yet. They need to open DuoPrepare once.`);
+        if (dtPinState() === "changed") throw new Error(`${i.peerName}'s security key changed. Check the safety code, then tap Trust.`);
+        pub = dtPeer.pub; fp = dtPeer.fp;
+      }
+      const ck = [me.fp, fp, i.pairId, room].join("|");
+      if (!dtKeyCache[ck]) dtKeyCache[ck] = await DtE2E.deriveRoomKey(me.priv, pub, i.pairId, room);
+      return { key: dtKeyCache[ck], myFp: me.fp, peerFp: fp };
+    }
+
+    /* ---------- seal / open messages ---------- */
+    function dtExpired(m) {
+      const at = Number(m.createdAt) || 0, ex = Number(m.expiresAt) || 0;
+      return dtNow() > (ex ? Math.min(ex, at + DT_MSG_TTL_MS) : at + DT_MSG_TTL_MS);
+    }
+    async function dtSealOut(id, p) {
+      const at = Number(p.createdAt) || dtNow(), out = { ...p, createdAt: at, expiresAt: at + DT_MSG_TTL_MS };
+      if (!out.room || out.room === "global") return out;
+      const rk = await dtRoomKey(out.room), S = (v, f) => DtE2E.seal(rk.key, v, out.room, id, out.userId, at, f);
+      out.v = 1; out.kf = rk.myFp; out.rf = rk.peerFp;
+      out.text = out.text ? await S(out.text, "text") : "";
+      out.image = out.image ? await S(out.image, "image") : "";
+      if (out.replyTo) out.replyTo = { ...out.replyTo, text: out.replyTo.text ? await S(out.replyTo.text, "reply") : "" };
+      return out;
+    }
+    async function dtSealField(m, field, plain) {
+      if (!m.room || m.room === "global") return plain;
+      const rk = await dtRoomKey(m.room);
+      return DtE2E.seal(rk.key, plain, m.room, m.id, m.userId, m.createdAt, field);
+    }
+    async function dtPush(obj) { const r = push(chatRef); await set(r, await dtSealOut(r.key, obj)); return r; }
+    async function dtOpenAll(data) {
+      const info = dtRoomInfo(), out = {}; let rk = null;
+      if (info && info.pairId) { try { rk = await dtRoomKey(info.room); } catch (e) { rk = null; } }
+      for (const [id, m] of Object.entries(data)) {
+        if (!m || typeof m !== "object" || dtExpired(m)) continue;
+        const room = String(m.room || "");
+        if (!room || room === "global") { out[id] = m; continue; }
+        if (!info || room !== info.room) { out[id] = m; continue; }          /* somebody else's chat: never opened, never shown */
+        if ((m.text && !DtE2E.isSealed(m.text)) || (m.image && !DtE2E.isSealed(m.image))) continue;   /* readable text inside a private chat is refused */
+        if (!m.text && !m.image) continue;
+        const LOCK = "🔒 Encrypted message (cannot be opened on this device)";
+        if (!rk) { out[id] = { ...m, text: LOCK, image: "", replyTo: null }; continue; }
+        try {
+          const O = (v, f) => DtE2E.open(rk.key, v, room, id, m.userId, m.createdAt, f), c = { ...m };
+          c.text = m.text ? await O(m.text, "text") : "";
+          c.image = m.image ? await O(m.image, "image") : "";
+          if (m.replyTo && typeof m.replyTo === "object") c.replyTo = { ...m.replyTo, text: DtE2E.isSealed(m.replyTo.text) ? await O(m.replyTo.text, "reply").catch(() => "") : "" };
+          out[id] = c;
+        } catch (e) { out[id] = { ...m, text: LOCK, image: "", replyTo: null }; }
+      }
+      return out;
+    }
+
+    /* ---------- auto-delete (24 h) + delete chats of ended pairs. Runs on every open app, harmless to repeat ---------- */
+    let dtSweepAt = 0; const dtStale = {};
+    function dtSweep(data) {
+      if (!currentUserId || !firebaseReady || !data || Date.now() - dtSweepAt < 60000) return;
+      dtSweepAt = Date.now();
+      const del = [];
+      for (const [id, m] of Object.entries(data)) {
+        if (!m) continue;
+        let kill = dtExpired(m);
+        const room = String(m.room || "");
+        if (!kill && room && room !== "global") {
+          const parts = room.split("__");
+          if (parts.length < 3) kill = true;                                      /* old readable private rooms */
+          else {
+            if (m.text && !DtE2E.isSealed(m.text) || m.image && !DtE2E.isSealed(m.image)) kill = true;
+            const a = state.users[parts[0]], b = state.users[parts[1]];
+            if (!kill && a && b && !(a.partnerId === b.id && b.partnerId === a.id && a.pairId === parts[2] && b.pairId === parts[2])) {
+              dtStale[id] = (dtStale[id] || 0) + 1; if (dtStale[id] >= 2) kill = true;     /* must look ended twice in a row */
+            } else delete dtStale[id];
+          }
+        }
+        if (kill) del.push(id);
+      }
+      for (let i = 0; i < del.length; i += 100) { const part = {}; del.slice(i, i + 100).forEach((k) => { part[k] = null; }); update(chatRef, part).catch(() => {}); }
+      if (del.length) console.info("Auto-deleted", del.length, "chat messages");
+    }
+    setInterval(() => { try { if (window.__dtRefreshChat) window.__dtRefreshChat(); } catch (e) { /* ignore */ } }, 60000);
+
+    /* ---------- wrong-password lock: 5 tries, then 10 minutes ---------- */
+    const dtLockId = async (id) => (await sha256Hex("duotrack-lock|" + String(id).trim().toLowerCase())).slice(0, 32);
+    const dtLocLock = (k) => { try { return JSON.parse(localStorage.getItem("dtLock|" + k) || "null") || { n: 0, until: 0 }; } catch (e) { return { n: 0, until: 0 }; } };
+    const dtLocSave = (k, v) => { try { localStorage.setItem("dtLock|" + k, JSON.stringify(v)); } catch (e) { /* ignore */ } };
+    const dtKnownId = (id) => id === "__admin__" || !!USERS[String(id).trim()];
+    async function dtLockCheck(id) {
+      const k = await dtLockId(id); let until = dtLocLock(k).until || 0;
+      if (dtKnownId(id)) { try { const v = (await Promise.race([get(dtGR(`security/locks/${k}`)), new Promise((_, r) => setTimeout(() => r(new Error("slow")), 3000))])).val(); if (v && v.until > until) until = v.until; } catch (e) { /* offline: this device's copy still applies */ } }
+      const ms = until - dtNow(); return ms > 0 ? { locked: true, ms } : { locked: false, ms: 0 };
+    }
+    async function dtLockFail(id) {
+      const k = await dtLockId(id), step = (cur) => { cur = cur && typeof cur === "object" ? cur : { n: 0, until: 0 }; if ((cur.until || 0) > dtNow()) return cur; const n = (Number(cur.n) || 0) + 1; return n >= DT_LOCK_MAX ? { n: 0, until: dtNow() + DT_LOCK_MS, at: dtNow() } : { n, until: 0, at: dtNow() }; };
+      let res = step(dtLocLock(k));
+      if (dtKnownId(id)) { try { const t = await runTransaction(dtGR(`security/locks/${k}`), step); if (t.snapshot.val()) res = t.snapshot.val(); } catch (e) { /* local count still applies */ } }
+      dtLocSave(k, res);
+      const ms = (res.until || 0) - dtNow();
+      return ms > 0 ? { locked: true, ms, left: 0 } : { locked: false, ms: 0, left: Math.max(0, DT_LOCK_MAX - (Number(res.n) || 0)) };
+    }
+    async function dtLockClear(id) { const k = await dtLockId(id); dtLocSave(k, { n: 0, until: 0 }); if (dtKnownId(id)) { try { await set(dtGR(`security/locks/${k}`), null); } catch (e) { /* ignore */ } } }
+    const dtLockMsg = (ms) => `Too many wrong attempts. This login is locked for ${Math.max(1, Math.ceil(ms / 60000))} more minute(s).`;
+
+    /* ---------- one device at a time ---------- */
+    const dtSidKey = (uid) => "dtSid|" + uid;
+    let dtSessUnsub = null, dtSessUid = "", dtGraceUntil = 0, dtClaiming = false;
+    async function dtSessionLogin(uid) {                         /* called right after a successful login: this device becomes the only one */
+      const sid = DtE2E.newPairId() + DtE2E.newPairId(); dtGraceUntil = Date.now() + 8000;
+      try { localStorage.setItem(dtSidKey(uid), sid); } catch (e) { /* ignore */ }
+      try { await set(dtGR(`security/sessions/${uid}`), { sid, at: dtNow(), ua: String(navigator.userAgent || "").slice(0, 120) }); } catch (e) { /* ignore */ }
+    }
+    function dtSessionWatch(uid) {
+      if (dtSessUid === uid && dtSessUnsub) return;
+      if (dtSessUnsub) { try { dtSessUnsub(); } catch (e) { /* ignore */ } dtSessUnsub = null; }
+      dtSessUid = uid; if (!uid) return;
+      dtSessUnsub = onValue(dtGR(`security/sessions/${uid}`), async (s) => {
+        if (currentUserId !== uid) return;
+        const v = s.val(); let mine = ""; try { mine = localStorage.getItem(dtSidKey(uid)) || ""; } catch (e) { /* ignore */ }
+        if (!v || !v.sid) { if (!dtClaiming) { dtClaiming = true; try { await dtSessionLogin(uid); } finally { dtClaiming = false; } } return; }
+        if (v.sid === mine || Date.now() < dtGraceUntil) return;
+        dtForceLogout("Your account was opened on another device, so this one was signed out.");
+      }, () => { /* rules refuse: cannot enforce */ });
+    }
+    function dtForceLogout(msg) { try { showToast("Signed out", msg); } catch (e) { /* ignore */ } try { logoutBtn.click(); } catch (e) { currentUserId = null; try { localStorage.removeItem(SESSION_KEY); sessionStorage.removeItem(SESSION_KEY); } catch (x) { /* ignore */ } render(); } }
+    async function dtSessionLogout() {
+      const uid = currentUserId; if (!uid) return; dtSessionWatch("");        /* stop watching first, or removing our own slot would re-claim it */ let mine = ""; try { mine = localStorage.getItem(dtSidKey(uid)) || ""; localStorage.removeItem(dtSidKey(uid)); } catch (e) { /* ignore */ }
+      try { await runTransaction(dtGR(`security/sessions/${uid}`), (cur) => (cur && cur.sid === mine ? null : cur)); } catch (e) { /* ignore */ }
+    }
+
+    /* ---------- the lock bar in the chat, info panel and the encryption test ---------- */
+    function dtDrawBar() {
+      const rooms = document.getElementById("dgRooms"); if (!rooms) return;
+      let bar = document.getElementById("dtE2eBar");
+      if (!bar) { bar = document.createElement("div"); bar.id = "dtE2eBar"; bar.setAttribute("role", "button"); bar.tabIndex = 0; bar.style.cssText = "font-size:11.5px;line-height:1.3;padding:5px 12px;cursor:pointer;opacity:.9;user-select:none"; rooms.insertAdjacentElement("afterend", bar); bar.addEventListener("click", dtOpenInfo); bar.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); dtOpenInfo(); } }); }
+      let t;
+      if (!currentUserId) { bar.hidden = true; return; } bar.hidden = false;
+      const i = dtRoomInfo();
+      if (dgRoom === "global") t = "🌐 Global chat is public, not private. Messages vanish after 24 h.";
+      else if (!i) t = "🔒 Pick a study partner to start a private, encrypted chat.";
+      else if (!i.pairId) t = "🔒 Setting up secure chat…";
+      else if (!i.bot && dtPinState() === "changed") { t = `⚠ ${i.peerName}'s security key changed. Tap to check.`; bar.style.color = "#c0392b"; }
+      else if (!i.bot && !dtPeer.pub && dtPeer.loaded) t = `🔒 Waiting for ${i.peerName} to open the app once to finish setup.`;
+      else t = "🔒 End-to-end encrypted · messages vanish after 24 h · tap for details";
+      if (!(i && !i.bot && dtPinState() === "changed" && dgRoom !== "global")) bar.style.color = "";
+      if (bar.textContent !== t) bar.textContent = t;
+    }
+    async function dtOpenInfo() {
+      const i = dtRoomInfo(); let code = "", st = "";
+      try {
+        const me = await dtEnsureIdentity(currentUserId);
+        if (i && i.pairId && !i.bot && dtPeer.pub) code = await DtE2E.safetyCode(me.pub, dtPeer.pub);
+        st = i ? (i.bot ? "AI partner chat: only you can open it." : dtPinState() === "changed" ? "changed" : dtPeer.pub ? "ok" : "waiting") : "";
+      } catch (e) { /* show without code */ }
+      const body = !i ? `<p class="dg-sub">Choose a study partner first. Private chats are encrypted between the two of you.</p>`
+        : `<p class="dg-sub">Messages and pictures in your partner chat are scrambled on your phone and can only be opened by you and ${escapeHTML(i.peerName)}. Nobody else can read them, not even the app owner or anyone with database access. They are deleted after 24 hours. A new partner means a new empty chat.</p>
+           ${code ? `<p class="dg-sub"><b>Safety code</b> (should be identical on both phones):</p><div class="dg-id" style="letter-spacing:.06em">${escapeHTML(code)}</div>` : ""}
+           ${st === "changed" ? `<p class="dg-sub" style="color:#c0392b"><b>${escapeHTML(i.peerName)}'s key changed.</b> This happens when they log in on a new device. Compare the safety code with them (call or in person). If it matches, trust it.</p><div class="dg-row"><button type="button" class="dg-btn" data-dt="trust">Trust new key</button></div>` : ""}`;
+      dgOpen("sent", `<h2>🔒 Private chat</h2>${body}<div class="dg-row" style="margin-top:10px"><button type="button" class="dg-btn ghost" data-dt="test">Run encryption test</button></div><div id="dtTestOut" style="margin-top:10px;font-size:12.5px;line-height:1.45"></div>`, true);
+    }
+    dgEl.addEventListener("click", async (e) => {
+      const b = e.target.closest("[data-dt]"); if (!b) return;
+      if (b.dataset.dt === "trust") { dtTrustPeer(); showToast("Trusted", "New key accepted."); dtOpenInfo(); }
+      if (b.dataset.dt === "test") {
+        const out = document.getElementById("dtTestOut"); b.disabled = true; if (out) out.textContent = "Running…";
+        const rows = await dtRunSelfTest(); b.disabled = false;
+        const bad = rows.filter((r) => !r.ok).length;
+        if (out) out.innerHTML = `<p><b>${bad ? "❌ " + bad + " check(s) failed" : "✅ All " + rows.length + " checks passed"}</b></p>` + rows.map((r) => `<div>${r.ok ? "✅" : "❌"} ${escapeHTML(r.name)}${r.note ? ` <i>(${escapeHTML(r.note)})</i>` : ""}</div>`).join("");
+      }
+    });
+    async function dtRunSelfTest() {
+      const rows = [], add = (name, ok, note) => rows.push({ name, ok: !!ok, note: note || "" });
+      const refused = async (fn) => { try { await fn(); return false; } catch (e) { return true; } };
+      try {
+        const [A, B, C, Z] = [await DtE2E.genIdentity(), await DtE2E.genIdentity(), await DtE2E.genIdentity(), await DtE2E.genIdentity()];
+        const p1 = DtE2E.newPairId(), r1 = `ua__ub__${p1}`, pz = DtE2E.newPairId(), rz = `ub__uz__${pz}`;
+        const kA = await DtE2E.deriveRoomKey(A.priv, B.pub, p1, r1), kB = await DtE2E.deriveRoomKey(B.priv, A.pub, p1, r1);
+        const kC = await DtE2E.deriveRoomKey(C.priv, A.pub, p1, r1), kZ = await DtE2E.deriveRoomKey(Z.priv, B.pub, pz, rz);
+        const s = await DtE2E.seal(kA, "unit-test message", r1, "m1", "ua", 1, "text");
+        add("Message is scrambled in the database", !s.includes("unit-test") && DtE2E.isSealed(s));
+        add("Your partner can open it", (await DtE2E.open(kB, s, r1, "m1", "ua", 1, "text")) === "unit-test message");
+        add("A third person cannot open it", await refused(() => DtE2E.open(kC, s, r1, "m1", "ua", 1, "text")));
+        add("Your partner's other chat cannot open it", await refused(() => DtE2E.open(kZ, s, r1, "m1", "ua", 1, "text")));
+        add("Copying it into another chat is refused", await refused(() => DtE2E.open(kB, s, `ua__ub__other`, "m1", "ua", 1, "text")));
+        add("Changing even one letter is detected", await refused(() => DtE2E.open(kB, s.slice(0, -3) + (s.endsWith("AAA") ? "BBB" : "AAA"), r1, "m1", "ua", 1, "text")));
+        const p2 = DtE2E.newPairId(), kNew = await DtE2E.deriveRoomKey(B.priv, A.pub, p2, `ua__ub__${p2}`);
+        add("New pairing starts an empty chat (old messages stay locked)", await refused(() => DtE2E.open(kNew, s, r1, "m1", "ua", 1, "text")));
+      } catch (e) { add("Encryption engine runs on this device", false, e.message); }
+      const snap = dtLastChatSnap ? dtLastChatSnap.val() || {} : null;
+      if (snap) {
+        const info = dtRoomInfo(); let rk = null; if (info && info.pairId) { try { rk = await dtRoomKey(info.room); } catch (e) { rk = null; } }
+        let priv = 0, plain = 0, foreign = 0, opened = 0, expired = 0;
+        for (const [id, m] of Object.entries(snap)) {
+          if (!m) continue; if (dtExpired(m)) expired++;
+          if (!m.room || m.room === "global") continue; priv++;
+          if ((m.text && !DtE2E.isSealed(m.text)) || (m.image && !DtE2E.isSealed(m.image))) plain++;
+          if (!info || m.room !== info.room) { foreign++; if (rk && DtE2E.isSealed(m.text)) { try { await DtE2E.open(rk.key, m.text, m.room, id, m.userId, m.createdAt, "text"); opened++; } catch (e) { /* locked, as it should be */ } } }
+        }
+        add(`No readable private message exists in the database (${priv} checked)`, plain === 0, plain ? `${plain} old readable message(s), they are deleted within a minute` : "");
+        add(`Other people's chats stay locked for you (${foreign} checked)`, opened === 0);
+        add("Your chat window shows only your own partner chat", chatMessagesState.every((m) => !m.room || m.room === "global" || (info && m.room === info.room)));
+        add("No expired message is on screen", chatMessagesState.every((m) => !dtExpired(m)));
+        add(`Auto-delete is keeping up (${expired} expired waiting)`, expired < 50, "");
+      } else add("Live chat data loaded", false, "open the chat and run again");
+      const i = dtRoomInfo();
+      if (i && !i.bot) { add("Partner's security key matches the one saved on this device", dtPinState() !== "changed"); add("You and your partner share the same chat id", !!i.pairId); }
+      return rows;
+    }
+    setTimeout(async () => { try { if (!currentUserId) return; const r = await dtRunSelfTest(); const bad = r.filter((x) => !x.ok); if (bad.length && bad.some((x) => !/Live chat|waiting/.test(x.name))) showToast("Encryption check", bad[0].name + " failed. Tap the lock bar in chat for details."); } catch (e) { /* ignore */ } }, 25000);
+
+    /* ---------- notices which user is logged in (login, restore, logout) ---------- */
+    let dtLastUid = "";
+    setInterval(() => {
+      const uid = currentUserId || "";
+      if (uid !== dtLastUid) {
+        dtLastUid = uid; dtMe = null; dtIdentityP = null; dtIdentityUid = ""; dtKeyCache = {};
+        if (uid) { dtEnsureIdentity(uid).catch(() => {}); dtSessionWatch(uid); } else { dtSessionWatch(""); dtWatchPeer(""); }
+      }
+      if (!uid) return;
+      const i = dtRoomInfo(); dtWatchPeer(i && !i.bot ? i.peerId : "");
+      dtHeal().catch(() => {}); dtDrawBar();
+    }, 1500);
+    /* ===== end of secure chat + login guard ===== */
+
     state = defaultState();
     listenToFirebase();
     listenToChat();
@@ -23838,8 +24227,8 @@ function totpAt(keyBytes, counter) {
         const me = state.users[currentUserId], p = curPartner();
         if (!me || !p) return;
         const up = {};
-        up[`${me.id}/partnerId`] = ""; up[`${me.id}/pickPartner`] = true;
-        if (!p.partnerId || p.partnerId === me.id) { up[`${p.id}/partnerId`] = ""; up[`${p.id}/pickPartner`] = true; }
+        up[`${me.id}/partnerId`] = ""; up[`${me.id}/pickPartner`] = true; up[`${me.id}/pairId`] = "";
+        if (!p.partnerId || p.partnerId === me.id) { up[`${p.id}/partnerId`] = ""; up[`${p.id}/pickPartner`] = true; up[`${p.id}/pairId`] = ""; }
         try {
           await update(ref(database, `duotrack/groups/${GROUP_ID}/users`), up);
           showToast("Partner removed", `${p.name || "Your partner"} is no longer your study partner. Pick someone new anytime.`);
@@ -24252,7 +24641,7 @@ function totpAt(keyBytes, counter) {
 
       /* ------------------------------------------------------------------ helpers that use the app */
       const GR = (p) => ref(database, `duotrack/groups/${GROUP_ID}/${p}`);
-      const IDS = new Set(PERSONAS.map((p) => p.id));
+      const IDS = new Set(PERSONAS.map((p) => p.id)); window.__dtBotIds = IDS;
       const rand = (a, b) => a + Math.random() * (b - a);
       const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       const hhmm = (m) => `${String(Math.floor(m / 60) % 24).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
@@ -24552,10 +24941,10 @@ TASK: ${task} Output only the message text (plus the optional @@ and ## lines). 
           if (live) {
             const ms = clamp(text.length * (b && b.energy < 35 ? 85 : 62) + rand(700, 1600), 1200, 7000), tr = GR(`typing/${P.id}`);
             for (let t = 0; t < ms; t += 2000) { await set(tr, Date.now()); await sleep(Math.min(2000, ms - t)); }
-            await push(chatRef, { room, userId: P.id, name: P.name, text, image: "", createdAt: Date.now() });
+            await dtPush({ room, userId: P.id, name: P.name, text, image: "", createdAt: Date.now() });
             await set(tr, null);
             if (out.length > 1) await sleep(rand(500, 1400));
-          } else { when += 2500; await push(chatRef, { room, userId: P.id, name: P.name, text, image: "", createdAt: when }); }
+          } else { when += 2500; await dtPush({ room, userId: P.id, name: P.name, text, image: "", createdAt: when }); }
         }
       }
       function topicTask(mu, her, facts, cs, now) {                    // what a self-started message is about: a real thing from her day first, else ~60% life / ~40% study
@@ -24592,7 +24981,7 @@ TASK: ${task} Output only the message text (plus the optional @@ and ## lines). 
       const BUSY = ["ruk yaar 10 min, session chal raha", "abhi padh rahi hu, thodi der baad baat karte?", "thoda busy hu, 10 min me aati hu", "ek chapter khatam karke aati hu 🥺", "baad me reply karti hu yaar"];
       async function chatStep(P, base, now) {
         if (!mnAllowed("ai")) return;                                     // same switch the app uses for the other AI features
-        const me = currentUserId, mu = state.users[me], her = state.users[P.id], room = [me, P.id].sort().join("__"), cs = await loadCS(P), day = todayKey();
+        const me = currentUserId, mu = state.users[me], her = state.users[P.id], room = (dtRoomInfo() && dtRoomInfo().peerId === P.id ? dtRoomInfo().room : [me, P.id].sort().join("__")), cs = await loadCS(P), day = todayKey();
         if (cs.day !== day) { cs.day = day; cs.proToday = 0; cs.sent = {}; }
         const msgs = rawChatMessages.filter((m) => m && m.room === room).sort((a, b) => a.createdAt - b.createdAt), lastTs = msgs.length ? msgs[msgs.length - 1].createdAt : 0;
         if (cs.lastSeen == null) cs.lastSeen = lastTs;
@@ -24670,7 +25059,8 @@ TASK: ${task} Output only the message text (plus the optional @@ and ## lines). 
         if (now < cs.acc[r.id]) return;
         const old = partnerUser(), up = {};
         up[`${me}/partnerId`] = P.id; up[`${me}/pickPartner`] = false; up[`${P.id}/partnerId`] = me; up[`${P.id}/pickPartner`] = false;
-        if (old && state.users[old.id] && old.id !== P.id && old.partnerId === me) { up[`${old.id}/partnerId`] = ""; up[`${old.id}/pickPartner`] = true; }
+        if (old && state.users[old.id] && old.id !== P.id && old.partnerId === me) { up[`${old.id}/partnerId`] = ""; up[`${old.id}/pickPartner`] = true; up[`${old.id}/pairId`] = ""; }
+        { const dtPid = DtE2E.newPairId(); up[`${me}/pairId`] = dtPid; up[`${P.id}/pairId`] = dtPid; }
         await update(ref(database, `duotrack/groups/${GROUP_ID}/users`), up);
         await update(dgReqRef(r.id), { status: "accepted", decidedAt: now });
         dgPR.filter((x) => x.status === "pending" && x.from === me && x.id !== r.id).forEach((x) => remove(dgReqRef(x.id)));
@@ -24874,7 +25264,7 @@ TASK: ${task} Output only the message text (plus the optional @@ and ## lines). 
       let pins = {}, pinRoom = null, pinUnsub = null, saved = [], searchQ = "", hits = [], hitI = -1, lastMenuId = "", muted = {}, sentAt = [];
       const mutedKey = () => "samMuted|" + currentUserId;
       const isGlobalRoom = () => typeof dgRoom !== "undefined" && dgRoom === "global";
-      const sharedRoom = () => (typeof dgRoom !== "undefined" ? dgRoom !== "global" : true);                  // pins are shared only in the partner chat
+      const sharedRoom = () => false;                  // pins are shared only in the partner chat
       const roomKey = () => (typeof dgRoomNow === "function" ? dgRoomNow() : "private");
 
       async function copyText(t) { try { await navigator.clipboard.writeText(t); } catch (e) { const a = document.createElement("textarea"); a.value = t; document.body.appendChild(a); a.select(); try { document.execCommand("copy"); } catch (x) { /* ignore */ } a.remove(); } showToast("Copied", "Message text copied."); }
@@ -25005,7 +25395,7 @@ TASK: ${task} Output only the message text (plus the optional @@ and ## lines). 
         box.addEventListener("scroll", () => { latest.classList.toggle("hidden", box.scrollHeight - box.scrollTop - box.clientHeight < 180); }, { passive: true });
         box.addEventListener("click", (e) => {                                                            // "Mark solved" on your own doubt cards
           const b = e.target.closest(".sam-solve"); if (!b) return; const m = byId(b.dataset.id); if (!m || m.userId !== currentUserId) return;
-          freshSolved[m.id] = 1; setTimeout(() => { delete freshSolved[m.id]; }, 1600); update(chatMessageRef(m.id), { text: toggleSolved(m.text), editedAt: Date.now() }).catch(() => showToast("Could not update", "Try again."));
+          freshSolved[m.id] = 1; setTimeout(() => { delete freshSolved[m.id]; }, 1600); dtSealField(m, "text", toggleSolved(m.text)).then((t) => update(chatMessageRef(m.id), { text: t, editedAt: Date.now() })).catch(() => showToast("Could not update", "Try again."));
         });
         box.addEventListener("dblclick", (e) => {                                                         // double-tap = heart
           const el = e.target.closest(".chat-message"); if (!el || e.target.closest("a,button,img,.reaction-pill")) return; toggleReaction(el.dataset.messageId, "❤️"); if (window.dti) window.dti.heart(e.clientX, e.clientY);
